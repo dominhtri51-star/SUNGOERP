@@ -31,7 +31,7 @@ initUsers();
 // Lấy danh sách tài khoản
 router.get('/', async (req, res) => {
     try {
-        // Bỏ created_at để tránh lỗi nếu database không có cột này
+        await initUsers();
         const { rows } = await pool.query("SELECT id, emp_id, username, full_name, role FROM users ORDER BY id DESC");
         res.json({ success: true, data: rows });
     } catch(e) { 
@@ -39,10 +39,12 @@ router.get('/', async (req, res) => {
         res.status(500).json({ success: false, error: e.message }); 
     }
 });
+
 // Kiểm tra Đăng nhập (POST /api/users/login)
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+        await initUsers();
         
         // Truy vấn xem có tài khoản nào khớp user và pass không
         const { rows } = await pool.query(
@@ -59,9 +61,10 @@ router.post('/login', async (req, res) => {
         }
     } catch(e) { 
         console.error("Lỗi API LOGIN:", e.message);
-        res.status(500).json({ success: false, error: "Lỗi kết nối CSDL!" }); 
+        res.status(500).json({ success: false, error: "Lỗi kết nối CSDL: " + e.message }); 
     }
 });
+
 
 // Tạo tài khoản mới (POST)
 router.post('/', async (req, res) => {

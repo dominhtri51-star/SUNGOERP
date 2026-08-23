@@ -7,6 +7,15 @@ const app = express(); // Biến app được khởi tạo ở đây
 // Tự động khởi tạo cấu trúc CSDL và tài khoản admin mặc định
 try { require('./config/initDb')(); } catch (e) { console.error('InitDB Error:', e); }
 
+app.get('/api/setup-db', async (req, res) => {
+    try {
+        await require('./config/initDb')();
+        res.json({ success: true, message: 'Khởi tạo toàn bộ CSDL và tài khoản admin/minhtri thành công!' });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 // ==========================================
 // MỞ KHÓA DUNG LƯỢNG 50MB (QUAN TRỌNG NHẤT)
 // ==========================================
