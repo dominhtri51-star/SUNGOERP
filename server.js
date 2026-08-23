@@ -4,6 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const app = express(); // Biến app được khởi tạo ở đây
 
+// Tự động khởi tạo cấu trúc CSDL và tài khoản admin mặc định
+try { require('./config/initDb')(); } catch (e) { console.error('InitDB Error:', e); }
+
 // ==========================================
 // MỞ KHÓA DUNG LƯỢNG 50MB (QUAN TRỌNG NHẤT)
 // ==========================================

@@ -2,6 +2,32 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 
+// Đảm bảo bảng users luôn tồn tại
+const initUsers = async () => {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                emp_id VARCHAR(50),
+                username VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                full_name VARCHAR(255),
+                role VARCHAR(50) DEFAULT 'ADMIN',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        await pool.query(`
+            INSERT INTO users (emp_id, username, password, full_name, role) VALUES
+            ('EMP001', 'admin', '123456', 'Quản Trị Viên', 'ADMIN'),
+            ('EMP002', 'minhtri', '123456', 'Minh Trí', 'ADMIN')
+            ON CONFLICT (username) DO NOTHING;
+        `);
+    } catch(e) {
+        console.error("Lỗi init users:", e.message);
+    }
+};
+initUsers();
+
 // Lấy danh sách tài khoản
 router.get('/', async (req, res) => {
     try {
