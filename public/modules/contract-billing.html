@@ -1,0 +1,286 @@
+<div class="space-y-6 relative h-full">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="bg-white p-4 rounded-xl border border-l-4 border-l-purple-500 shadow-sm">
+            <p class="text-xs text-slate-400 font-bold uppercase mb-1">Tổng Dòng Tiền Kỳ Vọng</p>
+            <h3 class="text-xl font-black text-slate-800" id="stat-total">0 đ</h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-l-4 border-l-emerald-500 shadow-sm">
+            <p class="text-xs text-slate-400 font-bold uppercase mb-1">Đã Thực Thu</p>
+            <h3 class="text-xl font-black text-emerald-600" id="stat-paid">0 đ</h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-l-4 border-l-red-500 shadow-sm">
+            <p class="text-xs text-slate-400 font-bold uppercase mb-1">Công Nợ Còn Tồn</p>
+            <h3 class="text-xl font-black text-red-500" id="stat-debt">0 đ</h3>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+            <h3 class="font-bold text-slate-900 text-base"><i class="fas fa-file-signature text-purple-600"></i> Quản Lý Hợp Đồng & Thanh Toán</h3>
+            <button onclick="window.modContract.openCreate()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow"><i class="fas fa-magic mr-1"></i> Soạn Hợp Đồng Tự Động</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-100 text-xs uppercase text-slate-600">
+                    <tr><th class="p-3">Mã HĐ</th><th class="p-3">Khách Hàng / Đối Tác</th><th class="p-3 text-right">Tổng Tiền (VNĐ)</th><th class="p-3 text-center w-1/4">Tiến Độ Giải Ngân</th><th class="p-3 text-center">Trạng Thái</th><th class="p-3 text-center">Hành Động</th></tr>
+                </thead>
+                <tbody id="tbl-contracts" class="divide-y text-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="contract-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl w-full max-w-5xl p-6 h-[90vh] flex flex-col shadow-2xl">
+        <div class="flex justify-between items-center border-b-2 border-purple-500 pb-2 mb-4">
+            <h3 class="font-black text-xl text-slate-800"><i class="fas fa-robot text-purple-500"></i> Smart Contract Builder</h3>
+            <button onclick="window.modContract.closeCreate()" class="text-slate-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        
+        <div class="grid grid-cols-4 gap-4 mb-4 shrink-0 bg-slate-50 p-4 rounded-lg border">
+            <input type="text" id="c-code" placeholder="Mã Hợp Đồng" class="border p-2 rounded w-full font-mono font-bold text-purple-700 uppercase">
+            <input type="text" id="c-cust" placeholder="Tên Khách Hàng / Công ty" class="col-span-2 border p-2 rounded w-full">
+            <input type="number" id="c-val" placeholder="Tổng Giá Trị (VNĐ)" class="border p-2 rounded w-full font-bold text-slate-700" oninput="window.modContract.genPreview()">
+        </div>
+
+        <div class="flex-1 bg-white border-2 border-slate-200 rounded-lg p-10 overflow-y-auto font-serif text-[15px] leading-relaxed shadow-inner" id="contract-preview">
+            <div class="text-center mb-8">
+                <h2 class="font-bold text-lg">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h2>
+                <h3 class="font-bold underline">Độc lập - Tự do - Hạnh phúc</h3>
+                <h2 class="font-bold text-2xl mt-8 mb-2 text-slate-800">HỢP ĐỒNG KINH TẾ</h2>
+                <p class="italic text-slate-600">Số: <span id="prev-code" class="font-bold text-slate-800">[Mã HĐ]</span>/HĐKT-SUNGO</p>
+                <p class="italic text-slate-600 mb-6">V/v: Cung cấp và thi công lắp đặt Hệ thống Điện Năng Lượng Mặt Trời</p>
+            </div>
+            
+            <p class="mb-2">Hôm nay, ngày ... tháng ... năm 2026, tại TP. Hồ Chí Minh, chúng tôi gồm:</p>
+            <p><strong>BÊN A (Chủ đầu tư):</strong> <span id="prev-cust" class="text-red-600 font-bold bg-red-50 px-2 rounded">[Nhập tên khách hàng]</span></p>
+            <p><strong>BÊN B (Đơn vị thi công):</strong> CÔNG TY CỔ PHẦN NĂNG LƯỢNG SUNGO</p>
+            
+            <h4 class="font-bold mt-6 mb-2 uppercase text-slate-800">Điều 1: Nội dung hợp đồng</h4>
+            <p class="text-justify mb-2">Bên B nhận cung cấp vật tư và thi công lắp đặt trọn gói hệ thống điện mặt trời cho Bên A theo đúng thiết kế và kỹ thuật. Hệ thống sử dụng các thiết bị cốt lõi thuộc hệ sinh thái SUNGO bao gồm:</p>
+            <ul class="list-disc ml-8 mb-4">
+                <li><strong>Hệ thống Biến tần ZEN:</strong> Ứng dụng công nghệ Đức, đảm bảo hiệu suất chuyển đổi cao.</li>
+                <li><strong>Pin lưu trữ E.BOX 16kWh:</strong> Công nghệ lõi Đức, cho phép xả sâu và chu kỳ sống lên đến 6000 lần.</li>
+            </ul>
+            
+            <h4 class="font-bold mt-6 mb-2 uppercase text-slate-800">Điều 2: Giá trị và Tiến độ thanh toán</h4>
+            <p>Tổng giá trị hợp đồng trọn gói (Đã bao gồm VAT và chi phí thi công): <strong id="prev-val" class="text-red-600 bg-red-50 px-2 rounded font-black text-lg">0 VNĐ</strong></p>
+            <p class="italic mb-2">(Bằng chữ: .....................................................................)</p>
+            <p class="font-semibold mb-1">Phương thức thanh toán chia làm 03 đợt:</p>
+            <ul class="list-disc ml-8 mb-4 space-y-1">
+                <li><strong>Đợt 1 (30%):</strong> Thanh toán tạm ứng ngay sau khi hai bên ký kết hợp đồng.</li>
+                <li><strong>Đợt 2 (50%):</strong> Thanh toán khi Bên B tập kết đầy đủ vật tư (Tấm pin, Inverter ZEN, Pin E.BOX, Khung bệ) tại chân công trình.</li>
+                <li><strong>Đợt 3 (20%):</strong> Thanh toán phần còn lại sau khi hệ thống hoàn thiện, đóng điện, nghiệm thu bàn giao và kích hoạt Mã Serial bảo hành điện tử.</li>
+            </ul>
+            
+            <div class="grid grid-cols-2 text-center mt-12 mb-10">
+                <div><h4 class="font-bold">ĐẠI DIỆN BÊN A</h4><p class="italic text-sm text-slate-500">(Ký, ghi rõ họ tên)</p></div>
+                <div><h4 class="font-bold">ĐẠI DIỆN BÊN B</h4><p class="italic text-sm text-slate-500">(Ký, đóng dấu)</p></div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-4 pt-4 border-t shrink-0">
+            <button onclick="window.modContract.print()" class="px-5 py-2.5 bg-slate-800 text-white rounded-lg font-bold hover:bg-slate-700 transition shadow"><i class="fas fa-print"></i> In Bản PDF</button>
+            <button onclick="window.modContract.save()" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition shadow"><i class="fas fa-save"></i> Ký & Lưu Lên Hệ Thống</button>
+        </div>
+    </div>
+</div>
+
+<div id="payment-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden items-end md:items-center justify-end md:justify-center z-50">
+    <div class="bg-white h-full md:h-[90vh] w-full md:w-[600px] md:rounded-xl shadow-2xl p-6 flex flex-col transform transition-transform animate-slide-in-right">
+        <div class="flex justify-between items-center border-b pb-3 mb-4 shrink-0">
+            <div>
+                <h3 class="font-black text-xl text-slate-800" id="pay-title">Chi Tiết Hợp Đồng</h3>
+                <p class="text-xs text-slate-500 font-bold" id="pay-sub">Đang tải...</p>
+            </div>
+            <button onclick="window.modContract.closePaymentDrawer()" class="text-slate-400 hover:text-red-500 bg-slate-100 p-2 rounded-full"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto mb-4 bg-slate-50 rounded-lg p-4 border" id="pay-history">
+        </div>
+
+        <div class="shrink-0 border-t pt-4 bg-white">
+            <h4 class="font-bold text-sm text-emerald-600 mb-3"><i class="fas fa-hand-holding-usd"></i> Cập Nhật Giao Dịch Mới (Thu Tiền)</h4>
+            <input type="hidden" id="pay-id">
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Số Tiền Khách CK (VNĐ)</label>
+                    <input type="number" id="pay-amt" placeholder="VD: 50000000" class="border-2 border-slate-200 p-2 rounded-lg w-full text-lg font-bold text-slate-800 outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Upload Hình Ảnh (UNC)</label>
+                    <input type="file" id="pay-file" accept="image/*,.pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border-2 border-dashed border-slate-300 p-1 rounded-lg">
+                </div>
+            </div>
+            <input type="text" id="pay-note" placeholder="Nội dung/Ghi chú giao dịch (VD: Thanh toán Đợt 1)" class="border-2 border-slate-200 p-2 rounded-lg w-full text-sm outline-none focus:border-emerald-500 mb-3">
+            <button onclick="window.modContract.submitPayment()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 uppercase tracking-wider">
+                Xác Nhận Đã Nhận Tiền
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .animate-slide-in-right { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+</style>
+
+<script>
+    window.modContract = {
+        list: [],
+        load: async () => {
+            const res = await fetch('/api/contracts'); const data = await res.json();
+            if(data.success) {
+                window.modContract.list = data.data;
+                const tbody = document.getElementById('tbl-contracts');
+                let t_total = 0, t_paid = 0;
+
+                if(data.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium">Chưa có hợp đồng nào được ký kết.</td></tr>`;
+                } else {
+                    tbody.innerHTML = data.data.map(c => {
+                        t_total += parseFloat(c.total_value);
+                        t_paid += parseFloat(c.paid_amount);
+
+                        const pct = c.total_value > 0 ? Math.min(100, Math.round((c.paid_amount / c.total_value) * 100)) : 0;
+                        let color = 'bg-red-500'; if(pct > 30) color = 'bg-amber-500'; if(pct >= 100) color = 'bg-emerald-500';
+                        
+                        let statusColor = 'text-slate-600 bg-slate-100'; 
+                        if (c.payment_status === 'Chờ Đặt Cọc') statusColor = 'text-red-600 bg-red-100 border border-red-200';
+                        else if (c.payment_status === 'Đang Thanh Toán') statusColor = 'text-amber-600 bg-amber-100 border border-amber-200';
+                        else if (c.payment_status === 'Đã Hoàn Tất') statusColor = 'text-emerald-700 bg-emerald-100 border border-emerald-200';
+                        
+                        return `
+                            <tr class="hover:bg-purple-50/50 transition">
+                                <td class="p-3 font-mono font-bold text-purple-700 underline cursor-pointer" onclick="window.modContract.openPaymentDrawer(${c.id})">${c.contract_code}</td>
+                                <td class="p-3 font-bold text-slate-800">${c.customer_name}</td>
+                                <td class="p-3 text-right font-black text-slate-800">${new Intl.NumberFormat('vi-VN').format(c.total_value)}</td>
+                                <td class="p-3 px-6">
+                                    <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+                                        <span>Thu: ${new Intl.NumberFormat('vi-VN').format(c.paid_amount)}</span>
+                                        <span class="${color.replace('bg-', 'text-')}">${pct}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 rounded-full h-2.5 shadow-inner overflow-hidden">
+                                        <div class="${color} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                                    </div>
+                                </td>
+                                <td class="p-3 text-center"><span class="${statusColor} px-2 py-1 rounded-md text-[10px] font-black uppercase shadow-sm">${c.payment_status}</span></td>
+                                <td class="p-3 text-center">
+                                    <button onclick="window.modContract.openPaymentDrawer(${c.id})" class="text-slate-500 hover:text-purple-600 bg-slate-100 hover:bg-purple-100 p-2 rounded transition" title="Mở Hồ Sơ Thanh Toán">
+                                        <i class="fas fa-folder-open"></i> Hồ Sơ
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                document.getElementById('stat-total').innerText = new Intl.NumberFormat('vi-VN').format(t_total) + ' đ';
+                document.getElementById('stat-paid').innerText = new Intl.NumberFormat('vi-VN').format(t_paid) + ' đ';
+                document.getElementById('stat-debt').innerText = new Intl.NumberFormat('vi-VN').format(t_total - t_paid) + ' đ';
+            }
+        },
+
+        genPreview: () => {
+            const code = document.getElementById('c-code').value || '[Mã HĐ]';
+            const cust = document.getElementById('c-cust').value || '[Nhập tên khách hàng]';
+            const val = document.getElementById('c-val').value || 0;
+            document.getElementById('prev-code').innerText = code;
+            document.getElementById('prev-cust').innerText = cust;
+            document.getElementById('prev-val').innerText = new Intl.NumberFormat('vi-VN').format(val) + ' VNĐ';
+        },
+        openCreate: () => {
+            const today = new Date();
+            const yymm = String(today.getFullYear()).slice(-2) + String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('c-code').value = 'HD-' + yymm + '-' + Math.floor(Math.random() * 1000);
+            document.getElementById('c-cust').value = ''; document.getElementById('c-val').value = '';
+            window.modContract.genPreview();
+            document.getElementById('contract-modal').classList.replace('hidden', 'flex');
+        },
+        closeCreate: () => document.getElementById('contract-modal').classList.replace('flex', 'hidden'),
+        save: async () => {
+            const payload = { contract_code: document.getElementById('c-code').value.toUpperCase(), customer_name: document.getElementById('c-cust').value, total_value: document.getElementById('c-val').value };
+            if(!payload.customer_name || !payload.total_value) return alert('Nhập đủ Tên khách và Giá trị!');
+            const res = await fetch('/api/contracts', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            const data = await res.json();
+            if(data.success) { window.modContract.closeCreate(); window.modContract.load(); }
+            else { alert("Lỗi: " + data.error); }
+        },
+        print: () => {
+            const content = document.getElementById('contract-preview').innerHTML;
+            const win = window.open('', '', 'height=800,width=800');
+            win.document.write('<html><head><title>In Hợp Đồng</title><script src="https://cdn.tailwindcss.com"><\/script></head><body class="p-8 font-serif">');
+            win.document.write(content); win.document.write('</body></html>');
+            win.document.close(); setTimeout(() => { win.print(); }, 1000);
+        },
+
+        openPaymentDrawer: (id) => {
+            const c = window.modContract.list.find(x => x.id === id);
+            if(!c) return;
+            
+            document.getElementById('pay-id').value = id;
+            document.getElementById('pay-title').innerText = c.contract_code;
+            document.getElementById('pay-sub').innerText = c.customer_name + ` - Cần Thu: ${new Intl.NumberFormat('vi-VN').format(c.total_value - c.paid_amount)} đ`;
+            
+            document.getElementById('pay-amt').value = '';
+            document.getElementById('pay-file').value = '';
+            document.getElementById('pay-note').value = '';
+
+            const historyDiv = document.getElementById('pay-history');
+            if(!c.history || c.history.length === 0) {
+                historyDiv.innerHTML = `<div class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-3xl mb-2"></i><br>Hồ sơ trống. Chưa có dòng tiền nào được ghi nhận.</div>`;
+            } else {
+                historyDiv.innerHTML = c.history.map((h, index) => `
+                    <div class="bg-white p-4 rounded-lg shadow-sm border mb-3 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold mb-1"><i class="far fa-clock"></i> ${new Date(h.payment_date).toLocaleString('vi-VN')}</p>
+                                <p class="text-lg font-black text-emerald-600">+ ${new Intl.NumberFormat('vi-VN').format(h.amount)} đ</p>
+                                <p class="text-sm text-slate-600 mt-1">${h.note || 'Không có ghi chú'}</p>
+                            </div>
+                            ${h.proof_url ? `<a href="${h.proof_url}" target="_blank" class="text-blue-500 bg-blue-50 hover:bg-blue-100 text-xs px-2 py-1 rounded font-bold border border-blue-200 transition"><i class="fas fa-paperclip"></i> Xem File/Ảnh</a>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('payment-modal').classList.replace('hidden', 'flex');
+        },
+        closePaymentDrawer: () => document.getElementById('payment-modal').classList.replace('flex', 'hidden'),
+        
+        submitPayment: async () => {
+            const id = document.getElementById('pay-id').value;
+            const amt = document.getElementById('pay-amt').value;
+            const note = document.getElementById('pay-note').value;
+            const fileInput = document.getElementById('pay-file');
+            
+            if(!amt || isNaN(amt) || amt <= 0) return alert('Vui lòng nhập số tiền hợp lệ!');
+
+            const formData = new FormData();
+            formData.append('amount', amt);
+            formData.append('note', note);
+            if (fileInput.files[0]) formData.append('proof_file', fileInput.files[0]);
+
+            document.getElementById('pay-history').innerHTML = `<div class="text-center text-amber-500 py-10"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>Đang tải bằng chứng lên máy chủ...</div>`;
+
+            try {
+                const res = await fetch(`/api/contracts/${id}/pay`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if(data.success) {
+                    alert('✅ ' + data.message);
+                    window.modContract.closePaymentDrawer();
+                    window.modContract.load();
+                } else {
+                    alert('❌ Lỗi: ' + data.error);
+                }
+            } catch (err) {
+                alert('Lỗi kết nối Server khi tải file!');
+            }
+        }
+    };
+    
+    document.getElementById('c-cust').addEventListener('input', window.modContract.genPreview);
+    document.getElementById('c-code').addEventListener('input', window.modContract.genPreview);
+    
+    window.modContract.load();
+</script>

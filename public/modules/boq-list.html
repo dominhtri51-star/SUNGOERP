@@ -1,0 +1,234 @@
+<style>
+    #boq-list-container { display: flex !important; flex-direction: column !important; height: 100% !important; }
+    #boq-list-container .overflow-x-auto { max-height: calc(100vh - 220px) !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+    #boq-list-container thead th { position: sticky !important; top: 0 !important; z-index: 10 !important; background-color: #f8f9fa !important; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1); }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
+
+<div class="h-full flex flex-col bg-slate-50 relative overflow-hidden text-sm" id="boq-wrapper">
+    
+    <!-- MÀN HÌNH 1: BẢNG DANH SÁCH BOQ -->
+    <div id="boq-list-container" class="flex-1 flex flex-col p-6 w-full h-full overflow-y-auto">
+        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
+            <div class="flex items-center gap-4 shrink-0">
+                <h2 class="text-[22px] font-bold text-slate-800">Danh Sách BOQ Dự Án</h2>
+                <button onclick="loadModule('sale-boq')" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-bold text-[11px] hover:bg-blue-200 transition border border-blue-200 shadow-sm"><i class="fas fa-plus mr-1"></i>Tạo BOQ Mới</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-sm">
+                    <span class="text-slate-500 text-[11px] font-bold uppercase"><i class="fas fa-calendar-alt mr-1"></i>Từ:</span>
+                    <input type="date" id="boq-date-from" onchange="window.modBoq.applyFilters()" class="text-xs font-bold outline-none text-blue-700 bg-transparent cursor-pointer">
+                </div>
+                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-sm">
+                    <span class="text-slate-500 text-[11px] font-bold uppercase"><i class="fas fa-calendar-check mr-1"></i>Đến:</span>
+                    <input type="date" id="boq-date-to" onchange="window.modBoq.applyFilters()" class="text-xs font-bold outline-none text-blue-700 bg-transparent cursor-pointer">
+                </div>
+                <button onclick="window.modBoq.clearFilters()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[11px] font-bold shadow-sm transition uppercase"><i class="fas fa-sync-alt mr-1"></i>Tải Lại</button>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 mb-6" id="boq-filters">
+            <span class="text-slate-400 text-[11px] font-bold uppercase mr-2"><i class="fas fa-filter mr-1"></i>Lọc:</span>
+            <button onclick="window.modBoq.toggleStatus('DRAFT')" id="b-st-DRAFT" class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 shadow-sm">Bản nháp</button>
+            <button onclick="window.modBoq.toggleStatus('QUOTING')" id="b-st-QUOTING" class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 shadow-sm">Đang báo giá</button>
+            <button onclick="window.modBoq.toggleStatus('WON')" id="b-st-WON" class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 shadow-sm">Khách đã chốt</button>
+            <button onclick="window.modBoq.toggleStatus('LOST')" id="b-st-LOST" class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 shadow-sm">Hủy / Thất bại</button>
+        </div>
+        
+        <div class="border border-slate-100 rounded-lg shadow-sm flex flex-col bg-white overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex items-center gap-2">
+                <div class="w-2.5 h-2.5 bg-blue-500 rounded-sm"></div>
+                <h3 class="font-bold text-slate-800 text-[13px]">Lịch Sử Báo Giá BOQ</h3>
+                <div class="ml-auto relative w-72">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search"></i></span>
+                    <input type="text" id="boq-search" placeholder="Tìm Mã BOQ, Tên Dự Án, KH..." oninput="window.modBoq.applyFilters()" class="w-full border border-slate-200 rounded-lg py-1.5 pl-10 pr-4 text-xs font-bold outline-none focus:border-blue-500 bg-slate-50 transition">
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left whitespace-nowrap">
+                    <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold tracking-wider border-b border-slate-100">
+                        <tr>
+                            <th class="p-4 py-3">Mã BOQ / Ngày</th>
+                            <th class="p-4 py-3">Thông Tin Dự Án & Khách Hàng</th>
+                            <th class="p-4 py-3 text-center">Hệ Thống</th>
+                            <th class="p-4 py-3 text-right">Tổng Mức Đầu Tư</th>
+                            <th class="p-4 py-3 text-center">Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boq-tbody" class="divide-y divide-slate-50"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH 2: CHI TIẾT BOQ (SLIDE OUT) -->
+    <div id="boq-detail-container" class="absolute inset-0 bg-slate-50 z-20 flex-col hidden overflow-hidden transition-all duration-300 transform translate-x-full">
+        <div class="bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm shrink-0">
+            <button onclick="window.modBoq.showList()" class="text-slate-500 hover:text-blue-600 font-black text-sm flex items-center gap-2"><i class="fas fa-arrow-left"></i> QUAY LẠI BẢNG</button>
+            <h2 class="font-black text-slate-800 text-lg">CHI TIẾT BOQ: <span id="dt-boq-code" class="text-blue-600">---</span></h2>
+            <div class="flex gap-2">
+                <button onclick="window.modBoq.exportPDF()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 rounded text-[13px] font-black shadow-sm transition"><i class="fas fa-file-pdf mr-1"></i> XUẤT PDF</button>
+                <button onclick="window.modBoq.convertToOrder()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded text-[13px] font-black shadow-sm transition"><i class="fas fa-cart-arrow-down mr-1"></i> TẠO ĐƠN HÀNG</button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 flex items-center justify-center">
+            <div class="text-center text-slate-400">
+                <i class="fas fa-tools text-6xl mb-4 text-slate-300"></i>
+                <p class="font-bold text-lg text-slate-500">Màn hình xem chi tiết BOQ</p>
+                <p class="text-sm mt-2">Dữ liệu chi tiết sẽ được đổ về đây sau khi module tính toán lưu dữ liệu vào Database.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modBoq = {
+    allData: [],
+    activeStatuses: [],
+
+    init: () => {
+        const now = new Date();
+        const past30 = new Date();
+        past30.setDate(now.getDate() - 30); // Lọc BOQ trong 30 ngày
+        const tzOffset = now.getTimezoneOffset() * 60000;
+        document.getElementById('boq-date-from').value = new Date(past30.getTime() - tzOffset).toISOString().split('T')[0];
+        document.getElementById('boq-date-to').value = new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
+        window.modBoq.loadData();
+    },
+
+    loadData: async () => {
+        const tbody = document.getElementById('boq-tbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl"></i></td></tr>';
+        
+        try {
+            // Giả lập gọi API (Sếp sẽ cần tạo bảng 'boqs' trong database sau này)
+            // const res = await fetch('/api/boqs?t=' + Date.now());
+            // const data = await res.json();
+            // window.modBoq.allData = data.success ? data.data : [];
+            
+            // DỮ LIỆU DEMO TẠM THỜI CHO SẾP XEM GIAO DIỆN MƯỢT THẾ NÀO
+            window.modBoq.allData = [
+                { id: 1, boq_code: 'BOQ-26081701', project_name: 'Dự án Điện Mặt Trời Mái Nhà 10kWp', customer_name: 'Anh Nguyễn Văn A', phone: '0901234567', system_type: 'HYBRID', total_value: 125000000, status: 'QUOTING', created_at: new Date().toISOString() },
+                { id: 2, boq_code: 'BOQ-26081502', project_name: 'Hệ Bơm Nước Năng Lượng Tự Động 5HP', customer_name: 'Trang trại Bác Ba', phone: '0988777666', system_type: 'PUMP', total_value: 45000000, status: 'WON', created_at: new Date(Date.now() - 86400000*2).toISOString() },
+                { id: 3, boq_code: 'BOQ-26081003', project_name: 'Hệ Bám Tải Công Nghiệp 50kWp', customer_name: 'Công ty Nhựa ABC', phone: '0283333444', system_type: 'ONGRID', total_value: 650000000, status: 'DRAFT', created_at: new Date(Date.now() - 86400000*7).toISOString() }
+            ];
+            window.modBoq.applyFilters();
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">Lỗi kết nối cơ sở dữ liệu BOQ</td></tr>';
+        }
+    },
+
+    toggleStatus: (st) => {
+        const idx = window.modBoq.activeStatuses.indexOf(st);
+        if (idx > -1) window.modBoq.activeStatuses.splice(idx, 1);
+        else window.modBoq.activeStatuses.push(st);
+        window.modBoq.renderStatusButtons();
+        window.modBoq.applyFilters();
+    },
+
+    renderStatusButtons: () => {
+        const configs = {
+            'DRAFT': 'bg-slate-100 border-slate-400 text-slate-700 shadow-inner',
+            'QUOTING': 'bg-blue-100 border-blue-400 text-blue-700 shadow-inner',
+            'WON': 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner',
+            'LOST': 'bg-red-100 border-red-400 text-red-700 shadow-inner'
+        };
+        Object.keys(configs).forEach(k => {
+            const el = document.getElementById('b-st-' + k);
+            if (!el) return;
+            el.className = 'px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 cursor-pointer shadow-sm';
+            if (window.modBoq.activeStatuses.includes(k)) el.className = 'px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border cursor-pointer ' + configs[k];
+        });
+    },
+
+    applyFilters: () => {
+        const term = document.getElementById('boq-search').value.toLowerCase().trim();
+        let filtered = window.modBoq.allData;
+
+        if (window.modBoq.activeStatuses.length > 0) {
+            filtered = filtered.filter(o => window.modBoq.activeStatuses.includes(o.status));
+        }
+
+        if (term) {
+            filtered = filtered.filter(o => 
+                (o.boq_code || '').toLowerCase().includes(term) || 
+                (o.project_name || '').toLowerCase().includes(term) || 
+                (o.customer_name || '').toLowerCase().includes(term)
+            );
+        }
+        window.modBoq.renderTable(filtered);
+    },
+
+    clearFilters: () => {
+        window.modBoq.init();
+        document.getElementById('boq-search').value = '';
+        window.modBoq.activeStatuses = [];
+        window.modBoq.renderStatusButtons();
+    },
+
+    renderTable: (dataList) => {
+        const tbody = document.getElementById('boq-tbody');
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+        if(dataList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold">Không có BOQ nào phù hợp</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = dataList.map(o => {
+            const d = new Date(o.created_at);
+            const dateStr = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+            
+            let stBadge = '';
+            if (o.status === 'DRAFT') stBadge = '<span class="px-2.5 py-1 rounded bg-slate-100 text-slate-600 text-[9px] font-black uppercase">Nháp</span>';
+            else if (o.status === 'QUOTING') stBadge = '<span class="px-2.5 py-1 rounded bg-blue-100 text-blue-600 text-[9px] font-black uppercase">Đang báo giá</span>';
+            else if (o.status === 'WON') stBadge = '<span class="px-2.5 py-1 rounded bg-emerald-100 text-emerald-600 text-[9px] font-black uppercase">Khách chốt</span>';
+            else if (o.status === 'LOST') stBadge = '<span class="px-2.5 py-1 rounded bg-red-100 text-red-600 text-[9px] font-black uppercase">Hủy/Thất bại</span>';
+
+            let sysBadge = '';
+            if (o.system_type === 'HYBRID') sysBadge = '<span class="px-2.5 py-1 rounded border border-amber-500 text-amber-600 text-[9px] font-black"><i class="fas fa-bolt mr-1"></i>HYBRID</span>';
+            else if (o.system_type === 'PUMP') sysBadge = '<span class="px-2.5 py-1 rounded border border-blue-500 text-blue-600 text-[9px] font-black"><i class="fas fa-water mr-1"></i>BƠM NƯỚC</span>';
+            else if (o.system_type === 'ONGRID') sysBadge = '<span class="px-2.5 py-1 rounded border border-emerald-500 text-emerald-600 text-[9px] font-black"><i class="fas fa-sun mr-1"></i>BÁM TẢI</span>';
+            else sysBadge = '<span class="px-2.5 py-1 rounded border border-purple-500 text-purple-600 text-[9px] font-black"><i class="fas fa-battery-full mr-1"></i>ĐỘC LẬP</span>';
+
+            return `
+            <tr class="hover:bg-blue-50/40 transition border-b border-slate-50 cursor-pointer" onclick="window.modBoq.openDetail('${o.boq_code}')">
+                <td class="p-4 py-3 font-bold text-blue-600 text-[13px]">${o.boq_code}<br><span class="text-[9px] text-slate-400 font-normal">${dateStr}</span></td>
+                <td class="p-4 py-3">
+                    <p class="font-bold text-slate-800 text-[13px]">${o.project_name}</p>
+                    <p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-user text-slate-400 mr-1"></i>${o.customer_name} | <i class="fas fa-phone-alt ml-1 mr-1 text-slate-400"></i>${o.phone}</p>
+                </td>
+                <td class="p-4 py-3 text-center">${sysBadge}</td>
+                <td class="p-4 py-3 pr-4 font-black text-right text-red-500">${fmt(o.total_value)} đ</td>
+                <td class="p-4 py-3 text-center">${stBadge}</td>
+            </tr>`;
+        }).join('');
+    },
+
+    openDetail: (code) => {
+        document.getElementById('dt-boq-code').innerText = code;
+        document.getElementById('boq-list-container').classList.add('hidden');
+        document.getElementById('boq-detail-container').classList.remove('hidden', 'translate-x-full');
+    },
+
+    showList: () => {
+        document.getElementById('boq-detail-container').classList.add('translate-x-full');
+        setTimeout(() => {
+            document.getElementById('boq-detail-container').classList.add('hidden');
+            document.getElementById('boq-list-container').classList.remove('hidden');
+        }, 300);
+    },
+
+    convertToOrder: () => {
+        alert("Tính năng chuyển BOQ thành Đơn Hàng (Sale Order) sẽ được kích hoạt sau khi thiết lập Backend Database.");
+    },
+
+    exportPDF: () => {
+        alert("Tính năng xuất PDF BOQ chi tiết.");
+    }
+};
+
+window.modBoq.init();
+</script>

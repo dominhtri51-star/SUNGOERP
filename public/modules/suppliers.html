@@ -1,0 +1,389 @@
+<div class="h-full flex flex-col relative overflow-hidden text-sm bg-slate-50">
+    
+    <!-- ========================================== -->
+    <!-- MÀN HÌNH 1: DANH SÁCH NHÀ CUNG CẤP         -->
+    <!-- ========================================== -->
+    <div id="sup-main-view" class="flex-1 overflow-y-auto p-6 w-full h-full flex flex-col">
+        <div class="flex justify-between items-center mb-6 shrink-0">
+            <div>
+                <h3 class="font-bold text-slate-900 text-2xl"><i class="fas fa-building text-blue-600 mr-2"></i>Quản Lý Nhà Cung Cấp & Công Nợ</h3>
+                <p class="text-xs text-slate-500 mt-1">Quản lý hồ sơ, thiết lập hạn mức nợ và đối soát thanh toán.</p>
+            </div>
+            <button onclick="window.modSupplier.openForm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition shadow-md"><i class="fas fa-plus mr-1"></i> Thêm Nhà Cung Cấp</button>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+            <div class="overflow-y-auto flex-1">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-[#f8f9fa] text-xs uppercase text-slate-500 sticky top-0 shadow-sm z-10 border-b border-slate-100">
+                        <tr>
+                            <th class="p-4 font-bold">Mã & Đơn Vị</th>
+                            <th class="p-4 font-bold">Liên Hệ</th>
+                            <th class="p-4 font-bold text-right">Hạn Mức Nợ Tối Đa</th>
+                            <th class="p-4 font-bold text-center">Chính Sách</th>
+                            <th class="p-4 font-bold text-center w-32">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-suppliers" class="divide-y divide-slate-50 text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MÀN HÌNH 2: BẢNG ĐIỀU KHIỂN SỔ CÁI CÔNG NỢ -->
+    <!-- ========================================== -->
+    <div id="sup-detail-view" class="absolute inset-0 bg-slate-50 z-20 flex-col hidden overflow-hidden transition-all transform translate-x-full">
+        <div class="bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm shrink-0">
+            <button onclick="window.modSupplier.hideDetail()" class="text-slate-500 hover:text-blue-600 font-black text-sm flex items-center gap-2"><i class="fas fa-arrow-left"></i> TRỞ VỀ DANH SÁCH</button>
+            <h2 class="font-black text-slate-800 text-lg flex items-center">
+                SỔ CÔNG NỢ: <span id="detail-sup-name" class="text-blue-600 ml-2">---</span> 
+                <span id="detail-terms" class="text-xs text-slate-500 font-medium ml-4 pl-4 border-l border-slate-300"></span>
+            </h2>
+            <button onclick="alert('Tính năng lập UNC nằm ở module Sổ Quỹ Kế Toán.')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded text-xs font-black shadow-sm transition"><i class="fas fa-money-check-alt mr-1"></i> LẬP PHIẾU CHI TRẢ TIỀN</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 max-w-6xl mx-auto w-full space-y-6">
+            <!-- Thống kê tổng quan -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-blue-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl"><i class="fas fa-boxes"></i></div>
+                    <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Phát Sinh Nợ (Tiền Hàng)</p><p id="detail-total-payable" class="font-black text-slate-800 text-lg">0 đ</p></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xl"><i class="fas fa-money-check-alt"></i></div>
+                    <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Phát Sinh Có (Đã Trả)</p><p id="detail-total-paid" class="font-black text-emerald-600 text-lg">0 đ</p></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-red-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-xl"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Dư Nợ Hiện Tại (Phải Trả)</p><p id="detail-current-debt" class="font-black text-red-600 text-2xl">0 đ</p></div>
+                </div>
+            </div>
+
+            <!-- Bảng Sổ Chi Tiết Công Nợ (Ledger) -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-800 text-white px-4 py-3 font-bold text-xs uppercase flex justify-between items-center">
+                    <span><i class="fas fa-book mr-2"></i> Sổ Chi Tiết Giao Dịch & Công Nợ</span>
+                </div>
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-bold border-b border-slate-200">
+                        <tr>
+                            <th class="p-3 w-28 text-center">Ngày Ghi Sổ</th>
+                            <th class="p-3 w-40">Mã Chứng Từ</th>
+                            <th class="p-3">Diễn Giải Giao Dịch</th>
+                            <th class="p-3 text-center w-32">Trạng Thái</th>
+                            <th class="p-3 text-right text-slate-700 w-40">Phát Sinh Tăng (+)</th>
+                            <th class="p-3 text-right text-slate-700 w-40">Phát Sinh Giảm (-)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-ledger" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL THÊM/SỬA NHÀ CUNG CẤP                -->
+    <!-- ========================================== -->
+    <div id="supplier-form-modal" class="absolute inset-0 bg-slate-900 bg-opacity-60 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl w-full max-w-4xl p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center border-b-2 border-blue-500 pb-3 mb-4 shrink-0">
+                <h3 id="sup-modal-title" class="font-black text-xl text-slate-800"><i class="fas fa-handshake text-blue-600 mr-2"></i>Thêm Nhà Cung Cấp Mới</h3>
+                <button onclick="document.getElementById('supplier-form-modal').classList.replace('flex', 'hidden')" class="text-slate-400 hover:text-red-500 transition"><i class="fas fa-times text-2xl"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto pr-2 space-y-6">
+                <!-- Khối 1: Thông tin cơ bản -->
+                <div>
+                    <h4 class="text-sm font-bold text-slate-800 mb-3 border-b pb-1"><i class="fas fa-info-circle text-blue-500 mr-1"></i> Thông Tin Cơ Bản</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Tên Đơn Vị / Công Ty <span class="text-red-500">*</span></label>
+                            <input type="text" id="sup-name" class="w-full border-2 p-2.5 rounded outline-none focus:border-blue-500 font-bold text-slate-800">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Mã NCC</label>
+                            <input type="text" id="sup-code" class="w-full border border-slate-300 p-2.5 rounded outline-none focus:border-blue-500 font-mono text-sm bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Mã Số Thuế</label>
+                            <input type="text" id="sup-tax" class="w-full border border-slate-300 p-2.5 rounded outline-none focus:border-blue-500 font-mono text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Số Điện Thoại</label>
+                            <input type="text" id="sup-phone" class="w-full border border-slate-300 p-2.5 rounded outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Email Kế Toán</label>
+                            <input type="email" id="sup-email" class="w-full border border-slate-300 p-2.5 rounded outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Khối 2: Chính sách Công nợ -->
+                <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                    <h4 class="text-sm font-bold text-amber-900 mb-3 border-b border-amber-200 pb-2"><i class="fas fa-file-invoice-dollar text-amber-600 mr-1"></i> Cấu Hình Hạn Mức & Công Nợ</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-amber-800 mb-1">Quy định thanh toán (%)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="sup-advance-pct" value="0" class="w-full border border-amber-300 p-2 rounded outline-none focus:border-amber-600 text-center font-black text-slate-700 shadow-inner">
+                                <span class="font-black text-amber-400">/</span>
+                                <input type="number" id="sup-remain-pct" value="100" class="w-full border border-amber-300 p-2 rounded outline-none focus:border-amber-600 text-center font-black text-slate-700 shadow-inner">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-800 mb-1">Thời hạn được nợ (Ngày)</label>
+                            <div class="relative">
+                                <input type="number" id="sup-debt-days" value="0" class="w-full border border-amber-300 p-2 pr-12 rounded outline-none focus:border-amber-600 text-right font-black text-blue-700 shadow-inner">
+                                <span class="absolute right-3 top-2 text-xs font-bold text-slate-400">Ngày</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-800 mb-1">Hạn mức nợ tối đa (VNĐ)</label>
+                            <div class="relative">
+                                <input type="text" id="sup-credit-limit" value="0" oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, ''))" class="w-full border border-amber-300 p-2 pr-10 rounded outline-none focus:border-amber-600 text-right font-black text-red-600 shadow-inner">
+                                <span class="absolute right-3 top-2 text-xs font-bold text-slate-400">đ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 justify-end mt-6 pt-4 border-t border-slate-200 shrink-0">
+                <button onclick="document.getElementById('supplier-form-modal').classList.replace('flex', 'hidden')" class="px-5 py-2.5 bg-slate-100 text-slate-600 border border-slate-300 rounded-lg font-bold hover:bg-slate-200 transition">Hủy</button>
+                <button onclick="window.modSupplier.saveSupplier()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition shadow-md"><i class="fas fa-save mr-1"></i> Lưu Thiết Lập</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modSupplier = {
+    list: [],
+    editId: null,
+
+    fmtMoney: (num) => new Intl.NumberFormat('vi-VN').format(num || 0),
+
+    load: async () => {
+        try {
+            const res = await fetch('/api/suppliers?t=' + Date.now());
+            const data = await res.json();
+            if(data.success) {
+                window.modSupplier.list = data.data;
+                const tbody = document.getElementById('tbl-suppliers');
+                
+                if(data.data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Chưa có dữ liệu nhà cung cấp.</td></tr>`;
+
+                tbody.innerHTML = data.data.map(i => {
+                    const creditLimitStr = i.credit_limit > 0 ? `<span class="text-red-600 font-black">${window.modSupplier.fmtMoney(i.credit_limit)} đ</span>` : `<span class="text-slate-400 italic font-medium">Không giới hạn</span>`;
+                    const termStr = `Tạm ứng ${i.advance_pct || 0}%<br>Nợ ${i.debt_days || 0} ngày`;
+
+                    return `
+                    <tr class="hover:bg-blue-50/50 transition border-b border-slate-50 cursor-pointer" onclick="window.modSupplier.showDetail(${i.id})">
+                        <td class="p-4">
+                            <p class="font-bold text-blue-700 text-sm hover:underline">${i.name}</p>
+                            <p class="text-[10px] text-slate-400 font-mono mt-0.5">Mã: ${i.supplier_code} | MST: ${i.tax_code || '---'}</p>
+                        </td>
+                        <td class="p-4 text-xs">
+                            <p class="font-medium text-slate-700"><i class="fas fa-phone text-slate-400 w-4"></i> ${i.phone || '---'}</p>
+                            <p class="text-slate-500 mt-1"><i class="fas fa-envelope text-slate-400 w-4"></i> ${i.email || '---'}</p>
+                        </td>
+                        <td class="p-4 text-right">${creditLimitStr}</td>
+                        <td class="p-4 text-center">
+                            <span class="inline-block bg-amber-50 border border-amber-200 text-amber-800 text-[10px] px-2 py-1 rounded font-bold leading-tight">${termStr}</span>
+                        </td>
+                        <td class="p-4 text-center" onclick="event.stopPropagation()">
+                            <button onclick="window.modSupplier.openForm(${i.id})" class="text-slate-400 hover:text-blue-600 p-2 transition"><i class="fas fa-cog"></i></button>
+                            <button onclick="window.modSupplier.deleteSupplier(${i.id})" class="text-slate-400 hover:text-red-500 p-2 transition ml-1"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `}).join('');
+            }
+        } catch(e) {}
+    },
+
+    openForm: (id = null) => {
+        window.modSupplier.editId = id;
+        if (id) {
+            const item = window.modSupplier.list.find(x => x.id === id);
+            document.getElementById('sup-modal-title').innerHTML = `<i class="fas fa-edit text-blue-600 mr-2"></i>Thiết Lập Chính Sách: <span class="text-slate-500 text-base">${item.name}</span>`;
+            document.getElementById('sup-name').value = item.name;
+            document.getElementById('sup-code').value = item.supplier_code;
+            document.getElementById('sup-tax').value = item.tax_code || '';
+            document.getElementById('sup-phone').value = item.phone || '';
+            document.getElementById('sup-email').value = item.email || '';
+            document.getElementById('sup-advance-pct').value = item.advance_pct || 0;
+            document.getElementById('sup-remain-pct').value = item.remain_pct || 100;
+            document.getElementById('sup-debt-days').value = item.debt_days || 0;
+            document.getElementById('sup-credit-limit').value = window.modSupplier.fmtMoney(item.credit_limit || 0);
+        } else {
+            document.getElementById('sup-modal-title').innerHTML = `<i class="fas fa-handshake text-blue-600 mr-2"></i>Thêm Nhà Cung Cấp Mới`;
+            ['sup-name', 'sup-code', 'sup-tax', 'sup-phone', 'sup-email'].forEach(el => document.getElementById(el).value = '');
+            document.getElementById('sup-advance-pct').value = '0';
+            document.getElementById('sup-remain-pct').value = '100';
+            document.getElementById('sup-debt-days').value = '0';
+            document.getElementById('sup-credit-limit').value = '0';
+        }
+        document.getElementById('supplier-form-modal').classList.replace('hidden', 'flex');
+    },
+
+    saveSupplier: async () => {
+        const name = document.getElementById('sup-name').value.trim();
+        if(!name) return alert('Vui lòng nhập tên nhà cung cấp!');
+
+        const payload = {
+            name: name,
+            supplier_code: document.getElementById('sup-code').value.trim(),
+            tax_code: document.getElementById('sup-tax').value.trim(),
+            phone: document.getElementById('sup-phone').value.trim(),
+            email: document.getElementById('sup-email').value.trim(),
+            advance_pct: parseInt(document.getElementById('sup-advance-pct').value) || 0,
+            remain_pct: parseInt(document.getElementById('sup-remain-pct').value) || 100,
+            debt_days: parseInt(document.getElementById('sup-debt-days').value) || 0,
+            credit_limit: parseFloat(document.getElementById('sup-credit-limit').value.replace(/[^0-9]/g, '')) || 0
+        };
+
+        const id = window.modSupplier.editId;
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/suppliers/${id}` : '/api/suppliers';
+
+        try {
+            const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            if ((await res.json()).success) {
+                document.getElementById('supplier-form-modal').classList.replace('flex', 'hidden');
+                window.modSupplier.load();
+            }
+        } catch (e) { alert('Mất kết nối server'); }
+    },
+
+    deleteSupplier: async (id) => {
+        if(!confirm('Xóa đối tác này có thể ảnh hưởng đến lịch sử công nợ. Tiếp tục?')) return;
+        try { await fetch(`/api/suppliers/${id}`, { method: 'DELETE' }); window.modSupplier.load(); } catch (e) {}
+    },
+
+    // --- LOGIC SỔ KẾ TOÁN CÔNG NỢ (LEDGER) ---
+    showDetail: async (id) => {
+        const sup = window.modSupplier.list.find(x => x.id === id);
+        if(!sup) return;
+
+        document.getElementById('detail-sup-name').innerText = sup.name;
+        document.getElementById('detail-terms').innerText = `(Chính sách nợ: ${sup.debt_days || 0} ngày)`;
+        
+        const tbody = document.getElementById('detail-ledger');
+        tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-slate-400 text-2xl"></i></td></tr>';
+        
+        document.getElementById('sup-main-view').classList.add('hidden');
+        document.getElementById('sup-detail-view').classList.remove('hidden', 'translate-x-full');
+
+        try {
+            const [resPur, resPay] = await Promise.all([
+                fetch('/api/purchases?t=' + Date.now()),
+                fetch('/api/payments?t=' + Date.now())
+            ]);
+            
+            const dataPur = await resPur.json();
+            const dataPay = await resPay.json();
+            
+            if(dataPur.success && (dataPay.success || dataPay.data)) {
+                const myPOs = dataPur.data.filter(po => Number(po.supplier_id) === id || (po.supplier_name && po.supplier_name.trim().toLowerCase() === sup.name.trim().toLowerCase()));
+                const myPayments = (dataPay.data || []).filter(pay => Number(pay.supplier_id) === id || (pay.supplier_name && pay.supplier_name.trim().toLowerCase() === sup.name.trim().toLowerCase()));
+
+                let totalPayable = 0;
+                let totalPaid = 0;
+                let ledger = [];
+
+                // Đưa Đơn Mua Hàng vào Sổ
+                myPOs.forEach(po => {
+                    if (po.status === 'Hoàn Tất Nhập Kho') {
+                        totalPayable += (po.total_amount || 0);
+                        ledger.push({
+                            date: new Date(po.receive_date || po.updated_at || po.created_at),
+                            type: 'PO',
+                            code: `<span class="text-blue-600 font-bold"><i class="fas fa-file-import mr-1 text-slate-300"></i> ${po.po_code}</span>`,
+                            desc: po.note || 'Nhập kho thiết bị / vật tư',
+                            increase: po.total_amount || 0,
+                            decrease: 0,
+                            status: '<span class="text-blue-600 font-bold">Đã Nhập Kho</span>'
+                        });
+                    } else {
+                        // Đơn chưa nhập kho, chỉ hiển thị thông tin, không cộng nợ
+                        ledger.push({
+                            date: new Date(po.created_at),
+                            type: 'PO_PENDING',
+                            code: `<span class="text-slate-400 font-bold"><i class="far fa-clock mr-1"></i> ${po.po_code}</span>`,
+                            desc: po.note || 'Đang đặt hàng...',
+                            increase: 0, decrease: 0,
+                            status: `<span class="text-slate-400 font-medium">${po.status}</span>`
+                        });
+                    }
+                });
+
+                // Đưa Phiếu Chi vào Sổ
+                myPayments.forEach(pay => {
+                    if (pay.status === 'Đã Thanh Toán') {
+                        totalPaid += (pay.amount || 0);
+                        ledger.push({
+                            date: new Date(pay.updated_at || pay.created_at),
+                            type: 'PAY',
+                            code: `<span class="text-emerald-600 font-bold"><i class="fas fa-money-check-alt mr-1 text-slate-300"></i> ${pay.payment_code}</span>`,
+                            desc: pay.note || 'Ủy nhiệm chi / Trả tiền hàng',
+                            increase: 0,
+                            decrease: pay.amount || 0,
+                            status: '<span class="text-emerald-600 font-bold">Đã Duyệt Chi</span>'
+                        });
+                    } else if (pay.status === 'Chờ Duyệt') {
+                        ledger.push({
+                            date: new Date(pay.created_at),
+                            type: 'PAY_PENDING',
+                            code: `<span class="text-amber-500 font-bold"><i class="fas fa-hourglass-half mr-1"></i> ${pay.payment_code}</span>`,
+                            desc: pay.note || 'Phiếu chi đang đợi sếp duyệt...',
+                            increase: 0, decrease: 0,
+                            status: '<span class="text-amber-600 font-medium">Chờ Duyệt</span>'
+                        });
+                    }
+                });
+
+                // Sắp xếp theo ngày phát sinh
+                ledger.sort((a, b) => a.date - b.date);
+
+                // Cập nhật giao diện Sổ Cái
+                if (ledger.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center font-bold text-slate-400">Chưa có phát sinh giao dịch nào</td></tr>';
+                } else {
+                    tbody.innerHTML = ledger.map(item => {
+                        const incStr = item.increase > 0 ? `<span class="font-black text-red-500">+ ${window.modSupplier.fmtMoney(item.increase)}</span>` : '---';
+                        const decStr = item.decrease > 0 ? `<span class="font-black text-emerald-600">- ${window.modSupplier.fmtMoney(item.decrease)}</span>` : '---';
+                        const rowClass = (item.type.includes('PENDING')) ? 'bg-slate-50 opacity-60' : 'hover:bg-blue-50/50';
+
+                        return `
+                        <tr class="${rowClass} transition border-b border-slate-50">
+                            <td class="p-3 text-[11px] font-mono text-slate-500 text-center">${item.date.toLocaleDateString('vi-VN')}</td>
+                            <td class="p-3 text-xs">${item.code}</td>
+                            <td class="p-3 text-xs italic text-slate-600">${item.desc}</td>
+                            <td class="p-3 text-center text-[10px]">${item.status}</td>
+                            <td class="p-3 text-right bg-red-50/30">${incStr}</td>
+                            <td class="p-3 text-right bg-emerald-50/30">${decStr}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // Cập nhật thẻ Dashboard
+                let currentDebt = totalPayable - totalPaid;
+                document.getElementById('detail-total-payable').innerText = window.modSupplier.fmtMoney(totalPayable) + ' đ';
+                document.getElementById('detail-total-paid').innerText = window.modSupplier.fmtMoney(totalPaid) + ' đ';
+                document.getElementById('detail-current-debt').innerText = window.modSupplier.fmtMoney(currentDebt > 0 ? currentDebt : 0) + ' đ';
+            }
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Lỗi đồng bộ dữ liệu Sổ Cái</td></tr>';
+        }
+    },
+
+    hideDetail: () => {
+        document.getElementById('sup-detail-view').classList.add('translate-x-full');
+        setTimeout(() => { document.getElementById('sup-main-view').classList.remove('hidden'); }, 300);
+    }
+};
+
+window.modSupplier.load();
+</script>

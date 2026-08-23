@@ -1,0 +1,337 @@
+<div class="h-full flex flex-col space-y-4">
+    
+    <div class="flex flex-col md:flex-row justify-between items-center shrink-0">
+        <div>
+            <h3 class="font-black text-slate-900 text-xl"><i class="fas fa-building text-blue-800"></i> Kế Toán Tổng Hợp & Thuế (Chuẩn TT200)</h3>
+            <p class="text-xs text-slate-500 font-bold mt-1">Hệ thống đồng bộ API Tổng cục Thuế, VNACCS & iHTKK.</p>
+        </div>
+        <div class="flex gap-2">
+            <span class="bg-red-100 border border-red-300 text-red-700 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center shadow-sm animate-pulse">
+                <i class="far fa-clock mr-2"></i> Hạn nộp Tờ khai: 20/08/2026
+            </span>
+            <button class="bg-slate-800 text-white font-bold py-1.5 px-4 rounded-lg text-xs transition shadow flex items-center gap-2">
+                <i class="fas fa-plug"></i> Cổng API: Trực Tuyến
+            </button>
+        </div>
+    </div>
+
+    <!-- HỆ THỐNG MENU 4 PHÂN HỆ -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden mt-2">
+        <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-2 pt-2 gap-1">
+            <button onclick="window.modTax.switchTab('EINV')" id="tab-btn-EINV" class="px-4 py-2 font-bold text-[11px] bg-white border-t-2 border-blue-500 text-blue-700 rounded-t-lg shadow-[0_-2px_4px_rgba(0,0,0,0.05)] transition"><i class="fas fa-file-invoice mr-1"></i> 1. Hóa Đơn TCT & Đầu Vào</button>
+            <button onclick="window.modTax.switchTab('VAT_PIT')" id="tab-btn-VAT_PIT" class="px-4 py-2 font-bold text-[11px] border-t-2 border-transparent text-slate-500 hover:text-slate-700 transition"><i class="fas fa-calendar-check mr-1"></i> 2. Kê Khai Thuế Tháng (GTGT, TNCN)</button>
+            <button onclick="window.modTax.switchTab('IMPORT')" id="tab-btn-IMPORT" class="px-4 py-2 font-bold text-[11px] border-t-2 border-transparent text-slate-500 hover:text-slate-700 transition"><i class="fas fa-ship mr-1"></i> 3. Ngoại Thương & Giá Vốn</button>
+            <button onclick="window.modTax.switchTab('YEAR_END')" id="tab-btn-YEAR_END" class="px-4 py-2 font-bold text-[11px] border-t-2 border-transparent text-slate-500 hover:text-slate-700 transition"><i class="fas fa-file-excel mr-1"></i> 4. Quyết Toán TNDN & BCTC</button>
+        </div>
+
+        <!-- 1. HÓA ĐƠN ĐIỆN TỬ (XML / TCT) -->
+        <div id="tab-EINV" class="flex-1 flex flex-col p-4 bg-white min-h-0">
+            <div class="flex justify-between items-center mb-3">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm"><i class="fas fa-sync-alt"></i> Quản Lý Hóa Đơn Đầu Vào</h4>
+                    <p class="text-[10px] text-slate-500">Tải lên file XML nhận từ nhà cung cấp để hệ thống tự bóc tách dữ liệu.</p>
+                </div>
+                <label id="btn-upload-xml" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-xs shadow cursor-pointer transition flex items-center gap-2">
+                    <i class="fas fa-upload"></i> Tải Lên File XML
+                    <input type="file" accept=".xml" class="hidden" onchange="window.modTax.uploadXML(this)">
+                </label>
+            </div>
+            <div class="overflow-y-auto border rounded-lg flex-1">
+                <table class="w-full text-left text-[11px]">
+                    <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase">
+                        <tr><th class="p-3">Ngày Lập / Số HĐ</th><th class="p-3">Nhà Cung Cấp</th><th class="p-3 text-right">Tổng Tiền (Sau Thuế)</th><th class="p-3 text-center">Xác thực XML</th><th class="p-3 text-center">UNC (>20Tr)</th></tr>
+                    </thead>
+                    <tbody id="tbl-einv-list" class="divide-y text-slate-700 font-medium"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 2. KÊ KHAI THUẾ HÀNG THÁNG (BỔ SUNG HĐ NGOẠI TUYẾN & XUẤT HTKK) -->
+        <div id="tab-VAT_PIT" class="flex-1 flex flex-col p-4 bg-white min-h-0 hidden">
+            
+            <div class="flex justify-between items-center mb-4 shrink-0 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div class="flex items-center gap-3">
+                    <label class="text-xs font-bold text-slate-700">Kỳ Kê Khai:</label>
+                    <input type="month" id="tax-period" class="border border-slate-300 p-1.5 rounded text-xs font-bold outline-none focus:border-blue-500" onchange="window.modTax.loadTaxData()">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="window.modTax.openManualModal()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-1.5 px-3 rounded shadow-sm text-xs"><i class="fas fa-edit mr-1"></i> + HĐ Ngoại Tuyến (Bán lẻ)</button>
+                    <button onclick="window.modTax.exportHTKK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded shadow-sm text-xs"><i class="fas fa-file-excel mr-1"></i> Xuất Bảng Kê HTKK (CSV)</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 h-full min-h-0">
+                <!-- BẢNG KÊ BÁN RA (MẪU 01-1/GTGT) -->
+                <div class="border rounded-lg flex flex-col border-emerald-200">
+                    <div class="bg-emerald-50 p-3 border-b border-emerald-200 flex justify-between items-center">
+                        <h4 class="font-bold text-emerald-800 text-sm">Bảng kê Bán Ra (01-1/GTGT)</h4>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-200 shadow-sm" id="tax-out-total">Tổng Thuế: 0 đ</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto bg-white">
+                        <table class="w-full text-left text-[10px]">
+                            <thead class="bg-slate-50 text-slate-500 sticky top-0 uppercase">
+                                <tr><th class="p-2">Ngày/Số HĐ</th><th class="p-2">Khách Hàng</th><th class="p-2 text-right">Doanh Thu</th><th class="p-2 text-right text-emerald-600">Thuế (8-10%)</th></tr>
+                            </thead>
+                            <tbody id="tbl-tax-out" class="divide-y text-slate-700 font-medium"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- BẢNG KÊ MUA VÀO (MẪU 01-2/GTGT) -->
+                <div class="border rounded-lg flex flex-col border-blue-200">
+                    <div class="bg-blue-50 p-3 border-b border-blue-200 flex justify-between items-center">
+                        <h4 class="font-bold text-blue-800 text-sm">Bảng kê Mua Vào (01-2/GTGT)</h4>
+                        <span class="text-[10px] font-bold text-blue-700 bg-white px-2 py-0.5 rounded border border-blue-200 shadow-sm" id="tax-in-total">Được Khấu Trừ: 0 đ</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto bg-white">
+                        <table class="w-full text-left text-[10px]">
+                            <thead class="bg-slate-50 text-slate-500 sticky top-0 uppercase">
+                                <tr><th class="p-2">Ngày/Số HĐ</th><th class="p-2">Nhà Cung Cấp</th><th class="p-2 text-right">Chi Phí</th><th class="p-2 text-right text-blue-600">Thuế VAT</th></tr>
+                            </thead>
+                            <tbody id="tbl-tax-in" class="divide-y text-slate-700 font-medium"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3 bg-red-50 border border-red-200 p-3 rounded-lg flex justify-between items-center shrink-0">
+                <span class="font-bold text-red-800 text-sm uppercase">TỔNG THUẾ GTGT PHẢI NỘP KỲ NÀY:</span>
+                <span class="font-black text-red-600 text-xl" id="tax-payable">0 VNĐ</span>
+            </div>
+        </div>
+
+        <!-- 3. NGOẠI THƯƠNG -->
+        <div id="tab-IMPORT" class="flex-1 flex flex-col p-4 bg-white min-h-0 hidden">
+            <div class="flex justify-center items-center h-full flex-col text-slate-400">
+                <i class="fas fa-ship text-5xl mb-4 text-blue-100"></i>
+                <p class="font-bold">Module Phân bổ Chi phí L/C, VNACCS đang được nạp...</p>
+            </div>
+        </div>
+
+        <!-- 4. QUYẾT TOÁN TNDN -->
+        <div id="tab-YEAR_END" class="flex-1 flex flex-col p-4 bg-white min-h-0 hidden">
+            <div class="flex justify-center items-center h-full flex-col text-slate-400">
+                <i class="fas fa-file-excel text-5xl mb-4 text-emerald-100"></i>
+                <p class="font-bold">Module Báo cáo Tài chính XML đang được nạp...</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- MODAL THÊM HÓA ĐƠN NGOẠI TUYẾN (DÙNG CHUNG) -->
+<div id="manual-vat-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden items-center justify-center z-[70] p-4">
+    <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
+        <h3 class="font-black text-xl mb-4 border-b-2 border-amber-500 pb-2 text-slate-800"><i class="fas fa-edit text-amber-500"></i> Khai Báo Hóa Đơn Ngoại Tuyến</h3>
+        <p class="text-xs text-slate-500 mb-4">Ghi nhận các hóa đơn xuất trực tiếp trên cổng VinInvoice để đồng bộ Báo cáo Thuế.</p>
+        
+        <div class="space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Số HĐ (VinInvoice) <span class="text-red-500">*</span></label><input type="text" id="vat-mo-inv" class="w-full border-2 p-2 rounded outline-none font-bold text-amber-600"></div>
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Ngày Xuất HĐ <span class="text-red-500">*</span></label><input type="date" id="vat-mo-date" class="w-full border-2 p-2 rounded outline-none"></div>
+            </div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">Khách Hàng (Người mua)</label><input type="text" id="vat-mo-company" placeholder="Tên công ty hoặc Khách lẻ..." class="w-full border-2 p-2 rounded outline-none text-sm"></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">Mã Số Thuế</label><input type="text" id="vat-mo-tax" class="w-full border-2 p-2 rounded outline-none font-mono text-sm"></div>
+            
+            <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-1"><label class="block text-xs font-bold text-slate-600 mb-1">Thuế suất</label>
+                    <select id="vat-mo-rate" class="w-full border-2 p-2 rounded outline-none font-bold" onchange="window.modTax.calcManualVAT()"><option value="8">8%</option><option value="10">10%</option><option value="0">0%</option></select>
+                </div>
+                <div class="col-span-2"><label class="block text-xs font-bold text-slate-600 mb-1">Doanh Thu (Chưa Thuế) <span class="text-red-500">*</span></label>
+                    <input type="number" id="vat-mo-rev" class="w-full border-2 p-2 rounded outline-none font-black text-slate-700" oninput="window.modTax.calcManualVAT()">
+                </div>
+            </div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">Tiền Thuế VAT</label><input type="number" id="vat-mo-vat" class="w-full border-2 p-2 rounded bg-slate-50 font-black text-red-500" readonly></div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+            <button onclick="window.modTax.closeManualModal()" class="px-5 py-2.5 bg-slate-200 text-slate-700 rounded font-bold hover:bg-slate-300">Hủy</button>
+            <button onclick="window.modTax.saveManualVAT()" class="px-5 py-2.5 bg-amber-500 text-white rounded font-bold hover:bg-amber-600"><i class="fas fa-save mr-1"></i> Lưu Hóa Đơn</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.modTax = {
+        outData: [], // Bán ra
+        inData: [],  // Mua vào
+
+        load: async () => {
+            // Set kỳ kê khai mặc định là tháng hiện tại (YYYY-MM)
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('tax-period').value = `${yyyy}-${mm}`;
+            
+            await window.modTax.loadTaxData();
+        },
+
+        loadTaxData: async () => {
+            const period = document.getElementById('tax-period').value; // Format: YYYY-MM
+            if(!period) return;
+
+            const [resOut, resIn] = await Promise.all([ fetch('/api/invoices'), fetch('/api/invoices/expenses') ]);
+            const [outJson, inJson] = await Promise.all([resOut.json(), resIn.json()]);
+            
+            if(outJson.success) {
+                window.modTax.outData = outJson.data.filter(i => {
+                    if(i.status !== 'Đã Phát Hành' || !i.issued_at) return false;
+                    return i.issued_at.startsWith(period);
+                });
+            }
+            if(inJson.success) {
+                window.modTax.inData = inJson.data.filter(i => {
+                    if(!i.has_invoice) return false; // Chỉ lấy chi phí có Hóa đơn đỏ
+                    return i.expense_date.startsWith(period);
+                });
+            }
+
+            window.modTax.renderTaxTables();
+            window.modTax.renderEINV(); // Render lại Tab 1 luôn
+        },
+
+        renderEINV: () => {
+            const tbody = document.getElementById('tbl-einv-list');
+            if(window.modTax.inData.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Chưa có hóa đơn XML nào.</td></tr>`;
+
+            tbody.innerHTML = window.modTax.inData.map(i => {
+                const needUNC = parseFloat(i.total_amount) >= 20000000;
+                let uncHtml = needUNC ? `<span class="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded border border-red-300">Thiếu UNC</span>` : `<span class="bg-slate-100 text-slate-400 px-2 py-0.5 rounded text-[9px]">Dưới 20Tr</span>`;
+                return `
+                    <tr class="hover:bg-blue-50/30">
+                        <td class="p-3"><p class="font-bold text-slate-800">${new Date(i.expense_date).toLocaleDateString('vi-VN')}</p><p class="text-[10px] text-blue-600 font-mono font-bold">#${i.invoice_no}</p></td>
+                        <td class="p-3"><p class="font-bold text-slate-800">${i.vendor_name}</p><p class="text-[9px] font-mono text-slate-500">MST: ${i.vendor_tax_code}</p></td>
+                        <td class="p-3 text-right font-black text-slate-700">${new Intl.NumberFormat('vi-VN').format(i.total_amount)}</td>
+                        <td class="p-3 text-center"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[9px] font-bold">Hợp lệ</span></td>
+                        <td class="p-3 text-center">${uncHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        renderTaxTables: () => {
+            // Render Bán Ra
+            let tVatOut = 0;
+            const tbOut = document.getElementById('tbl-tax-out');
+            if(window.modTax.outData.length === 0) tbOut.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Không có hóa đơn Bán ra.</td></tr>`;
+            else {
+                tbOut.innerHTML = window.modTax.outData.map(i => {
+                    tVatOut += parseFloat(i.vat_amount || 0);
+                    const tag = i.ref_type === 'MANUAL' ? '<span class="text-[8px] bg-amber-100 text-amber-700 px-1 rounded ml-1">Nhập Tay</span>' : '';
+                    return `
+                        <tr>
+                            <td class="p-2"><p>${new Date(i.issued_at).toLocaleDateString('vi-VN')}</p><p class="text-[9px] font-mono font-bold text-blue-600">#${i.invoice_no}${tag}</p></td>
+                            <td class="p-2"><p class="font-bold line-clamp-1">${i.company_name}</p><p class="text-[9px] font-mono">MST: ${i.tax_code}</p></td>
+                            <td class="p-2 text-right font-bold">${new Intl.NumberFormat('vi-VN').format(i.total_amount)}</td>
+                            <td class="p-2 text-right font-bold text-emerald-600">${new Intl.NumberFormat('vi-VN').format(i.vat_amount)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            document.getElementById('tax-out-total').innerText = `Tổng Thuế: ${new Intl.NumberFormat('vi-VN').format(tVatOut)} đ`;
+
+            // Render Mua Vào
+            let tVatIn = 0;
+            const tbIn = document.getElementById('tbl-tax-in');
+            if(window.modTax.inData.length === 0) tbIn.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Không có hóa đơn Mua vào.</td></tr>`;
+            else {
+                tbIn.innerHTML = window.modTax.inData.map(i => {
+                    tVatIn += parseFloat(i.vat_amount || 0);
+                    return `
+                        <tr>
+                            <td class="p-2"><p>${new Date(i.expense_date).toLocaleDateString('vi-VN')}</p><p class="text-[9px] font-mono font-bold text-blue-600">#${i.invoice_no}</p></td>
+                            <td class="p-2"><p class="font-bold line-clamp-1">${i.vendor_name}</p><p class="text-[9px] font-mono">MST: ${i.vendor_tax_code}</p></td>
+                            <td class="p-2 text-right font-bold">${new Intl.NumberFormat('vi-VN').format(i.amount_before_tax)}</td>
+                            <td class="p-2 text-right font-bold text-blue-600">${new Intl.NumberFormat('vi-VN').format(i.vat_amount)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            document.getElementById('tax-in-total').innerText = `Được Khấu Trừ: ${new Intl.NumberFormat('vi-VN').format(tVatIn)} đ`;
+
+            // Tính thuế phải nộp
+            const payable = tVatOut - tVatIn;
+            document.getElementById('tax-payable').innerText = `${new Intl.NumberFormat('vi-VN').format(payable > 0 ? payable : 0)} VNĐ`;
+        },
+
+        // --- HÓA ĐƠN NGOẠI TUYẾN ---
+        openManualModal: () => {
+            document.getElementById('vat-mo-date').valueAsDate = new Date();
+            ['vat-mo-inv', 'vat-mo-company', 'vat-mo-tax', 'vat-mo-rev', 'vat-mo-vat'].forEach(el => document.getElementById(el).value = '');
+            document.getElementById('manual-vat-modal').classList.replace('hidden', 'flex');
+        },
+        closeManualModal: () => document.getElementById('manual-vat-modal').classList.replace('flex', 'hidden'),
+        calcManualVAT: () => {
+            const rev = parseFloat(document.getElementById('vat-mo-rev').value || 0);
+            const rate = parseFloat(document.getElementById('vat-mo-rate').value || 0);
+            document.getElementById('vat-mo-vat').value = Math.round(rev * (rate / 100));
+        },
+        saveManualVAT: async () => {
+            const payload = {
+                invoice_no: document.getElementById('vat-mo-inv').value.trim(),
+                issued_at: document.getElementById('vat-mo-date').value,
+                company_name: document.getElementById('vat-mo-company').value.trim() || 'Khách Lẻ',
+                tax_code: document.getElementById('vat-mo-tax').value.trim(),
+                vat_rate: document.getElementById('vat-mo-rate').value,
+                total_amount: document.getElementById('vat-mo-rev').value,
+                vat_amount: document.getElementById('vat-mo-vat').value
+            };
+            if(!payload.invoice_no || !payload.total_amount) return alert('⚠️ Vui lòng điền đủ Số Hóa Đơn và Doanh Thu!');
+            try {
+                const res = await fetch('/api/invoices/manual', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if(data.success) {
+                    window.modTax.closeManualModal();
+                    window.modTax.loadTaxData(); // Nạp lại dữ liệu Thuế
+                } else alert('Lỗi: ' + data.error);
+            } catch(e) { alert("Lỗi kết nối Server!"); }
+        },
+
+        // --- XUẤT HTKK ---
+        exportHTKK: () => {
+            if(window.modTax.outData.length === 0) return alert('Không có dữ liệu Bán Ra trong kỳ này!');
+            const period = document.getElementById('tax-period').value; // YYYY-MM
+            let csv = "\uFEFFSTT,Mẫu số hóa đơn,Ký hiệu hóa đơn,Số hóa đơn,Ngày tháng năm lập,Tên người mua,Mã số thuế người mua,Mặt hàng,Doanh thu chưa thuế,Thuế suất,Thuế GTGT\n";
+            window.modTax.outData.forEach((i, idx) => {
+                const dateStr = new Date(i.issued_at).toLocaleDateString('vi-VN');
+                const safeName = `"${(i.company_name||'').replace(/"/g, '""')}"`;
+                csv += `${idx+1},1C26T,AA/26E,${i.invoice_no},${dateStr},${safeName},${i.tax_code},"Hàng hóa dịch vụ",${i.total_amount},${i.vat_rate},${i.vat_amount}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Bang_Ke_Ban_Ra_HTKK_${period}.csv`;
+            link.click();
+        },
+
+        uploadXML: async (input) => {
+            const file = input.files[0];
+            if(!file) return;
+            const formData = new FormData(); formData.append('file', file);
+            const label = document.getElementById('btn-upload-xml');
+            const originalHTML = label.innerHTML; label.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang đọc XML...`;
+            try {
+                const res = await fetch('/api/invoices/upload-xml', { method: 'POST', body: formData });
+                const data = await res.json();
+                if(data.success) {
+                    alert(`✅ Đã bóc tách XML Hóa đơn: #${data.data.invoice_no}`);
+                    await window.modTax.loadTaxData();
+                } else alert('Lỗi: ' + data.error);
+            } catch(e) { alert('Lỗi Server!'); }
+            label.innerHTML = originalHTML; input.value = '';
+        },
+
+        switchTab: (tab) => {
+            ['EINV', 'VAT_PIT', 'IMPORT', 'YEAR_END'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).classList.replace('border-t-2', 'border-t-2'); 
+                document.getElementById(`tab-btn-${t}`).classList.remove('bg-white', 'border-blue-500', 'text-blue-700', 'shadow-[0_-2px_4px_rgba(0,0,0,0.05)]');
+                document.getElementById(`tab-btn-${t}`).classList.add('border-transparent', 'text-slate-500');
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tab}`).classList.remove('border-transparent', 'text-slate-500');
+            document.getElementById(`tab-btn-${tab}`).classList.add('bg-white', 'border-blue-500', 'text-blue-700', 'shadow-[0_-2px_4px_rgba(0,0,0,0.05)]');
+        }
+    };
+    
+    window.modTax.load();
+</script>

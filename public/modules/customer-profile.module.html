@@ -1,0 +1,138 @@
+<div class="h-full flex flex-col space-y-6 relative">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col overflow-hidden">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 shrink-0 gap-4">
+            <div>
+                <h3 class="font-bold text-slate-900 text-lg"><i class="fas fa-address-book text-blue-600"></i> Quản Lý Hồ Sơ & Thông Tin VAT</h3>
+                <p class="text-xs text-slate-500 mt-1">Cơ sở dữ liệu gốc của khách hàng. Chỉ dùng để cập nhật thông tin liên hệ và hóa đơn.</p>
+            </div>
+            <div class="flex gap-3">
+                <div class="relative w-full md:w-72">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search"></i></span>
+                    <input type="text" id="prof-search" oninput="window.modProfile.render()" placeholder="Tìm tên, SĐT, Mã số thuế..." class="w-full border-2 border-slate-200 rounded-lg py-2 pl-10 pr-4 outline-none focus:border-blue-500 text-sm">
+                </div>
+                <button onclick="window.modProfile.openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm whitespace-nowrap"><i class="fas fa-plus"></i> Thêm Hồ Sơ</button>
+            </div>
+        </div>
+        
+        <div class="overflow-y-auto flex-1 border rounded-lg">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase text-slate-600 sticky top-0 shadow-sm z-10">
+                    <tr>
+                        <th class="p-4 font-bold border-b w-1/4">Tên & Liên Hệ</th>
+                        <th class="p-4 font-bold border-b w-1/2">Thông Tin Xuất Hóa Đơn (VAT)</th>
+                        <th class="p-4 font-bold border-b text-center w-32">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="tbl-profile" class="divide-y text-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL THÊM/SỬA HỒ SƠ & VAT -->
+<div id="prof-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden items-center justify-center z-[60] p-4 overflow-y-auto">
+    <div class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl flex flex-col relative my-auto">
+        <button onclick="window.modProfile.closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+        <h3 class="font-black text-xl text-slate-800 mb-4 border-b pb-2"><i class="fas fa-user-edit text-blue-500"></i> Hồ Sơ Khách Hàng</h3>
+        
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Tên Khách Hàng / Đại Lý <span class="text-red-500">*</span></label><input type="text" id="pr-name" class="w-full border p-2.5 rounded outline-none font-bold text-slate-800 focus:border-blue-500"></div>
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Số Điện Thoại</label><input type="text" id="pr-phone" class="w-full border p-2.5 rounded outline-none font-bold text-slate-800 focus:border-blue-500"></div>
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded-lg border space-y-3">
+                <h4 class="font-black text-xs text-slate-500 uppercase"><i class="fas fa-file-invoice text-slate-400"></i> Thông Tin Xuất VAT</h4>
+                <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Công Ty (Pháp Nhân)</label><input type="text" id="pr-vat-company" class="w-full border p-2 rounded outline-none font-semibold text-sm focus:border-blue-500"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Mã Số Thuế</label><input type="text" id="pr-vat-tax" class="w-full border p-2 rounded outline-none font-mono font-bold text-sm text-blue-700 focus:border-blue-500"></div>
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Email Nhận Hóa Đơn</label><input type="text" id="pr-vat-email" class="w-full border p-2 rounded outline-none font-semibold text-sm focus:border-blue-500"></div>
+                </div>
+                <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Địa Chỉ Xuất Hóa Đơn</label><input type="text" id="pr-vat-address" class="w-full border p-2 rounded outline-none font-semibold text-sm focus:border-blue-500"></div>
+            </div>
+            <input type="hidden" id="pr-id">
+        </div>
+        
+        <div class="flex justify-between items-center mt-6 pt-4 border-t">
+            <button onclick="window.modProfile.del()" class="text-red-500 hover:bg-red-50 px-4 py-2 rounded font-bold text-sm transition"><i class="fas fa-trash-alt"></i> Xóa Hồ Sơ</button>
+            <div class="flex gap-2">
+                <button onclick="window.modProfile.closeModal()" class="px-5 py-2.5 bg-slate-200 text-slate-700 rounded font-bold">Hủy</button>
+                <button onclick="window.modProfile.save()" class="px-5 py-2.5 bg-blue-600 text-white rounded font-bold hover:bg-blue-700"><i class="fas fa-save"></i> Lưu Dữ Liệu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.modProfile = {
+        list: [],
+        load: async () => {
+            const res = await fetch('/api/customers');
+            const data = await res.json();
+            if(data.success) { window.modProfile.list = data.data; window.modProfile.render(); }
+        },
+        render: () => {
+            const term = document.getElementById('prof-search').value.toLowerCase();
+            const tbody = document.getElementById('tbl-profile');
+            let filtered = window.modProfile.list.filter(c => String(c.name).toLowerCase().includes(term) || String(c.phone||'').includes(term) || String(c.vat_taxcode||'').includes(term));
+            
+            if(filtered.length === 0) return tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-400 font-bold">Chưa có hồ sơ khách hàng.</td></tr>`;
+            
+            tbody.innerHTML = filtered.map(c => `
+                <tr class="hover:bg-blue-50/50">
+                    <td class="p-4 border-b">
+                        <p class="font-black text-slate-800">${c.name}</p>
+                        <p class="text-[11px] font-mono text-slate-500 mt-1"><i class="fas fa-phone-alt mr-1"></i>${c.phone || '---'}</p>
+                    </td>
+                    <td class="p-4 border-b text-xs">
+                        ${c.vat_company ? `
+                            <p class="font-bold text-slate-700">${c.vat_company}</p>
+                            <p class="font-mono font-bold text-blue-600 mt-0.5">MST: ${c.vat_taxcode || '---'}</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1" title="${c.vat_address}">${c.vat_address || '---'}</p>
+                        ` : `<span class="text-slate-300 italic">Chưa có thông tin VAT</span>`}
+                    </td>
+                    <td class="p-4 text-center border-b">
+                        <button onclick="window.modProfile.openModal(${c.id})" class="text-blue-600 bg-white border border-blue-200 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg font-bold shadow-sm transition"><i class="fas fa-edit"></i> Cập Nhật</button>
+                    </td>
+                </tr>
+            `).join('');
+        },
+        openModal: (id=null) => {
+            if(id) {
+                const c = window.modProfile.list.find(x=>x.id==id);
+                document.getElementById('pr-id').value = c.id;
+                document.getElementById('pr-name').value = c.name; document.getElementById('pr-phone').value = c.phone || '';
+                document.getElementById('pr-vat-company').value = c.vat_company || ''; document.getElementById('pr-vat-tax').value = c.vat_taxcode || '';
+                document.getElementById('pr-vat-address').value = c.vat_address || ''; document.getElementById('pr-vat-email').value = c.vat_email || '';
+            } else {
+                ['pr-id', 'pr-name', 'pr-phone', 'pr-vat-company', 'pr-vat-tax', 'pr-vat-address', 'pr-vat-email'].forEach(i => document.getElementById(i).value = '');
+            }
+            document.getElementById('prof-modal').classList.replace('hidden', 'flex');
+        },
+        closeModal: () => document.getElementById('prof-modal').classList.replace('flex', 'hidden'),
+        save: async () => {
+            const id = document.getElementById('pr-id').value;
+            const payload = {
+                name: document.getElementById('pr-name').value.trim(), phone: document.getElementById('pr-phone').value.trim(),
+                vat_company: document.getElementById('pr-vat-company').value.trim(), vat_taxcode: document.getElementById('pr-vat-tax').value.trim(),
+                vat_address: document.getElementById('pr-vat-address').value.trim(), vat_email: document.getElementById('pr-vat-email').value.trim()
+            };
+            if(!payload.name) return alert('Bắt buộc nhập tên!');
+            
+            // Xây API chìm để lưu VAT và Thông tin cơ bản
+            await fetch('/api/customers', { 
+                method: 'POST', headers: {'Content-Type':'application/json'}, 
+                body: JSON.stringify({...payload, action: id ? 'update_profile' : 'create', id: id }) 
+            });
+            window.modProfile.closeModal(); window.modProfile.load();
+        },
+        del: async () => {
+            const id = document.getElementById('pr-id').value;
+            if(!id) return window.modProfile.closeModal();
+            if(!confirm('Xóa hồ sơ này sẽ mất toàn bộ dữ liệu ở cả CRM. Xóa?')) return;
+            await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+            window.modProfile.closeModal(); window.modProfile.load();
+        }
+    };
+    window.modProfile.load();
+</script>

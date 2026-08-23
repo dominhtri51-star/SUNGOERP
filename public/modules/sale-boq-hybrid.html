@@ -1,0 +1,822 @@
+<style>
+    /* FIX TIỆT ĐỂ LỖI PRINT TRANG TRẮNG & HIỂN THỊ CHUẨN VIP */
+    @media print {
+        @page { size: A4 portrait; margin: 4mm; }
+        body * { visibility: hidden !important; }
+        #printable-quotation, #printable-quotation * { visibility: visible !important; }
+        #printable-quotation {
+            position: absolute !important; left: 0 !important; top: 0 !important;
+            width: 100% !important; max-width: 100% !important; margin: 0 !important;
+            padding: 16px !important; border: 2px solid #f59e0b !important;
+            border-radius: 12px !important; box-shadow: none !important;
+            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        }
+        .no-print { display: none !important; }
+        input[type="number"] { display: none !important; }
+        .price-print-only { display: inline-block !important; }
+    }
+</style>
+
+<div class="max-w-6xl mx-auto space-y-6 pb-20">
+    
+    <!-- HEADER MENU CHUYỂN TRANG -->
+    <div class="bg-slate-900 text-white p-5 rounded-xl flex justify-between items-center shadow-md no-print">
+        <div>
+            <h1 class="font-bold text-amber-400 text-xl tracking-wide">SUNGO HYBRID SOLAR RMS</h1>
+            <p class="text-xs text-slate-400">Phân Hệ Báo Giá Hybrid Cao Cấp (Bóc Tách Thi Công In Thẳng PDF)</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="bg-amber-500 text-slate-900 font-bold text-xs px-3 py-2 rounded border border-amber-400 cursor-default">⚡ Hybrid</button>
+            <button onclick="loadModule('sale-boq-pump', 'Báo Giá Bơm Nước')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3 py-2 rounded transition">💧 Bơm Nước</button>
+            <button onclick="loadModule('sale-boq-ongrid', 'Báo Giá Bám Tải')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3 py-2 rounded transition">☀️ Bám Tải</button>
+            <button onclick="loadModule('sale-boq-offgrid', 'Báo Giá Độc Lập')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3 py-2 rounded transition">🔋 Độc Lập</button>
+        </div>
+    </div>
+
+    <!-- TABS CHUYỂN VIEW -->
+    <div class="flex gap-2 border-b border-slate-300 pb-2 no-print">
+        <button id="tab-btn-boq" onclick="window.modSaleHybrid.switchTab('boq')" class="bg-amber-500 text-slate-900 font-bold text-xs px-4 py-2 rounded shadow-sm">
+            📋 Báo Giá Hybrid & Vật Tư
+        </button>
+        <button id="tab-btn-labor" onclick="window.modSaleHybrid.switchTab('labor')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs px-4 py-2 rounded transition">
+            🛠️ Bóc Tách Chi Phí Thi Công Detail (Liên Kết: <span id="tab-labor-total" class="text-amber-400">0 đ</span>)
+        </button>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div id="tab-content-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- PANEL BÊN TRÁI -->
+        <div id="sale-control-panel" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 no-print">
+            <h2 class="font-bold border-b pb-2 text-slate-900 text-sm flex items-center justify-between">
+                <span>⚡ Thiết Lập Báo Giá Hybrid</span>
+                <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-black">HYBRID VIP</span>
+            </h2>
+            
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Dòng Sản Phẩm / Thương Hiệu</label>
+                <select id="brand-select" class="w-full border rounded p-2 text-xs font-bold text-amber-600 outline-none">
+                    <option value="SUNGO ZEN">SUNGO - ZEN German Hybrid Technology</option>
+                    <option value="SUNGO E.BOX">SUNGO - E.BOX German Energy Standard</option>
+                </select>
+            </div>
+
+            <div class="bg-amber-500 p-3 rounded-lg text-slate-900 space-y-1 shadow-sm">
+                <label class="block text-xs font-black uppercase tracking-wider">🏗️ Kết Cấu Mái / Khung Giá</label>
+                <select id="roof-type-select" class="w-full bg-slate-900 text-amber-300 border border-slate-700 rounded p-2 text-xs font-bold outline-none" onchange="window.modSaleHybrid.updateHybridLabor()">
+                    <option value="ROOF_TIN_LOW">1. Áp Mái Tôn Thấp (Mái bằng, chuẩn)</option>
+                    <option value="ROOF_STEEL_LOW">2. Khung Sắt Thấp (Chân nghiêng ≤ 1.5m)</option>
+                    <option value="ROOF_STEEL_HIGH">3. Khung Cao Sân Thượng (> 1.5m)</option>
+                    <option value="ROOF_TILE">4. Mái Ngói / Mái Thái (Móc Inox + Keo)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Khách Hàng / Công Trình</label>
+                <input type="text" id="cust-name" value="Anh Toàn (Tân Phú, TP.HCM)" class="w-full border rounded p-2 text-sm outline-none" oninput="window.modSaleHybrid.calcBOQ()">
+            </div>
+
+            <div class="bg-amber-50/60 p-3 rounded-lg border border-amber-300 space-y-1">
+                <label class="block text-xs font-bold text-amber-900">💵 Tiền Điện Hàng Tháng (VNĐ)</label>
+                <input type="text" id="monthly-bill" value="5.000.000" class="w-full border border-amber-400 rounded p-2 text-base font-extrabold text-amber-700 outline-none" oninput="window.modSaleHybrid.formatAndCalcBill(this)">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Công suất giàn PV (kWp)</label>
+                <input type="number" id="kwp" value="14.8" min="1" step="0.5" class="w-full border rounded p-2 text-sm font-bold text-slate-800 bg-slate-50" oninput="window.modSaleHybrid.calcBOQ()">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Tấm Pin Mặt Trời (PV)</label>
+                <select id="select-panel" class="w-full border rounded p-2 text-xs outline-none" onchange="window.modSaleHybrid.calcBOQ()"></select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Biến Tần Inverter Hybrid</label>
+                <select id="select-inverter" class="w-full border rounded p-2 text-xs font-bold border-amber-400 text-amber-900 outline-none" onchange="window.modSaleHybrid.calcBOQ()"></select>
+            </div>
+
+            <div class="bg-slate-900 p-3 rounded-lg text-white space-y-2 border border-amber-400">
+                <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider">🔋 Pin Lưu Trữ Lithium (Backup)</label>
+                <select id="select-battery" class="w-full bg-slate-800 border border-amber-500 text-amber-300 rounded p-2 text-xs font-bold outline-none" onchange="window.modSaleHybrid.calcBOQ()"></select>
+                <div class="flex justify-between items-center text-[11px] text-slate-300 pt-1">
+                    <span>Số bộ lắp đặt:</span>
+                    <input type="number" id="bat-qty" value="2" min="1" max="10" class="w-16 bg-slate-900 border border-amber-400 text-amber-300 font-bold text-center rounded p-0.5 outline-none" oninput="window.modSaleHybrid.calcBOQ()">
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded border space-y-2 text-xs">
+                <label class="flex items-center gap-2 font-semibold text-slate-800">
+                    <input type="checkbox" id="chk-vat" checked onchange="window.modSaleHybrid.recalculateTotals()"> Đã bao gồm thuế VAT (8%)
+                </label>
+            </div>
+
+            <!-- BÁO CÁO LỢI NHUẬN & HOA HỒNG -->
+            <div class="bg-slate-900 text-white p-3 rounded-lg space-y-1">
+                <div class="flex justify-between text-xs">
+                    <span class="text-slate-400">Tổng Giá Bán:</span>
+                    <strong id="side-total-price" class="text-amber-400 font-bold">0 VNĐ</strong>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-slate-400">Lợi Nhuận Ròng:</span>
+                    <strong id="side-profit" class="text-emerald-400 font-bold">0 VNĐ</strong>
+                </div>
+                <div class="flex justify-between text-xs border-t border-slate-700 pt-1 mt-1">
+                    <span class="text-amber-300 font-bold">🎁 Hoa Hồng Sale (10% Lời):</span>
+                    <strong id="side-commission" class="text-amber-400 font-extrabold">0 VNĐ</strong>
+                </div>
+            </div>
+
+            <div id="price-floor-warning" class="hidden bg-red-50 border-l-4 border-red-500 p-3 text-red-700 text-xs rounded font-medium space-y-1">
+                <p class="font-bold flex items-center gap-1">⛔ Giá Bán Dưới Sàn 5%!</p>
+                <p id="warning-text-detail"></p>
+            </div>
+
+            <div id="save-action-area">
+                <button id="btn-save-quotation" onclick="window.modSaleHybrid.saveQuotation('DRAFT')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2.5 rounded-lg transition shadow-sm">
+                    💾 Lưu & Xuất Báo Giá Hybrid
+                </button>
+            </div>
+        </div>
+
+        <!-- NỘI DUNG CHÍNH -->
+        <div class="md:col-span-2 space-y-4">
+            
+            <div id="view-boq" class="space-y-4">
+                <div id="history-list" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 no-print">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h2 class="font-bold text-slate-900">Danh Sách Báo Giá Hybrid Đã Tạo</h2>
+                        <button onclick="window.modSaleHybrid.loadHistory()" class="text-xs text-amber-600 font-semibold hover:underline">🔄 Tải lại</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 text-xs uppercase text-slate-500">
+                                    <th class="p-2">Thương Hiệu</th>
+                                    <th class="p-2">Mã Đơn</th>
+                                    <th class="p-2">Khách Hàng</th>
+                                    <th class="p-2 text-right">Tổng Tiền</th>
+                                    <th class="p-2 text-center">Trạng Thái</th>
+                                    <th class="p-2 text-center">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body" class="divide-y text-xs"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- KHỐI TỜ BÁO GIÁ DÙNG ĐỂ IN PDF -->
+                <div id="printable-quotation" class="bg-white p-6 rounded-2xl border-2 border-amber-400 shadow-xl space-y-4">
+                    <!-- HEADER LOGO -->
+                    <div class="flex justify-between items-start border-b-2 border-amber-500 pb-2">
+                        <div>
+                            <h2 id="pdf-brand-logo" class="font-black text-2xl text-amber-600 tracking-wider uppercase">SUNGO HYBRID SOLAR</h2>
+                            <p class="text-xs text-slate-600 font-bold">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Trụ sở: 419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
+                            <p class="text-[11px] text-slate-500">Hotline: 0937.039.889 | Email: contact@sungo.vn | Website: www.sungo.vn</p>
+                        </div>
+                        <div class="text-right space-y-1">
+                            <span id="detail-status-badge" class="text-xs px-3 py-1 rounded-full font-black uppercase bg-amber-500 text-slate-900 inline-block shadow-sm">DRAFT</span>
+                            <p id="pdf-q-code" class="text-sm font-mono font-black text-slate-800">HYB-000000</p>
+                            <p class="text-[10px] text-slate-400 font-medium">Ngày lập: <span id="pdf-date-now">--/--/----</span></p>
+                        </div>
+                    </div>
+
+                    <!-- THÔNG TIN HỆ THỐNG CỦA KHÁCH -->
+                    <div class="bg-gradient-to-r from-amber-50 via-slate-50 to-amber-50 p-3 rounded-xl border border-amber-200 text-xs grid grid-cols-2 md:grid-cols-4 gap-2 shadow-sm">
+                        <div>
+                            <span class="text-slate-400 font-semibold block">Khách hàng:</span>
+                            <strong id="pdf-cust-name" class="text-slate-900 text-xs font-bold block">Anh Toàn</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 font-semibold block">Loại Hệ Thống:</span>
+                            <strong class="text-amber-700 font-black text-xs block">HYBRID LƯU TRỮ ATS</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 font-semibold block">Công suất PV:</span>
+                            <strong id="pdf-kwp" class="text-slate-900 text-xs font-bold block">14.8 kWp</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 font-semibold block">Dung lượng Lithium:</span>
+                            <strong id="pdf-bat-capacity" class="text-emerald-700 text-xs font-black block">28.60 kWh (Lithium)</strong>
+                        </div>
+                    </div>
+
+                    <!-- BẢNG 1: DANH SÁCH THIẾT BỊ VÀ VẬT TƯ CHÍNH -->
+                    <div class="space-y-1">
+                        <h3 class="text-xs font-black text-slate-900 uppercase flex items-center gap-1">
+                            📦 I. DANH SÁCH THIẾT BỊ VẬT TƯ
+                        </h3>
+                        <div class="overflow-x-auto rounded-lg border border-slate-200">
+                            <table id="boq-items-table" class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="bg-slate-900 text-amber-400 uppercase font-black tracking-wider border-b border-amber-400">
+                                        <th class="p-2 text-center w-8">STT</th>
+                                        <th class="p-2">MÃ SKU</th>
+                                        <th class="p-2">TÊN THIẾT BỊ / VẬT TƯ</th>
+                                        <th class="p-2 text-center">ĐVT</th>
+                                        <th class="p-2 text-center">SL</th>
+                                        <th class="p-2 text-right">ĐƠN GIÁ (VNĐ)</th>
+                                        <th class="p-2 text-right">THÀNH TIỀN (VNĐ)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-items-body" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- BẢNG 2: BÓC TÁCH THI CÔNG CHI TIẾT -->
+                    <div class="space-y-1 pt-1">
+                        <h3 class="text-xs font-black text-amber-800 uppercase flex items-center gap-1">
+                            🛠️ II. BÓC TÁCH CHI PHÍ THI CÔNG LẮP ĐẶT CHI TIẾT
+                        </h3>
+                        <div class="overflow-x-auto rounded-lg border border-amber-300">
+                            <table class="w-full text-left text-[11px]">
+                                <thead>
+                                    <tr class="bg-amber-500 text-slate-900 uppercase font-black tracking-wider border-b border-amber-600">
+                                        <th class="p-1.5 text-center w-8">STT</th>
+                                        <th class="p-1.5">HẠNG MỤC THI CÔNG</th>
+                                        <th class="p-1.5 text-center">ĐVT</th>
+                                        <th class="p-1.5 text-center">KHỐI LƯỢNG</th>
+                                        <th class="p-1.5 text-right">ĐƠN GIÁ (VNĐ)</th>
+                                        <th class="p-1.5 text-right">THÀNH TIỀN (VNĐ)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pdf-labor-body" class="divide-y divide-amber-200 bg-amber-50/20"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI TỔNG THÀNH TIỀN NỀN ĐEN -->
+                    <div class="flex justify-between items-center py-3 px-5 bg-slate-900 text-white rounded-xl shadow-md border border-amber-400">
+                        <div class="space-y-0.5">
+                            <p id="pdf-vat-text" class="text-xs text-amber-300 font-bold">* Báo giá đã bao gồm VAT (8%). Có hiệu lực trong 10 ngày.</p>
+                            <p class="text-[10px] text-slate-400">* Bao gồm trọn gói vật tư, nhân công lắp đặt & tủ chuyển mạch ATS Backup.</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-amber-400 uppercase tracking-widest font-black block">TỔNG VỐN ĐẦU TƯ HYBRID:</span>
+                            <p id="pdf-total-amount" class="text-2xl font-black text-amber-400">0 VNĐ</p>
+                        </div>
+                    </div>
+
+                    <!-- BẢNG SO SÁNH TIỀN THỰC TẾ 20 NĂM -->
+                    <div class="bg-slate-50 p-3 rounded-xl border border-amber-300 space-y-2 shadow-sm">
+                        <div class="flex justify-between items-center border-b border-slate-300 pb-1">
+                            <h3 class="font-black text-slate-900 text-xs uppercase tracking-wide flex items-center gap-1">
+                                💰 SO SÁNH TỔNG LỢI NHUẬN THU VỀ SAU 20 NĂM
+                            </h3>
+                            <span class="text-[9px] bg-amber-500 text-slate-900 font-black px-2.5 py-0.5 rounded-full uppercase">HIỆU QUẢ THỰC TẾ</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200 text-center space-y-0.5 shadow-sm">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase block">🏦 GỬI TIẾT KIỆM NGÂN HÀNG (7.0%/NĂM)</span>
+                                <p id="calc-bank-20y" class="text-base font-black text-slate-700">0 VNĐ</p>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-slate-900 p-2.5 rounded-xl text-center space-y-0.5 shadow-md">
+                                <span class="text-[10px] font-black uppercase text-slate-900 block">☀️ ĐẦU TƯ ĐIỆN MẶT TRỜI SUNGO</span>
+                                <p id="calc-solar-20y" class="text-lg font-black text-slate-900">0 VNĐ</p>
+                                <p id="calc-diff-note" class="text-[9px] font-extrabold text-slate-900 bg-white/60 py-0.5 px-3 rounded-full inline-block shadow-sm">
+                                    👉 Lời hơn gửi ngân hàng: +0 VNĐ
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="pt-1 border-t border-slate-200 flex justify-between items-center text-[10px] text-slate-500">
+                            <span>Thời gian hoàn vốn: <strong id="calc-payback" class="text-slate-800 font-bold">3.5 năm</strong></span>
+                            <span>Tỷ suất dòng tiền (ROE): <strong id="calc-roe" class="text-slate-800 font-bold">28.5%/năm</strong></span>
+                            <span>NPV (Chiết khấu 10%): <strong id="calc-npv" class="text-slate-800 font-bold">0 VNĐ</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- CHỮ KÝ XÁC NHẬN BÁO GIÁ -->
+                    <div class="grid grid-cols-2 text-center pt-3 text-xs text-slate-700 border-t border-slate-200">
+                        <div>
+                            <p class="font-bold uppercase text-slate-800">ĐẠI DIỆN KHÁCH HÀNG</p>
+                            <p class="text-[10px] text-slate-400 italic mb-8">(Ký & ghi rõ họ tên)</p>
+                            <p id="pdf-sign-cust-name" class="font-bold text-slate-900">Anh Toàn</p>
+                        </div>
+                        <div>
+                            <p class="font-bold uppercase text-amber-700">ĐẠI DIỆN SUNGO SOLAR</p>
+                            <p class="text-[10px] text-slate-400 italic mb-8">(Ký, đóng dấu & ghi rõ họ tên)</p>
+                            <p class="font-bold text-slate-900">Đỗ Minh Trí</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-2 border-t no-print">
+                        <button onclick="window.modSaleHybrid.triggerPrint()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-2.5 rounded-lg text-xs shadow-md">🖨️ In Báo Giá PDF SUNGO</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: BÓC TÁCH THI CÔNG TRÊN APP -->
+            <div id="view-labor" class="hidden space-y-4">
+                <div class="bg-white p-5 rounded-xl border border-amber-300 shadow-md space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base">🛠️ BÓC TÁCH CHI TIẾT CHI PHÍ THI CÔNG HYBRID</h3>
+                            <p class="text-xs text-slate-500">Gồm: Kéo dàn PV + Tủ điện ATS Backup + Đấu Lithium BMS + Cáp tiếp địa Cadivi</p>
+                        </div>
+                        <button onclick="window.modSaleHybrid.switchTab('boq')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs px-3 py-1.5 rounded">
+                            ↩️ Quay Lại Báo Giá
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="bg-slate-900 text-white uppercase">
+                                    <th class="p-2.5">STT</th>
+                                    <th class="p-2.5">Hạng Mục Thi Công Hybrid Specialized</th>
+                                    <th class="p-2.5 text-center">ĐVT</th>
+                                    <th class="p-2.5 text-center">Khối Lượng</th>
+                                    <th class="p-2.5 text-right">Đơn Giá Thi Công (VNĐ)</th>
+                                    <th class="p-2.5 text-right">Thành Tiền (VNĐ)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="labor-items-body" class="divide-y border-b"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-amber-50 p-4 rounded-lg border border-amber-300">
+                        <span class="font-bold text-amber-900 text-sm">TỔNG CHI PHÍ THI CÔNG HYBRID (TỰ ĐỘNG LINK BÁO GIÁ):</span>
+                        <strong id="labor-grand-total" class="text-xl font-black text-amber-600">0 VNĐ</strong>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+window.modSaleHybrid = {
+    dbProducts: [],
+    currentCalculatedItems: [],
+    currentQuotationData: null,
+    laborItems: [],
+    ACCESSORY_WASTAGE_RATE: 1.10,
+    MIN_PROFIT_MARGIN: 1.05,
+
+    init: () => {
+        window.modSaleHybrid.loadProducts();
+        window.modSaleHybrid.loadHistory();
+    },
+
+    triggerPrint: () => {
+        window.modSaleHybrid.switchTab('boq');
+        setTimeout(() => { window.print(); }, 150);
+    },
+
+    parseRawBillValue: () => {
+        const rawVal = document.getElementById('monthly-bill').value.replace(/\./g, '').replace(/,/g, '');
+        return parseFloat(rawVal) || 0;
+    },
+
+    formatAndCalcBill: (inputElem) => {
+        let num = inputElem.value.replace(/\D/g, '');
+        if (num) {
+            inputElem.value = new Intl.NumberFormat('vi-VN').format(parseInt(num, 10));
+        } else {
+            inputElem.value = '0';
+        }
+        window.modSaleHybrid.calcFromBill();
+    },
+
+    formatVND: (amt) => {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amt);
+    },
+
+    switchTab: (tab) => {
+        if (tab === 'labor') {
+            document.getElementById('view-boq').classList.add('hidden');
+            document.getElementById('view-labor').classList.remove('hidden');
+            document.getElementById('tab-btn-labor').className = "bg-amber-500 text-slate-900 font-bold text-xs px-4 py-2 rounded shadow-sm";
+            document.getElementById('tab-btn-boq').className = "bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs px-4 py-2 rounded transition";
+        } else {
+            document.getElementById('view-labor').classList.add('hidden');
+            document.getElementById('view-boq').classList.remove('hidden');
+            document.getElementById('tab-btn-boq').className = "bg-amber-500 text-slate-900 font-bold text-xs px-4 py-2 rounded shadow-sm";
+            document.getElementById('tab-btn-labor').className = "bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs px-4 py-2 rounded transition";
+        }
+    },
+
+    calcFromBill: () => {
+        const bill = window.modSaleHybrid.parseRawBillValue();
+        const kwhMonth = bill / 2750;
+        const kwhDay = kwhMonth / 30;
+        let calculatedKwp = Math.round((kwhDay / 4.1) * 2) / 2;
+        if (calculatedKwp < 3) calculatedKwp = 3;
+
+        document.getElementById('kwp').value = calculatedKwp;
+        window.modSaleHybrid.updateHybridLabor();
+    },
+
+    loadProducts: async () => {
+        try {
+            const res = await fetch('/api/products');
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch(err) {
+                console.error("Lỗi 500 từ Server:", text);
+                alert("❌ Lỗi Backend (500)! Nhấn F12 mở tab Console để xem lỗi gốc từ server.");
+                if(btn) { btn.innerHTML = oldText; btn.classList.remove('opacity-50', 'pointer-events-none'); }
+                return;
+            }
+            if(data.success && data.data.length > 0) {
+                window.modSaleHybrid.dbProducts = data.data;
+                window.modSaleHybrid.renderSelects();
+            }
+        } catch (e) { console.error('Lỗi tải sản phẩm:', e); }
+    },
+
+    renderSelects: () => {
+        const dbP = window.modSaleHybrid.dbProducts;
+        const panels = dbP.filter(p => p.category === 'Pin mặt trời');
+        const inverters = dbP.filter(p => p.category === 'Biến tần' && (p.product_name.toLowerCase().includes('hybrid') || p.product_name.toLowerCase().includes('ip65')));
+        const batteries = dbP.filter(p => p.category === 'Pin lưu trữ');
+
+        const fmt = window.modSaleHybrid.formatVND;
+        document.getElementById('select-panel').innerHTML = panels.map(p => `<option value="${p.sku}">${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
+        document.getElementById('select-inverter').innerHTML = (inverters.length > 0 ? inverters : dbP.filter(p => p.category === 'Biến tần')).map(p => `<option value="${p.sku}">${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
+        document.getElementById('select-battery').innerHTML = batteries.map(p => `<option value="${p.sku}">${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
+
+        window.modSaleHybrid.updateHybridLabor();
+    },
+
+    updateHybridLabor: () => {
+        const roofType = document.getElementById('roof-type-select').value;
+        const kwpTarget = parseFloat(document.getElementById('kwp').value) || 14.8;
+        const totalWp = Math.round(kwpTarget * 1000);
+
+        let baseLaborPrice = 500;
+        let frameCost = 1500000;
+        let frameName = "Gia cố chân U nhôm / Bát Z áp mái tôn tiêu chuẩn";
+        let transportCost = 2000000;
+
+        if (roofType === 'ROOF_STEEL_LOW') {
+            frameCost = 3500000; frameName = "Thi công khung sắt hộp chịu lực (Sắt 30x60/40x80) sơn chống gỉ cao ≤1.5m";
+        } else if (roofType === 'ROOF_STEEL_HIGH') {
+            baseLaborPrice = 650; frameCost = 8500000; frameName = "Hàn giàn kết cấu khung sắt cao chịu lực, cột chống & xà gồ (>1.5m sân thượng)"; transportCost = 3500000;
+        } else if (roofType === 'ROOF_TILE') {
+            baseLaborPrice = 600; frameCost = 4500000; frameName = "Bộ bát móc ngói Inox 304, keo silicone chống rò nước & tháo/móc ngói";
+        }
+
+        window.modSaleHybrid.laborItems = [
+            { id: 'L1', name: 'Nhân công kéo cáp DC, lắp dàn pin PV & treo Inverter Hybrid', unit: 'Wp', qty: totalWp, price: baseLaborPrice, wholesale: baseLaborPrice * 0.7 },
+            { id: 'L2', name: frameName, unit: 'Trọn gói', qty: 1, price: frameCost, wholesale: frameCost * 0.7 },
+            { id: 'L3', name: 'Thi công tủ điện Hybrid ATS chuyển mạch tự động & kéo đường cáp Backup Load', unit: 'Bộ', qty: 1, price: 3500000, wholesale: 2500000 },
+            { id: 'L4', name: 'Đấu nối tủ pin Lithium, đi cáp nguồn dòng lớn & cài đặt giao thức giao tiếp (BMS)', unit: 'Bộ', qty: 1, price: 1500000, wholesale: 1000000 },
+            { id: 'L5', name: 'Thi công tiếp địa chống sét Cadivi & cọc đồng tiếp địa', unit: 'Bộ', qty: 1, price: 1200000, wholesale: 800000 },
+            { id: 'L6', name: 'Chi phí xe cẩu, vận chuyển vật tư & ăn ở công trình', unit: 'Chuyến', qty: 1, price: transportCost, wholesale: transportCost * 0.75 }
+        ];
+        window.modSaleHybrid.calcBOQ();
+    },
+
+    renderLaborTable: () => {
+        let totalLaborRetail = 0;
+        let totalLaborWholesale = 0;
+        const fmt = window.modSaleHybrid.formatVND;
+
+        document.getElementById('labor-items-body').innerHTML = window.modSaleHybrid.laborItems.map((item, idx) => {
+            const itemTotal = item.qty * item.price;
+            totalLaborRetail += itemTotal;
+            totalLaborWholesale += item.qty * item.wholesale;
+
+            return `
+                <tr class="hover:bg-amber-50/50">
+                    <td class="p-2.5 text-center text-slate-400 font-bold">${idx + 1}</td>
+                    <td class="p-2.5 font-semibold text-slate-800">${item.name}</td>
+                    <td class="p-2.5 text-center text-slate-500">${item.unit}</td>
+                    <td class="p-2.5 text-center font-bold text-slate-900">${item.qty.toLocaleString('vi-VN')}</td>
+                    <td class="p-2.5 text-right">
+                        <input type="number" value="${item.price}" class="w-28 text-right border border-amber-300 rounded p-1 text-xs font-bold text-slate-800 outline-none" oninput="window.modSaleHybrid.updateLaborPrice(${idx}, this.value)" />
+                    </td>
+                    <td class="p-2.5 text-right font-black text-amber-700">${fmt(itemTotal)}</td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('pdf-labor-body').innerHTML = window.modSaleHybrid.laborItems.map((item, idx) => `
+            <tr>
+                <td class="p-1.5 text-center text-slate-500 font-bold">${idx + 1}</td>
+                <td class="p-1.5 font-semibold text-slate-800">${item.name}</td>
+                <td class="p-1.5 text-center text-slate-500">${item.unit}</td>
+                <td class="p-1.5 text-center font-bold text-slate-900">${item.qty.toLocaleString('vi-VN')}</td>
+                <td class="p-1.5 text-right font-semibold text-slate-700">${fmt(item.price)}</td>
+                <td class="p-1.5 text-right font-bold text-amber-800">${fmt(item.qty * item.price)}</td>
+            </tr>
+        `).join('');
+
+        document.getElementById('labor-grand-total').innerText = fmt(totalLaborRetail);
+        document.getElementById('tab-labor-total').innerText = fmt(totalLaborRetail);
+
+        return { totalLaborRetail, totalLaborWholesale };
+    },
+
+    updateLaborPrice: (index, val) => {
+        window.modSaleHybrid.laborItems[index].price = parseFloat(val) || 0;
+        window.modSaleHybrid.calcBOQ();
+    },
+
+    computeFinancials: (totalCapex, actualSystemKwp, monthlyBill) => {
+        const bankRate = 0.07;
+        const totalBankInterest20Y = (totalCapex * bankRate) * 20;
+        const bill = monthlyBill || (actualSystemKwp * 4.1 * 30 * 2750);
+        const annualSavingsY1 = Math.min(bill * 12, (actualSystemKwp * 4.1 * 365 * 2750));
+        
+        let totalSolarCash20Y = 0;
+        let currentYrSaving = annualSavingsY1;
+
+        for (let y = 1; y <= 20; y++) {
+            if (y > 1) { currentYrSaving = currentYrSaving * 1.05 * 0.995; }
+            const netCash = currentYrSaving - (totalCapex * 0.01);
+            totalSolarCash20Y += netCash;
+        }
+
+        const paybackYears = (totalCapex / annualSavingsY1).toFixed(1);
+        const roePercent = (((annualSavingsY1 - (totalCapex / 20)) / totalCapex) * 100).toFixed(1);
+
+        let npvSum = -totalCapex;
+        for (let y = 1; y <= 20; y++) {
+            npvSum += (annualSavingsY1 * Math.pow(1.045, y-1)) / Math.pow(1.10, y);
+        }
+
+        return { totalBankInterest20Y, totalSolarCash20Y, paybackYears, roePercent, npvAmount: npvSum };
+    },
+
+    calcBOQ: () => {
+        const dbP = window.modSaleHybrid.dbProducts;
+        const kwpTarget = parseFloat(document.getElementById('kwp').value) || 0;
+        const panelSku = document.getElementById('select-panel').value;
+        const invSku = document.getElementById('select-inverter').value;
+        const batSku = document.getElementById('select-battery').value;
+        const batQty = parseInt(document.getElementById('bat-qty').value) || 1;
+
+        const panel = dbP.find(p => p.sku === panelSku);
+        const inv = dbP.find(p => p.sku === invSku);
+        const bat = dbP.find(p => p.sku === batSku);
+        const rail = dbP.find(p => p.sku === 'ACC-RAIL-20CM');
+        const midClamp = dbP.find(p => p.sku === 'ACC-CLAMP-MID');
+        const endClamp = dbP.find(p => p.sku === 'ACC-CLAMP-END');
+        const dcCable = dbP.find(p => p.sku === 'CBL-DC-04BLK');
+        const mc4 = dbP.find(p => p.sku === 'CON-MC4-30A');
+        const box = dbP.find(p => p.sku === 'BOX-HYB-ATS125');
+
+        if (!panel || !inv) return 0;
+
+        let panelWatt = 620;
+        const matchWatt = panel.product_name.match(/(\d{3})W/);
+        if (matchWatt && matchWatt[1]) panelWatt = parseInt(matchWatt[1]);
+
+        const panelQty = Math.ceil((kwpTarget * 1000) / panelWatt);
+        const rowCount = 2;
+        const endQty = rowCount * 4;
+        const midQty = Math.max(0, panelQty - rowCount) * 2;
+
+        const rate = window.modSaleHybrid.ACCESSORY_WASTAGE_RATE;
+        const railQty = Math.ceil((panelQty * 2) * rate);
+        const dcMeters = Math.ceil((panelQty * 4.0) * rate);
+        const mc4Pairs = Math.ceil(2 * rate);
+
+        let items = [
+            { sku: panel.sku, product_name: panel.product_name, unit: panel.unit, quantity: panelQty, wholesale_price: parseFloat(panel.wholesale_price), unit_price: parseFloat(panel.retail_price) },
+            { sku: inv.sku, product_name: inv.product_name, unit: inv.unit, quantity: 1, wholesale_price: parseFloat(inv.wholesale_price), unit_price: parseFloat(inv.retail_price) }
+        ];
+
+        if (bat) {
+            items.push({ sku: bat.sku, product_name: bat.product_name, unit: bat.unit, quantity: batQty, wholesale_price: parseFloat(bat.wholesale_price), unit_price: parseFloat(bat.retail_price) });
+            let unitKwh = 14.3;
+            const matchKwh = bat.product_name.match(/(\d+(\.\d+)?)kWh/i);
+            if (matchKwh && matchKwh[1]) unitKwh = parseFloat(matchKwh[1]);
+            document.getElementById('pdf-bat-capacity').innerText = `${(unitKwh * batQty).toFixed(2)} kWh Lithium (${batQty} Bộ)`;
+        } else {
+            document.getElementById('pdf-bat-capacity').innerText = `Không chọn Lithium`;
+        }
+
+        if(rail && midClamp && endClamp && dcCable && mc4 && box) {
+            items.push(
+                { sku: rail.sku, product_name: rail.product_name, unit: rail.unit, quantity: railQty, wholesale_price: parseFloat(rail.wholesale_price), unit_price: parseFloat(rail.retail_price) },
+                { sku: midClamp.sku, product_name: midClamp.product_name, unit: midClamp.unit, quantity: midQty, wholesale_price: parseFloat(midClamp.wholesale_price), unit_price: parseFloat(midClamp.retail_price) },
+                { sku: endClamp.sku, product_name: endClamp.product_name, unit: endClamp.unit, quantity: endQty, wholesale_price: parseFloat(endClamp.wholesale_price), unit_price: parseFloat(endClamp.retail_price) },
+                { sku: dcCable.sku, product_name: dcCable.product_name, unit: dcCable.unit, quantity: dcMeters, wholesale_price: parseFloat(dcCable.wholesale_price), unit_price: parseFloat(dcCable.retail_price) },
+                { sku: mc4.sku, product_name: mc4.product_name, unit: mc4.unit, quantity: mc4Pairs, wholesale_price: parseFloat(mc4.wholesale_price), unit_price: parseFloat(mc4.retail_price) },
+                { sku: box.sku, product_name: box.product_name, unit: box.unit, quantity: 1, wholesale_price: parseFloat(box.wholesale_price), unit_price: parseFloat(box.retail_price) }
+            );
+        }
+        window.modSaleHybrid.currentCalculatedItems = items;
+        window.modSaleHybrid.renderLaborTable();
+        window.modSaleHybrid.renderBOQTable();
+        window.modSaleHybrid.recalculateTotals();
+    },
+
+    renderBOQTable: () => {
+        const fmt = window.modSaleHybrid.formatVND;
+        const margin = window.modSaleHybrid.MIN_PROFIT_MARGIN;
+
+        document.getElementById('detail-items-body').innerHTML = window.modSaleHybrid.currentCalculatedItems.map((item, idx) => {
+            const minPrice = Math.ceil(item.wholesale_price * margin);
+            const isInvalid = item.unit_price < minPrice;
+            const borderClass = isInvalid ? 'border-2 border-red-500 bg-red-50 font-bold text-red-600' : 'border border-amber-300 bg-amber-50/40 font-semibold text-slate-800';
+
+            return `
+                <tr class="hover:bg-amber-100/20">
+                    <td class="py-1.5 px-2 text-center text-slate-400 font-bold">${idx + 1}</td>
+                    <td class="py-1.5 px-2 font-mono text-slate-500">${item.sku}</td>
+                    <td class="py-1.5 px-2 font-bold text-slate-800">${item.product_name}</td>
+                    <td class="py-1.5 px-2 text-center text-slate-500">${item.unit}</td>
+                    <td class="py-1.5 px-2 text-center font-bold text-slate-900">${item.quantity}</td>
+                    <td class="py-1.5 px-2 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                            <input type="number" value="${item.unit_price}" 
+                                class="w-24 text-right p-1 border rounded text-xs font-bold outline-none ${borderClass} no-print" 
+                                oninput="window.modSaleHybrid.updateItemPrice(${idx}, this.value)" />
+                            <span class="price-print-only hidden font-bold text-slate-800 bg-amber-50/60 px-2 py-0.5 rounded border border-amber-200">${fmt(item.unit_price)}</span>
+                        </div>
+                    </td>
+                    <td class="py-1.5 px-2 text-right font-black text-amber-700">${fmt(item.quantity * item.unit_price)}</td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    updateItemPrice: (index, newPriceVal) => {
+        window.modSaleHybrid.currentCalculatedItems[index].unit_price = parseFloat(newPriceVal) || 0;
+        window.modSaleHybrid.renderBOQTable();
+        window.modSaleHybrid.recalculateTotals();
+    },
+
+    recalculateTotals: () => {
+        let totalCapex = 0;
+        let totalWholesale = 0;
+        let hasViolation = false;
+        let violationDetails = [];
+        const fmt = window.modSaleHybrid.formatVND;
+
+        window.modSaleHybrid.currentCalculatedItems.forEach(item => {
+            totalCapex += item.quantity * item.unit_price;
+            totalWholesale += item.quantity * item.wholesale_price;
+            const minPriceAllowed = Math.ceil(item.wholesale_price * window.modSaleHybrid.MIN_PROFIT_MARGIN);
+            if (item.unit_price < minPriceAllowed) {
+                hasViolation = true;
+                violationDetails.push(`${item.sku} (Sàn: ${fmt(minPriceAllowed)})`);
+            }
+        });
+
+        window.modSaleHybrid.laborItems.forEach(item => {
+            totalCapex += item.qty * item.price;
+            totalWholesale += item.qty * item.wholesale;
+        });
+
+        const isVatChecked = document.getElementById('chk-vat').checked;
+        const finalTotal = isVatChecked ? Math.ceil(totalCapex * 1.08) : totalCapex;
+        const profit = finalTotal - totalWholesale;
+        const commission = Math.max(0, profit * 0.10);
+
+        document.getElementById('side-total-price').innerText = fmt(finalTotal);
+        document.getElementById('side-profit').innerText = fmt(profit);
+        document.getElementById('side-commission').innerText = fmt(commission);
+
+        document.getElementById('pdf-total-amount').innerText = fmt(finalTotal);
+        document.getElementById('pdf-vat-text').innerText = isVatChecked ? '* Báo giá đã bao gồm VAT (8%). Có hiệu lực trong 10 ngày.' : '* Báo giá chưa bao gồm VAT (8%). Có hiệu lực trong 10 ngày.';
+
+        const warnBox = document.getElementById('price-floor-warning');
+        const actionArea = document.getElementById('save-action-area');
+
+        if (hasViolation) {
+            warnBox.classList.remove('hidden');
+            document.getElementById('warning-text-detail').innerText = `Dưới sàn: ${violationDetails.join(', ')}`;
+            actionArea.innerHTML = `<button onclick="window.modSaleHybrid.saveQuotation('PENDING_APPROVAL')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg transition shadow-md">📩 Gửi Admin Duyệt Báo Giá Sàn</button>`;
+        } else {
+            warnBox.classList.add('hidden');
+            actionArea.innerHTML = `<button onclick="window.modSaleHybrid.saveQuotation('DRAFT')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2.5 rounded-lg transition shadow-sm">💾 Lưu & Xuất Báo Giá Hybrid</button>`;
+        }
+
+        const systemKwp = parseFloat(document.getElementById('kwp').value) || 14.8;
+        const monthlyBill = window.modSaleHybrid.parseRawBillValue();
+        const fin = window.modSaleHybrid.computeFinancials(finalTotal, systemKwp, monthlyBill);
+        
+        document.getElementById('calc-bank-20y').innerText = fmt(fin.totalBankInterest20Y);
+        document.getElementById('calc-solar-20y').innerText = fmt(fin.totalSolarCash20Y);
+        document.getElementById('calc-diff-note').innerText = `👉 Lời hơn gửi ngân hàng: +${fmt(fin.totalSolarCash20Y - fin.totalBankInterest20Y)}`;
+        document.getElementById('calc-payback').innerText = `${fin.paybackYears} năm`;
+        document.getElementById('calc-roe').innerText = `${fin.roePercent}%/năm`;
+        document.getElementById('calc-npv').innerText = `${(fin.npvAmount / 1000000).toFixed(1)} Tr VNĐ`;
+
+        const cust = document.getElementById('cust-name').value;
+        document.getElementById('pdf-cust-name').innerText = cust;
+        document.getElementById('pdf-sign-cust-name').innerText = cust;
+        document.getElementById('pdf-kwp').innerText = `${document.getElementById('kwp').value} kWp`;
+
+        const d = new Date();
+        document.getElementById('pdf-date-now').innerText = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+
+        return finalTotal;
+    },
+
+    saveQuotation: async (statusReq) => {
+        const name = document.getElementById('cust-name').value;
+        const kwp = parseFloat(document.getElementById('kwp').value);
+        const bill = window.modSaleHybrid.parseRawBillValue();
+        const brand = document.getElementById('brand-select').value;
+        const total = window.modSaleHybrid.recalculateTotals();
+
+        
+        const btn = document.getElementById('btn-save-quotation');
+        const oldText = btn ? btn.innerHTML : '';
+        if(btn) { 
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> ĐANG XỬ LÝ...'; 
+            btn.classList.add('opacity-50', 'pointer-events-none'); 
+        }
+
+        // Bổ sung product_id và chuẩn hóa price cho Backend
+        const payloadItems = window.modSaleHybrid.currentCalculatedItems.map(i => {
+            const originP = window.modSaleHybrid.dbProducts.find(p => p.sku === i.sku) || {};
+            return {
+                product_id: originP.id || originP.product_id || null,
+                sku: i.sku,
+                product_name: i.product_name,
+                unit: i.unit,
+                quantity: i.quantity,
+                price: i.unit_price,
+                wholesale_price: i.wholesale_price
+            };
+        });
+
+        try {
+            const res = await fetch('/api/quotations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    store_id: 1, brand_name: brand, customer_name: name, monthly_bill: bill,
+                    system_kwp: kwp, total_amount: total, payback_years: 3.5,
+                    npv_amount: 280000000, roe_percent: 28.5, status: statusReq || 'DRAFT',
+                    items: payloadItems
+                })
+            });
+            const data = await res.json();
+            if(data.success) {
+                alert(`✅ Tạo Báo Giá Hybrid Thành Công! Mã: ${data.quotation.quotation_code}`);
+                window.modSaleHybrid.loadHistory();
+                window.modSaleHybrid.viewDetail(data.quotation.quotation_id);
+            }
+        } catch(e) { 
+            console.error(e); 
+            alert("❌ Lỗi kết nối mạng hoặc Server sập!"); 
+        } finally {
+            if(btn) { btn.innerHTML = oldText; btn.classList.remove('opacity-50', 'pointer-events-none'); }
+        }
+    },
+
+    loadHistory: async () => {
+        try {
+            const res = await fetch('/api/quotations');
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('history-body').innerHTML = data.data.map(q => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2 font-bold text-amber-600">${q.brand_name || 'SUNGO HYBRID'}</td>
+                        <td class="p-2 font-mono text-slate-600">${q.quotation_code}</td>
+                        <td class="p-2 font-medium">${q.customer_name}</td>
+                        <td class="p-2 text-right font-bold">${window.modSaleHybrid.formatVND(q.total_amount)}</td>
+                        <td class="p-2 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">${q.status}</span></td>
+                        <td class="p-2 text-center flex justify-center gap-1">
+                            <button onclick="window.modSaleHybrid.viewDetail(${q.quotation_id})" class="text-xs bg-slate-800 text-white px-2 py-1 rounded">📄 Xem</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch(e) {}
+    },
+
+    viewDetail: async (id) => {
+        try {
+            const res = await fetch(`/api/quotations/${id}`);
+            const data = await res.json();
+            if(data.success) {
+                window.modSaleHybrid.currentQuotationData = data;
+                document.getElementById('pdf-brand-logo').innerText = `SUNGO SOLAR - ${data.quotation.brand_name || 'GERMAN HYBRID'}`;
+                document.getElementById('pdf-q-code').innerText = data.quotation.quotation_code;
+                document.getElementById('pdf-cust-name').innerText = data.quotation.customer_name;
+                document.getElementById('pdf-sign-cust-name').innerText = data.quotation.customer_name;
+                document.getElementById('pdf-kwp').innerText = `${data.quotation.system_kwp} kWp`;
+                document.getElementById('pdf-total-amount').innerText = window.modSaleHybrid.formatVND(data.quotation.total_amount);
+
+                window.modSaleHybrid.currentCalculatedItems = data.items.map(i => ({
+                    sku: i.sku, product_name: i.product_name, unit: i.unit,
+                    quantity: parseFloat(i.quantity),
+                    wholesale_price: parseFloat(i.wholesale_price || (i.unit_price / 1.15)),
+                    unit_price: parseFloat(i.unit_price)
+                }));
+                window.modSaleHybrid.renderBOQTable();
+                window.modSaleHybrid.recalculateTotals();
+            }
+        } catch(e) { alert("Lỗi tải chi tiết!"); }
+    }
+};
+
+window.modSaleHybrid.init();
+</script>

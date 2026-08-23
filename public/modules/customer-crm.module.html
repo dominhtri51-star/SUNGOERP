@@ -1,0 +1,477 @@
+<div class="h-full flex flex-col space-y-6 relative">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col overflow-hidden">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 shrink-0 gap-4">
+            <div>
+                <h3 class="font-black text-slate-900 text-xl"><i class="fas fa-crown text-amber-500"></i> Hệ Sinh Thái Khách Hàng (CRM PRO)</h3>
+                <p class="text-xs text-slate-500 mt-1 font-medium">Tạo hồ sơ, hóa đơn VAT, phân hạng đại lý, theo dõi điểm thưởng và quà tặng.</p>
+            </div>
+            <div class="flex gap-3 w-full md:w-auto">
+                <div class="relative flex-1 md:w-80">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search"></i></span>
+                    <input type="text" id="crm-search" oninput="window.modCRM.render()" placeholder="Tìm tên, SĐT, Nickname, MST..." class="w-full border-2 border-slate-200 rounded-lg py-2.5 pl-10 pr-4 outline-none focus:border-amber-500 font-bold text-sm">
+                </div>
+                <button onclick="window.modCRM.openDrawer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold shadow text-sm whitespace-nowrap transition"><i class="fas fa-plus mr-1"></i> Tạo Khách Mới</button>
+            </div>
+        </div>
+        <div class="overflow-y-auto flex-1 border rounded-xl shadow-inner bg-slate-50">
+            <table class="w-full text-left text-sm bg-white">
+                <thead class="bg-slate-100 text-[11px] uppercase text-slate-600 sticky top-0 shadow-sm z-10">
+                    <tr>
+                        <th class="p-4 font-black border-b w-[30%]">Hồ Sơ Đối Tác</th>
+                        <th class="p-4 font-black border-b w-[20%]">Thông Tin VAT</th>
+                        <th class="p-4 font-black border-b text-center">Hạng & Cấp Bậc</th>
+                        <th class="p-4 font-black border-b text-right">Doanh Số / Nợ</th>
+                        <th class="p-4 font-black border-b text-center text-amber-600">Điểm Quỹ (đ)</th>
+                        <th class="p-4 font-black border-b text-center w-24">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="tbl-crm" class="divide-y text-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="crm-drawer" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden z-[60] flex justify-end">
+    <div class="bg-white w-full md:w-[650px] h-full shadow-2xl flex flex-col animate-slide-in-right">
+        <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 shrink-0 shadow-md relative flex justify-between items-center">
+            <div>
+                <h3 class="font-black text-2xl text-amber-400" id="dr-title">Tạo Khách Hàng Mới</h3>
+                <p class="text-xs text-slate-400 mt-1" id="dr-subtitle">Nhập thông tin cơ bản và dữ liệu xuất hóa đơn.</p>
+            </div>
+            <button onclick="window.modCRM.closeDrawer()" class="text-slate-400 hover:text-white transition"><i class="fas fa-times text-3xl"></i></button>
+            <input type="hidden" id="dr-id">
+        </div>
+        <div id="drawer-tabs" class="flex bg-slate-100 border-b shrink-0 text-sm font-bold text-slate-500">
+            <button onclick="window.modCRM.switchTab('profile')" id="tab-btn-profile" class="flex-1 py-3 border-b-2 border-amber-500 text-amber-600 bg-white"><i class="fas fa-id-card mr-1"></i> Hồ Sơ & VAT</button>
+            <button onclick="window.modCRM.switchTab('tier')" id="tab-btn-tier" class="flex-1 py-3 border-b-2 border-transparent hover:text-slate-800"><i class="fas fa-chart-pie mr-1"></i> Hạng & Nợ</button>
+            <button onclick="window.modCRM.switchTab('gifts')" id="tab-btn-gifts" class="flex-1 py-3 border-b-2 border-transparent hover:text-slate-800"><i class="fas fa-gift mr-1"></i> Điểm & Quà</button>
+            <button onclick="window.modCRM.switchTab('logs')" id="tab-btn-logs" class="flex-1 py-3 border-b-2 border-transparent hover:text-slate-800"><i class="fas fa-history mr-1"></i> Nhật Ký</button>
+        </div>
+        <div class="flex-1 overflow-y-auto bg-slate-50 relative">
+            <div id="tab-profile" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Đối Tác <span class="text-red-500">*</span></label><input type="text" id="p-name" class="w-full border-2 p-2.5 rounded-lg outline-none font-black text-slate-800 focus:border-amber-500"></div>
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Số Điện Thoại</label><input type="text" id="p-phone" class="w-full border-2 p-2.5 rounded-lg outline-none font-bold text-slate-800 focus:border-amber-500"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Gợi Nhớ (Nickname)</label><input type="text" id="p-nickname" placeholder="VD: Anh A Thợ Điện" class="w-full border-2 p-2.5 rounded-lg outline-none font-bold text-slate-800 focus:border-amber-500"></div>
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Địa Chỉ Nhận Hàng</label><input type="text" id="p-address" placeholder="Lưu để làm báo giá/giao hàng..." class="w-full border-2 p-2.5 rounded-lg outline-none font-bold text-slate-800 focus:border-amber-500"></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4 mt-2">
+                    <h4 class="font-black text-xs text-blue-600 uppercase border-b pb-2"><i class="fas fa-file-invoice"></i> Dữ Liệu Xuất Hóa Đơn (VAT)</h4>
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Pháp Nhân (Công ty)</label><input type="text" id="p-vat-company" class="w-full border-2 p-2 rounded-lg outline-none font-bold text-sm focus:border-blue-500"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Mã Số Thuế</label><input type="text" id="p-vat-tax" class="w-full border-2 p-2 rounded-lg outline-none font-mono font-bold text-sm text-blue-700 focus:border-blue-500"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Email Kế Toán</label><input type="text" id="p-vat-email" class="w-full border-2 p-2 rounded-lg outline-none font-bold text-sm focus:border-blue-500"></div>
+                    </div>
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Địa Chỉ Hóa Đơn</label><input type="text" id="p-vat-address" class="w-full border-2 p-2 rounded-lg outline-none font-bold text-sm focus:border-blue-500"></div>
+                </div>
+                <div class="flex justify-between pt-4">
+                    <button onclick="window.modCRM.deleteCustomer()" id="btn-del" class="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg font-bold text-sm transition hidden"><i class="fas fa-trash-alt"></i> Xóa Đối Tác</button>
+                    <button onclick="window.modCRM.saveProfile()" id="btn-save-profile" class="bg-emerald-600 text-white px-8 py-3 rounded-lg font-black shadow-lg hover:bg-emerald-700 ml-auto"><i class="fas fa-save"></i> LƯU HỒ SƠ</button>
+                </div>
+            </div>
+            <div id="tab-tier" class="p-6 hidden space-y-6 h-full">
+                <div class="bg-white p-5 rounded-xl border shadow-sm grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-500 uppercase mb-2">Định vị Cấp Bậc (Tier)</label>
+                        <select id="dr-tier" class="w-full border-2 border-slate-200 p-2.5 rounded-lg font-bold text-sm bg-slate-50 focus:border-amber-500 outline-none">
+                            <option value="1">1. Khách Lẻ Mặc Định</option>
+                            <option value="2">2. Giá Chốt Sale</option>
+                            <option value="3">3. Thợ / Đại Lý Nhỏ</option>
+                            <option value="4">4. Sỉ Cấp 1</option>
+                            <option value="5">5. Sỉ VIP</option>
+                            <option value="6">6. NPP / Cắt Lô Dự Án</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-black text-red-500 uppercase mb-2">Công Nợ Tồn Đọng (VNĐ)</label>
+                        <input type="number" id="dr-debt" class="w-full border-2 border-red-200 p-2.5 rounded-lg font-black text-lg text-red-600 bg-red-50 focus:border-red-500 outline-none">
+                    </div>
+                </div>
+                <div class="flex justify-end pt-4"><button onclick="window.modCRM.saveTier()" class="bg-slate-800 text-white px-8 py-3 rounded-lg font-black shadow hover:bg-black">CẬP NHẬT TRẠNG THÁI</button></div>
+            </div>
+            <div id="tab-gifts" class="p-6 hidden flex-col h-full">
+                <div class="bg-gradient-to-r from-amber-500 to-orange-500 p-5 rounded-xl shadow-lg text-white mb-6 flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-black text-amber-100 uppercase mb-1">Quỹ Điểm Thưởng Khách Hàng</p>
+                        <div class="flex items-end gap-2"><input type="number" id="dr-points" class="bg-transparent border-none outline-none font-black text-4xl w-48 p-0 text-white"><span class="font-bold text-sm mb-1 text-amber-100">VNĐ</span></div>
+                    </div>
+                    <button onclick="window.modCRM.saveTier()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold text-xs border border-white/50 transition"><i class="fas fa-save"></i> Cập Nhật Quỹ</button>
+                </div>
+                <div class="bg-white p-4 rounded-xl border shadow-sm mb-4 space-y-3">
+                    <h4 class="font-black text-[11px] text-emerald-600 uppercase border-b pb-1">Chi Quà Tặng / Tri Ân</h4>
+                    <input type="text" id="g-name" placeholder="Tên quà tặng (VD: Bảng hiệu, Áo thun...)" class="w-full border-2 p-2 text-sm rounded-lg bg-slate-50 font-bold outline-none focus:border-emerald-500">
+                    <div class="flex gap-2">
+                        <input type="number" id="g-val" placeholder="Giá trị (đ)" class="w-1/2 border-2 p-2 text-sm rounded-lg bg-slate-50 font-bold text-emerald-600 outline-none focus:border-emerald-500">
+                        <button onclick="window.modCRM.addGift()" class="w-1/2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow"><i class="fas fa-check"></i> Lưu Quà Tặng</button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto bg-white rounded-xl border shadow-sm p-4"><div id="gift-list" class="space-y-3"></div></div>
+            </div>
+            <div id="tab-logs" class="p-6 hidden flex-col h-full">
+                <div class="flex gap-2 mb-4 bg-white p-2 rounded-xl border shadow-sm shrink-0">
+                    <input type="text" id="l-note" placeholder="Ghi chú nội dung chăm sóc, khiếu nại..." class="flex-1 border-none px-3 py-2 text-sm outline-none font-medium">
+                    <button onclick="window.modCRM.addLog()" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-blue-700"><i class="fas fa-paper-plane"></i></button>
+                </div>
+                <div id="log-list" class="space-y-4 flex-1 overflow-y-auto bg-white p-4 rounded-xl border shadow-sm"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .animate-slide-in-right { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+</style>
+<script>
+    window.modCRM = {
+        list: [],
+        load: async () => {
+            const tbody = document.getElementById('tbl-crm');
+            if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-amber-500 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Đang tải dữ liệu CRM...</td></tr>';
+            try {
+                const res = await fetch('/api/customers');
+                if(!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if(data.success) { window.modCRM.list = data.data || []; window.modCRM.render(); }
+                else if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Lỗi Database: ' + data.error + '</td></tr>';
+            } catch(e) { if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Mất kết nối máy chủ API! ' + e.message + '</td></tr>'; }
+        },
+        render: () => {
+            const term = document.getElementById('crm-search').value.toLowerCase();
+            const tbody = document.getElementById('tbl-crm');
+            let filtered = window.modCRM.list.filter(c => 
+                String(c.name).toLowerCase().includes(term) || 
+                String(c.nickname||'').toLowerCase().includes(term) ||
+                String(c.phone||'').includes(term) || 
+                String(c.vat_taxcode||'').includes(term)
+            );
+            
+            if(filtered.length === 0) return tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold">Không có dữ liệu đối tác.</td></tr>';
+
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num)||0);
+            const tiers = { 1: {n:'1. Khách Lẻ',c:'bg-slate-100 text-slate-600'}, 2: {n:'2. Chốt Sale',c:'bg-emerald-50 text-emerald-700'}, 3: {n:'3. Đại Lý',c:'bg-blue-50 text-blue-700'}, 4: {n:'4. Sỉ C1',c:'bg-amber-50 text-amber-700'}, 5: {n:'5. Sỉ VIP',c:'bg-orange-50 text-orange-700'}, 6: {n:'6. NPP',c:'bg-purple-100 text-purple-800 font-black'} };
+
+            tbody.innerHTML = filtered.map(c => {
+                const t = tiers[c.customer_tier] || tiers[1];
+                const warns = (c.customer_tier > 3 && c.last_purchase_date && Math.floor((new Date()-new Date(c.last_purchase_date))/86400000) > 60) ? '<p class="text-[9px] text-red-500 font-bold mt-1.5"><i class="fas fa-exclamation-triangle"></i> Cảnh báo KPI</p>' : '';
+                const vatInfo = c.vat_company ? `<p class="font-bold text-slate-700 text-xs truncate max-w-[200px]" title="${c.vat_company}">${c.vat_company}</p><p class="text-[10px] font-mono text-blue-600">MST: ${c.vat_taxcode}</p>` : '<span class="text-[10px] text-slate-400 italic">Chưa có VAT</span>';
+                
+                const nicknameHTML = c.nickname ? `<span class="text-amber-600 font-bold text-xs ml-1">(${c.nickname})</span>` : '';
+                const addressHTML = c.address ? ` | <i class="fas fa-map-marker-alt text-[10px] text-emerald-600 ml-1"></i> <span class="truncate max-w-[120px] inline-block align-bottom" title="${c.address}">${c.address}</span>` : '';
+
+                return `
+                <tr class="hover:bg-amber-50/30 transition">
+                    <td class="p-4 border-b">
+                        <p class="font-black text-slate-800 text-sm">${c.name} ${nicknameHTML}</p>
+                        <p class="text-[11px] font-mono font-bold text-slate-500 mt-1 whitespace-nowrap"><i class="fas fa-phone-alt opacity-50 mr-1"></i> ${c.phone || '---'} ${addressHTML}</p>
+                    </td>
+                    <td class="p-4 border-b">${vatInfo}</td>
+                    <td class="p-4 text-center border-b">
+                        <span class="${t.c} px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border">${t.n}</span>${warns}
+                    </td>
+                    <td class="p-4 text-right border-b">
+                        <p class="font-bold text-slate-700 mb-0.5" title="Tổng doanh số">${fmt(c.total_sales)} đ</p>
+                        <p class="font-black text-[11px] ${c.current_debt > 0 ? 'text-red-600 bg-red-50 px-1 rounded inline-block' : 'text-slate-400'}">Nợ: ${fmt(c.current_debt)}</p>
+                    </td>
+                    <td class="p-4 text-center border-b border-x border-amber-100 bg-amber-50/50">
+                        <span class="font-black text-amber-600 text-sm">${fmt(c.reward_points)}</span>
+                    </td>
+                    <td class="p-4 text-center border-b">
+                        <button onclick="window.modCRM.openDrawer(${c.id})" class="bg-white border-2 border-slate-200 hover:border-amber-500 hover:text-amber-600 text-slate-600 px-4 py-2 rounded-xl font-bold text-[11px] transition shadow-sm"><i class="fas fa-edit"></i> Xem / Sửa</button>
+                    </td>
+                </tr>
+            `}).join('');
+        },
+        switchTab: (id) => {
+            ['profile', 'tier', 'gifts', 'logs'].forEach(t => {
+                document.getElementById('tab-'+t).classList.replace('flex','hidden');
+                document.getElementById('tab-'+t).classList.replace('block','hidden');
+                document.getElementById('tab-btn-'+t).classList.remove('border-amber-500','text-amber-600', 'bg-white');
+            });
+            const target = document.getElementById('tab-'+id);
+            if(id==='gifts' || id==='logs') target.classList.replace('hidden','flex');
+            else target.classList.replace('hidden','block');
+            document.getElementById('tab-btn-'+id).classList.add('border-amber-500','text-amber-600', 'bg-white');
+        },
+        openDrawer: (id = null) => {
+            document.getElementById('crm-drawer').classList.replace('hidden', 'flex');
+            const tabs = document.getElementById('drawer-tabs');
+            if(id) {
+                const c = window.modCRM.list.find(x=>x.id==id);
+                document.getElementById('dr-title').innerText = "Hồ Sơ Đối Tác";
+                document.getElementById('dr-subtitle').innerText = "ID Hệ thống: #" + c.id;
+                tabs.classList.remove('hidden');
+                document.getElementById('btn-del').classList.remove('hidden');
+                document.getElementById('btn-save-profile').innerHTML = '<i class="fas fa-save"></i> CẬP NHẬT HỒ SƠ';
+                
+                document.getElementById('dr-id').value = c.id; 
+                document.getElementById('p-name').value = c.name; document.getElementById('p-phone').value = c.phone || '';
+                document.getElementById('p-nickname').value = c.nickname || ''; document.getElementById('p-address').value = c.address || '';
+                document.getElementById('p-vat-company').value = c.vat_company || ''; document.getElementById('p-vat-tax').value = c.vat_taxcode || '';
+                document.getElementById('p-vat-address').value = c.vat_address || ''; document.getElementById('p-vat-email').value = c.vat_email || '';
+                document.getElementById('dr-tier').value = c.customer_tier || 1; document.getElementById('dr-debt').value = c.current_debt || 0; 
+                document.getElementById('dr-points').value = c.reward_points || 0;
+                
+                window.modCRM.switchTab('profile');
+                window.modCRM.loadLogs(id); window.modCRM.loadGifts(id);
+            } else {
+                document.getElementById('dr-title').innerText = "Tạo Khách Hàng Mới";
+                document.getElementById('dr-subtitle').innerText = "Vui lòng nhập thông tin cơ bản để lưu vào CSDL.";
+                tabs.classList.add('hidden');
+                document.getElementById('btn-del').classList.add('hidden');
+                document.getElementById('btn-save-profile').innerHTML = '<i class="fas fa-plus"></i> TẠO MỚI NGAY';
+                
+                ['dr-id', 'p-name', 'p-phone', 'p-nickname', 'p-address', 'p-vat-company', 'p-vat-tax', 'p-vat-address', 'p-vat-email'].forEach(el => document.getElementById(el).value = '');
+                window.modCRM.switchTab('profile');
+            }
+        },
+        closeDrawer: () => document.getElementById('crm-drawer').classList.replace('flex', 'hidden'),
+        saveProfile: async () => {
+            const id = document.getElementById('dr-id').value;
+            const payload = {
+                name: document.getElementById('p-name').value.trim(), phone: document.getElementById('p-phone').value.trim(),
+                nickname: document.getElementById('p-nickname').value.trim(), address: document.getElementById('p-address').value.trim(),
+                vat_company: document.getElementById('p-vat-company').value.trim(), vat_taxcode: document.getElementById('p-vat-tax').value.trim(),
+                vat_address: document.getElementById('p-vat-address').value.trim(), vat_email: document.getElementById('p-vat-email').value.trim()
+            };
+            if(!payload.name) return alert('Bắt buộc nhập tên đối tác!');
+            try {
+                if(id) await fetch(`/api/customers/${id}/profile`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                else await fetch('/api/customers', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                window.modCRM.closeDrawer(); window.modCRM.load();
+            } catch(e) { alert("Lỗi lưu dữ liệu!"); }
+        },
+        saveTier: async () => {
+            const id = document.getElementById('dr-id').value;
+            await fetch(`/api/customers/${id}/tier`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({tier: document.getElementById('dr-tier').value, debt: document.getElementById('dr-debt').value, points: document.getElementById('dr-points').value})});
+            window.modCRM.load(); alert('Đã cập nhật trạng thái phân hạng!');
+        },
+        deleteCustomer: async () => {
+            const id = document.getElementById('dr-id').value;
+            if(!confirm('⚠️ Xóa đối tác sẽ mất luôn lịch sử và công nợ. Chắc chắn xóa?')) return;
+            await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+            window.modCRM.closeDrawer(); window.modCRM.load();
+        },
+        loadLogs: async (id) => {
+            try {
+                const res = await fetch(`/api/customers/${id}/logs`); const data = await res.json();
+                document.getElementById('log-list').innerHTML = (data.success && data.data.length) ? data.data.map(l => `<div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-sm"><p class="font-medium">${l.note}</p><p class="text-[10px] text-blue-500 mt-2 font-bold">${new Date(l.created_at).toLocaleString('vi-VN')}</p></div>`).join('') : '<p class="text-xs text-center py-6 text-slate-400">Trống</p>';
+            } catch(e) {}
+        },
+        addLog: async () => {
+            const id = document.getElementById('dr-id').value; const note = document.getElementById('l-note').value;
+            if(!note) return;
+            await fetch(`/api/customers/${id}/logs`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({note})});
+            document.getElementById('l-note').value=''; window.modCRM.loadLogs(id);
+        },
+        loadGifts: async (id) => {
+            try {
+                const res = await fetch(`/api/customers/${id}/gifts`); const data = await res.json();
+                document.getElementById('gift-list').innerHTML = (data.success && data.data.length) ? data.data.map(g => `<div class="flex justify-between items-center bg-emerald-50 p-3 rounded-lg border border-emerald-100"><div><p class="text-sm font-bold"><i class="fas fa-gift text-emerald-500 mr-1"></i> ${g.gift_name}</p><p class="text-[10px] text-emerald-600 mt-1 font-bold">${new Date(g.gift_date).toLocaleString('vi-VN')}</p></div><span class="font-black text-emerald-700 text-sm">${new Intl.NumberFormat('vi-VN').format(g.gift_value)} đ</span></div>`).join('') : '<p class="text-xs text-center py-6 text-slate-400">Trống</p>';
+            } catch(e) {}
+        },
+        addGift: async () => {
+            const id = document.getElementById('dr-id').value; const gift_name = document.getElementById('g-name').value; const gift_value = document.getElementById('g-val').value;
+            if(!gift_name) return;
+            await fetch(`/api/customers/${id}/gifts`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({gift_name, gift_value})});
+            document.getElementById('g-name').value=''; document.getElementById('g-val').value=''; window.modCRM.loadGifts(id);
+        }
+    };
+    window.modCRM.load();
+</script>
+
+<script>
+// [AUTO-FIX] Hàm gửi dữ liệu tạo khách hàng mới đồng bộ chuẩn PostgreSQL
+async function submitCrmCustomer(event) {
+  if (event) event.preventDefault();
+  
+  const fullNameInput = document.querySelector('#cust_name, #full_name, [name="full_name"], [name="name"]');
+  const phoneInput = document.querySelector('#cust_phone, #phone, [name="phone"]');
+  const addressInput = document.querySelector('#cust_address, #address, [name="address"]');
+  const vipInput = document.querySelector('#cust_vip, #vip_level, [name="vip_level"]');
+  const taxInput = document.querySelector('#cust_tax, #tax_code, [name="tax_code"]');
+  const companyInput = document.querySelector('#cust_company, #vat_company, [name="vat_company"]');
+
+  const payload = {
+    full_name: fullNameInput ? fullNameInput.value.trim() : '',
+    phone: phoneInput ? phoneInput.value.trim() : '',
+    address: addressInput ? addressInput.value.trim() : '',
+    vip_level: vipInput ? parseInt(vipInput.value) : 1,
+    vat_taxcode: taxInput ? taxInput.value.trim() : '',
+    vat_company: companyInput ? companyInput.value.trim() : ''
+  };
+
+  if (!payload.full_name || !payload.phone) {
+    alert('Vui lòng nhập đầy đủ Họ tên và Số điện thoại!');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/crm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      alert('🎉 Tạo khách hàng CRM thành công!');
+      if (typeof loadCustomers === 'function') loadCustomers();
+      if (typeof fetchCrmList === 'function') fetchCrmList();
+      const modal = document.querySelector('#customer-modal, #create-customer-modal');
+      if (modal) modal.classList.add('hidden');
+    } else {
+      alert('Lỗi tạo khách hàng: ' + (result.error || 'Kiểm tra lại dữ liệu'));
+    }
+  } catch (err) {
+    alert('Lỗi kết nối máy chủ: ' + err.message);
+  }
+}
+</script>
+
+
+<!-- MODAL CHỈNH SỬA TOÀN DIỆN KHÁCH HÀNG CRM PRO -->
+<div id="crm-edit-customer-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div class="flex justify-between items-center mb-4 border-b pb-3">
+      <h3 class="text-lg font-bold text-gray-900">Chỉnh Sửa Hồ Sơ Khách Hàng (CRM PRO)</h3>
+      <button type="button" onclick="closeCrmEditModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+    </div>
+    <form id="crm-edit-customer-form" onsubmit="submitUpdateCrmCustomer(event)" class="space-y-4">
+      <input type="hidden" id="edit-cust-id">
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Tên khách hàng / Đại lý *</label>
+          <input type="text" id="edit-cust-name" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Số điện thoại *</label>
+          <input type="text" id="edit-cust-phone" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 bg-blue-50/60 p-3 rounded-xl border border-blue-100">
+        <div>
+          <label class="block text-xs font-bold text-blue-900 mb-1">Hạng thành viên (VIP Level)</label>
+          <select id="edit-cust-vip" class="w-full px-3 py-2 text-sm border border-blue-200 rounded-lg font-semibold text-blue-950 focus:ring-2 focus:ring-blue-500">
+            <option value="1">VIP 1 - Khách Lẻ (Giá Lẻ)</option>
+            <option value="2">VIP 2 - Khách Thân Thiết</option>
+            <option value="3">VIP 3 - Đại Lý Cấp 2</option>
+            <option value="4">VIP 4 - Đại Lý Cấp 1</option>
+            <option value="5">VIP 5 - Nhà Phân Phối (Giá Sỉ)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-amber-900 mb-1">Điểm thưởng tích lũy (VNĐ)</label>
+          <input type="number" id="edit-cust-points" step="any" class="w-full px-3 py-2 text-sm border border-amber-200 rounded-lg font-bold text-amber-700 focus:ring-2 focus:ring-amber-500">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1">Địa chỉ giao hàng / Liên hệ</label>
+        <input type="text" id="edit-cust-address" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
+      </div>
+
+      <div class="border-t pt-3 space-y-3">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Thông Tin Xuất Hóa Đơn VAT</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Tên Công Ty Xuất VAT</label>
+            <input type="text" id="edit-cust-company" class="w-full px-3 py-1.5 text-sm border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Mã Số Thuế (MST)</label>
+            <input type="text" id="edit-cust-tax" class="w-full px-3 py-1.5 text-sm border rounded-lg">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Địa Chỉ Thuế</label>
+            <input type="text" id="edit-cust-vat-address" class="w-full px-3 py-1.5 text-sm border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Email Nhận Hóa Đơn</label>
+            <input type="email" id="edit-cust-vat-email" class="w-full px-3 py-1.5 text-sm border rounded-lg">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t">
+        <button type="button" onclick="closeCrmEditModal()" class="px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">Hủy</button>
+        <button type="submit" class="px-5 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-bold shadow-md">Lưu Thay Đổi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Hàm mở Modal và nạp toàn bộ trường dữ liệu
+function openEditCustomerModal(cust) {
+  if (typeof cust === 'string') {
+    try { cust = JSON.parse(cust); } catch(e) {}
+  }
+  if (!cust) return;
+
+  document.getElementById('edit-cust-id').value = cust.id || '';
+  document.getElementById('edit-cust-name').value = cust.full_name || cust.name || '';
+  document.getElementById('edit-cust-phone').value = cust.phone || '';
+  document.getElementById('edit-cust-vip').value = cust.vip_level || cust.tier || 1;
+  document.getElementById('edit-cust-points').value = cust.reward_points !== undefined ? cust.reward_points : (cust.points || 0);
+  document.getElementById('edit-cust-address').value = cust.address || '';
+  document.getElementById('edit-cust-company').value = cust.vat_company || cust.company_name || '';
+  document.getElementById('edit-cust-tax').value = cust.vat_taxcode || cust.tax_code || '';
+  document.getElementById('edit-cust-vat-address').value = cust.vat_address || cust.company_address || '';
+  document.getElementById('edit-cust-vat-email').value = cust.vat_email || '';
+
+  document.getElementById('crm-edit-customer-modal').classList.remove('hidden');
+}
+
+function closeCrmEditModal() {
+  const modal = document.getElementById('crm-edit-customer-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+// Hàm gửi request cập nhật toàn bộ biến
+async function submitUpdateCrmCustomer(e) {
+  if (e) e.preventDefault();
+  const id = document.getElementById('edit-cust-id').value;
+  if (!id) {
+    alert('Không tìm thấy ID khách hàng!');
+    return;
+  }
+
+  const payload = {
+    full_name: document.getElementById('edit-cust-name').value.trim(),
+    phone: document.getElementById('edit-cust-phone').value.trim(),
+    vip_level: parseInt(document.getElementById('edit-cust-vip').value) || 1,
+    reward_points: parseFloat(document.getElementById('edit-cust-points').value) || 0,
+    address: document.getElementById('edit-cust-address').value.trim(),
+    vat_company: document.getElementById('edit-cust-company').value.trim(),
+    vat_taxcode: document.getElementById('edit-cust-tax').value.trim(),
+    vat_address: document.getElementById('edit-cust-vat-address').value.trim(),
+    vat_email: document.getElementById('edit-cust-vat-email').value.trim()
+  };
+
+  try {
+    const res = await fetch(`/api/crm/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      alert('🎉 Đã cập nhật thành công toàn bộ thông tin khách hàng!');
+      closeCrmEditModal();
+      if (typeof loadCustomers === 'function') loadCustomers();
+      if (typeof fetchCustomers === 'function') fetchCustomers();
+      if (typeof renderCustomers === 'function') renderCustomers();
+      if (typeof window.location.reload === 'function') window.location.reload();
+    } else {
+      alert('Lỗi cập nhật: ' + (result.error || 'Vui lòng kiểm tra lại'));
+    }
+  } catch(err) {
+    alert('Lỗi máy chủ: ' + err.message);
+  }
+}
+</script>

@@ -1,0 +1,246 @@
+<div class="h-full flex flex-col space-y-6 relative overflow-hidden text-sm bg-slate-50">
+    
+    <!-- ========================================== -->
+    <!-- DASHBOARD TỔNG QUAN TỒN KHO & GIÁ TRỊ      -->
+    <!-- ========================================== -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0 p-6 pb-0">
+        <!-- Card 1: Tổng Sản Phẩm -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between hover:shadow-md transition">
+            <div>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Tổng Số Lượng Tồn</p>
+                <h3 class="text-2xl font-black text-blue-600" id="inv-total-items">0 <span class="text-sm font-bold text-slate-500">Sản phẩm</span></h3>
+                <p class="text-[10px] text-slate-400 mt-1">Đã được xác nhận nằm trên kệ</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-xl shadow-inner"><i class="fas fa-boxes"></i></div>
+        </div>
+
+        <!-- Card 2: Tổng Giá Trị Tồn Kho -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between hover:shadow-md transition">
+            <div>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Tổng Giá Trị Tồn Kho</p>
+                <h3 class="text-2xl font-black text-emerald-600" id="inv-total-value">0 đ</h3>
+                <p class="text-[10px] text-slate-400 mt-1">Tính theo giá nhập kho thực tế</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl shadow-inner"><i class="fas fa-hand-holding-usd"></i></div>
+        </div>
+
+        <!-- Card 3: Cảnh báo Hết Hàng -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between hover:shadow-md transition">
+            <div>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Cảnh Báo Hết Hàng</p>
+                <h3 class="text-2xl font-black text-red-600" id="inv-low-stock">0 <span class="text-sm font-bold text-slate-500">Mã (SKU)</span></h3>
+                <p class="text-[10px] text-slate-400 mt-1">Sản phẩm có tồn kho dưới 5 cái</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-xl shadow-inner"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- BẢNG CHI TIẾT TỒN KHO                      -->
+    <!-- ========================================== -->
+    <div class="flex-1 px-6 pb-6 flex flex-col overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+            
+            <!-- Toolbar -->
+            <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 bg-white z-20">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center"><i class="fas fa-warehouse text-emerald-600 mr-2"></i> Báo Cáo Tồn Kho Hiện Tại</h3>
+                <div class="relative w-full md:w-72">
+                    <input type="text" id="inv-search" oninput="window.modInventory.filterTable(this.value)" placeholder="Tìm tên vật tư, mã SKU, vị trí kệ..." class="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-slate-700 bg-slate-50 focus:bg-white transition">
+                    <i class="fas fa-search absolute left-3.5 top-2.5 text-slate-400"></i>
+                </div>
+            </div>
+            
+            <!-- Data Table -->
+            <div class="overflow-y-auto flex-1">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-[#f8f9fa] text-[10px] uppercase text-slate-500 sticky top-0 shadow-sm z-10 border-b border-slate-200">
+                        <tr>
+                            <th class="p-3 w-12 text-center">STT</th>
+                            <th class="p-3">Tên Vật Tư / Thiết Bị</th>
+                            <th class="p-3 text-center">Vị trí (Kệ/Ngăn)</th>
+                            <th class="p-3 text-center w-24">Tồn Kho</th>
+                            <th class="p-3 text-right">Đơn Giá Vốn</th>
+                            <th class="p-3 text-right">Tổng Giá Trị</th>
+                            <th class="p-3 text-center w-28">Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-inventory" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Data injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modInventory = {
+    fullData: [], // Lưu trữ mảng tồn kho gốc để dùng cho tính năng search
+
+    fmtMoney: (num) => new Intl.NumberFormat('vi-VN').format(num || 0),
+
+    load: async () => {
+        const tbody = document.getElementById('tbl-inventory');
+        tbody.innerHTML = '<tr><td colspan="7" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-slate-400 text-3xl"></i><p class="mt-2 text-xs font-bold text-slate-500">Đang đồng bộ dữ liệu Kho & Giá vốn...</p></td></tr>';
+
+        try {
+            // Tải đồng thời Danh mục Sản phẩm và Lịch sử Mua Hàng/Nhập Kho
+            const [resProd, resPur] = await Promise.all([
+                fetch('/api/products?t=' + Date.now()),
+                fetch('/api/purchases?t=' + Date.now())
+            ]);
+            
+            const dataProd = await resProd.json();
+            const dataPur = await resPur.json();
+
+            if (dataProd.success && dataPur.success) {
+                const products = dataProd.data || [];
+                const purchases = dataPur.data || [];
+                
+                // 1. Tạo Map Tồn kho cơ bản từ Danh mục sản phẩm
+                let inventoryMap = {};
+                products.forEach(p => {
+                    inventoryMap[p.id] = {
+                        id: p.id,
+                        name: p.product_name || p.name,
+                        unit: p.unit || 'Cái',
+                        stock_qty: 0,
+                        avg_price: p.cost_price || p.price || 0, // Giá vốn mặc định
+                        total_value: 0,
+                        locations: new Set() // Dùng Set để lưu các vị trí kệ không trùng lặp
+                    };
+                });
+
+                // 2. Quét qua Lịch sử Mua Hàng để tính tổng nhập thực tế
+                purchases.forEach(po => {
+                    // Chỉ tính những đơn đã thực sự nhập kho an toàn
+                    if (po.status === 'Hoàn Tất Nhập Kho' && po.items) {
+                        po.items.forEach(item => {
+                            if (item.product_id && inventoryMap[item.product_id]) {
+                                const actQty = parseFloat(item.actual_qty) || 0;
+                                inventoryMap[item.product_id].stock_qty += actQty;
+                                
+                                // Cập nhật lại giá vốn theo giá nhập gần nhất (nếu có giá trị)
+                                if (item.price > 0) {
+                                    inventoryMap[item.product_id].avg_price = item.price;
+                                }
+
+                                // Thu thập vị trí kệ (Bin/Rack)
+                                if (item.bin_location && item.bin_location.trim() !== '') {
+                                    inventoryMap[item.product_id].locations.add(item.bin_location.trim());
+                                }
+                            } else if (item.product_id) {
+                                // Nếu có mã SP mới chưa nằm trong danh mục (phòng hờ)
+                                inventoryMap[item.product_id] = {
+                                    id: item.product_id,
+                                    name: item.name || 'Sản phẩm không xác định',
+                                    unit: item.unit || 'Cái',
+                                    stock_qty: parseFloat(item.actual_qty) || 0,
+                                    avg_price: parseFloat(item.price) || 0,
+                                    locations: new Set(item.bin_location ? [item.bin_location.trim()] : [])
+                                };
+                            }
+                        });
+                    }
+                });
+
+                // 3. Chuyển Map thành Mảng, tính toán tổng giá trị và loại bỏ các SP có tồn = 0 (nếu muốn)
+                let finalInventory = [];
+                let grandTotalQty = 0;
+                let grandTotalValue = 0;
+                let lowStockCount = 0;
+
+                Object.values(inventoryMap).forEach(item => {
+                    item.total_value = item.stock_qty * item.avg_price;
+                    item.location_str = item.locations.size > 0 ? Array.from(item.locations).join(', ') : 'Chưa xếp kệ';
+                    
+                    // Chỉ hiển thị các mặt hàng đã từng nhập hoặc có tồn kho
+                    if(item.stock_qty > 0) {
+                        finalInventory.push(item);
+                        grandTotalQty += item.stock_qty;
+                        grandTotalValue += item.total_value;
+                        if (item.stock_qty < 5) lowStockCount++; // Ngưỡng cảnh báo hết hàng: < 5
+                    }
+                });
+
+                // Sắp xếp theo giá trị tồn kho giảm dần
+                finalInventory.sort((a, b) => b.total_value - a.total_value);
+                
+                // Lưu vào biến toàn cục để dùng cho thanh Search
+                window.modInventory.fullData = finalInventory;
+
+                // Cập nhật Dashboard Cards
+                document.getElementById('inv-total-items').innerHTML = `${window.modInventory.fmtMoney(grandTotalQty)} <span class="text-sm font-bold text-slate-500">Đơn vị</span>`;
+                document.getElementById('inv-total-value').innerText = window.modInventory.fmtMoney(grandTotalValue) + ' đ';
+                document.getElementById('inv-low-stock').innerHTML = `${lowStockCount} <span class="text-sm font-bold text-red-400">Mã (SKU)</span>`;
+
+                // Hiển thị bảng
+                window.modInventory.renderTable(finalInventory);
+            }
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-red-500 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i> Lỗi kết nối hệ thống dữ liệu.</td></tr>';
+        }
+    },
+
+    renderTable: (dataArray) => {
+        const tbody = document.getElementById('tbl-inventory');
+        
+        if(dataArray.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="p-10 text-center text-slate-400 font-medium bg-slate-50/50"><i class="fas fa-box-open text-3xl mb-2"></i><br>Kho hiện tại đang trống.<br>Hãy tạo phiếu Mua Hàng và Nhập Kho để theo dõi.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = dataArray.map((i, idx) => {
+            // Xác định trạng thái cảnh báo tồn kho
+            let statusBadge = '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md text-[10px] font-black uppercase shadow-sm">Có sẵn</span>';
+            let qtyClass = 'text-emerald-600 font-black';
+            
+            if (i.stock_qty < 5) {
+                statusBadge = '<span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-md text-[10px] font-black uppercase shadow-sm animate-pulse">Sắp hết</span>';
+                qtyClass = 'text-red-600 font-black';
+            }
+
+            return `
+            <tr class="hover:bg-emerald-50/50 transition cursor-pointer border-b border-slate-50">
+                <td class="p-3 text-center font-bold text-slate-400 text-xs">${idx + 1}</td>
+                <td class="p-3">
+                    <p class="font-bold text-slate-800 text-sm">${i.name}</p>
+                    <p class="text-[10px] text-slate-400 font-mono mt-0.5">Mã SP: ${i.id} | ĐVT: ${i.unit}</p>
+                </td>
+                <td class="p-3 text-center">
+                    <span class="inline-block bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold truncate max-w-[120px]" title="${i.location_str}">
+                        <i class="fas fa-map-marker-alt mr-1 text-slate-400"></i> ${i.location_str}
+                    </span>
+                </td>
+                <td class="p-3 text-center text-base ${qtyClass}">${window.modInventory.fmtMoney(i.stock_qty)}</td>
+                <td class="p-3 text-right">
+                    <p class="font-bold text-slate-600 text-xs">${window.modInventory.fmtMoney(i.avg_price)} đ</p>
+                </td>
+                <td class="p-3 text-right">
+                    <p class="font-black text-slate-800 text-sm">${window.modInventory.fmtMoney(i.total_value)} đ</p>
+                </td>
+                <td class="p-3 text-center">${statusBadge}</td>
+            </tr>
+            `;
+        }).join('');
+    },
+
+    // Hàm lọc dữ liệu trên thanh tìm kiếm
+    filterTable: (keyword) => {
+        const kw = keyword.toLowerCase().trim();
+        if (kw === '') {
+            window.modInventory.renderTable(window.modInventory.fullData);
+            return;
+        }
+        
+        const filtered = window.modInventory.fullData.filter(item => 
+            (item.name || '').toLowerCase().includes(kw) || 
+            (item.location_str || '').toLowerCase().includes(kw) ||
+            item.id.toString().includes(kw)
+        );
+        window.modInventory.renderTable(filtered);
+    }
+};
+
+window.modInventory.load();
+</script>

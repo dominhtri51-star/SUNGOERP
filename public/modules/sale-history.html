@@ -1,0 +1,305 @@
+<div class="h-full flex flex-col bg-white relative overflow-hidden text-sm" id="orders-container">
+    
+    <!-- MÀN HÌNH 1: BẢNG DANH SÁCH (COPY 100% THEO ẢNH SCREENSHOT CỦA SẾP) -->
+    <div id="view-list" class="flex-1 flex flex-col p-6 w-full h-full overflow-y-auto">
+        
+        <!-- Header giống ảnh: Chữ Quản Lý Đơn Hàng to góc trái -->
+        <h2 class="text-[22px] font-bold text-slate-800 mb-8">Quản Lý Đơn Hàng</h2>
+        
+        <!-- Ô Khung Bảng -->
+        <div class="border border-slate-100 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] flex flex-col bg-white overflow-hidden">
+            
+            <!-- Thanh Tiêu đề nhỏ (Có cục vuông cam) -->
+            <div class="p-4 border-b border-slate-100 flex items-center gap-2">
+                <div class="w-2.5 h-2.5 bg-amber-500 rounded-sm"></div>
+                <h3 class="font-bold text-slate-800 text-[13px]">Quản Lý Đơn Hàng</h3>
+                <div class="ml-auto relative w-64">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search"></i></span>
+                    <input type="text" placeholder="Tìm MÃ ĐƠN hoặc SĐT..." oninput="window.modOrders.filterOrders(this.value)" class="w-full border border-slate-200 rounded-lg py-1.5 pl-10 pr-4 text-xs font-bold outline-none focus:border-amber-500 bg-slate-50 transition">
+                </div>
+            </div>
+
+            <!-- BẢNG DỮ LIỆU ĐÚNG CHUẨN SUNGO ERP -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left whitespace-nowrap">
+                    <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold tracking-wider border-b border-slate-100">
+                        <tr>
+                            <th class="p-4 py-3">Mã Đơn</th>
+                            <th class="p-4 py-3">Khách Hàng / Đại Lý</th>
+                            <th class="p-4 py-3 text-right">Tổng Tiền</th>
+                            <th class="p-4 py-3 text-center">Ngày Tạo</th>
+                            <th class="p-4 py-3 text-center">Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-tbody" class="divide-y divide-slate-50">
+                        <!-- Dữ liệu sẽ được Render giống hệt ảnh -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH 2: MINI-ERP CHI TIẾT ĐƠN HÀNG (TRƯỢT RA TỪ BÊN PHẢI) -->
+    <div id="view-detail" class="absolute inset-0 bg-slate-50 z-20 flex-col hidden overflow-hidden transition-all duration-300 transform translate-x-full">
+        <!-- HEADER CỦA MINI-ERP -->
+        <div class="bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm shrink-0">
+            <button onclick="window.modOrders.showList()" class="text-slate-500 hover:text-blue-600 font-black text-sm flex items-center gap-2"><i class="fas fa-arrow-left"></i> QUAY LẠI BẢNG</button>
+            <h2 class="font-black text-slate-800 text-lg">XỬ LÝ ĐƠN: <span id="dt-order-code" class="text-amber-500">---</span></h2>
+            <button onclick="window.modOrders.saveDetail()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-[13px] font-black shadow-sm transition"><i class="fas fa-save mr-1"></i> LƯU THAY ĐỔI</button>
+        </div>
+
+        <!-- 10 NHÓM DỮ LIỆU BÊN TRONG -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <div class="grid grid-cols-12 gap-6 max-w-7xl mx-auto">
+                
+                <!-- CỘT TRÁI (8/12) -->
+                <div class="col-span-12 xl:col-span-8 flex flex-col gap-6">
+                    <!-- Nhóm Thiết bị & Serial -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                        <h3 class="font-black text-slate-800 text-sm uppercase mb-4 border-b pb-2"><i class="fas fa-barcode text-blue-500 mr-2"></i>Chi tiết Thiết bị & Serial</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-[13px]">
+                                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px]">
+                                    <tr><th class="p-2">Tên Hàng Hóa</th><th class="p-2 text-center">SL</th><th class="p-2 text-right">Thành Tiền</th><th class="p-2 w-1/3">Mã Serial / IMEI</th></tr>
+                                </thead>
+                                <tbody id="dt-items" class="divide-y divide-slate-50"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Giao hàng & Hình ảnh -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                            <h3 class="font-black text-slate-800 text-[12px] uppercase mb-4 border-b pb-2 text-emerald-600">Vận Chuyển / Giao Hàng</h3>
+                            <div class="space-y-3">
+                                <input type="text" id="dt-delivery" placeholder="Đơn vị vận chuyển (VD: Xe tải nhà)" class="w-full border border-slate-200 rounded p-2 text-sm outline-none focus:border-emerald-500">
+                                <input type="text" id="dt-driver" placeholder="Tên tài xế & SĐT" class="w-full border border-slate-200 rounded p-2 text-sm outline-none focus:border-emerald-500">
+                                <input type="text" id="dt-plate" placeholder="Biển số xe" class="w-full border border-slate-200 rounded p-2 text-sm outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
+                            <h3 class="font-black text-slate-800 text-[12px] uppercase mb-4 border-b pb-2 text-purple-600">Hồ Sơ Chứng Từ</h3>
+                            <div class="flex-1 border-2 border-dashed border-slate-300 rounded flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-purple-400 hover:text-purple-500 transition cursor-pointer">
+                                <i class="fas fa-upload text-2xl mb-1"></i><span class="text-[11px] font-bold uppercase">Upload File & Ảnh</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nhóm 4: Ghi chú nội bộ -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                        <h3 class="font-black text-slate-800 text-sm uppercase mb-3"><i class="fas fa-pen-square text-amber-500 mr-2"></i>Ghi chú Xử Lý</h3>
+                        <textarea id="dt-notes" rows="3" class="w-full border border-slate-200 rounded-lg p-3 text-sm font-medium outline-none focus:border-amber-500 resize-none" placeholder="Nhập các vấn đề phát sinh, lưu ý cho kế toán..."></textarea>
+                    </div>
+                </div>
+
+                <!-- CỘT PHẢI (4/12) -->
+                <div class="col-span-12 xl:col-span-4 flex flex-col gap-6">
+                    <!-- Khách hàng -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Thông tin Khách Hàng</p>
+                        <p id="dt-customer-name" class="font-black text-slate-800 text-base">---</p>
+                        <p id="dt-customer-phone" class="text-[12px] font-bold text-slate-500 mt-1"><i class="fas fa-phone-alt text-slate-400 mr-1"></i> ---</p>
+                    </div>
+
+                    <!-- Công Nợ Tài Chính -->
+                    <div class="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-5 text-white relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 opacity-10 text-6xl"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <h3 class="font-black text-emerald-400 text-xs uppercase mb-3 border-b border-slate-700 pb-2 relative z-10">Tài Chính & Công Nợ</h3>
+                        <div class="flex justify-between items-center mb-2 relative z-10">
+                            <span class="text-xs text-slate-400 font-bold uppercase">Tổng Đơn:</span>
+                            <span id="dt-total-money" class="font-black">0 đ</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-3 relative z-10">
+                            <span class="text-xs text-emerald-400 font-bold uppercase">Đã Thu:</span>
+                            <input type="number" id="dt-paid-money" oninput="window.modOrders.calcDebt()" class="w-24 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-right text-emerald-400 font-black text-sm outline-none focus:border-emerald-400">
+                        </div>
+                        <div class="pt-3 border-t border-slate-600 border-dashed flex justify-between items-center relative z-10">
+                            <span class="text-[11px] text-red-400 font-black uppercase">Còn Nợ:</span>
+                            <span id="dt-debt-money" class="font-black text-xl text-red-500">0 đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Đổi Trạng Thái -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">Trạng Thái Đơn Hàng</label>
+                        <select id="dt-status-select" class="w-full border-2 border-blue-100 bg-blue-50 text-blue-700 rounded p-2 text-sm font-black outline-none focus:border-blue-500 mb-4" disabled>
+                            <option value="PENDING">⏳ CHỜ XÁC NHẬN</option>
+                            <option value="PROCESSING">⚙️ ĐANG XỬ LÝ</option>
+                            <option value="PACKED">📦 SẴN SÀNG GIAO</option>
+                            <option value="SHIPPING_CMD">🚛 LỆNH XUẤT</option>
+                            <option value="SHIPPED">🚚 ĐÃ GIAO</option>
+                            <option value="COMPLETED">✅ HOÀN THÀNH</option>
+                            <option value="RETURNED">🔄 TRẢ HÀNG</option>
+                            <option value="CANCELLED">❌ HỦY ĐƠN</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modOrders = {
+    allOrders: [],
+    
+    // RENDER BẢNG CHÍNH Y HỆT ẢNH SCREENSHOT
+    loadData: async () => {
+        const tbody = document.getElementById('orders-tbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl"></i></td></tr>';
+        
+        try {
+            const res = await fetch('/api/orders');
+            const data = await res.json();
+            if(data.success) {
+                window.modOrders.allOrders = data.data || [];
+                window.modOrders.renderTable(window.modOrders.allOrders);
+            }
+        } catch(e) {}
+    },
+
+    filterOrders: (val) => {
+        const q = val.toLowerCase().trim();
+        const filtered = window.modOrders.allOrders.filter(o => 
+            (o.order_code || '').toLowerCase().includes(q) || 
+            (o.customer_name || '').toLowerCase().includes(q) ||
+            (o.phone || '').includes(q)
+        );
+        window.modOrders.renderTable(filtered);
+    },
+    
+    renderTable: (dataList) => {
+        const tbody = document.getElementById('orders-tbody');
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+        
+        if(dataList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold">Không có dữ liệu</td></tr>'; return;
+        }
+
+        tbody.innerHTML = dataList.map(o => {
+            const d = new Date(o.created_at);
+            const dateStr = d.toLocaleDateString('vi-VN'); 
+            const total = parseFloat(o.total_amount) || 0;
+            
+            // Format giống y ảnh: Nền xanh dương nhạt, chữ xanh dương đậm
+            let stBadge = `<span class="px-3 py-1 rounded bg-[#e8f0fe] text-[#1a73e8] text-[9px] font-black uppercase tracking-wider">${o.status || 'COMPLETED'}</span>`;
+            
+            return `
+            <!-- Dòng được gắn sự kiện onClick để mở Mini-ERP -->
+            <tr class="hover:bg-amber-50/50 transition border-b border-slate-50 last:border-0 cursor-pointer group" onclick="window.modOrders.openDetail(${o.id})">
+                <td class="p-4 py-4 font-bold text-amber-500 text-[13px] group-hover:underline">${o.order_code}</td>
+                <td class="p-4 py-4">
+                    <p class="font-bold text-slate-800 text-[13px]">${o.customer_name || 'Khách Lẻ'}</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1"><i class="fas fa-phone-alt text-[9px]"></i> ${o.phone || 'không có sđt'}</p>
+                </td>
+                <td class="p-4 py-4 font-black text-red-500 text-[13px] text-right">${fmt(total)} đ</td>
+                <td class="p-4 py-4 text-slate-600 text-[13px] text-center">${dateStr}</td>
+                <td class="p-4 py-4 text-center">${stBadge}</td>
+            </tr>`;
+        }).join('');
+    },
+
+    // XỬ LÝ MINI-ERP BÊN TRONG
+    openDetail: async (id) => {
+        window.modOrders.currentDetailId = id;
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+        try {
+            const res = await fetch('/api/orders/' + id);
+            const data = await res.json();
+            
+            if(data.success) {
+                const o = data.data;
+                document.getElementById('dt-order-code').innerText = o.order_code;
+                document.getElementById('dt-customer-name').innerText = o.customer_name || 'Khách Lẻ';
+                document.getElementById('dt-customer-phone').innerHTML = `<i class="fas fa-phone-alt text-slate-400 mr-2"></i>${o.phone || 'Chưa cập nhật'}`;
+                
+                document.getElementById('dt-delivery').value = o.delivery_company || '';
+                document.getElementById('dt-driver').value = o.driver_name || '';
+                document.getElementById('dt-plate').value = o.license_plate || '';
+                document.getElementById('dt-notes').value = o.notes || '';
+                
+                document.getElementById('dt-total-money').setAttribute('data-val', o.total_amount || 0);
+                document.getElementById('dt-total-money').innerText = fmt(o.total_amount) + ' đ';
+                document.getElementById('dt-paid-money').value = o.paid_amount || 0;
+                
+                const st = document.getElementById('dt-status-select');
+                st.value = o.status || 'COMPLETED';
+
+                document.getElementById('dt-items').innerHTML = (o.items || []).map(i => `
+                    <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition">
+                        <td class="p-2 font-bold text-slate-800">${i.product_name} <br><span class="text-[9px] text-slate-400 font-mono">${i.sku || ''}</span></td>
+                        <td class="p-2 font-black text-center">${i.quantity}</td>
+                        <td class="p-2 font-black text-blue-600 text-right">${fmt(i.total || (i.price * (i.quantity)))}đ</td>
+                        <td class="p-2"><input type="text" value="${i.serial_number || ''}" placeholder="Nhập Serial..." class="w-full border border-slate-200 rounded p-1.5 text-xs outline-none focus:border-blue-500 bg-amber-50 focus:bg-white transition font-mono uppercase shadow-inner"></td>
+                    </tr>
+                `).join('');
+
+                window.modOrders.calcDebt();
+
+                // Hiệu ứng trượt ra
+                const list = document.getElementById('view-list');
+                const detail = document.getElementById('view-detail');
+                detail.classList.remove('hidden');
+                
+                // Đợi 1 chút để render xong rồi mới kích hoạt hiệu ứng trượt
+                setTimeout(() => {
+                    detail.classList.remove('translate-x-full');
+                    list.style.opacity = '0.3';
+                }, 10);
+            }
+        } catch(e) {}
+    },
+
+    calcDebt: () => {
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+        const total = parseFloat(document.getElementById('dt-total-money').getAttribute('data-val')) || 0;
+        const paid = parseFloat(document.getElementById('dt-paid-money').value) || 0;
+        const debt = total - paid;
+        
+        const debtEl = document.getElementById('dt-debt-money');
+        debtEl.innerText = fmt(debt) + ' đ';
+        debtEl.className = debt <= 0 ? "font-black text-xl text-emerald-400" : "font-black text-xl text-red-500";
+    },
+
+    showList: () => {
+        const list = document.getElementById('view-list');
+        const detail = document.getElementById('view-detail');
+        detail.classList.add('translate-x-full');
+        list.style.opacity = '1';
+        setTimeout(() => { detail.classList.add('hidden'); }, 300);
+    },
+
+    saveDetail: async () => {
+        const id = window.modOrders.currentDetailId;
+        if (!id) return;
+        
+        const payload = {
+            delivery_company: document.getElementById('dt-delivery').value,
+            driver_name: document.getElementById('dt-driver').value,
+            license_plate: document.getElementById('dt-plate').value,
+            notes: document.getElementById('dt-notes').value,
+            paid_amount: parseFloat(document.getElementById('dt-paid-money').value) || 0,
+            status: document.getElementById('dt-status-select').value
+        };
+        
+        try {
+            const res = await fetch('/api/orders/' + id + '/status', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("✅ LƯU THÀNH CÔNG DỮ LIỆU ĐƠN HÀNG!");
+                window.modOrders.showList();
+            } else {
+                alert("❌ Lỗi: " + data.error);
+            }
+        } catch (e) {
+            alert("❌ Lỗi kết nối!");
+        }
+    }
+};
+
+window.modOrders.loadData();
+</script>

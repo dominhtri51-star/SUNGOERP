@@ -1,0 +1,367 @@
+<div class="h-full flex flex-col space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col relative overflow-hidden">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 shrink-0 gap-4">
+            <div>
+                <h3 class="font-bold text-slate-900 text-lg"><i class="fas fa-ship text-blue-600"></i> Quản Lý Đơn Nhập Khẩu & Chứng Từ</h3>
+                <p class="text-xs text-slate-500 mt-1">Lưu trữ Tờ khai Hải quan, Form E, C/O, C/Q, B/L để đối soát Thuế.</p>
+            </div>
+            <button onclick="window.modImport.openCreate()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow"><i class="fas fa-plus mr-1"></i> Tạo Lô Hàng Mới</button>
+        </div>
+        
+        <div class="overflow-y-auto flex-1 border rounded-lg">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase text-slate-600 sticky top-0 shadow-sm z-10">
+                    <tr>
+                        <th class="p-4 font-bold border-b w-1/3">Mã Lô Hàng (PO) & Ghi Chú</th>
+                        <th class="p-4 font-bold border-b">Nhà Cung Cấp</th>
+                        <th class="p-4 font-bold border-b text-right">Tổng Tiền</th>
+                        <th class="p-4 font-bold border-b text-center">Trạng Thái</th>
+                        <th class="p-4 font-bold border-b text-center w-32">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="tbl-imports" class="divide-y text-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL TẠO MỚI / SỬA THÔNG TIN -->
+<div id="import-create-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
+        <h3 id="modal-title" class="font-black text-xl mb-4 border-b-2 border-blue-500 pb-2 text-slate-800">Tạo Lô Hàng Mới</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Mã PO / Contract No <span class="text-red-500">*</span></label>
+                <input type="text" id="i-po" placeholder="VD: PO-ZEN-082026" class="w-full border-2 p-2 rounded outline-none focus:border-blue-500 font-mono font-bold uppercase text-blue-700">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Ghi chú (Mô tả lô hàng) <span class="text-red-500">*</span></label>
+                <input type="text" id="i-note" placeholder="VD: Lô 500 biến tần ZEN, nhập kho Bình Dương..." class="w-full border-2 p-2 rounded outline-none focus:border-amber-500 font-semibold bg-amber-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Nhà Cung Cấp (Vendor)</label>
+                <input type="text" id="i-sup" placeholder="VD: Deye Inverter Co., Ltd" class="w-full border-2 p-2 rounded outline-none focus:border-blue-500 font-bold">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Tổng Giá Trị</label>
+                    <input type="number" id="i-val" class="w-full border-2 p-2 rounded outline-none focus:border-blue-500 font-black text-slate-700">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Loại Tiền</label>
+                    <select id="i-cur" class="w-full border-2 p-2 rounded outline-none focus:border-blue-500 font-bold">
+                        <option value="USD">USD ($)</option>
+                        <option value="CNY">RMB (¥)</option>
+                        <option value="VND">VNĐ (đ)</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Ngày Dự Kiến Cập Cảng Cát Lái (ETA)</label>
+                <input type="date" id="i-eta" class="w-full border-2 p-2 rounded outline-none focus:border-blue-500 text-sm font-bold text-blue-800">
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+            <button onclick="document.getElementById('import-create-modal').classList.replace('flex', 'hidden')" class="px-5 py-2.5 bg-slate-200 text-slate-700 rounded font-bold hover:bg-slate-300">Hủy</button>
+            <button id="btn-save-po" onclick="window.modImport.saveCreate()" class="px-5 py-2.5 bg-blue-600 text-white rounded font-bold hover:bg-blue-700"><i class="fas fa-save mr-1"></i> Lưu PO</button>
+        </div>
+    </div>
+</div>
+
+<!-- KÉT SẮT CHỨNG TỪ -->
+<div id="import-docs-drawer" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden z-[60] flex justify-end">
+    <div class="bg-slate-50 w-full md:w-[600px] h-full shadow-2xl flex flex-col animate-slide-in-right">
+        
+        <div class="bg-blue-800 text-white p-5 shrink-0 shadow-md">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-black text-xl"><i class="fas fa-folder-open text-amber-400"></i> Két Sắt Chứng Từ HQ</h3>
+                <button onclick="window.modImport.closeDocs()" class="text-white hover:text-red-400"><i class="fas fa-times text-2xl"></i></button>
+            </div>
+            <p class="font-mono text-amber-400 font-bold text-lg" id="doc-po-code">PO-XXXX</p>
+            <p class="text-sm text-blue-200" id="doc-sup-name">Nhà cung cấp...</p>
+            <input type="hidden" id="doc-id">
+            
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                    <span class="block text-[10px] font-bold text-blue-300 uppercase mb-1">Trạng thái lô hàng:</span>
+                    <select id="doc-status" onchange="window.modImport.updateStatus(this.value)" class="w-full bg-blue-900 border border-blue-700 text-white text-xs font-bold py-1.5 px-2 rounded outline-none focus:border-amber-400 cursor-pointer">
+                        <option value="Chờ Thanh Toán">Chờ Thanh Toán</option>
+                        <option value="Đang Sản Xuất">Đang Sản Xuất</option>
+                        <option value="Đã Lên Tàu (ETD)">Đã Lên Tàu (ETD)</option>
+                        <option value="Đang Làm Thủ Tục HQ">Đang Làm Thủ Tục HQ</option>
+                        <option value="Hoàn Tất Nhập Kho">Hoàn Tất Nhập Kho</option>
+                    </select>
+                </div>
+                <div>
+                    <span class="block text-[10px] font-bold text-blue-300 uppercase mb-1">Ghi chú (Tự động lưu):</span>
+                    <textarea id="doc-note" onchange="window.modImport.updateNote(this.value)" rows="2" class="w-full bg-blue-900 border border-blue-700 text-amber-300 text-xs p-1.5 rounded outline-none focus:border-amber-400 placeholder-blue-500 font-medium leading-tight" placeholder="Nhập mô tả cho lô hàng này..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div class="bg-white border rounded-lg overflow-hidden shadow-sm">
+                <div class="bg-slate-100 px-4 py-2 border-b flex justify-between items-center">
+                    <h4 class="font-bold text-slate-800 text-sm"><i class="fas fa-file-invoice text-blue-500 w-5"></i> 1. Thương Mại (Contract, PKL)</h4>
+                    <label class="text-[10px] bg-blue-500 text-white px-2 py-1 rounded cursor-pointer hover:bg-blue-600 font-bold shadow-sm">
+                        <i class="fas fa-upload"></i> Thêm File
+                        <input type="file" class="hidden" onchange="window.modImport.uploadDoc(this, 'commercial')" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                    </label>
+                </div>
+                <div class="p-3 bg-white" id="list-commercial"></div>
+            </div>
+
+            <div class="bg-white border rounded-lg overflow-hidden shadow-sm">
+                <div class="bg-slate-100 px-4 py-2 border-b flex justify-between items-center">
+                    <h4 class="font-bold text-slate-800 text-sm"><i class="fas fa-ship text-emerald-500 w-5"></i> 2. Vận Tải (Bill of Lading - B/L)</h4>
+                    <label class="text-[10px] bg-emerald-500 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-600 font-bold shadow-sm">
+                        <i class="fas fa-upload"></i> Thêm File
+                        <input type="file" class="hidden" onchange="window.modImport.uploadDoc(this, 'transport')" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                    </label>
+                </div>
+                <div class="p-3 bg-white" id="list-transport"></div>
+            </div>
+
+            <div class="bg-white border rounded-lg overflow-hidden shadow-sm border-amber-200">
+                <div class="bg-amber-50 px-4 py-2 border-b border-amber-200 flex justify-between items-center">
+                    <h4 class="font-bold text-amber-800 text-sm"><i class="fas fa-certificate text-amber-500 w-5"></i> 3. Chứng Nhận (C/O, C/Q, Form E)</h4>
+                    <label class="text-[10px] bg-amber-500 text-white px-2 py-1 rounded cursor-pointer hover:bg-amber-600 font-bold shadow-sm">
+                        <i class="fas fa-upload"></i> Thêm File
+                        <input type="file" class="hidden" onchange="window.modImport.uploadDoc(this, 'cert')" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                    </label>
+                </div>
+                <div class="p-3 bg-white" id="list-cert"></div>
+            </div>
+
+            <div class="bg-white border rounded-lg overflow-hidden shadow-sm border-red-200">
+                <div class="bg-red-50 px-4 py-2 border-b border-red-200 flex justify-between items-center">
+                    <h4 class="font-bold text-red-800 text-sm"><i class="fas fa-stamp text-red-500 w-5"></i> 4. Hải Quan (Tờ Khai, Thuế)</h4>
+                    <label class="text-[10px] bg-red-500 text-white px-2 py-1 rounded cursor-pointer hover:bg-red-600 font-bold shadow-sm">
+                        <i class="fas fa-upload"></i> Thêm File
+                        <input type="file" class="hidden" onchange="window.modImport.uploadDoc(this, 'customs')" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                    </label>
+                </div>
+                <div class="p-3 bg-white" id="list-customs"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .animate-slide-in-right { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+</style>
+
+<script>
+    window.modImport = {
+        list: [],
+        editId: null,
+        
+        load: async () => {
+            try {
+                const res = await fetch('/api/imports?t=' + Date.now());
+                const data = await res.json();
+                if(data.success) {
+                    window.modImport.list = data.data;
+                    const tbody = document.getElementById('tbl-imports');
+                    
+                    if(data.data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Chưa có lô hàng nhập khẩu nào.</td></tr>`;
+
+                    tbody.innerHTML = data.data.map(i => {
+                        let statusColor = 'bg-slate-100 text-slate-600';
+                        if (i.status === 'Đang Sản Xuất') statusColor = 'bg-blue-100 text-blue-700';
+                        if (i.status === 'Đã Lên Tàu (ETD)') statusColor = 'bg-amber-100 text-amber-700';
+                        if (i.status === 'Đang Làm Thủ Tục HQ') statusColor = 'bg-red-100 text-red-700';
+                        if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700';
+
+                        return `
+                            <tr class="hover:bg-blue-50/50 transition">
+                                <td class="p-4">
+                                    <p onclick="window.modImport.openDocs(${i.id})" class="font-mono font-bold text-blue-700 text-sm cursor-pointer hover:text-blue-500 hover:underline flex items-center gap-2">
+                                        <i class="fas fa-file-contract text-slate-400"></i> ${i.po_code}
+                                    </p>
+                                    ${i.note ? `<p class="text-[11px] text-slate-600 bg-amber-50 p-1.5 rounded mt-1.5 line-clamp-2 border border-amber-100 shadow-sm"><i class="fas fa-comment-dots text-amber-400 mr-1"></i>${i.note}</p>` : ''}
+                                </td>
+                                <td class="p-4 font-bold text-slate-800">
+                                    ${i.supplier_name}
+                                    ${i.eta_date ? `<p class="text-[10px] text-slate-400 font-normal mt-1"><i class="far fa-clock"></i> ETA: ${new Date(i.eta_date).toLocaleDateString('vi-VN')}</p>` : ''}
+                                </td>
+                                <td class="p-4 text-right font-black text-slate-700">${new Intl.NumberFormat('vi-VN').format(i.total_value)} <span class="text-xs text-slate-400">${i.currency}</span></td>
+                                <td class="p-4 text-center"><span class="${statusColor} px-2.5 py-1 rounded-md text-[10px] font-black uppercase border shadow-sm">${i.status || 'Chờ Thanh Toán'}</span></td>
+                                <td class="p-4 text-center">
+                                    <div class="flex flex-col gap-2">
+                                        <button onclick="window.modImport.openDocs(${i.id})" class="bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 px-3 py-1.5 rounded-lg font-bold transition shadow-sm border border-amber-200 text-xs flex items-center justify-center gap-2 mx-auto w-full">
+                                            <i class="fas fa-folder-open text-lg"></i> Mở Két Chứng Từ
+                                        </button>
+                                        <button onclick="window.modImport.openEdit(${i.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1 rounded-lg font-bold transition shadow-sm border text-[11px] flex items-center justify-center gap-2 mx-auto w-full">
+                                            <i class="fas fa-edit text-blue-500"></i> Sửa Thông Tin
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            } catch(e) {}
+        },
+
+        openCreate: () => {
+            window.modImport.editId = null;
+            document.getElementById('modal-title').innerText = 'Tạo Lô Hàng Mới';
+            document.getElementById('btn-save-po').innerHTML = '<i class="fas fa-save mr-1"></i> Lưu PO';
+            ['i-po', 'i-note', 'i-sup', 'i-val', 'i-eta'].forEach(el => document.getElementById(el).value = '');
+            document.getElementById('i-cur').value = 'USD';
+            document.getElementById('import-create-modal').classList.replace('hidden', 'flex');
+        },
+
+        openEdit: (id) => {
+            const item = window.modImport.list.find(x => x.id === id);
+            if (!item) return;
+            window.modImport.editId = id; 
+            document.getElementById('modal-title').innerText = 'Sửa Lô Hàng: ' + item.po_code;
+            document.getElementById('btn-save-po').innerHTML = '<i class="fas fa-check mr-1"></i> Cập Nhật';
+            document.getElementById('i-po').value = item.po_code || '';
+            document.getElementById('i-note').value = item.note || '';
+            document.getElementById('i-sup').value = item.supplier_name || '';
+            document.getElementById('i-val').value = item.total_value || '';
+            document.getElementById('i-cur').value = item.currency || 'USD';
+            document.getElementById('i-eta').value = item.eta_date || '';
+            document.getElementById('import-create-modal').classList.replace('hidden', 'flex');
+        },
+
+        saveCreate: async () => {
+            const payload = {
+                po_code: document.getElementById('i-po').value.trim(),
+                note: document.getElementById('i-note').value.trim(),
+                supplier_name: document.getElementById('i-sup').value.trim(),
+                total_value: document.getElementById('i-val').value || 0,
+                currency: document.getElementById('i-cur').value,
+                eta_date: document.getElementById('i-eta').value || null
+            };
+            if(!payload.po_code || !payload.note) return alert('Nhập đủ Mã PO và Ghi chú lô hàng!');
+
+            const id = window.modImport.editId;
+            const url = id ? `/api/imports/${id}` : '/api/imports';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, { 
+                    method: method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) 
+                });
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('import-create-modal').classList.replace('flex', 'hidden');
+                    window.modImport.load();
+                } else alert('❌ Lỗi: ' + data.error);
+            } catch(e) {}
+        },
+
+        // Đồng bộ hoàn toàn endpoint về /api/imports
+        openDocs: async (id) => {
+            const i = window.modImport.list.find(x => x.id == id);
+            if(!i) return;
+
+            document.getElementById('doc-id').value = id;
+            document.getElementById('doc-po-code').innerText = i.po_code;
+            document.getElementById('doc-sup-name').innerText = i.supplier_name;
+            document.getElementById('doc-status').value = i.status || 'Chờ Thanh Toán';
+            document.getElementById('doc-note').value = i.note || '';
+
+            window.modImport.renderFileList({ commercial: [], transport: [], cert: [], customs: [] });
+            document.getElementById('import-docs-drawer').classList.replace('hidden', 'flex');
+
+            try {
+                const res = await fetch('/api/imports/' + id + '/docs?t=' + Date.now());
+                const data = await res.json();
+                if(data.success && data.docs) {
+                    window.modImport.renderFileList(data.docs);
+                }
+            } catch(e) {}
+        },
+
+        closeDocs: () => document.getElementById('import-docs-drawer').classList.replace('flex', 'hidden'),
+
+        updateStatus: async (newStatus) => {
+            const id = document.getElementById('doc-id').value;
+            await fetch(`/api/imports/${id}/status`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus }) });
+            window.modImport.load();
+        },
+
+        updateNote: async (newNote) => {
+            const id = document.getElementById('doc-id').value;
+            await fetch(`/api/imports/${id}/note`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ note: newNote }) });
+            window.modImport.load();
+        },
+
+        renderFileList: (docs) => {
+            const renderCategory = (arr, type) => {
+                if(!arr || arr.length === 0) return `<p class="text-xs text-slate-400 italic text-center py-3">Chưa có chứng từ nào</p>`;
+                return arr.map(f => `
+                    <div class="flex justify-between items-center p-2 hover:bg-slate-50 border-b border-slate-100 last:border-0 group transition">
+                        <a href="${f.url}" target="_blank" class="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline flex-1 line-clamp-1"><i class="fas fa-file-pdf text-red-500 mr-2 text-sm"></i>${f.name}</a>
+                        <button onclick="window.modImport.deleteDoc('${type}', '${f.url}')" class="text-slate-300 hover:text-red-500 px-2 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-trash"></i></button>
+                    </div>
+                `).join('');
+            };
+
+            const d = docs || {};
+            document.getElementById('list-commercial').innerHTML = renderCategory(d.commercial, 'commercial');
+            document.getElementById('list-transport').innerHTML = renderCategory(d.transport, 'transport');
+            document.getElementById('list-cert').innerHTML = renderCategory(d.cert, 'cert');
+            document.getElementById('list-customs').innerHTML = renderCategory(d.customs, 'customs');
+        },
+
+        uploadDoc: async (input, type) => {
+            const file = input.files[0];
+            if(!file) return;
+            if(file.size > 50 * 1024 * 1024) { alert("❌ File quá lớn! Tối đa 50MB."); input.value = ''; return; }
+
+            const id = document.getElementById('doc-id').value;
+            const docName = prompt("Nhập Tên / Ghi chú cho file này:", file.name);
+            if(!docName) { input.value = ''; return; }
+
+            document.getElementById(`list-${type}`).innerHTML = `<div class="p-3 text-center text-xs font-bold text-emerald-600 bg-emerald-50 rounded"><i class="fas fa-spinner fa-spin mr-1"></i> Đang tải và khóa vào Két Sắt...</div>`;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const payload = { file_name: file.name, file_data: e.target.result, doc_type: type, doc_note: docName };
+                try {
+                    const res = await fetch(`/api/imports/${id}/docs`, { 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                    });
+                    const text = await res.text();
+                    try {
+                        const data = JSON.parse(text);
+                        if(data.success) {
+                            window.modImport.renderFileList(data.docs); 
+                            setTimeout(() => alert('✅ Đã lưu file an toàn vào Két sắt!'), 100);
+                        } else alert('❌ Lỗi Server: ' + data.error);
+                    } catch(err) {
+                        alert('❌ Server báo lỗi HTML:\n' + text.substring(0, 150));
+                        window.modImport.openDocs(id);
+                    }
+                } catch(err) { 
+                    alert('❌ Máy chủ vừa bị sập đột ngột! Hãy kiểm tra lại Backend.'); 
+                    window.modImport.openDocs(id);
+                }
+                input.value = ''; 
+            };
+            reader.readAsDataURL(file);
+        },
+
+        deleteDoc: async (type, url) => {
+            if(!confirm("⚠️ Xóa chứng từ này khỏi Két sắt? Không thể khôi phục!")) return;
+            const id = document.getElementById('doc-id').value;
+            try {
+                const res = await fetch(`/api/imports/${id}/docs`, { 
+                    method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ doc_type: type, file_url: url }) 
+                });
+                const data = await res.json();
+                if(data.success) window.modImport.renderFileList(data.docs);
+            } catch(e) {}
+        }
+    };
+    
+    window.modImport.load();
+</script>

@@ -1,0 +1,555 @@
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full flex flex-col relative">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 shrink-0 gap-4">
+        <div>
+            <h3 class="font-bold text-slate-900 text-lg"><i class="fas fa-solar-panel text-amber-500"></i> Quản Lý Danh Mục Vật Tư</h3>
+            <p class="text-xs text-slate-500 mt-1">Đã bật chế độ lọc Tab. Quản trị Kho Đa Tầng và 6 Cấp độ Giá.</p>
+        </div>
+        
+        <div class="flex gap-2">
+            <button onclick="document.getElementById('category-modal').classList.replace('hidden', 'flex'); window.modCats.load();" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow flex items-center gap-2">
+                <i class="fas fa-sitemap"></i> Cấu Trúc Danh Mục
+            </button>
+            
+            <div class="relative group">
+                <button class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow flex items-center gap-2">
+                    <i class="fas fa-file-excel"></i> Xử Lý Excel
+                </button>
+                <div class="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 overflow-hidden divide-y divide-slate-100">
+                    <button onclick="window.modProducts.downloadExcelTemplate()" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 font-bold cursor-pointer flex justify-between items-center transition">
+                        1. Tải File Mẫu <i class="fas fa-download text-emerald-500"></i>
+                    </button>
+                    <label class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 font-bold cursor-pointer flex justify-between items-center transition">
+                        2. Upload Dữ Liệu <i class="fas fa-upload text-blue-500"></i>
+                        <input type="file" accept=".xlsx" class="hidden" onchange="window.modProducts.handleExcelUpload(this)">
+                    </label>
+                </div>
+            </div>
+            
+            <button onclick="window.modProducts.openModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow"><i class="fas fa-plus mr-1"></i> Thêm Thiết Bị</button>
+        </div>
+    </div>
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4 shrink-0 bg-slate-50 p-2 rounded-lg border border-slate-200">
+        <div id="product-tabs" class="flex flex-wrap gap-2 w-full md:w-auto"></div>
+        <div class="relative w-full md:w-72 shrink-0">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search"></i></span>
+            <input type="text" id="p-search" oninput="window.modProducts.renderTable()" placeholder="Tìm tên thiết bị, mã SKU..." class="w-full border-2 border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm outline-none focus:border-amber-500 bg-white">
+        </div>
+    </div>
+
+    <div class="overflow-y-auto flex-1 border rounded-lg relative bg-white">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-100 text-[11px] uppercase text-slate-600 sticky top-0 shadow-sm z-10">
+                <tr>
+                    <th class="p-3 font-bold border-b w-[35%]">Hồ Sơ Thiết Bị</th>
+                    <th class="p-3 font-bold border-b text-center w-24">Quản Trị Kho</th>
+                    <th class="p-3 font-bold border-b text-center">Cấu Trúc Giá 6 Cấp (Lẻ - Thợ - Sỉ - Dự Án)</th>
+                    <th class="p-3 font-bold border-b text-center w-28">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody id="tbl-products" class="divide-y text-slate-700"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Cấu Trúc Danh Mục -->
+<div id="category-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden items-center justify-center z-[60] p-4 overflow-y-auto">
+    <div class="bg-white rounded-xl w-full max-w-3xl p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-4 border-b-2 border-slate-700 pb-2">
+            <h3 class="font-black text-xl text-slate-800"><i class="fas fa-sitemap text-slate-700"></i> Quản Lý Cấu Trúc Danh Mục</h3>
+            <button onclick="document.getElementById('category-modal').classList.replace('flex', 'hidden')" class="text-slate-400 hover:text-red-500"><i class="fas fa-times text-2xl"></i></button>
+        </div>
+        <div class="mb-4 bg-blue-50 border border-blue-200 p-4 rounded-lg flex justify-between items-center">
+            <div>
+                <p class="text-sm font-bold text-blue-800">Cây Danh Mục Hệ Thống</p>
+            </div>
+            <button onclick="window.modCats.add(null, 1)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2"><i class="fas fa-plus"></i> Thêm Thư Mục Gốc</button>
+        </div>
+        <div class="bg-slate-50 border border-slate-300 rounded-lg p-2 max-h-[55vh] overflow-y-auto" id="cat-tree"></div>
+    </div>
+</div>
+
+<!-- Modal Thiết Bị -->
+<div id="product-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-xl w-full max-w-3xl p-6 shadow-2xl my-auto flex flex-col relative">
+        <button onclick="window.modProducts.closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+        <h3 class="font-black text-xl text-slate-800 mb-4 border-b pb-2"><i class="fas fa-box-open text-amber-500"></i> Khởi Tạo / Chỉnh Sửa Mã Hàng</h3>
+        
+        <div class="space-y-4">
+            <div class="flex flex-col md:flex-row gap-4 mb-2">
+                <div class="w-28 h-28 shrink-0 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative shadow-inner">
+                    <img id="p-img-preview" src="" class="hidden w-full h-full object-cover">
+                    <i id="p-img-icon" class="fas fa-image text-slate-300 text-3xl"></i>
+                </div>
+                <div class="flex-1 space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-xs font-bold text-slate-600 mb-1">Mã SKU</label><input type="text" id="p-sku" class="w-full border p-2 rounded outline-none font-bold text-blue-700 uppercase"></div>
+                        <div><label class="block text-xs font-bold text-slate-600 mb-1">Danh Mục Chuẩn</label><input type="text" id="p-cat-final" class="w-full border p-2 rounded outline-none bg-yellow-50 font-bold"></div>
+                    </div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Tên Thiết Bị</label><input type="text" id="p-name" class="w-full border p-2 rounded outline-none font-bold text-slate-800"></div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Mô Tả Ngắn / Quy Cách Kỹ Thuật</label>
+                    <textarea id="p-desc" rows="2" placeholder="Thông số, quy cách..." class="w-full border p-2 rounded outline-none text-xs font-medium text-slate-700"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-blue-600 mb-1"><i class="fas fa-map-marker-alt mr-1"></i> Vị Trí Lưu Kho (Bin / Rack)</label>
+                    <input type="text" id="p-bin-location" placeholder="VD: Kệ A-1, Tầng 2..." class="w-full border-2 border-blue-100 bg-blue-50/30 p-2 rounded outline-none text-sm font-bold text-blue-800 focus:border-blue-400">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Hình Ảnh Thiết Bị (Link hoặc Upload)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="p-image" oninput="window.modProducts.previewImage(this.value)" placeholder="Dán link ảnh từ web hoặc bấm nút Upload..." class="w-full border p-2 rounded outline-none text-sm focus:border-blue-500 font-medium">
+                    <label class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 rounded cursor-pointer whitespace-nowrap shadow transition flex items-center">
+                        <i class="fas fa-upload mr-1"></i> Tải Ảnh Lên
+                        <input type="file" id="p-image-upload" accept="image/*" class="hidden" onchange="window.modProducts.uploadImage(this)">
+                    </label>
+                </div>
+            </div>
+
+            <!-- KHO TÀI LIỆU KỸ THUẬT -->
+            <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 space-y-3">
+                <h4 class="font-black text-xs text-amber-800 uppercase"><i class="fas fa-folder-open mr-1"></i> Kho Tài Liệu Kỹ Thuật (Sales & Đấu Thầu)</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link CO / CQ</label><input type="text" id="p-doc-cocq" placeholder="Link CO/CQ..." class="w-full border p-1.5 rounded text-xs outline-none bg-white font-medium"></div>
+                    <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link Datasheet</label><input type="text" id="p-doc-ds" placeholder="Link Datasheet..." class="w-full border p-1.5 rounded text-xs outline-none bg-white font-medium"></div>
+                    <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link Catalog</label><input type="text" id="p-doc-cat" placeholder="Link Catalog..." class="w-full border p-1.5 rounded text-xs outline-none bg-white font-medium"></div>
+                    <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link Manual</label><input type="text" id="p-doc-man" placeholder="Link Manual..." class="w-full border p-1.5 rounded text-xs outline-none bg-white font-medium"></div>
+                </div>
+            </div>
+
+            <!-- QUẢN LÝ TỒN KHO ĐA KHO -->
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
+                <h4 class="font-black text-xs text-blue-800 uppercase mb-3"><i class="fas fa-warehouse mr-1"></i> Quản Lý Tồn Thực Tế Theo Kho</h4>
+                
+                <div id="dynamic-warehouse-stocks" class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 pb-4 border-b border-blue-200 border-dashed">
+                    <div class="text-xs text-slate-500 col-span-full">Đang tải danh sách kho...</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tổng Tồn Hệ Thống (Auto)</label>
+                        <input type="number" id="p-total-stock" disabled class="w-full border-2 border-slate-300 bg-slate-200 p-2 rounded outline-none font-black text-slate-700" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-blue-700 mb-1">Kho NCC (Tồn Ảo)</label>
+                        <input type="number" id="p-virtual-stock" class="w-full border-2 border-blue-200 p-2 rounded outline-none font-black text-blue-700 bg-white">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded-lg border">
+                <div class="mb-4 pb-4 border-b border-dashed grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-red-600 mb-1">Giá Vốn Nhập</label><input type="number" id="p-import" class="w-full border-2 border-red-200 p-2.5 rounded outline-none font-black text-red-600 bg-white"></div>
+                    <div><label class="block text-xs font-bold text-emerald-600 mb-1">(1) Giá Lẻ Mặc Định</label><input type="number" id="p-retail" class="w-full border-2 border-emerald-200 p-2.5 rounded outline-none font-black text-emerald-600 bg-white"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div><label class="block text-[10px] uppercase font-bold text-emerald-700 mb-1">(2) Chốt Sale</label><input type="number" id="p-price2" class="w-full border p-2 text-sm rounded outline-none font-bold text-emerald-700"></div>
+                    <div><label class="block text-[10px] uppercase font-bold text-blue-600 mb-1">(3) Thợ</label><input type="number" id="p-price3" class="w-full border p-2 text-sm rounded outline-none font-bold text-blue-600"></div>
+                    <div><label class="block text-[10px] uppercase font-bold text-amber-600 mb-1">(4) Sỉ C1</label><input type="number" id="p-price4" class="w-full border p-2 text-sm rounded outline-none font-bold text-amber-600"></div>
+                    <div class="col-span-2"><label class="block text-[10px] uppercase font-bold text-amber-700 mb-1">(5) Sỉ VIP</label><input type="number" id="p-price5" class="w-full border p-2 text-sm rounded outline-none font-bold text-amber-700"></div>
+                    <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">(6) NPP / Cắt Lô</label><input type="number" id="p-price6" class="w-full border-2 border-purple-200 bg-purple-50 p-2 text-sm rounded outline-none font-black text-purple-700"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+            <button onclick="window.modProducts.closeModal()" class="px-6 py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold">Hủy Bỏ</button>
+            <button onclick="window.modProducts.save()" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-bold shadow-lg hover:bg-blue-700"><i class="fas fa-save mr-1"></i> Lưu Bảng Giá</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.modCats = {
+        data: [],
+        load: async () => {
+            try {
+                const res = await fetch('/api/categories');
+                const json = await res.json();
+                if(json.success) {
+                    window.modCats.data = json.data;
+                    window.modCats.renderTree();
+                    if(window.modProducts) window.modProducts.renderTabs();
+                }
+            } catch(e) {}
+        },
+        renderTree: () => {
+            const buildNode = (parentId, level) => {
+                const children = window.modCats.data.filter(c => c.parent_id === parentId);
+                if(children.length === 0) return '';
+                let html = `<div class="${level > 1 ? 'border-l-2 border-dashed border-slate-300 ml-5 pl-4 mt-2' : ''}">`;
+                children.forEach(c => {
+                    const icon = level === 1 ? '<i class="fas fa-folder text-amber-500 text-lg"></i>' : level === 2 ? '<i class="fas fa-folder-open text-blue-500"></i>' : '<i class="fas fa-tag text-slate-400 text-xs"></i>';
+                    html += `
+                    <div class="flex items-center justify-between py-3 border-b border-slate-200 bg-white px-4 rounded-lg shadow-sm mb-2 hover:bg-slate-50 transition">
+                        <div class="flex items-center gap-3">${icon} <span class="font-bold text-slate-800 ${level === 1 ? 'uppercase text-sm' : 'text-xs'}">${c.name}</span></div>
+                        <div class="flex gap-2">
+                            ${level < 3 ? `<button onclick="window.modCats.add(${c.id}, ${level+1})" class="text-[10px] bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-md font-bold"><i class="fas fa-plus mr-1"></i> Cấp ${level+1}</button>` : ''}
+                            <button onclick="window.modCats.edit(${c.id}, '${c.name}')" class="text-[10px] bg-amber-50 text-amber-600 px-3 py-1.5 rounded-md font-bold"><i class="fas fa-edit mr-1"></i> Sửa</button>
+                            <button onclick="window.modCats.del(${c.id})" class="text-[10px] bg-red-50 text-red-600 px-3 py-1.5 rounded-md font-bold"><i class="fas fa-trash mr-1"></i> Xóa</button>
+                        </div>
+                    </div>
+                    ${buildNode(c.id, level + 1)}`;
+                });
+                return html + `</div>`;
+            };
+            const treeEl = document.getElementById('cat-tree');
+            if(treeEl) treeEl.innerHTML = buildNode(null, 1) || '<div class="text-center p-10 text-slate-400">Chưa có danh mục nào.</div>';
+        },
+        add: async (parentId, level) => {
+            const name = prompt(`Nhập Tên Danh Mục (Cấp ${level}):`);
+            if(!name || name.trim() === '') return;
+            await fetch('/api/categories', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: name.trim(), parent_id: parentId }) });
+            window.modCats.load();
+        },
+        edit: async (id, oldName) => {
+            const name = prompt(`Sửa tên danh mục:`, oldName);
+            if(!name || name.trim() === '' || name === oldName) return;
+            await fetch(`/api/categories/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: name.trim() }) });
+            window.modCats.load();
+        },
+        del: async (id) => {
+            if(!confirm("⚠️ Xóa danh mục này sẽ xóa luôn các mục con bên trong!")) return;
+            await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+            window.modCats.load();
+        }
+    };
+
+    window.modProducts = {
+        list: [], 
+        currentCat: 'ALL',
+        systemWarehouses: [],
+
+        load: async () => {
+            try { await window.modCats.load(); } catch(e){} 
+            try {
+                // Fetch settings to get dynamic warehouses
+                const setRes = await fetch('/api/settings?t=' + Date.now());
+                const setJson = await setRes.json();
+                if(setJson.success && setJson.data && setJson.data.warehouses) {
+                    window.modProducts.systemWarehouses = setJson.data.warehouses;
+                }
+
+                const res = await fetch('/api/products'); 
+                const data = await res.json();
+                if(data.success) {
+                    window.modProducts.list = data.data || [];
+                    window.modProducts.renderTabs();
+                    window.modProducts.renderTable();
+                }
+            } catch(e) { document.getElementById('tbl-products').innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500 font-bold">Lỗi tải dữ liệu.</td></tr>`; }
+        },
+        renderTabs: () => {
+            try {
+                const officialL1 = window.modCats.data.filter(c => !c.parent_id).map(c => c.name);
+                const tabsDiv = document.getElementById('product-tabs');
+                let html = `<button onclick="window.modProducts.setCategory('ALL')" class="${window.modProducts.currentCat === 'ALL' ? 'bg-slate-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-200'} px-4 py-2 rounded-md font-bold text-sm transition">Tất Cả</button>`;
+                officialL1.forEach(cat => {
+                    html += `<button onclick="window.modProducts.setCategory('${cat}')" class="${window.modProducts.currentCat === cat ? 'bg-amber-500 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-200'} px-4 py-2 rounded-md font-bold text-sm transition uppercase"><i class="fas fa-folder mr-1"></i> ${cat}</button>`;
+                });
+                html += `<button onclick="window.modProducts.setCategory('KHAC')" class="${window.modProducts.currentCat === 'KHAC' ? 'bg-red-500 text-white shadow-md' : 'bg-white text-red-500 border border-red-200'} px-4 py-2 rounded-md font-bold text-sm transition uppercase ml-auto"><i class="fas fa-exclamation-triangle mr-1"></i> Chưa Phân Loại</button>`;
+                tabsDiv.innerHTML = html;
+            } catch (e) {}
+        },
+        setCategory: (cat) => { window.modProducts.currentCat = cat; window.modProducts.renderTabs(); window.modProducts.renderTable(); },
+        renderTable: () => {
+            const term = document.getElementById('p-search').value.toLowerCase().trim();
+            const tbody = document.getElementById('tbl-products');
+            const officialNames = window.modCats.data.filter(c => !c.parent_id).map(c => c.name);
+            let filtered = window.modProducts.list;
+
+            if (window.modProducts.currentCat === 'KHAC') {
+                filtered = filtered.filter(p => !officialNames.includes(String(p.category || 'Khác').split('/')[0].trim()) || String(p.category||'Khác').split('/')[0].trim() === 'Khác');
+            } else if (window.modProducts.currentCat !== 'ALL') {
+                filtered = filtered.filter(p => String(p.category || '').split('/')[0].trim() === window.modProducts.currentCat);
+            }
+            if (term) filtered = filtered.filter(p => String(p.product_name || '').toLowerCase().includes(term) || String(p.sku || '').toLowerCase().includes(term));
+            if(filtered.length === 0) return tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 font-medium">Không có sản phẩm nào.</td></tr>`;
+
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num)||0);
+
+            tbody.innerHTML = filtered.map(p => {
+                const catUI = window.modProducts.currentCat === 'KHAC' 
+                    ? `<span class="text-red-500 bg-red-50 px-1 rounded border border-red-200"><i class="fas fa-trash-alt mr-1"></i>${String(p.category || 'Trống')}</span>`
+                    : `<span class="text-slate-500"><i class="fas fa-sitemap mr-1"></i>${String(p.category || 'Khác')}</span>`;
+
+                const totalStock = (p.stock_qty || 0) + (p.virtual_stock || 0);
+
+                return `
+                <tr class="hover:bg-blue-50/40 transition">
+                    <td class="p-3 border-b">
+                        <div class="flex items-center gap-3">
+                            <div class="w-14 h-14 bg-slate-100 rounded border flex justify-center items-center overflow-hidden shrink-0">
+                                ${p.image_url ? `<img src="${p.image_url}" class="w-full h-full object-cover">` : `<i class="fas fa-box text-slate-300 text-xl"></i>`}
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm leading-tight line-clamp-2">${String(p.product_name || 'Chưa có tên')}</p>
+                                <p class="font-mono font-bold text-blue-600 mt-1 text-[11px]">${String(p.sku || 'Không rõ')}</p>
+                                <p class="text-[10px] mt-0.5 font-bold">${catUI}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3 text-center border-b border-x border-slate-100 bg-slate-50/50">
+                        <div class="flex flex-col gap-1 w-full max-w-[90px] mx-auto">
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 py-1 rounded">Thực: ${p.stock_qty || 0}</span>
+                            <span class="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 py-1 rounded">NCC: ${p.virtual_stock || 0}</span>
+                            <span class="text-[11px] font-black text-slate-800 mt-1 border-t border-slate-300 pt-1">Tổng: ${totalStock}</span>
+                        </div>
+                    </td>
+                    <td class="p-3 border-b">
+                        <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] max-w-lg mx-auto">
+                            <div class="flex justify-between border-b border-slate-100 pb-0.5"><span class="text-slate-500 font-bold">(1) Lẻ Mặc Định:</span> <span class="font-black text-emerald-600">${fmt(p.retail_price)} đ</span></div>
+                            <div class="flex justify-between border-b border-slate-100 pb-0.5"><span class="text-slate-500 font-bold">(4) Sỉ Cấp 1:</span> <span class="font-black text-amber-600">${fmt(p.price_4)} đ</span></div>
+                            <div class="flex justify-between border-b border-slate-100 pb-0.5"><span class="text-slate-500">(2) Chốt Sale:</span> <span class="font-bold text-emerald-500">${fmt(p.price_2)} đ</span></div>
+                            <div class="flex justify-between border-b border-slate-100 pb-0.5"><span class="text-slate-500">(5) Sỉ VIP:</span> <span class="font-bold text-amber-700">${fmt(p.price_5)} đ</span></div>
+                            <div class="flex justify-between border-b border-slate-100 pb-0.5"><span class="text-slate-500">(3) Thợ:</span> <span class="font-bold text-blue-600">${fmt(p.price_3)} đ</span></div>
+                            <div class="flex justify-between border-b border-slate-100 pb-0.5"><span class="text-slate-500 font-bold">(6) NPP:</span> <span class="font-black text-purple-600">${fmt(p.price_6)} đ</span></div>
+                            <div class="flex justify-between col-span-2 pt-1 border-t border-dashed mt-1"><span class="text-red-500 font-bold uppercase"><i class="fas fa-lock text-[9px]"></i> Giá Vốn:</span> <span class="font-black text-red-600 text-xs">${fmt(p.import_price)} đ</span></div>
+                        </div>
+                    </td>
+                    <td class="p-3 text-center border-b">
+                        <button onclick="window.modProducts.openModal(${p.id})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg transition font-black shadow-sm w-full border border-blue-100"><i class="fas fa-edit mr-1"></i> Sửa Mã</button>
+                    </td>
+                </tr>
+            `}).join('');
+        },
+        uploadImage: async (input) => {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('p-image').value = data.url;
+                    window.modProducts.previewImage(data.url);
+                } else alert("Lỗi tải ảnh: " + data.error);
+            } catch (err) { alert("Lỗi kết nối upload ảnh!"); }
+            input.value = '';
+        },
+        previewImage: (url) => {
+            const img = document.getElementById('p-img-preview');
+            const icon = document.getElementById('p-img-icon');
+            if(url && url.trim() !== '') {
+                img.src = url;
+                img.classList.remove('hidden');
+                icon.classList.add('hidden');
+            } else {
+                img.classList.add('hidden');
+                icon.classList.remove('hidden');
+            }
+        },
+        
+        calcTotalStock: () => {
+            let total = 0;
+            document.querySelectorAll('.wh-stock-input').forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            document.getElementById('p-total-stock').value = total;
+        },
+
+        openModal: (id = null) => {
+            window.modProducts.isEdit = !!id;
+            window.modProducts.editId = id;
+            
+            // Khởi tạo giao diện nhập Tồn Kho động dựa trên danh sách kho
+            const whContainer = document.getElementById('dynamic-warehouse-stocks');
+            if(window.modProducts.systemWarehouses.length === 0) {
+                whContainer.innerHTML = `<div class="col-span-full text-sm text-red-500 font-bold bg-red-50 p-2 rounded">⚠️ Vui lòng cấu hình Kho Hàng trong mục Cài Đặt trước khi nhập tồn kho!</div>`;
+            } else {
+                whContainer.innerHTML = '';
+                window.modProducts.systemWarehouses.forEach(wh => {
+                    whContainer.innerHTML += `
+                        <div>
+                            <label class="block text-[10px] font-bold text-emerald-700 mb-1 line-clamp-1" title="${wh.name}">${wh.code}</label>
+                            <input type="number" id="stock_${wh.id}" data-whid="${wh.id}" class="wh-stock-input w-full border-2 border-emerald-200 p-1.5 rounded outline-none font-black text-emerald-700 bg-white" value="0" oninput="window.modProducts.calcTotalStock()">
+                        </div>
+                    `;
+                });
+            }
+
+            if(id) {
+                const p = window.modProducts.list.find(x => x.id === id);
+                document.getElementById('p-sku').value = p.sku || '';
+                document.getElementById('p-name').value = p.product_name || '';
+                document.getElementById('p-cat-final').value = p.category || '';
+                document.getElementById('p-desc').value = p.description || '';
+                
+                // Load Vị Trí Kệ Hàng
+                document.getElementById('p-bin-location').value = p.bin_location || '';
+                
+                document.getElementById('p-image').value = p.image_url || '';
+                document.getElementById('p-doc-cocq').value = p.doc_cocq || '';
+                document.getElementById('p-doc-ds').value = p.doc_datasheet || '';
+                document.getElementById('p-doc-cat').value = p.doc_catalog || '';
+                document.getElementById('p-doc-man').value = p.doc_manual || '';
+                document.getElementById('p-virtual-stock').value = p.virtual_stock || 0;
+                document.getElementById('p-import').value = p.import_price || 0;
+                document.getElementById('p-retail').value = p.retail_price || 0;
+                document.getElementById('p-price2').value = p.price_2 || 0;
+                document.getElementById('p-price3').value = p.price_3 || 0;
+                document.getElementById('p-price4').value = p.price_4 || 0;
+                document.getElementById('p-price5').value = p.price_5 || 0;
+                document.getElementById('p-price6').value = p.price_6 || 0;
+                window.modProducts.previewImage(p.image_url);
+
+                // Load dữ liệu tồn từng kho
+                let totalActualStock = 0;
+                if(p.stocks && typeof p.stocks === 'object') {
+                    window.modProducts.systemWarehouses.forEach(wh => {
+                        const el = document.getElementById(`stock_${wh.id}`);
+                        if(el) {
+                            const val = parseInt(p.stocks[wh.id]) || 0;
+                            el.value = val;
+                            totalActualStock += val;
+                        }
+                    });
+                } else {
+                    // Tương thích ngược: Nếu chỉ có stock_qty cũ, dồn vào kho đầu tiên
+                    if(p.stock_qty > 0 && window.modProducts.systemWarehouses.length > 0) {
+                        const firstWhEl = document.getElementById(`stock_${window.modProducts.systemWarehouses[0].id}`);
+                        if(firstWhEl) firstWhEl.value = p.stock_qty;
+                        totalActualStock = p.stock_qty;
+                    }
+                }
+                document.getElementById('p-total-stock').value = totalActualStock;
+
+            } else {
+                ['p-sku', 'p-name', 'p-cat-final', 'p-desc', 'p-bin-location', 'p-image', 'p-doc-cocq', 'p-doc-ds', 'p-doc-cat', 'p-doc-man', 'p-virtual-stock', 'p-import', 'p-retail', 'p-price2', 'p-price3', 'p-price4', 'p-price5', 'p-price6'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.value = '';
+                });
+                document.getElementById('p-total-stock').value = '0';
+                window.modProducts.previewImage('');
+            }
+            document.getElementById('product-modal').classList.replace('hidden', 'flex');
+        },
+        closeModal: () => document.getElementById('product-modal').classList.replace('flex', 'hidden'),
+        save: async () => {
+            // Lấy dữ liệu tồn từng kho
+            let stocksObject = {};
+            let totalStockQty = 0;
+            document.querySelectorAll('.wh-stock-input').forEach(input => {
+                const whid = input.getAttribute('data-whid');
+                const val = parseInt(input.value) || 0;
+                stocksObject[whid] = val;
+                totalStockQty += val;
+            });
+
+            const payload = {
+                sku: document.getElementById('p-sku').value.trim().toUpperCase(),
+                product_name: document.getElementById('p-name').value.trim(),
+                category: document.getElementById('p-cat-final').value || 'Khác',
+                description: document.getElementById('p-desc').value.trim(),
+                
+                // Lưu Vị Trí Kệ Hàng
+                bin_location: document.getElementById('p-bin-location').value.trim(),
+                
+                image_url: document.getElementById('p-image').value.trim(),
+                doc_cocq: document.getElementById('p-doc-cocq').value.trim(),
+                doc_datasheet: document.getElementById('p-doc-ds').value.trim(),
+                doc_catalog: document.getElementById('p-doc-cat').value.trim(),
+                doc_manual: document.getElementById('p-doc-man').value.trim(),
+                
+                // Lưu cấu trúc tồn kho mới
+                stock_qty: totalStockQty,
+                stocks: stocksObject,
+                virtual_stock: parseInt(document.getElementById('p-virtual-stock').value) || 0,
+                
+                import_price: document.getElementById('p-import').value || 0,
+                retail_price: document.getElementById('p-retail').value || 0,
+                price_2: document.getElementById('p-price2').value || 0,
+                price_3: document.getElementById('p-price3').value || 0,
+                price_4: document.getElementById('p-price4').value || 0,
+                price_5: document.getElementById('p-price5').value || 0,
+                price_6: document.getElementById('p-price6').value || 0
+            };
+            if(!payload.sku || !payload.product_name) return alert("SKU và Tên Thiết Bị không được để trống!");
+            try {
+                const url = window.modProducts.isEdit ? `/api/products/${window.modProducts.editId}` : '/api/products';
+                const method = window.modProducts.isEdit ? 'PUT' : 'POST';
+                const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if(!data.success) return alert("Lỗi Server: " + data.error);
+                window.modProducts.closeModal(); 
+                window.modProducts.load();
+                alert("✅ Lưu sản phẩm thành công!");
+            } catch(e) { alert("Lỗi kết nối lưu dữ liệu!"); }
+        },
+        downloadExcelTemplate: () => {
+            if (typeof XLSX === 'undefined') return alert('Thư viện Excel đang tải!');
+            const templateData = [
+                { "Mã SKU": "INV-DE-5KW", "Tên Thiết Bị": "Biến Tần Hybrid", "Mô Tả Kỹ Thuật": "5kW", "Danh Mục": "INVERTER", "Vị Trí Kệ": "A1-00", "Link Ảnh": "", "Link CO/CQ": "", "Link Datasheet": "", "Link Catalog": "", "Link Manual": "", "Tồn Thực Tế": 10, "Kho NCC (Ảo)": 100, "Giá Vốn": 10000000, "Lẻ Mặc Định (1)": 15000000, "Chốt Sale (2)": 14000000, "Giá Thợ (3)": 13000000, "Sỉ Cấp 1 (4)": 12500000, "Sỉ VIP (5)": 12000000, "NPP/Cắt Lô (6)": 11000000 }
+            ];
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "SUNGO_Template");
+            XLSX.writeFile(wb, "SUNGO_Bieu_Mau_San_Pham.xlsx");
+        },
+        handleExcelUpload: async (input) => {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    for (const row of rows) {
+                        // Tương thích khi import Excel: Dồn tạm Tồn Thực Tế vào kho đầu tiên (nếu có)
+                        const rawStock = parseInt(row["Tồn Thực Tế"]) || 0;
+                        let stocksObject = {};
+                        if(window.modProducts.systemWarehouses.length > 0 && rawStock > 0) {
+                            stocksObject[window.modProducts.systemWarehouses[0].id] = rawStock;
+                        }
+
+                        const payload = {
+                            sku: String(row["Mã SKU"] || '').trim().toUpperCase(),
+                            product_name: String(row["Tên Thiết Bị"] || '').trim(),
+                            description: String(row["Mô Tả Kỹ Thuật"] || '').trim(),
+                            category: String(row["Danh Mục"] || 'Khác').trim(),
+                            
+                            // Hỗ trợ Import Vị trí Kệ
+                            bin_location: String(row["Vị Trí Kệ"] || '').trim(),
+                            
+                            image_url: String(row["Link Ảnh"] || '').trim(),
+                            doc_cocq: String(row["Link CO/CQ"] || '').trim(),
+                            doc_datasheet: String(row["Link Datasheet"] || '').trim(),
+                            doc_catalog: String(row["Link Catalog"] || '').trim(),
+                            doc_manual: String(row["Link Manual"] || '').trim(),
+                            
+                            stock_qty: rawStock,
+                            stocks: stocksObject,
+                            virtual_stock: parseInt(row["Kho NCC (Ảo)"]) || 0,
+                            
+                            import_price: parseFloat(row["Giá Vốn"]) || 0,
+                            retail_price: parseFloat(row["Lẻ Mặc Định (1)"]) || 0,
+                            price_2: parseFloat(row["Chốt Sale (2)"]) || 0,
+                            price_3: parseFloat(row["Giá Thợ (3)"]) || 0,
+                            price_4: parseFloat(row["Sỉ Cấp 1 (4)"]) || 0,
+                            price_5: parseFloat(row["Sỉ VIP (5)"]) || 0,
+                            price_6: parseFloat(row["NPP/Cắt Lô (6)"]) || 0
+                        };
+                        if(payload.sku && payload.product_name) {
+                            await fetch('/api/products', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                        }
+                    }
+                    alert("✅ Import Excel thành công!");
+                    window.modProducts.load();
+                } catch(err) { alert("Lỗi đọc file: " + err.message); }
+                input.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    };
+    window.modProducts.load();
+</script>

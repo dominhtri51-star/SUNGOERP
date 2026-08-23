@@ -1,0 +1,229 @@
+<div class="p-6 h-full flex flex-col bg-slate-50 relative overflow-hidden text-sm">
+    <div class="flex justify-between items-center mb-6 shrink-0">
+        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Quản Lý Tài Khoản & KPI (RBAC)</h2>
+        <button onclick="window.modUsers.openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-black text-xs shadow-lg transition flex items-center uppercase">
+            <i class="fas fa-user-plus mr-2"></i> Tạo Tài Khoản Mới
+        </button>
+    </div>
+
+    <!-- Bảng danh sách User -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden flex-1">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold border-b border-slate-100">
+                    <tr>
+                        <th class="p-4 py-3">Mã NV (KPI)</th>
+                        <th class="p-4 py-3">Tài khoản (Username)</th>
+                        <th class="p-4 py-3">Họ Tên Nhân Viên</th>
+                        <th class="p-4 py-3">Quyền Truy Cập (Role)</th>
+                        <th class="p-4 py-3 text-center">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody" class="divide-y divide-slate-50"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Tạo / Sửa User -->
+    <div id="user-modal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden items-center justify-center backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-transform">
+            <div class="bg-slate-800 p-4 flex items-center justify-between">
+                <h3 class="text-white font-black uppercase"><i class="fas fa-user-shield mr-2"></i>Cấp / Sửa Tài Khoản</h3>
+                <button onclick="window.modUsers.closeModal()" class="text-white hover:text-slate-300"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <!-- Thêm input ẩn để lưu ID khi Edit -->
+                <input type="hidden" id="usr-id" value="">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mã NV (KPI ID)</label>
+                        <input type="text" id="usr-empid" placeholder="VD: SALE_01" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 text-sm font-bold bg-amber-50">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tên đăng nhập</label>
+                        <input type="text" id="usr-username" placeholder="VD: namkho" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 text-sm font-bold">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Họ tên nhân viên</label>
+                    <input type="text" id="usr-fullname" placeholder="Nguyễn Văn A" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mật khẩu</label>
+                    <input type="password" id="usr-password" placeholder="******" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 text-sm font-bold">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1 text-red-500">Giới hạn chức năng phòng ban (Role)</label>
+                    <select id="usr-role" class="w-full border-2 border-blue-200 bg-blue-50 text-blue-700 rounded-lg p-2.5 text-xs font-black outline-none focus:border-blue-500">
+                        <option value="ADMIN">👑 GIÁM ĐỐC (FULL QUYỀN)</option>
+                        <option value="SALE">🤝 SALE & MARKETING (Xem giá, Tạo BOQ/Đơn hàng)</option>
+                        <option value="THU_MUA">🛒 THU MUA (Tồn kho, Nhà cung cấp)</option>
+                        <option value="NHAN_VIEN_KHO" class="text-red-600 bg-red-50">📦 KHO VẬN (MÙ GIÁ - Chỉ Xuất/Nhập/Đóng gói)</option>
+                        <option value="KE_TOAN">💰 KẾ TOÁN (Sổ quỹ, VAT, Hợp đồng)</option>
+                        <option value="BAO_HANH">🔧 KỸ THUẬT & O&M (Serial, Dự án, Thi công)</option>
+                    </select>
+                </div>
+                <button onclick="window.modUsers.saveUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 rounded-lg mt-2 shadow-md transition uppercase">Xác Nhận Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modUsers = {
+    usersData: [], 
+    load: async () => {
+        const tbody = document.getElementById('users-tbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-2xl text-slate-400"></i></td></tr>';
+        try {
+            const res = await fetch('/api/users?t=' + Date.now());
+            const data = await res.json();
+            
+            // ĐÃ THÊM: Xử lý hiển thị lỗi từ Database ra màn hình
+            if(data.success) {
+                window.modUsers.usersData = data.data; 
+                // Lấy thông tin người đang đăng nhập hiện tại từ localStorage
+const currentUserStr = localStorage.getItem('sungo_user');
+const currentUser = currentUserStr ? JSON.parse(currentUserStr) : { role: 'GUEST' };
+const myRole = currentUser.role;
+
+tbody.innerHTML = data.data.map(u => {
+    let rBadge = '';
+    switch(u.role) {
+        case 'SUPER_ADMIN': rBadge = '<span class="bg-red-100 text-red-700 px-2 py-1 rounded font-black text-[10px] border border-red-300">👑 TÀI KHOẢN TỐI CAO</span>'; break;
+        case 'ADMIN': rBadge = '<span class="bg-purple-100 text-purple-700 px-2 py-1 rounded font-black text-[9px]">💼 GIÁM ĐỐC (ADMIN)</span>'; break;
+        case 'NHAN_VIEN_KHO': rBadge = '<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded font-black text-[9px] border border-orange-200">📦 KHO VẬN (MÙ GIÁ)</span>'; break;
+        case 'SALE': rBadge = '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded font-black text-[9px]">🤝 KINH DOANH</span>'; break;
+        case 'BAO_HANH': rBadge = '<span class="bg-cyan-100 text-cyan-700 px-2 py-1 rounded font-black text-[9px]">🔧 KỸ THUẬT O&M</span>'; break;
+        default: rBadge = `<span class="bg-slate-100 text-slate-700 px-2 py-1 rounded font-black text-[9px]">${u.role}</span>`;
+    }
+
+    // XỬ LÝ LOGIC HIỂN THỊ NÚT (Ai được phép xóa/sửa ai)
+    let actionButtons = '';
+    
+    if (u.role === 'SUPER_ADMIN') {
+        actionButtons = `<span class="text-[10px] text-red-400 font-bold uppercase"><i class="fas fa-lock mr-1"></i> Bất khả xâm phạm</span>`;
+    } 
+    else if (u.role === 'ADMIN' && myRole !== 'SUPER_ADMIN') {
+        // Nếu mục tiêu là ADMIN, nhưng người đang thao tác không phải SUPER_ADMIN -> Khóa
+        actionButtons = `<span class="text-xs text-slate-400"><i class="fas fa-shield-alt mr-1"></i>Bảo vệ</span>`;
+    } 
+    else {
+        // Cho phép sửa/xóa
+        actionButtons = `
+            <button onclick="window.modUsers.editUser(${u.id})" class="text-blue-500 hover:text-blue-700 font-bold text-xs mr-3"><i class="fas fa-edit"></i> Đổi Pass / Sửa</button>
+            <button onclick="window.modUsers.deleteUser(${u.id}, '${u.username}')" class="text-red-400 hover:text-red-600 font-bold text-xs"><i class="fas fa-trash"></i> Xóa</button>
+        `;
+    }
+
+    return `
+    <tr class="hover:bg-slate-50 transition border-b border-slate-50">
+        <td class="p-4 py-3 font-black text-amber-600 text-[13px] bg-amber-50/30">${u.emp_id || 'N/A'}</td>
+        <td class="p-4 py-3 font-bold text-blue-600 text-[13px]">${u.username}</td>
+        <td class="p-4 py-3 font-bold text-slate-700">${u.full_name}</td>
+        <td class="p-4 py-3">${rBadge}</td>
+        <td class="p-4 py-3 text-center">${actionButtons}</td>
+    </tr>`;
+}).join('');
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 font-bold">Lỗi từ Database: ${data.error}</td></tr>`;
+            }
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500 font-bold">Lỗi kết nối tới Server. API chưa phản hồi.</td></tr>';
+        }
+    },
+    openModal: () => {
+        document.getElementById('usr-id').value = '';
+        document.getElementById('usr-empid').value = '';
+        document.getElementById('usr-username').value = '';
+        document.getElementById('usr-password').value = '';
+        document.getElementById('usr-fullname').value = '';
+        document.getElementById('usr-password').placeholder = '******';
+        
+        const m = document.getElementById('user-modal');
+        m.classList.remove('hidden'); m.classList.add('flex');
+    },
+    editUser: (id) => {
+        const user = window.modUsers.usersData.find(u => u.id === id);
+        if(!user) return;
+        
+        document.getElementById('usr-id').value = user.id;
+        document.getElementById('usr-empid').value = user.emp_id || '';
+        document.getElementById('usr-username').value = user.username;
+        document.getElementById('usr-fullname').value = user.full_name;
+        document.getElementById('usr-role').value = user.role;
+        
+        document.getElementById('usr-password').value = '';
+        document.getElementById('usr-password').placeholder = 'Nhập mật khẩu mới (hoặc để trống)';
+        
+        const m = document.getElementById('user-modal');
+        m.classList.remove('hidden'); m.classList.add('flex');
+    },
+    closeModal: () => {
+        const m = document.getElementById('user-modal');
+        m.classList.add('hidden'); m.classList.remove('flex');
+    },
+    saveUser: async () => {
+        const id = document.getElementById('usr-id').value;
+        const payload = {
+            emp_id: document.getElementById('usr-empid').value,
+            username: document.getElementById('usr-username').value,
+            full_name: document.getElementById('usr-fullname').value,
+            role: document.getElementById('usr-role').value
+        };
+        
+        const password = document.getElementById('usr-password').value;
+        if(password) payload.password = password;
+        
+        if(!payload.emp_id) return alert("❌ Bắt buộc phải nhập Mã Nhân Viên (Phục vụ KPI)!");
+        if(!id && !payload.password) return alert("❌ Tạo mới phải nhập Password!");
+        if(!payload.username) return alert("❌ Bắt buộc nhập Username!");
+        
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? '/api/users/' + id : '/api/users';
+
+        try {
+            const res = await fetch(url, { 
+                method: method, 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(payload) 
+            });
+            const data = await res.json();
+            if(data.success) {
+                alert(id ? "✅ Cập nhật tài khoản/Mật khẩu thành công!" : "✅ Tạo tài khoản thành công!");
+                window.modUsers.closeModal();
+                window.modUsers.load();
+            } else alert("❌ " + data.error);
+        } catch(e) { alert("Lỗi mạng! API backend chưa hoạt động chuẩn."); }
+    },
+    deleteUser: async (id, name) => {
+        // Thay thế hàm confirm bằng prompt để yêu cầu nhập mật mã
+        const confirmText = `Xóa vĩnh viễn tài khoản ${name}?\nHệ thống KPI liên quan tới Mã NV này sẽ trở thành Vô Danh.\n\nVui lòng nhập mã bảo mật để xác nhận xóa:`;
+        const pwd = prompt(confirmText);
+        
+        // Nếu người dùng bấm Hủy (Cancel)
+        if (pwd === null) return; 
+        
+        // Kiểm tra mật mã
+        if (pwd !== 'sungo123') {
+            alert("❌ Mã bảo mật không chính xác. Hủy thao tác xóa!");
+            return;
+        }
+
+        // Nếu đúng mật mã thì tiến hành gọi API xóa
+        try {
+            const res = await fetch('/api/users/' + id, { method: 'DELETE' });
+            if(res.ok) {
+                alert("✅ Đã xóa tài khoản thành công!");
+                window.modUsers.load();
+            } else {
+                alert("❌ Lỗi khi xóa từ server.");
+            }
+        } catch(e) { 
+            alert("Lỗi kết nối khi xóa tài khoản!"); 
+        }
+    }
+};
+window.modUsers.load();
+</script>

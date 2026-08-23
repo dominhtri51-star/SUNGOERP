@@ -1,0 +1,235 @@
+<div class="p-4 md:p-6 max-w-6xl mx-auto h-full flex flex-col bg-slate-50">
+    <div class="flex justify-between items-center mb-6 shrink-0">
+        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Cài Đặt Hệ Thống</h2>
+        <button onclick="window.modSettings.save()" id="btn-save-settings" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-black text-sm shadow-lg transition flex items-center">
+            <i class="fas fa-save mr-2"></i> Lưu Cấu Hình
+        </button>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
+        <!-- Sidebar Menu -->
+        <div class="w-full md:w-64 shrink-0 bg-white rounded-xl shadow-sm border border-slate-200 p-3 h-fit">
+            <button id="btn-tab-general" onclick="window.modSettings.switchTab('general')" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-bold text-[13px] bg-blue-50 text-blue-600 mb-1 transition">
+                <i class="fas fa-store w-6 text-center"></i> Thông Tin Chung
+            </button>
+            <button id="btn-tab-warehouses" onclick="window.modSettings.switchTab('warehouses')" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-bold text-[13px] text-slate-600 hover:bg-slate-50 mb-1 transition">
+                <i class="fas fa-warehouse w-6 text-center"></i> Quản Lý Danh Sách Kho
+            </button>
+            <button id="btn-tab-quote" onclick="window.modSettings.switchTab('quote')" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-bold text-[13px] text-slate-600 hover:bg-slate-50 mb-1 transition">
+                <i class="fas fa-file-invoice-dollar w-6 text-center"></i> Mẫu Báo Giá
+            </button>
+            <button id="btn-tab-delivery" onclick="window.modSettings.switchTab('delivery')" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition">
+                <i class="fas fa-truck-loading w-6 text-center"></i> Mẫu Phiếu Xuất Kho
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 p-6 overflow-y-auto relative">
+            
+            <!-- TAB: GENERAL -->
+            <div id="tab-general" class="setting-tab space-y-5">
+                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5">Thông Tin Doanh Nghiệp</h3>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Tên Công Ty / Cửa Hàng</label>
+                    <input type="text" id="set-store-name" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-bold outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Số Điện Thoại</label>
+                        <input type="text" id="set-store-phone" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mã Số Thuế</label>
+                        <input type="text" id="set-store-tax" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Địa Chỉ</label>
+                    <input type="text" id="set-store-address" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Link Logo (URL Hình Ảnh)</label>
+                    <input type="text" id="set-store-logo" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 mb-2">
+                </div>
+            </div>
+
+            <!-- TAB: WAREHOUSES -->
+            <div id="tab-warehouses" class="setting-tab hidden space-y-5">
+                <div class="flex justify-between items-center border-b pb-3 mb-5">
+                    <h3 class="font-black text-slate-800 uppercase">Quản Lý Đa Kho (WMS)</h3>
+                    <button onclick="window.modSettings.addWarehouse()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Thêm Kho Mới
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                            <tr>
+                                <th class="p-3 border-b">Mã Kho (ID)</th>
+                                <th class="p-3 border-b">Tên Kho</th>
+                                <th class="p-3 border-b">Địa Chỉ / Vị Trí</th>
+                                <th class="p-3 border-b">Người Phụ Trách</th>
+                                <th class="p-3 border-b text-center">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="set-warehouses-list" class="divide-y divide-slate-100">
+                            <!-- Dữ liệu kho render tại đây -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: QUOTE -->
+            <div id="tab-quote" class="setting-tab hidden space-y-5">
+                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5">Tùy Chỉnh Mẫu Báo Giá</h3>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mẫu Báo Giá</label>
+                    <select id="set-quote-template" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500">
+                        <option value="tpl_minimal">Mẫu 1: Tiêu chuẩn</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Điều Khoản & Ghi Chú</label>
+                    <textarea id="set-quote-notes" rows="6" class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none"></textarea>
+                </div>
+            </div>
+
+            <!-- TAB: DELIVERY -->
+            <div id="tab-delivery" class="setting-tab hidden space-y-5">
+                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5">Tùy Chỉnh Phiếu Xuất Kho</h3>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Quy Định Kho</label>
+                    <textarea id="set-delivery-notes" rows="6" class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none"></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+window.modSettings = {
+    warehouses: [], 
+    
+    load: async () => {
+        try {
+            const res = await fetch('/api/settings?t=' + Date.now());
+            const json = await res.json();
+            if(json.success && json.data) {
+                const d = json.data;
+                document.getElementById('set-store-name').value = d.store_name || '';
+                document.getElementById('set-store-phone').value = d.store_phone || '';
+                document.getElementById('set-store-address').value = d.store_address || '';
+                document.getElementById('set-store-tax').value = d.store_tax || '';
+                document.getElementById('set-store-logo').value = d.store_logo || '';
+                document.getElementById('set-quote-notes').value = d.quote_notes || '';
+                document.getElementById('set-quote-template').value = d.quote_template || 'tpl_minimal';
+                document.getElementById('set-delivery-notes').value = d.delivery_notes || '';
+                
+                // --- BẢN VÁ LỖI ÉP KIỂU TẠI ĐÂY ---
+                let whData = [];
+                if (d.warehouses) {
+                    if (typeof d.warehouses === 'string') {
+                        try { whData = JSON.parse(d.warehouses); } catch(e) { whData = []; }
+                    } else {
+                        whData = d.warehouses;
+                    }
+                }
+                
+                // Đảm bảo warehouses luôn luôn là 1 mảng (Array) để dùng được hàm .push()
+                window.modSettings.warehouses = Array.isArray(whData) ? whData : [];
+                
+                window.modSettings.renderWarehouses();
+            }
+        } catch(e) {
+            console.error("Lỗi tải settings:", e);
+        }
+    },
+    
+    renderWarehouses: () => {
+        const tbody = document.getElementById('set-warehouses-list');
+        if(window.modSettings.warehouses.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Chưa có kho nào được thiết lập.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = window.modSettings.warehouses.map((w, index) => `
+            <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-blue-600">${w.code}</td>
+                <td class="p-3 font-bold text-slate-800">${w.name}</td>
+                <td class="p-3 text-slate-600 text-xs">${w.address}</td>
+                <td class="p-3 text-slate-800 font-medium">${w.manager}</td>
+                <td class="p-3 text-center">
+                    <button onclick="window.modSettings.removeWarehouse(${index})" class="text-red-500 hover:text-red-700 bg-red-50 px-2 py-1 rounded text-xs"><i class="fas fa-trash"></i> Xóa</button>
+                </td>
+            </tr>
+        `).join('');
+    },
+    
+    addWarehouse: () => {
+        const code = prompt("Nhập Mã Kho (VD: KHO_HCM_1):");
+        if(!code) return;
+        const name = prompt("Nhập Tên Kho (VD: Kho Trung Tâm Quận 1):");
+        const address = prompt("Nhập Địa Chỉ Kho:");
+        const manager = prompt("Tên Người Phụ Trách (Thủ Kho):");
+        
+        window.modSettings.warehouses.push({
+            id: 'W_' + Date.now(), 
+            code: code.trim().toUpperCase(),
+            name: name,
+            address: address,
+            manager: manager
+        });
+        window.modSettings.renderWarehouses();
+    },
+    
+    removeWarehouse: (index) => {
+        if(confirm("Bạn có chắc chắn muốn xóa kho này khỏi hệ thống? (Lưu ý: Dữ liệu tồn kho của kho này có thể bị mồ côi)")) {
+            window.modSettings.warehouses.splice(index, 1);
+            window.modSettings.renderWarehouses();
+        }
+    },
+    
+    save: async () => {
+        const payload = {
+            store_name: document.getElementById('set-store-name').value,
+            store_phone: document.getElementById('set-store-phone').value,
+            store_address: document.getElementById('set-store-address').value,
+            store_tax: document.getElementById('set-store-tax').value,
+            store_logo: document.getElementById('set-store-logo').value,
+            quote_notes: document.getElementById('set-quote-notes').value,
+            quote_template: document.getElementById('set-quote-template').value,
+            delivery_notes: document.getElementById('set-delivery-notes').value,
+            warehouses: window.modSettings.warehouses 
+        };
+        const btn = document.getElementById('btn-save-settings');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang lưu...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            if(res.ok) alert('✅ Đã cập nhật Cấu Hình Hệ Thống thành công!');
+            else alert('❌ Lỗi lưu dữ liệu!');
+        } catch(e) { alert('❌ Lỗi kết nối!'); }
+        finally {
+            btn.innerHTML = '<i class="fas fa-save mr-2"></i> Lưu Cấu Hình';
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+    
+    switchTab: (tabId) => {
+        document.querySelectorAll('.setting-tab').forEach(el => el.classList.add('hidden'));
+        document.getElementById('tab-' + tabId).classList.remove('hidden');
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('bg-blue-50', 'text-blue-600');
+            el.classList.add('text-slate-600');
+        });
+        const activeBtn = document.getElementById('btn-tab-' + tabId);
+        activeBtn.classList.remove('text-slate-600');
+        activeBtn.classList.add('bg-blue-50', 'text-blue-600');
+    }
+};
+
+window.modSettings.load();
+</script>

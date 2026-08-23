@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+
+    <!-- UNIFIED RBAC SYSTEM (5 LEVELS) -->
+    <script>
+    (function() {
+        // Cấu hình từ khóa nhận diện Menu cho từng Quyền
+        const rolePermissions = {
+            'ADMIN': ['all'],
+            'SALES': ['bán hàng', 'crm', 'khách hàng', 'đơn hàng', 'báo giá', 'boq'],
+            'TECH': ['kỹ thuật', 'thi công', 'dự án', 'bảo trì', 'o&m', 'serial'],
+            'INVENTORY': ['thu mua', 'vật tư', 'tồn kho', 'nhập kho', 'nhà cung cấp', 'sơ đồ'],
+            'WAREHOUSE': ['kho vận', 'đóng gói', 'lệnh xuất', 'giao hàng']
+        };
+
+        // Cấu hình màn hình khởi động tự động cho từng Quyền
+        const defaultModules = {
+            'ADMIN': 'dashboard',
+            'SALES': 'crm-list',
+            'TECH': 'tech-projects',
+            'INVENTORY': 'inventory-map',
+            'WAREHOUSE': 'warehouse-out'
+        };
+
+        function applyRBAC() {
+            try {
+                const uStr = localStorage.getItem('user');
+                if (!uStr) return;
+                const user = JSON.parse(uStr);
+                const role = user.role || 'GUEST';
+                const perms = rolePermissions[role] || [];
+                
+                // Sếp tổng (ADMIN) thì thấy sạch sẽ mọi thứ
+                if (perms.includes('all')) {
+                    document.querySelectorAll('.hidden[data-role], li, .menu-item').forEach(el => {
+                        if (el.style.display === 'none') el.style.display = '';
+                    });
+                    return;
+                }
+
+                // Các nhân viên khác: Lọc menu gắt gao
+                document.querySelectorAll('a, li, button, .menu-item, .nav-item').forEach(el => {
+                    const txt = (el.innerText || '').toLowerCase();
+                    const onclick = (el.getAttribute('onclick') || '').toLowerCase();
+                    
+                    // Chỉ xét những menu có chức năng chuyển trang
+                    if (onclick.includes('loadmodule') || el.hasAttribute('data-module')) {
+                        let isAllowed = false;
+                        for (let p of perms) {
+                            if (txt.includes(p) || onclick.includes(p)) {
+                                isAllowed = true; 
+                                break;
+                            }
+                        }
+
+                        if (isAllowed) {
+                            el.classList.remove('hidden');
+                            el.style.display = '';
+                            if(el.parentElement && el.parentElement.tagName !== 'BODY') {
+                                el.parentElement.style.display = '';
+                                el.parentElement.classList.remove('hidden');
+                            }
+                        } else {
+                            if (txt.length > 2) { // Giấu sạch những cái không thuộc thẩm quyền
+                                el.style.display = 'none';
+                                el.classList.add('hidden');
+                            }
+                        }
+                    }
+                });
+
+                // Auto-Focus: Vừa login xong là ném thẳng vào đúng nơi làm việc
+                if (typeof loadModule === 'function' && document.getElementById('main-content').innerHTML.trim().length < 500) {
+                    const defMod = defaultModules[role];
+                    if(defMod) loadModule(defMod);
+                }
+
+            } catch(e) {}
+        }
+
+        // Kích hoạt tường lửa Menu
+        window.addEventListener('DOMContentLoaded', () => {
+            setInterval(applyRBAC, 400); // Quét bảo vệ mỗi 0.4s
+            applyRBAC();
+        });
+    })();
+    </script>
+    <!-- END UNIFIED RBAC SYSTEM -->
+
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - SUNGO ERP</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 h-screen flex items-center justify-center font-sans">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all hover:scale-[1.01]">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black text-amber-500 tracking-widest mb-2">SUNGO<span class="text-slate-900">ERP</span></h1>
+            <p class="text-slate-500 text-sm font-medium">Hệ thống Quản trị Năng lượng Thông minh</p>
+        </div>
+        
+        <!-- BÊN TRONG FILE index.html (Phần nút bấm & Script) -->
+<!-- FORM ĐĂNG NHẬP THẬT -->
+        <div class="space-y-4">
+            <!-- Khu vực hiển thị lỗi -->
+            <div id="login-error" class="hidden bg-red-100 text-red-600 p-3 rounded-lg text-sm font-bold text-center border border-red-200"></div>
+            
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tên đăng nhập (Username)</label>
+                <input type="text" id="username" class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-amber-500 text-sm font-bold bg-slate-50" placeholder="Nhập tài khoản của bạn...">
+            </div>
+            
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mật khẩu (Password)</label>
+                <input type="password" id="password" class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-amber-500 text-sm font-bold bg-slate-50" placeholder="••••••••">
+            </div>
+            
+            <button onclick="performLogin()" id="btn-login" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-black py-3.5 rounded-lg mt-4 shadow-md transition uppercase tracking-wide">
+                Đăng Nhập Vào Hệ Thống
+            </button>
+        </div>
+    </div> <!-- Kết thúc thẻ div form card -->
+
+    <script>
+        // Xóa phiên đăng nhập cũ mỗi khi ra ngoài màn hình này
+        localStorage.removeItem('sungo_user');
+
+        async function performLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const btn = document.getElementById('btn-login');
+            const err = document.getElementById('login-error');
+
+            // Kiểm tra rỗng
+            if(!user || !pass) {
+                err.innerText = "⚠️ Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!";
+                err.classList.remove('hidden');
+                return;
+            }
+
+            // Hiệu ứng đang xử lý
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> ĐANG KIỂM TRA...';
+            btn.classList.add('opacity-50', 'pointer-events-none');
+            err.classList.add('hidden');
+
+            try {
+                // Gọi API backend chúng ta vừa tạo
+                const res = await fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                
+                const data = await res.json();
+
+                if(data.success) {
+                    const u = data.user;
+                    // Đóng gói data để lưu vào localStorage đúng chuẩn hệ thống đang dùng
+                    const sessionData = {
+                        role: u.role,
+                        name: u.full_name,
+                        avatar: '👤',
+                        empId: u.emp_id
+                    };
+                    localStorage.setItem('sungo_user', JSON.stringify(sessionData));
+                    
+                    // Thành công -> Bắn thẳng vào Dashboard
+                    window.location.href = '/dashboard.html';
+                } else {
+                    // Trả về lỗi sai pass từ server
+                    err.innerText = "❌ " + data.error;
+                    err.classList.remove('hidden');
+                }
+            } catch(e) {
+                err.innerText = "⚠️ Lỗi không thể kết nối đến Máy chủ (Server)!";
+                err.classList.remove('hidden');
+            } finally {
+                // Trả lại trạng thái nút
+                btn.innerHTML = 'Đăng Nhập Vào Hệ Thống';
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        // Bắt sự kiện nhấn phím Enter để login cho nhanh
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                performLogin();
+            }
+        });
+    </script>
+</body>
+</html>

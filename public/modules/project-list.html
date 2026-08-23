@@ -1,0 +1,440 @@
+<div class="h-full flex flex-col space-y-5 overflow-hidden">
+  
+  <!-- ======================= CẤP 1: DANH SÁCH TỔNG QUAN CÁC DỰ ÁN ======================= -->
+  <div id="view-project-list" class="h-full flex flex-col space-y-5">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
+      <div>
+        <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+          <i class="fas fa-solar-panel text-amber-500"></i> Quản Trị Dự Án Thi Công
+        </h2>
+        <p class="text-xs text-slate-500 mt-1">Theo dõi tiến độ, phân công kỹ thuật và nghiệm thu bàn giao cho toàn bộ dự án đang chạy song song.</p>
+      </div>
+      <div class="flex items-center gap-3 w-full md:w-auto">
+        <input type="text" id="project-search-input" oninput="window.modConstruction.filterProjects()" placeholder="🔍 Tìm tên DA, SĐT, Mã DA..." class="border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64">
+        <button onclick="window.modConstruction.openCreateProjectModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition whitespace-nowrap">
+          <i class="fas fa-plus mr-1"></i> Tạo Dự Án Mới
+        </button>
+      </div>
+    </div>
+
+    <!-- Bảng danh sách dự án -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
+      <div class="overflow-y-auto flex-1">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-100 text-xs font-black text-slate-600 uppercase tracking-wider sticky top-0 z-10 border-b">
+            <tr>
+              <th class="p-4">Mã & Tên Dự Án</th>
+              <th class="p-4">Khách Hàng / Địa Chỉ</th>
+              <th class="p-4">Cấu Hình Hệ Thống</th>
+              <th class="p-4 text-center">Tiến Độ</th>
+              <th class="p-4 text-center">Trạng Thái</th>
+              <th class="p-4 text-center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="projects-table-body" class="divide-y divide-slate-100">
+            <!-- Render danh sách dự án -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= CẤP 2: CHI TIẾT DỰ ÁN & NGHIỆM THU BÀN GIAO ======================= -->
+  <div id="view-project-detail" class="hidden h-full flex flex-col space-y-4 overflow-y-auto pr-1">
+    <!-- Header Chi tiết dự án -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
+      <div class="flex items-center gap-3">
+        <button onclick="window.modConstruction.backToProjectList()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5">
+          <i class="fas fa-arrow-left"></i> Danh sách
+        </button>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 text-xs font-black rounded-lg bg-blue-100 text-blue-800" id="det-code">DA-001</span>
+            <h2 class="text-lg font-black text-slate-900" id="det-title">Tên Dự Án</h2>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5" id="det-meta">Khách hàng: --- | Kỹ sư phụ trách: ---</p>
+        </div>
+      </div>
+      <button onclick="window.modConstruction.saveProjectHandover(event)" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md transition flex items-center gap-2">
+        <i class="fas fa-save"></i> LƯU BIÊN BẢN & ẢNH
+      </button>
+    </div>
+
+    <!-- Khối 1: Thông tin App Inverter -->
+    <div class="bg-gradient-to-r from-slate-900 to-blue-950 rounded-2xl p-6 text-white shadow-lg space-y-4">
+      <div class="flex items-center gap-2 border-b border-white/10 pb-3">
+        <i class="fas fa-mobile-alt text-amber-400 text-xl"></i>
+        <h3 class="text-sm font-bold text-amber-300 uppercase tracking-wider">Thông Tin Bàn Giao App Điều Khiển Inverter</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-xs text-slate-300 mb-1 font-semibold">Tên Ứng Dụng (App)</label>
+          <input type="text" id="det-app-name" placeholder="VD: Solarman, Deye, Luxpower..." class="w-full bg-white/10 border border-white/20 rounded-xl px-3.5 py-2 text-sm text-white focus:bg-white/20 outline-none font-bold">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-300 mb-1 font-semibold">Tài Khoản (Email / SĐT)</label>
+          <input type="text" id="det-app-acc" placeholder="khachhang@gmail.com" class="w-full bg-white/10 border border-white/20 rounded-xl px-3.5 py-2 text-sm text-emerald-400 focus:bg-white/20 outline-none font-bold">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-300 mb-1 font-semibold">Mật Khẩu Bàn Giao</label>
+          <input type="text" id="det-app-pass" placeholder="Sungo@123456" class="w-full bg-white/10 border border-white/20 rounded-xl px-3.5 py-2 text-sm text-amber-300 focus:bg-white/20 outline-none font-bold">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-300 mb-1 font-semibold">Trạng Thái Kết Nối Dữ Liệu</label>
+          <select id="det-app-status" class="w-full bg-slate-800 border border-white/20 rounded-xl px-3.5 py-2 text-sm text-emerald-300 font-bold outline-none">
+            <option value="HOẠT ĐỘNG MƯỢT MÀ">✅ Đang chạy mượt mà (Online 100%)</option>
+            <option value="CHỜ CẤP MẠNG">⚠️ Đang chờ cấu hình lại Wifi</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Khối 2: 6 Ảnh Nghiệm Thu Hiện Trường -->
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+      <div class="border-b pb-3">
+        <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider">6 Ảnh Nghiệm Thu Hiện Trường Thực Tế</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Tải lên hoặc chụp trực tiếp 6 góc ảnh thực tế của dự án này.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- 1. Tấm pin -->
+        <div class="border-2 border-dashed border-slate-200 hover:border-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-slate-50">
+          <span class="text-xs font-black text-slate-700 mb-2">1. Lắp Đặt Tấm Pin Trên Mái</span>
+          <img id="img-prev-panels" class="hidden w-full h-36 object-cover rounded-xl mb-2 shadow-sm">
+          <input type="file" accept="image/*" onchange="window.modConstruction.previewUpload(event, 'img-prev-panels', 'data-panels')" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white cursor-pointer">
+          <input type="hidden" id="data-panels">
+        </div>
+        <!-- 2. Tủ điện -->
+        <div class="border-2 border-dashed border-slate-200 hover:border-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-slate-50">
+          <span class="text-xs font-black text-slate-700 mb-2">2. Lắp Đặt Tủ Điện (AC / DC)</span>
+          <img id="img-prev-cabinet" class="hidden w-full h-36 object-cover rounded-xl mb-2 shadow-sm">
+          <input type="file" accept="image/*" onchange="window.modConstruction.previewUpload(event, 'img-prev-cabinet', 'data-cabinet')" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white cursor-pointer">
+          <input type="hidden" id="data-cabinet">
+        </div>
+        <!-- 3. Inverter -->
+        <div class="border-2 border-dashed border-slate-200 hover:border-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-slate-50">
+          <span class="text-xs font-black text-slate-700 mb-2">3. Lắp Đặt Inverter Biến Tần</span>
+          <img id="img-prev-inverter" class="hidden w-full h-36 object-cover rounded-xl mb-2 shadow-sm">
+          <input type="file" accept="image/*" onchange="window.modConstruction.previewUpload(event, 'img-prev-inverter', 'data-inverter')" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white cursor-pointer">
+          <input type="hidden" id="data-inverter">
+        </div>
+        <!-- 4. Pin lưu trữ -->
+        <div class="border-2 border-dashed border-slate-200 hover:border-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-slate-50">
+          <span class="text-xs font-black text-slate-700 mb-2">4. Lắp Đặt Pin Lưu Trữ (Battery)</span>
+          <img id="img-prev-battery" class="hidden w-full h-36 object-cover rounded-xl mb-2 shadow-sm">
+          <input type="file" accept="image/*" onchange="window.modConstruction.previewUpload(event, 'img-prev-battery', 'data-battery')" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white cursor-pointer">
+          <input type="hidden" id="data-battery">
+        </div>
+        <!-- 5. Đường dây điện -->
+        <div class="border-2 border-dashed border-slate-200 hover:border-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-slate-50">
+          <span class="text-xs font-black text-slate-700 mb-2">5. Đường Dây & Ống Bảo Vệ</span>
+          <img id="img-prev-wiring" class="hidden w-full h-36 object-cover rounded-xl mb-2 shadow-sm">
+          <input type="file" accept="image/*" onchange="window.modConstruction.previewUpload(event, 'img-prev-wiring', 'data-wiring')" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white cursor-pointer">
+          <input type="hidden" id="data-wiring">
+        </div>
+        <!-- 6. App báo số liệu -->
+        <div class="border-2 border-dashed border-slate-200 hover:border-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-slate-50">
+          <span class="text-xs font-black text-slate-700 mb-2">6. Màn Hình App Nhận Đủ Số Liệu</span>
+          <img id="img-prev-app" class="hidden w-full h-36 object-cover rounded-xl mb-2 shadow-sm">
+          <input type="file" accept="image/*" onchange="window.modConstruction.previewUpload(event, 'img-prev-app', 'data-app')" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white cursor-pointer">
+          <input type="hidden" id="data-app">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tạo Dự Án Mới -->
+<div id="create-project-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+    <div class="flex justify-between items-center mb-4 border-b pb-2">
+      <h3 class="text-base font-bold text-slate-900">Khởi Tạo Dự Án Thi Công Mới</h3>
+      <button onclick="window.modConstruction.closeCreateProjectModal()" class="text-gray-400 hover:text-gray-700 text-xl font-bold">&times;</button>
+    </div>
+    <form onsubmit="window.modConstruction.submitNewProject(event)" class="space-y-3">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Tên Dự Án *</label>
+        <input type="text" id="np-name" required placeholder="VD: Hệ Solar Hybrid 10kW - Anh Nam" class="w-full px-3 py-2 text-sm border rounded-lg">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Tên Khách Hàng *</label>
+          <input type="text" id="np-cust" required placeholder="Nguyễn Văn A" class="w-full px-3 py-2 text-sm border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Số Điện Thoại</label>
+          <input type="text" id="np-phone" placeholder="090..." class="w-full px-3 py-2 text-sm border rounded-lg">
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Loại Hệ Thống</label>
+          <select id="np-type" class="w-full px-2 py-2 text-xs border rounded-lg font-bold">
+            <option value="Hybrid">Hybrid Lưu Trữ</option>
+            <option value="Hòa Lưới">Hòa Lưới (On-grid)</option>
+            <option value="Độc Lập">Độc Lập (Off-grid)</option>
+            <option value="Lưu trữ ESS">Lưu Trữ ESS Công Nghiệp</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Công Suất (kWp)</label>
+          <input type="number" step="any" id="np-kwp" placeholder="10.5" class="w-full px-2 py-2 text-xs border rounded-lg font-bold">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Dung Lượng Pin (kWh)</label>
+          <input type="number" step="any" id="np-kwh" placeholder="16.0" class="w-full px-2 py-2 text-xs border rounded-lg font-bold">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Địa Chỉ Lắp Đặt</label>
+          <input type="text" id="np-addr" placeholder="TP. Hồ Chí Minh" class="w-full px-3 py-2 text-sm border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Kỹ Sư Phụ Trách</label>
+          <input type="text" id="np-engineer" placeholder="Kỹ sư phụ trách" class="w-full px-3 py-2 text-sm border rounded-lg">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-3 border-t">
+        <button type="button" onclick="window.modConstruction.closeCreateProjectModal()" class="px-4 py-2 text-xs bg-slate-100 rounded-lg font-bold">Hủy</button>
+        <button type="submit" class="px-5 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold">Tạo Dự Án</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+window.modConstruction = {
+  allProjects: [],
+  currentProjectId: null,
+  currentProjectObj: null,
+
+  loadProjects: async () => {
+    try {
+      const res = await fetch('/api/construction/projects');
+      const data = await res.json();
+      if (data.success) {
+        window.modConstruction.allProjects = data.data || [];
+        window.modConstruction.renderProjectList(window.modConstruction.allProjects);
+      }
+    } catch (err) {
+      console.error('Lỗi tải danh sách dự án:', err);
+    }
+  },
+
+  renderProjectList: (list) => {
+    const tbody = document.getElementById('projects-table-body');
+    // Quan trọng: Kiểm tra DOM để ngắt luồng nếu user chuyển tab khác
+    if (!tbody) return; 
+
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold">Chưa có dự án nào đang chạy. Hãy bấm "Tạo Dự Án Mới".</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(p => {
+      const isDone = Number(p.progress) >= 100;
+      return `
+        <tr class="hover:bg-blue-50/40 transition">
+          <td class="p-4">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-black text-xs">${p.project_code}</span>
+              <strong class="text-slate-800 font-bold text-sm">${p.project_name}</strong>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Phụ trách: <strong>${p.lead_engineer || '---'}</strong></p>
+          </td>
+          <td class="p-4">
+            <p class="font-bold text-slate-800 text-xs">${p.customer_name}</p>
+            <p class="text-xs text-slate-500 font-mono">📞 ${p.customer_phone || '---'} ${p.address ? '• ' + p.address : ''}</p>
+          </td>
+          <td class="p-4">
+            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs font-bold">${p.system_type}</span>
+            <p class="text-xs font-black text-amber-600 mt-1">${p.capacity_kwp} kWp ${p.battery_kwh > 0 ? '+ ' + p.battery_kwh + ' kWh' : ''}</p>
+          </td>
+          <td class="p-4 text-center">
+            <div class="w-24 bg-slate-100 rounded-full h-2 mx-auto overflow-hidden">
+              <div class="${isDone ? 'bg-emerald-500' : 'bg-blue-600'} h-2 rounded-full" style="width: ${p.progress}%"></div>
+            </div>
+            <span class="text-xs font-black text-slate-700 mt-1 inline-block">${p.progress}%</span>
+          </td>
+          <td class="p-4 text-center">
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+              ${isDone ? 'Hoàn tất' : 'Đang thi công'}
+            </span>
+          </td>
+          <td class="p-4 text-center">
+            <button onclick="window.modConstruction.openProjectDetail(${p.id})" class="px-3 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-sm transition">
+              Chi tiết <i class="fas fa-arrow-right ml-1 text-[10px]"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  filterProjects: () => {
+    const term = document.getElementById('project-search-input').value.toLowerCase().trim();
+    const filtered = window.modConstruction.allProjects.filter(p => 
+      p.project_name.toLowerCase().includes(term) ||
+      p.project_code.toLowerCase().includes(term) ||
+      p.customer_name.toLowerCase().includes(term) ||
+      (p.customer_phone && p.customer_phone.includes(term))
+    );
+    window.modConstruction.renderProjectList(filtered);
+  },
+
+  openProjectDetail: async (id) => {
+    window.modConstruction.currentProjectId = id;
+    window.modConstruction.currentProjectObj = window.modConstruction.allProjects.find(p => p.id == id);
+    if (!window.modConstruction.currentProjectObj) return;
+
+    document.getElementById('det-code').innerText = window.modConstruction.currentProjectObj.project_code;
+    document.getElementById('det-title').innerText = window.modConstruction.currentProjectObj.project_name;
+    document.getElementById('det-meta').innerText = `Khách hàng: ${window.modConstruction.currentProjectObj.customer_name} (${window.modConstruction.currentProjectObj.customer_phone || '---'}) | Phụ trách: ${window.modConstruction.currentProjectObj.lead_engineer || '---'}`;
+
+    // Xóa ảnh cũ
+    ['panels', 'cabinet', 'inverter', 'battery', 'wiring', 'app'].forEach(k => {
+      document.getElementById('img-prev-' + k).src = '';
+      document.getElementById('img-prev-' + k).classList.add('hidden');
+      document.getElementById('data-' + k).value = '';
+    });
+
+    // Tải dữ liệu bàn giao & ảnh hiện trường
+    try {
+      const res = await fetch(`/api/construction/handover/${id}`);
+      const result = await res.json();
+      if (result.success && result.data) {
+        const d = result.data;
+        document.getElementById('det-app-name').value = d.app_name || '';
+        document.getElementById('det-app-acc').value = d.app_account || '';
+        document.getElementById('det-app-pass').value = d.app_password || '';
+        document.getElementById('det-app-status').value = d.app_status || 'HOẠT ĐỘNG MƯỢT MÀ';
+
+        const map = {
+          'panels': d.img_panels,
+          'cabinet': d.img_cabinet,
+          'inverter': d.img_inverter,
+          'battery': d.img_battery,
+          'wiring': d.img_wiring,
+          'app': d.img_app
+        };
+
+        for (const [k, src] of Object.entries(map)) {
+          if (src) {
+            document.getElementById('img-prev-' + k).src = src;
+            document.getElementById('img-prev-' + k).classList.remove('hidden');
+            document.getElementById('data-' + k).value = src;
+          }
+        }
+      }
+    } catch(e) {
+      console.error('Lỗi tải chi tiết dự án:', e);
+    }
+
+    document.getElementById('view-project-list').classList.add('hidden');
+    document.getElementById('view-project-detail').classList.remove('hidden');
+  },
+
+  backToProjectList: () => {
+    document.getElementById('view-project-detail').classList.add('hidden');
+    document.getElementById('view-project-list').classList.remove('hidden');
+    window.modConstruction.loadProjects();
+  },
+
+  previewUpload: (e, imgId, inputDataId) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target.result;
+      document.getElementById(imgId).src = base64;
+      document.getElementById(imgId).classList.remove('hidden');
+      document.getElementById(inputDataId).value = base64;
+    };
+    reader.readAsDataURL(file);
+  },
+
+  saveProjectHandover: async (e) => {
+    if (e) e.preventDefault();
+    if (!window.modConstruction.currentProjectId) return;
+
+    const payload = {
+      customer_name: window.modConstruction.currentProjectObj.customer_name,
+      customer_phone: window.modConstruction.currentProjectObj.customer_phone,
+      address: window.modConstruction.currentProjectObj.address,
+      installed_kwp: window.modConstruction.currentProjectObj.capacity_kwp,
+      app_name: document.getElementById('det-app-name').value.trim(),
+      app_account: document.getElementById('det-app-acc').value.trim(),
+      app_password: document.getElementById('det-app-pass').value.trim(),
+      app_status: document.getElementById('det-app-status').value,
+      img_panels: document.getElementById('data-panels').value,
+      img_cabinet: document.getElementById('data-cabinet').value,
+      img_inverter: document.getElementById('data-inverter').value,
+      img_battery: document.getElementById('data-battery').value,
+      img_wiring: document.getElementById('data-wiring').value,
+      img_app: document.getElementById('data-app').value,
+      progress: 100
+    };
+
+    try {
+      const res = await fetch(`/api/construction/handover/${window.modConstruction.currentProjectId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      if (result.success) {
+        alert('🎉 Đã lưu biên bản nghiệm thu và toàn bộ 6 ảnh của dự án này thành công!');
+      } else {
+        alert('Lỗi: ' + result.error);
+      }
+    } catch(err) {
+      alert('Lỗi kết nối: ' + err.message);
+    }
+  },
+
+  openCreateProjectModal: () => {
+    document.getElementById('create-project-modal').classList.remove('hidden');
+  },
+  
+  closeCreateProjectModal: () => {
+    document.getElementById('create-project-modal').classList.add('hidden');
+  },
+
+  submitNewProject: async (e) => {
+    e.preventDefault();
+    const payload = {
+      project_name: document.getElementById('np-name').value.trim(),
+      customer_name: document.getElementById('np-cust').value.trim(),
+      customer_phone: document.getElementById('np-phone').value.trim(),
+      system_type: document.getElementById('np-type').value,
+      capacity_kwp: document.getElementById('np-kwp').value || 0,
+      battery_kwh: document.getElementById('np-kwh').value || 0,
+      address: document.getElementById('np-addr').value.trim(),
+      lead_engineer: document.getElementById('np-engineer').value.trim()
+    };
+
+    try {
+      const res = await fetch('/api/construction/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.modConstruction.closeCreateProjectModal();
+        window.modConstruction.loadProjects();
+      } else {
+        alert('Lỗi tạo dự án: ' + data.error);
+      }
+    } catch(err) {
+      alert('Lỗi kết nối: ' + err.message);
+    }
+  }
+};
+
+// Kích hoạt ngay
+if (document.getElementById('projects-table-body')) {
+  window.modConstruction.loadProjects();
+}
+</script>

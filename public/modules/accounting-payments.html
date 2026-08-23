@@ -1,0 +1,225 @@
+<div class="h-full flex flex-col space-y-6 bg-slate-50 relative">
+    
+    <!-- DASHBOARD DÒNG TIỀN -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 shrink-0">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Tổng Chi Ra Trong Tháng</p>
+                <h3 class="text-2xl font-black text-red-600" id="cashflow-monthly">0 đ</h3>
+                <p class="text-[10px] text-slate-400 mt-1">Các UNC / Phiếu chi đã được duyệt</p>
+            </div>
+            <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-2xl"><i class="fas fa-chart-line"></i></div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Phiếu Chi Chờ Duyệt</p>
+                <h3 class="text-2xl font-black text-amber-600" id="cashflow-pending">0</h3>
+                <p class="text-[10px] text-slate-400 mt-1">Cần kế toán trưởng / GĐ phê duyệt</p>
+            </div>
+            <div class="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-2xl"><i class="fas fa-file-invoice-dollar"></i></div>
+        </div>
+    </div>
+
+    <!-- BẢNG DANH SÁCH PHIẾU CHI -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col overflow-hidden">
+        <div class="flex justify-between items-center mb-6 shrink-0 border-b border-slate-100 pb-4">
+            <div>
+                <h3 class="font-bold text-slate-900 text-lg"><i class="fas fa-money-check-alt text-blue-600 mr-2"></i>Sổ Quỹ & Thanh Toán (Ủy Nhiệm Chi)</h3>
+            </div>
+            <button onclick="window.modPayment.openCreate()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition shadow-md"><i class="fas fa-plus mr-1"></i> Lập Phiếu Chi Mới</button>
+        </div>
+        
+        <div class="overflow-y-auto flex-1">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 text-xs uppercase text-slate-500 sticky top-0 shadow-sm z-10">
+                    <tr>
+                        <th class="p-4 font-bold border-b">Mã Phiếu & Ngày Lập</th>
+                        <th class="p-4 font-bold border-b">Đơn Vị Thụ Hưởng (Đối Tác)</th>
+                        <th class="p-4 font-bold border-b text-right">Số Tiền Trả</th>
+                        <th class="p-4 font-bold border-b text-center">Hình Thức</th>
+                        <th class="p-4 font-bold border-b text-center">Trạng Thái</th>
+                        <th class="p-4 font-bold border-b text-center">Duyệt Chi</th>
+                    </tr>
+                </thead>
+                <tbody id="tbl-payments" class="divide-y text-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LẬP PHIẾU CHI MỚI -->
+<div id="payment-form-modal" class="absolute inset-0 bg-slate-900 bg-opacity-60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="flex justify-between items-center border-b-2 border-blue-500 pb-3 mb-4 shrink-0">
+            <h3 class="font-black text-xl text-slate-800"><i class="fas fa-money-bill-wave text-blue-600 mr-2"></i>Lập Ủy Nhiệm Chi / Phiếu Chi</h3>
+            <button onclick="document.getElementById('payment-form-modal').classList.replace('flex', 'hidden')" class="text-slate-400 hover:text-red-500"><i class="fas fa-times text-2xl"></i></button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto pr-2 space-y-4">
+            <div class="bg-blue-50 text-blue-800 text-xs p-3 rounded-lg border border-blue-200 font-medium mb-4">
+                <i class="fas fa-info-circle mr-1"></i> Phiếu chi sau khi được <b>Duyệt (Đã Thanh Toán)</b> sẽ tự động trừ vào Dư Nợ Hiện Tại của Nhà Cung Cấp.
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Đơn vị thụ hưởng (Nhà Cung Cấp) <span class="text-red-500">*</span></label>
+                    <select id="pay-supplier" class="w-full border-2 p-2.5 rounded outline-none focus:border-blue-500 font-bold text-slate-800 bg-white">
+                        <option value="">-- Tải danh sách đối tác... --</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Số tiền thanh toán (VNĐ) <span class="text-red-500">*</span></label>
+                    <input type="text" id="pay-amount" placeholder="0" oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, ''))" class="w-full border-2 p-2.5 rounded outline-none focus:border-blue-500 text-right font-black text-red-600 text-lg">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Hình thức thanh toán</label>
+                    <select id="pay-method" class="w-full border border-slate-300 p-3 rounded outline-none focus:border-blue-500 text-sm font-bold">
+                        <option value="Chuyển Khoản">Chuyển Khoản Ngân Hàng (UNC)</option>
+                        <option value="Tiền Mặt">Tiền Mặt</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Lý do / Nội dung chi</label>
+                    <input type="text" id="pay-note" placeholder="VD: Thanh toán tiền đợt 1 cho PO-DOM-123456..." class="w-full border border-slate-300 p-2.5 rounded outline-none focus:border-blue-500 font-medium">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3 justify-end mt-6 pt-4 border-t shrink-0">
+            <button onclick="document.getElementById('payment-form-modal').classList.replace('flex', 'hidden')" class="px-5 py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300 transition">Hủy</button>
+            <button onclick="window.modPayment.savePayment()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition shadow-md"><i class="fas fa-save mr-1"></i> Trình Ký & Lưu Phiếu</button>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modPayment = {
+    suppliers: [],
+    
+    fmt: (num) => new Intl.NumberFormat('vi-VN').format(num || 0),
+
+    init: async () => {
+        try {
+            const res = await fetch('/api/suppliers?t=' + Date.now());
+            const data = await res.json();
+            if (data.success) {
+                window.modPayment.suppliers = data.data;
+                document.getElementById('pay-supplier').innerHTML = '<option value="">-- Chọn đối tác thụ hưởng --</option>' 
+                    + data.data.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            }
+        } catch(e) { console.error("Lỗi tải NCC"); }
+        window.modPayment.load();
+    },
+
+    load: async () => {
+        try {
+            const res = await fetch('/api/payments?t=' + Date.now());
+            const data = await res.json();
+            
+            if(data.success) {
+                const tbody = document.getElementById('tbl-payments');
+                if(data.data.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium">Chưa có giao dịch thanh toán nào.</td></tr>`;
+
+                let currentMonthOutflow = 0;
+                let pendingCount = 0;
+                const currentMonth = new Date().getMonth();
+
+                tbody.innerHTML = data.data.map(p => {
+                    const d = new Date(p.created_at);
+                    const isCurrentMonth = d.getMonth() === currentMonth;
+                    
+                    let badge = '<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-[10px] font-black uppercase">Chờ Duyệt</span>';
+                    let actionBtn = `<button onclick="window.modPayment.approve(${p.id}, 'Đã Thanh Toán')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded shadow text-xs font-bold transition">Duyệt Chi</button>`;
+                    
+                    if (p.status === 'Chờ Duyệt') {
+                        pendingCount++;
+                    } else if (p.status === 'Đã Thanh Toán') {
+                        badge = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[10px] font-black uppercase">Đã Thanh Toán</span>';
+                        actionBtn = '<span class="text-slate-400 text-xs font-bold"><i class="fas fa-check-circle text-emerald-500"></i> Hoàn Tất</span>';
+                        if(isCurrentMonth) currentMonthOutflow += p.amount;
+                    } else if (p.status === 'Đã Hủy') {
+                        badge = '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-black uppercase">Đã Hủy</span>';
+                        actionBtn = '---';
+                    }
+
+                    return `
+                        <tr class="hover:bg-blue-50/50 transition border-b border-slate-50">
+                            <td class="p-4">
+                                <p class="font-bold text-slate-700 font-mono text-sm">${p.payment_code}</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5"><i class="far fa-calendar-alt"></i> ${d.toLocaleDateString('vi-VN')}</p>
+                            </td>
+                            <td class="p-4">
+                                <p class="font-bold text-blue-700">${p.supplier_name}</p>
+                                <p class="text-[10px] text-slate-500 mt-1 line-clamp-1 italic">${p.note || ''}</p>
+                            </td>
+                            <td class="p-4 text-right">
+                                <p class="font-black text-red-600 text-sm">${window.modPayment.fmt(p.amount)} đ</p>
+                            </td>
+                            <td class="p-4 text-center text-xs font-bold text-slate-500">${p.payment_method}</td>
+                            <td class="p-4 text-center">${badge}</td>
+                            <td class="p-4 text-center">${actionBtn}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Cập nhật Dashboard
+                document.getElementById('cashflow-monthly').innerText = window.modPayment.fmt(currentMonthOutflow) + ' đ';
+                document.getElementById('cashflow-pending').innerText = pendingCount;
+            }
+        } catch(e) { console.error('Lỗi tải dữ liệu'); }
+    },
+
+    openCreate: () => {
+        document.getElementById('pay-supplier').value = '';
+        document.getElementById('pay-amount').value = '';
+        document.getElementById('pay-note').value = '';
+        document.getElementById('payment-form-modal').classList.replace('hidden', 'flex');
+    },
+
+    savePayment: async () => {
+        const supEl = document.getElementById('pay-supplier');
+        const supId = supEl.value;
+        const amountStr = document.getElementById('pay-amount').value;
+        const amount = parseFloat(amountStr.replace(/[^0-9]/g, '')) || 0;
+
+        if(!supId) return alert("Vui lòng chọn Đơn vị thụ hưởng!");
+        if(amount <= 0) return alert("Số tiền thanh toán phải lớn hơn 0!");
+
+        const payload = {
+            supplier_id: Number(supId),
+            supplier_name: supEl.options[supEl.selectedIndex].text,
+            amount: amount,
+            payment_method: document.getElementById('pay-method').value,
+            note: document.getElementById('pay-note').value.trim()
+        };
+
+        try {
+            const res = await fetch('/api/payments', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('payment-form-modal').classList.replace('flex', 'hidden');
+                window.modPayment.load();
+                alert("Đã tạo Phiếu Chi. Chờ Kế toán trưởng duyệt!");
+            }
+        } catch(e) { alert("Lỗi kết nối"); }
+    },
+
+    approve: async (id, status) => {
+        if(!confirm("Xác nhận ĐÃ THANH TOÁN khoản này? Hệ thống sẽ tự động giảm trừ công nợ của Nhà Cung Cấp.")) return;
+        
+        try {
+            await fetch(`/api/payments/${id}/status`, {
+                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: status })
+            });
+            window.modPayment.load();
+        } catch(e) { alert("Lỗi xử lý"); }
+    }
+};
+
+window.modPayment.init();
+</script>
