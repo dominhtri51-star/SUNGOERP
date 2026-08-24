@@ -42,13 +42,22 @@ function readJsonFile(filePath) {
     }
 }
 
+function writeJsonFile(filePath, data) {
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 // Khởi tạo bảng CSDL cho Két Sắt nếu chưa có
 async function initVaultTables() {
     try {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS tax_vault_documents (
                 id SERIAL PRIMARY KEY,
-                vault_code VARCHAR(100) UNIQUE,
+                vault_code VARCHAR(100),
                 category VARCHAR(100) NOT NULL,
                 sub_category VARCHAR(100),
                 title VARCHAR(255) NOT NULL,
@@ -137,6 +146,7 @@ async function aggregateAllVaultDocuments() {
                 arr.forEach(d => {
                     if (d && (d.url || d.file_url)) {
                         docList.push({
+                            id: d.id,
                             name: d.name || d.original_name || dType,
                             url: d.url || d.file_url,
                             type: (d.url||'').endsWith('.pdf') ? 'pdf' : ((d.url||'').endsWith('.xml') ? 'xml' : 'image'),
@@ -147,9 +157,9 @@ async function aggregateAllVaultDocuments() {
             });
         }
 
-        const hasCO = docList.some(d => (d.doc_type === 'co_cq' || (d.name||'').toLowerCase().includes('co') || (d.name||'').toLowerCase().includes('cq')));
+        const hasCO = docList.some(d => (d.doc_type === 'cert' || d.doc_type === 'co_cq' || (d.name||'').toLowerCase().includes('co') || (d.name||'').toLowerCase().includes('cq') || (d.name||'').toLowerCase().includes('cert')));
         const hasCustoms = docList.some(d => (d.doc_type === 'customs' || (d.name||'').toLowerCase().includes('hải quan') || (d.name||'').toLowerCase().includes('to khai')));
-        const hasBL = docList.some(d => (d.doc_type === 'bl' || (d.name||'').toLowerCase().includes('b/l') || (d.name||'').toLowerCase().includes('vận đơn')));
+        const hasBL = docList.some(d => (d.doc_type === 'transport' || d.doc_type === 'bl' || (d.name||'').toLowerCase().includes('b/l') || (d.name||'').toLowerCase().includes('vận đơn') || (d.name||'').toLowerCase().includes('thắng')));
 
         const riskNotes = [];
         if (!hasCustoms) riskNotes.push('Thiếu Tờ khai Hải quan điện tử');
@@ -183,6 +193,44 @@ async function aggregateAllVaultDocuments() {
         });
     });
 
+    // Gom chứng nhận C/O, C/Q từ danh mục sản phẩm (bảng products)
+    try {
+        const prodDocsRes = await pool.query("SELECT id, sku, product_name, doc_cocq, doc_datasheet, doc_catalog, created_at FROM products WHERE (doc_cocq IS NOT NULL AND doc_cocq != '') OR (doc_datasheet IS NOT NULL AND doc_datasheet != '') LIMIT 50");
+        prodDocsRes.rows.forEach(p => {
+            const pTag = getPeriodTag(p.created_at);
+            const qTag = getQuarterTag(p.created_at);
+            const docList = [];
+            if (p.doc_cocq) docList.push({ name: `Chứng chỉ C/O, C/Q (${p.sku})`, url: p.doc_cocq, type: 'pdf', doc_type: 'co_cq' });
+            if (p.doc_datasheet) docList.push({ name: `Datasheet kỹ thuật (${p.sku})`, url: p.doc_datasheet, type: 'pdf', doc_type: 'datasheet' });
+
+            allDocs.push({
+                id: `PRD-${p.id}`,
+                vault_code: `VLT-CQ-${String(p.id).padStart(5, '0')}`,
+                category: 'ORIGIN_CO_CQ',
+                category_label: 'Nguồn Gốc & Nhập Khẩu',
+                sub_category: 'Chứng Nhận C/O, C/Q Thiết Bị',
+                code: p.sku || `SKU-${p.id}`,
+                title: `Hồ sơ Xuất xứ & Chất lượng: ${p.product_name}`,
+                date: (p.created_at ? new Date(p.created_at).toISOString() : new Date().toISOString()).split('T')[0],
+                period_tag: pTag,
+                quarter_tag: qTag,
+                partner_name: 'Nhà Sản Xuất Chính Hãng',
+                partner_tax_code: 'OEM',
+                amount: 0,
+                vat_rate: 0,
+                vat_amount: 0,
+                docs: docList,
+                docs_count: docList.length,
+                items_summary: p.product_name,
+                compliance_status: 'VALID',
+                risk_notes: [],
+                is_locked: false,
+                source_module: 'PRODUCTS',
+                ref_id: p.sku
+            });
+        });
+    } catch (e) {}
+
     // -------------------------------------------------------------
     // 2. KHOANG: MUA HÀNG NỘI ĐỊA & NHẬP KHO (PURCHASES & EXPENSES)
     // -------------------------------------------------------------
@@ -199,6 +247,7 @@ async function aggregateAllVaultDocuments() {
                 arr.forEach(d => {
                     if (d && (d.url || d.file_url)) {
                         docList.push({
+                            id: d.id,
                             name: d.name || d.original_name || 'Biên nhận kho',
                             url: d.url || d.file_url,
                             type: (d.url||'').endsWith('.pdf') ? 'pdf' : 'image',
@@ -333,6 +382,7 @@ async function aggregateAllVaultDocuments() {
 
                 oDocs.forEach(d => {
                     docList.push({
+                        id: d.id,
                         name: d.doc_name || d.doc_type || 'Chứng từ giao hàng',
                         url: d.doc_url || d.file_url,
                         type: (d.doc_url||'').endsWith('.pdf') ? 'pdf' : 'image',
@@ -438,6 +488,7 @@ async function aggregateAllVaultDocuments() {
             payments.forEach((p, pIdx) => {
                 if (p.proof_url) {
                     docList.push({
+                        id: p.id,
                         name: `UNC/Biên lai thanh toán đợt #${pIdx + 1} (${new Intl.NumberFormat('vi-VN').format(p.amount)}đ)`,
                         url: p.proof_url,
                         type: (p.proof_url||'').endsWith('.pdf') ? 'pdf' : 'image',
@@ -565,45 +616,110 @@ async function aggregateAllVaultDocuments() {
     } catch (e) {}
 
     // -------------------------------------------------------------
-    // 6. KHOANG: CHỨNG TỪ LƯU TRỮ THỦ CÔNG TRỰC TIẾP TRONG KÉT SẮT
+    // 6. KHOANG: CHỨNG TỪ LƯU TRỮ TRONG BẢNG tax_vault_documents
     // -------------------------------------------------------------
     try {
         const customDocs = await pool.query("SELECT * FROM tax_vault_documents ORDER BY id DESC");
-        customDocs.rows.forEach(cd => {
-            const pTag = cd.period_tag || getPeriodTag(cd.doc_date || cd.created_at);
-            const qTag = getQuarterTag(cd.doc_date || cd.created_at);
-            const isLocked = cd.is_locked || lockedPeriods.has(pTag) || lockedPeriods.has(qTag);
+        
+        // Tách riêng các file bổ sung (SUPPLEMENT_ATTACHMENT) và hồ sơ độc lập
+        const supplementMap = new Map();
+        const standaloneDocs = [];
 
-            allDocs.push({
-                id: `VLT-${cd.id}`,
-                vault_code: cd.vault_code || `VLT-MAN-${String(cd.id).padStart(5, '0')}`,
-                category: cd.category || 'LEGAL_COMPLIANCE',
-                category_label: cd.category === 'ORIGIN_CO_CQ' ? 'Nguồn Gốc & Nhập Khẩu' :
-                                (cd.category === 'INBOUND_PURCHASE' ? 'Mua Hàng & Nhập Kho' :
-                                (cd.category === 'OUTBOUND_DISPATCH' ? 'Xuất Kho & Vận Chuyển' :
-                                (cd.category === 'CONTRACT_BOQ' ? 'Báo Giá & Hợp Đồng' :
-                                (cd.category === 'TAX_INVOICE' ? 'Hóa Đơn GTGT & Thuế' : 'Hồ Sơ Pháp Lý & Kiểm Tra')))),
-                sub_category: cd.sub_category || 'Chứng Từ Lưu Trữ Thủ Công',
-                code: cd.doc_number || `DOC-${cd.id}`,
-                title: cd.title,
-                date: (cd.doc_date ? new Date(cd.doc_date).toISOString() : new Date(cd.created_at).toISOString()).split('T')[0],
-                period_tag: pTag,
-                quarter_tag: qTag,
-                partner_name: cd.partner_name || '',
-                partner_tax_code: cd.partner_tax_code || '',
-                amount: parseFloat(cd.amount || 0),
-                vat_amount: parseFloat(cd.vat_amount || 0),
-                docs: cd.file_url ? [{ name: cd.file_name || cd.title, url: cd.file_url, type: cd.file_type || 'pdf' }] : [],
-                docs_count: cd.file_url ? 1 : 0,
-                note: cd.note || '',
-                compliance_status: cd.is_verified ? 'VALID' : 'WARNING',
-                risk_notes: [],
-                is_locked: isLocked,
-                source_module: 'MANUAL_DEPOSIT',
-                ref_id: cd.ref_id
+        customDocs.rows.forEach(cd => {
+            if (cd.source_module === 'SUPPLEMENT_ATTACHMENT' || (cd.ref_id && cd.ref_id.trim() !== '')) {
+                const targetKey = cd.ref_id || cd.vault_code;
+                if (!supplementMap.has(targetKey)) {
+                    supplementMap.set(targetKey, []);
+                }
+                supplementMap.get(targetKey).push(cd);
+            }
+            
+            // Nếu không phải là file bổ sung gắn vào mã khác, hiển thị như một hồ sơ độc lập
+            if (cd.source_module !== 'SUPPLEMENT_ATTACHMENT') {
+                const pTag = cd.period_tag || getPeriodTag(cd.doc_date || cd.created_at);
+                const qTag = getQuarterTag(cd.doc_date || cd.created_at);
+                const isLocked = cd.is_locked || lockedPeriods.has(pTag) || lockedPeriods.has(qTag);
+
+                standaloneDocs.push({
+                    id: `VLT-${cd.id}`,
+                    vault_code: cd.vault_code || `VLT-MAN-${String(cd.id).padStart(5, '0')}`,
+                    category: cd.category || 'LEGAL_COMPLIANCE',
+                    category_label: cd.category === 'ORIGIN_CO_CQ' ? 'Nguồn Gốc & Nhập Khẩu' :
+                                    (cd.category === 'INBOUND_PURCHASE' ? 'Mua Hàng & Nhập Kho' :
+                                    (cd.category === 'OUTBOUND_DISPATCH' ? 'Xuất Kho & Vận Chuyển' :
+                                    (cd.category === 'CONTRACT_BOQ' ? 'Báo Giá & Hợp Đồng' :
+                                    (cd.category === 'TAX_INVOICE' ? 'Hóa Đơn GTGT & Thuế' : 'Hồ Sơ Pháp Lý & Kiểm Tra')))),
+                    sub_category: cd.sub_category || 'Chứng Từ Lưu Trữ Bổ Sung',
+                    code: cd.doc_number || `DOC-${cd.id}`,
+                    title: cd.title,
+                    date: (cd.doc_date ? new Date(cd.doc_date).toISOString() : new Date(cd.created_at).toISOString()).split('T')[0],
+                    period_tag: pTag,
+                    quarter_tag: qTag,
+                    partner_name: cd.partner_name || '',
+                    partner_tax_code: cd.partner_tax_code || '',
+                    amount: parseFloat(cd.amount || 0),
+                    vat_amount: parseFloat(cd.vat_amount || 0),
+                    docs: cd.file_url ? [{ id: cd.id, name: cd.file_name || cd.title, url: cd.file_url, type: cd.file_type || 'pdf', note: cd.note }] : [],
+                    docs_count: cd.file_url ? 1 : 0,
+                    note: cd.note || '',
+                    compliance_status: cd.is_verified ? 'VALID' : 'WARNING',
+                    risk_notes: [],
+                    is_locked: isLocked,
+                    source_module: 'MANUAL_DEPOSIT',
+                    ref_id: cd.ref_id
+                });
+            }
+        });
+
+        // Bổ sung các file đính kèm thêm vào các chứng từ gốc tương ứng
+        allDocs.forEach(d => {
+            const possibleKeys = [d.id, d.code, d.vault_code, d.ref_id].filter(Boolean);
+            possibleKeys.forEach(key => {
+                if (supplementMap.has(key)) {
+                    const supps = supplementMap.get(key);
+                    supps.forEach(s => {
+                        if (s.file_url && !d.docs.some(x => x.url === s.file_url)) {
+                            d.docs.push({
+                                id: s.id,
+                                name: s.file_name || s.title,
+                                url: s.file_url,
+                                type: s.file_type || 'pdf',
+                                doc_type: s.sub_category || 'SUPPLEMENT',
+                                note: s.note,
+                                uploaded_at: s.created_at,
+                                is_supplement: true
+                            });
+                            d.docs_count = d.docs.length;
+
+                            // Giải phóng rủi ro thuế nếu đã bổ sung chứng từ tương ứng
+                            const subLow = (s.sub_category || '').toLowerCase() + ' ' + (s.title || '').toLowerCase() + ' ' + (s.file_name || '').toLowerCase();
+                            if (subLow.includes('unc') || subLow.includes('ngân hàng') || subLow.includes('thanh toán')) {
+                                d.risk_notes = d.risk_notes.filter(r => !r.includes('UNC') && !r.includes('tiền mặt'));
+                            }
+                            if (subLow.includes('co') || subLow.includes('cq') || subLow.includes('xuất xứ') || subLow.includes('chất lượng')) {
+                                d.risk_notes = d.risk_notes.filter(r => !r.includes('C/O'));
+                            }
+                            if (subLow.includes('hải quan') || subLow.includes('tờ khai') || subLow.includes('customs')) {
+                                d.risk_notes = d.risk_notes.filter(r => !r.includes('Hải quan'));
+                            }
+                            if (subLow.includes('nghiệm thu') || subLow.includes('giao nhận') || subLow.includes('bàn giao') || subLow.includes('biên bản')) {
+                                d.risk_notes = d.risk_notes.filter(r => !r.includes('nghiệm thu') && !r.includes('biên bản'));
+                            }
+                            if (d.risk_notes.length === 0) {
+                                d.compliance_status = 'VALID';
+                            }
+                        }
+                    });
+                }
             });
         });
-    } catch (e) {}
+
+        // Ghép thêm standalone docs vào danh sách
+        standaloneDocs.forEach(sd => allDocs.push(sd));
+
+    } catch (e) {
+        console.error('Error merging supplementary docs:', e.message);
+    }
 
     // Sắp xếp chứng từ mới nhất lên đầu
     allDocs.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
@@ -617,7 +733,6 @@ router.get('/summary', async (req, res) => {
     try {
         const allDocs = await aggregateAllVaultDocuments();
 
-        // 1. Thống kê theo phân loại khoang
         const categoryCounts = {
             ORIGIN_CO_CQ: allDocs.filter(d => d.category === 'ORIGIN_CO_CQ').length,
             INBOUND_PURCHASE: allDocs.filter(d => d.category === 'INBOUND_PURCHASE').length,
@@ -628,18 +743,15 @@ router.get('/summary', async (req, res) => {
             LEGAL_COMPLIANCE: allDocs.filter(d => d.category === 'LEGAL_COMPLIANCE').length
         };
 
-        // 2. Tính toán các cảnh báo rủi ro thuế (Tax Risk Radar)
         const riskDocs = allDocs.filter(d => d.risk_notes && d.risk_notes.length > 0);
         const missingUncList = allDocs.filter(d => (d.risk_notes || []).some(r => r.includes('UNC') || r.includes('tiền mặt')));
         const missingCoCqList = allDocs.filter(d => (d.risk_notes || []).some(r => r.includes('C/O') || r.includes('Hải quan')));
         const missingInvoiceList = allDocs.filter(d => (d.risk_notes || []).some(r => r.includes('hóa đơn')));
 
-        // 3. Tính điểm sẵn sàng thanh tra (Audit Readiness Score %)
         const totalDocs = allDocs.length;
         const validDocs = allDocs.filter(d => d.compliance_status === 'VALID').length;
         const readinessScore = totalDocs > 0 ? Math.round((validDocs / totalDocs) * 100) : 100;
 
-        // 4. Tổng hợp tài chính & Thuế
         let totalRevenue = 0;
         let totalExpense = 0;
         let totalVatOutput = 0;
@@ -657,7 +769,6 @@ router.get('/summary', async (req, res) => {
 
         const taxPayable = totalVatOutput - totalVatInput;
 
-        // 5. Danh sách các kỳ đã khóa niêm phong
         let locks = [];
         try {
             const lockRes = await pool.query("SELECT * FROM tax_vault_locks ORDER BY locked_at DESC");
@@ -739,12 +850,41 @@ router.get('/all', async (req, res) => {
 });
 
 // =========================================================================
-// API 3: [GET] BỘ HỒ SƠ THANH TRA THEO KỲ & DỰ ÁN (AUDIT DOSSIER BUNDLES)
+// API 3: [GET] DANH SÁCH GỢI Ý MÃ REF / MÃ KÉT SẮT (SUGGESTIONS)
+// =========================================================================
+router.get('/ref-suggestions', async (req, res) => {
+    try {
+        const docs = await aggregateAllVaultDocuments();
+        const suggestions = docs.map(d => ({
+            id: d.id,
+            ref_code: d.code,
+            vault_code: d.vault_code,
+            title: d.title,
+            partner_name: d.partner_name,
+            category: d.category,
+            category_label: d.category_label,
+            date: d.date,
+            docs_count: d.docs_count,
+            source_module: d.source_module
+        }));
+
+        res.json({
+            success: true,
+            total: suggestions.length,
+            data: suggestions
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// =========================================================================
+// API 4: [GET] BỘ HỒ SƠ THANH TRA THEO KỲ & DỰ ÁN (AUDIT DOSSIER BUNDLES)
 // =========================================================================
 router.get('/audit-bundles', async (req, res) => {
     try {
         const allDocs = await aggregateAllVaultDocuments();
-        const { group_by = 'period' } = req.query; // 'period' hoặc 'project'
+        const { group_by = 'period' } = req.query;
 
         const bundles = {};
 
@@ -793,7 +933,6 @@ router.get('/audit-bundles', async (req, res) => {
             });
         }
 
-        // Đánh giá mắt xích & tính % hoàn thiện từng gói hồ sơ
         const bundleList = Object.values(bundles).map(b => {
             const hasL1 = b.chain.link1_quote_contract.length > 0;
             const hasL2 = b.chain.link2_invoice_out.length > 0;
@@ -821,7 +960,6 @@ router.get('/audit-bundles', async (req, res) => {
             };
         });
 
-        // Sắp xếp kỳ gần nhất lên đầu
         bundleList.sort((a, b) => b.period.localeCompare(a.period));
 
         res.json({
@@ -835,7 +973,129 @@ router.get('/audit-bundles', async (req, res) => {
 });
 
 // =========================================================================
-// API 4: [POST] NẠP CHỨNG TỪ PHÁP LÝ / THUẾ VÀO KÉT SẮT (DEPOSIT DOC)
+// API 5: [POST] BỔ SUNG / ĐÍNH KÈM CHỨNG TỪ VÀO MÃ KÉT SẮT / REF CÓ SẴN (ATTACH)
+// =========================================================================
+router.post('/attach-to-ref', upload.single('file'), async (req, res) => {
+    try {
+        const {
+            target_id,
+            ref_code,
+            vault_code,
+            doc_type = 'ChungTuBoSung',
+            title,
+            note,
+            doc_number,
+            doc_date
+        } = req.body;
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'Vui lòng chọn tệp tin cần đính kèm!' });
+        }
+
+        const cleanTargetId = target_id || ref_code || vault_code;
+        if (!cleanTargetId) {
+            return res.status(400).json({ success: false, error: 'Thiếu thông tin Mã Két Sắt hoặc Mã Ref cần bổ sung!' });
+        }
+
+        const fileUrl = `/uploads/vault/${req.file.filename}`;
+        const fileName = req.file.originalname;
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        const fileType = ext.includes('pdf') ? 'pdf' : (ext.includes('xml') ? 'xml' : (['.jpg', '.jpeg', '.png', '.webp'].includes(ext) ? 'image' : 'doc'));
+        const finalTitle = title || `${doc_type}: ${fileName}`;
+
+        // 1. Lưu bản ghi vào bảng tax_vault_documents để index và liên kết toàn diện
+        const insertRes = await pool.query(`
+            INSERT INTO tax_vault_documents (
+                vault_code, category, sub_category, title, doc_number, doc_date,
+                file_url, file_name, file_type, note, source_module, ref_id, is_verified
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'SUPPLEMENT_ATTACHMENT', $11, true)
+            RETURNING *
+        `, [
+            vault_code || `VLT-ATT-${Date.now().toString().slice(-5)}`,
+            'LEGAL_COMPLIANCE',
+            doc_type,
+            finalTitle,
+            doc_number || '',
+            doc_date || new Date(),
+            fileUrl,
+            fileName,
+            fileType,
+            note || '',
+            cleanTargetId
+        ]);
+
+        // 2. Cập nhật trực tiếp vào phân hệ gốc nếu có thể
+        if (cleanTargetId.startsWith('IMP-') || cleanTargetId.startsWith('PO-IMP-') || cleanTargetId.startsWith('AS0182')) {
+            const impId = cleanTargetId.replace('IMP-', '');
+            const importsData = readJsonFile(importsFile);
+            const impItem = importsData.find(i => String(i.id) === impId || i.po_code === cleanTargetId);
+            if (impItem) {
+                if (!impItem.docs) impItem.docs = {};
+                const bucket = doc_type.toLowerCase().includes('co') || doc_type.toLowerCase().includes('cert') ? 'cert' :
+                               (doc_type.toLowerCase().includes('hải quan') || doc_type.toLowerCase().includes('customs') ? 'customs' : 'transport');
+                if (!impItem.docs[bucket]) impItem.docs[bucket] = [];
+                impItem.docs[bucket].push({
+                    name: finalTitle,
+                    url: fileUrl,
+                    original_name: fileName,
+                    uploaded_at: new Date().toISOString()
+                });
+                writeJsonFile(importsFile, importsData);
+            }
+        } else if (cleanTargetId.startsWith('PUR-') || cleanTargetId.startsWith('PO-DOM-')) {
+            const purId = cleanTargetId.replace('PUR-', '');
+            const purchasesData = readJsonFile(purchasesFile);
+            const purItem = purchasesData.find(p => String(p.id) === purId || p.po_code === cleanTargetId);
+            if (purItem) {
+                if (!purItem.docs) purItem.docs = {};
+                const bucket = doc_type.toLowerCase().includes('unc') ? 'unc' : 'wms_receipt';
+                if (!purItem.docs[bucket]) purItem.docs[bucket] = [];
+                purItem.docs[bucket].push({
+                    name: finalTitle,
+                    url: fileUrl,
+                    original_name: fileName,
+                    uploaded_at: new Date().toISOString()
+                });
+                writeJsonFile(purchasesFile, purchasesData);
+            }
+        } else if (cleanTargetId.startsWith('ORD-') || cleanTargetId.startsWith('DH-')) {
+            const ordId = cleanTargetId.replace('ORD-', '');
+            try {
+                // Lấy ID order
+                const oCheck = await pool.query("SELECT id FROM orders WHERE id = $1 OR order_code = $2", [isNaN(ordId) ? 0 : parseInt(ordId), cleanTargetId]);
+                if (oCheck.rows.length > 0) {
+                    await pool.query(`
+                        INSERT INTO order_docs (order_id, doc_name, doc_url, doc_type) 
+                        VALUES ($1, $2, $3, $4)
+                    `, [oCheck.rows[0].id, finalTitle, fileUrl, doc_type]);
+                }
+            } catch (e) {}
+        } else if (cleanTargetId.startsWith('CTR-') || cleanTargetId.startsWith('HD-')) {
+            const ctrId = cleanTargetId.replace('CTR-', '');
+            try {
+                const cCheck = await pool.query("SELECT id FROM contracts WHERE id = $1 OR contract_code = $2", [isNaN(ctrId) ? 0 : parseInt(ctrId), cleanTargetId]);
+                if (cCheck.rows.length > 0) {
+                    await pool.query(`
+                        INSERT INTO contract_payments (contract_id, amount, payment_date, proof_url, note) 
+                        VALUES ($1, 0, CURRENT_DATE, $2, $3)
+                    `, [cCheck.rows[0].id, fileUrl, finalTitle]);
+                }
+            } catch (e) {}
+        }
+
+        res.json({
+            success: true,
+            message: `✅ Đã bổ sung thành công tệp tin vào mã [${cleanTargetId}]!`,
+            data: insertRes.rows[0]
+        });
+
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// =========================================================================
+// API 6: [POST] NẠP HỒ SƠ MỚI ĐỘC LẬP VÀO KÉT SẮT (DEPOSIT DOC)
 // =========================================================================
 router.post('/deposit', upload.single('file'), async (req, res) => {
     try {
@@ -909,7 +1169,7 @@ router.post('/deposit', upload.single('file'), async (req, res) => {
 });
 
 // =========================================================================
-// API 5: [POST] NIÊM PHONG / KHÓA SỔ KÉT SẮT THEO KỲ (LOCK / UNLOCK PERIOD)
+// API 7: [POST] NIÊM PHONG / KHÓA SỔ KÉT SẮT THEO KỲ (LOCK / UNLOCK PERIOD)
 // =========================================================================
 router.post('/lock-period', async (req, res) => {
     try {
@@ -933,7 +1193,7 @@ router.post('/lock-period', async (req, res) => {
 });
 
 // =========================================================================
-// API 6: [DELETE] XÓA CHỨNG TỪ TẢI THÊM TRONG KÉT SẮT
+// API 8: [DELETE] XÓA CHỨNG TỪ ĐÍNH KÈM / BỔ SUNG TRONG KÉT SẮT
 // =========================================================================
 router.delete('/doc/:id', async (req, res) => {
     try {
@@ -956,7 +1216,7 @@ router.delete('/doc/:id', async (req, res) => {
 });
 
 // =========================================================================
-// API 7: [GET] XUẤT BẢNG KÊ CHỨNG TỪ PHÁP LÝ & THUẾ (CSV / EXPORT)
+// API 9: [GET] XUẤT BẢNG KÊ CHỨNG TỪ PHÁP LÝ & THUẾ (CSV / EXPORT)
 // =========================================================================
 router.get('/export-csv', async (req, res) => {
     try {

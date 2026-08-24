@@ -16,11 +16,24 @@
     background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
     color: #ffffff !important;
     border-color: #1d4ed8 !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
 }
 .cat-pill.active .cat-badge {
     background: #ffffff !important;
     color: #1d4ed8 !important;
+}
+
+.subcat-pill {
+    transition: all 0.15s ease-in-out;
+}
+.subcat-pill.active {
+    background: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: #0f172a !important;
+}
+.subcat-pill.active .subcat-badge {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
 }
 
 @media print {
@@ -55,7 +68,7 @@
                         <i class="fas fa-tag text-blue-600"></i> <span id="pos-tier-label">VIP 1 • GIÁ LẺ NIÊM YẾT</span>
                     </span>
                 </div>
-                <p class="text-[11px] text-slate-500 font-medium">Bán lẻ & Dự án Solar • Tự động tính giá VIP theo phân hạng khách hàng</p>
+                <p class="text-[11px] text-slate-500 font-medium">Bán lẻ & Dự án Solar • Danh mục logic chuẩn Admin • Tự động tính giá VIP theo khách hàng</p>
             </div>
         </div>
 
@@ -75,7 +88,7 @@
         <!-- CỘT TRÁI: DANH MỤC & LƯỚI SẢN PHẨM (62%) -->
         <div class="w-full lg:w-[62%] flex flex-col bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             
-            <!-- THANH TÌM KIẾM & BỘ LỌC CÒN HÀNG -->
+            <!-- THANH TÌM KIẾM, LỌC TỒN KHO & DANH MỤC LOGIC -->
             <div class="p-3 border-b border-slate-100 bg-slate-50/70 space-y-2 shrink-0">
                 <div class="flex gap-2">
                     <div class="relative flex-1">
@@ -86,7 +99,7 @@
                                oninput="window.modPos.renderProducts()" 
                                placeholder="🔍 Gõ tên thiết bị, mã SKU, thương hiệu để tìm nhanh..." 
                                class="w-full pl-9 pr-8 py-2 text-xs font-bold border border-slate-300 rounded-lg outline-none bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-2xs">
-                        <button type="button" onclick="document.getElementById('pos-search').value=''; window.modPos.renderProducts();" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-300 hover:text-slate-500">
+                        <button type="button" onclick="document.getElementById('pos-search').value=''; window.modPos.renderProducts();" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-300 hover:text-slate-500 cursor-pointer">
                             <i class="fas fa-times-circle text-xs"></i>
                         </button>
                     </div>
@@ -97,32 +110,19 @@
                     </button>
                 </div>
 
-                <!-- THANH DANH MỤC NHANH (CATEGORY PILL TABS) -->
+                <!-- CẤP 1: THANH DANH MỤC CHÍNH (ĐỒNG BỘ CHUẨN CÂY DANH MỤC TỪ ADMIN-PRODUCTS) -->
                 <div class="flex items-center gap-1.5 overflow-x-auto pos-scroll pb-1" id="pos-cat-pill-container">
-                    <button type="button" onclick="window.modPos.filterCategory('ALL')" data-cat="ALL" class="cat-pill active px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i class="fas fa-th-large text-xs"></i> Tất Cả <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-all">0</span>
+                    <button type="button" onclick="window.modPos.selectRootCategory('ALL')" id="cat-pill-ALL" class="cat-pill active px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                        <i class="fas fa-layer-group text-xs text-amber-500"></i> Tất Cả SP <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-all">0</span>
                     </button>
-                    <button type="button" onclick="window.modPos.filterCategory('PANEL')" data-cat="PANEL" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i class="fas fa-solar-panel text-amber-500 text-xs"></i> Tấm Pin NLMT <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-panel">0</span>
-                    </button>
-                    <button type="button" onclick="window.modPos.filterCategory('INVERTER')" data-cat="INVERTER" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i class="fas fa-bolt text-blue-500 text-xs"></i> Biến Tần Inverter <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-inverter">0</span>
-                    </button>
-                    <button type="button" onclick="window.modPos.filterCategory('BATTERY')" data-cat="BATTERY" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i class="fas fa-car-battery text-emerald-500 text-xs"></i> Pin Lưu Trữ <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-battery">0</span>
-                    </button>
-                    <button type="button" onclick="window.modPos.filterCategory('PUMP')" data-cat="PUMP" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i class="fas fa-water text-cyan-500 text-xs"></i> Bơm NLMT <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-pump">0</span>
-                    </button>
-                    <button type="button" onclick="window.modPos.filterCategory('CABINET')" data-cat="CABINET" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i class="fas fa-boxes-stacked text-purple-500 text-xs"></i> Tủ Điện & Đóng Cắt <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-cabinet">0</span>
-                    </button>
-                    <button type="button" onclick="window.modPos.filterCategory('ACCESSORY')" data-cat="ACCESSORY" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i class="fas fa-tools text-indigo-500 text-xs"></i> Phụ Kiện & Cáp <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-accessory">0</span>
-                    </button>
-                    <button type="button" onclick="window.modPos.filterCategory('OTHER')" data-cat="OTHER" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i class="fas fa-box-open text-slate-500 text-xs"></i> Khác <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-other">0</span>
-                    </button>
+                    <!-- Render động từ categories API -->
+                    <div id="pos-dynamic-root-cats" class="flex items-center gap-1.5 shrink-0"></div>
+                </div>
+
+                <!-- CẤP 2: THANH DANH MỤC PHÂN NHÁNH / CON (HIỆN KHI CHỌN NHÓM CÓ CON) -->
+                <div id="pos-subcat-bar" class="hidden flex items-center gap-1.5 overflow-x-auto pos-scroll pt-1 border-t border-slate-200/60">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase mr-1 shrink-0"><i class="fas fa-level-down-alt mr-0.5 text-blue-500"></i>Nhóm con:</span>
+                    <div id="pos-subcat-pills" class="flex items-center gap-1.5 shrink-0"></div>
                 </div>
             </div>
 
@@ -227,7 +227,7 @@
                 <!-- Nội dung giỏ hàng render động -->
             </div>
 
-            <!-- PHẦN TÍNH TIỀN & CHỐT ĐƠN HÀNG (FOOTER PHẢI) -->
+            <!-- PHẦN TÍNH TIỀN & TẠO ĐƠN MỚI (FOOTER PHẢI) -->
             <div class="bg-slate-900 text-white p-3.5 shrink-0 border-t border-slate-800 space-y-2.5 shadow-2xl">
                 <div class="space-y-1 text-xs">
                     <div class="flex justify-between items-center text-slate-400">
@@ -271,9 +271,9 @@
                     <input type="text" id="pos-order-note" placeholder="Ghi chú đơn hàng (nếu có)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs px-2.5 py-1.5 rounded-lg outline-none focus:border-blue-500 placeholder-slate-500 font-medium">
                 </div>
 
-                <!-- NÚT CHỐT ĐƠN HÀNG -->
+                <!-- NÚT TẠO ĐƠN MỚI (ĐÃ ĐỔI TÊN THEO YÊU CẦU) -->
                 <button type="button" onclick="window.modPos.checkout()" id="btn-pos-checkout" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm py-2.5 rounded-lg shadow-lg transition flex justify-center items-center gap-2 uppercase tracking-wider cursor-pointer">
-                    <i class="fas fa-check-circle text-base"></i> <span>Xác Nhận Chốt Đơn</span>
+                    <i class="fas fa-plus-circle text-base"></i> <span>Tạo Đơn Mới</span>
                 </button>
             </div>
         </div>
@@ -385,11 +385,13 @@
 <script>
 window.modPos = {
     products: [],
+    categories: [],
     customers: [],
     cart: [],
     selectedCustomer: null,
     activeTier: 1, // 1..6
-    selectedCategory: 'ALL',
+    selectedRootCatId: 'ALL',
+    selectedSubCatId: 'ALL',
     onlyInStock: false,
     paymentMethod: 'TIEN_MAT',
     discountVal: 0,
@@ -404,18 +406,29 @@ window.modPos = {
         6: "VIP 6 • NHÀ PHÂN PHỐI"
     },
 
-    // Khởi tạo và tải dữ liệu kho + khách hàng
+    colorMap: {
+        amber: 'text-amber-500',
+        blue: 'text-blue-500',
+        emerald: 'text-emerald-500',
+        cyan: 'text-cyan-500',
+        purple: 'text-purple-500',
+        indigo: 'text-indigo-500',
+        slate: 'text-slate-500'
+    },
+
+    // Khởi tạo và tải dữ liệu kho + danh mục từ DB + khách hàng
     load: async () => {
         const grid = document.getElementById('pos-product-grid');
         const reloadIcon = document.getElementById('pos-reload-icon');
         if (reloadIcon) reloadIcon.classList.add('fa-spin');
         
-        grid.innerHTML = '<div class="col-span-full text-center p-12 text-slate-400"><i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i><p class="mt-2 text-xs font-bold">Đang đồng bộ danh mục & kho hàng...</p></div>';
+        grid.innerHTML = '<div class="col-span-full text-center p-12 text-slate-400"><i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i><p class="mt-2 text-xs font-bold">Đang đồng bộ danh mục chuẩn & kho hàng...</p></div>';
         
         try {
-            const [resP, resC] = await Promise.all([
+            const [resP, resC, resCats] = await Promise.all([
                 fetch('/api/products?t=' + Date.now()).then(r => r.json()),
-                fetch('/api/customers?t=' + Date.now()).then(r => r.json())
+                fetch('/api/customers?t=' + Date.now()).then(r => r.json()),
+                fetch('/api/categories?t=' + Date.now()).then(r => r.json()).catch(() => ({ success: false }))
             ]);
 
             if (resP && resP.success) {
@@ -424,8 +437,11 @@ window.modPos = {
             if (resC && resC.success) {
                 window.modPos.customers = resC.data || [];
             }
+            if (resCats && resCats.success) {
+                window.modPos.categories = resCats.data || [];
+            }
 
-            window.modPos.updateCategoryCounts();
+            window.modPos.renderCategoryTabs();
             window.modPos.renderProducts();
         } catch(e) {
             console.error("POS Load Error:", e);
@@ -435,63 +451,114 @@ window.modPos = {
         }
     },
 
-    // Phân loại nhóm danh mục cho từng sản phẩm
-    getProductGroup: (p) => {
-        const text = `${p.product_name || ''} ${p.category || ''} ${p.sku || ''} ${p.description || ''}`.toLowerCase();
-        
-        if (text.includes('pin') || text.includes('jinko') || text.includes('rapid') || text.includes('solar panel') || text.includes('tấm pin') || text.includes('615w') || text.includes('620w') || text.includes('580w') || text.includes('bifacial')) {
-            if (!text.includes('lưu trữ') && !text.includes('lithium') && !text.includes('cell pin') && !text.includes('cọc pin') && !text.includes('lifepo4')) {
-                return 'PANEL';
-            }
+    // Render danh mục chính và phụ theo đúng logic của #admin-products
+    renderCategoryTabs: () => {
+        const allCats = window.modPos.categories || [];
+        const rootContainer = document.getElementById('pos-dynamic-root-cats');
+        const allCountBadge = document.getElementById('cat-cnt-all');
+
+        if (allCountBadge) allCountBadge.innerText = window.modPos.products.length;
+
+        // Lấy các danh mục gốc (parent_id is null/undefined)
+        const roots = allCats.filter(c => !c.parent_id);
+        roots.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+        if (rootContainer) {
+            rootContainer.innerHTML = roots.map(root => {
+                const colorClass = window.modPos.colorMap[root.color] || 'text-amber-500';
+                const isActive = String(window.modPos.selectedRootCatId) === String(root.id);
+                return `
+                <button type="button" onclick="window.modPos.selectRootCategory(${root.id})" 
+                        id="cat-pill-${root.id}"
+                        class="cat-pill ${isActive ? 'active' : ''} px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                    <i class="fas ${root.icon || 'fa-folder'} ${isActive ? 'text-white' : colorClass} text-xs"></i> 
+                    <span>${root.name}</span> 
+                    <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black">${root.product_count || 0}</span>
+                </button>`;
+            }).join('');
         }
-        if (text.includes('inverter') || text.includes('biến tần') || text.includes('hybrid') || text.includes('hòa lưới') || text.includes('hoà lưới') || text.includes('off-grid') || text.includes('offgrid') || text.includes('on-grid') || text.includes('ongrid') || text.includes('sunways') || text.includes('lumentree') || text.includes('deye') || text.includes('growatt') || text.includes('goodwe') || text.includes('vfd')) {
-            if (!text.includes('bơm')) return 'INVERTER';
-        }
-        if (text.includes('lithium') || text.includes('lifepo4') || text.includes('lưu trữ') || text.includes('cell pin') || text.includes('bms') || text.includes('seplos') || text.includes('apess') || text.includes('ebox') || text.includes('jaixi') || text.includes('pin lưu')) {
-            return 'BATTERY';
-        }
-        if (text.includes('bơm') || text.includes('solpump') || text.includes('everrun') || text.includes('everun') || text.includes('hỏa tiễn') || text.includes('pumping')) {
-            return 'PUMP';
-        }
-        if (text.includes('tủ điện') || text.includes('tụ điện') || text.includes('ats') || text.includes('mcb') || text.includes('mccb') || text.includes('cb ') || text.includes('spd') || text.includes('thoát sét') || text.includes('chống sét') || text.includes('meter') || text.includes('vỏ tủ')) {
-            return 'CABINET';
-        }
-        if (text.includes('rail') || text.includes('kẹp') || text.includes('mc4') || text.includes('dây dc') || text.includes('cáp dc') || text.includes('dây điện') || text.includes('cáp điện') || text.includes('jack') || text.includes('chân l') || text.includes('bát z') || text.includes('tiếp địa') || text.includes('ốc') || text.includes('bulong')) {
-            return 'ACCESSORY';
-        }
-        return 'OTHER';
+
+        window.modPos.renderSubCategoryPills();
     },
 
-    // Cập nhật số đếm trên thanh category tabs
-    updateCategoryCounts: () => {
-        const counts = { ALL: 0, PANEL: 0, INVERTER: 0, BATTERY: 0, PUMP: 0, CABINET: 0, ACCESSORY: 0, OTHER: 0 };
-        window.modPos.products.forEach(p => {
-            counts.ALL++;
-            const grp = window.modPos.getProductGroup(p);
-            counts[grp] = (counts[grp] || 0) + 1;
+    // Render nhóm con khi người dùng chọn 1 danh mục gốc
+    renderSubCategoryPills: () => {
+        const subBar = document.getElementById('pos-subcat-bar');
+        const subContainer = document.getElementById('pos-subcat-pills');
+        if (!subBar || !subContainer) return;
+
+        const rootId = window.modPos.selectedRootCatId;
+        if (rootId === 'ALL') {
+            subBar.classList.add('hidden');
+            return;
+        }
+
+        const allCats = window.modPos.categories || [];
+        const rootCat = allCats.find(c => String(c.id) === String(rootId));
+        const subCats = allCats.filter(c => String(c.parent_id) === String(rootId));
+        subCats.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+        if (subCats.length === 0) {
+            subBar.classList.add('hidden');
+            return;
+        }
+
+        subBar.classList.remove('hidden');
+
+        const isAllSubActive = window.modPos.selectedSubCatId === 'ALL';
+
+        let html = `
+        <button type="button" onclick="window.modPos.selectSubCategory('ALL')" 
+                class="subcat-pill ${isAllSubActive ? 'active' : ''} px-2.5 py-1 rounded-md text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs">
+            <span>Tất cả ${rootCat ? rootCat.name : ''}</span>
+            <span class="subcat-badge px-1 py-0.2 text-[9px] rounded-full bg-slate-100 font-black">${rootCat ? (rootCat.product_count || 0) : 0}</span>
+        </button>`;
+
+        subCats.forEach(sub => {
+            const isSubActive = String(window.modPos.selectedSubCatId) === String(sub.id);
+            html += `
+            <button type="button" onclick="window.modPos.selectSubCategory(${sub.id})" 
+                    class="subcat-pill ${isSubActive ? 'active' : ''} px-2.5 py-1 rounded-md text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs">
+                <i class="fas ${sub.icon || 'fa-tag'} text-[10px] text-slate-400"></i>
+                <span>${sub.name}</span>
+                <span class="subcat-badge px-1 py-0.2 text-[9px] rounded-full bg-slate-100 font-black">${sub.product_count || sub.direct_count || 0}</span>
+            </button>`;
         });
 
-        const setCnt = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-        setCnt('cat-cnt-all', counts.ALL);
-        setCnt('cat-cnt-panel', counts.PANEL);
-        setCnt('cat-cnt-inverter', counts.INVERTER);
-        setCnt('cat-cnt-battery', counts.BATTERY);
-        setCnt('cat-cnt-pump', counts.PUMP);
-        setCnt('cat-cnt-cabinet', counts.CABINET);
-        setCnt('cat-cnt-accessory', counts.ACCESSORY);
-        setCnt('cat-cnt-other', counts.OTHER);
+        subContainer.innerHTML = html;
     },
 
-    filterCategory: (catKey) => {
-        window.modPos.selectedCategory = catKey;
-        document.querySelectorAll('.cat-pill').forEach(btn => {
-            if (btn.getAttribute('data-cat') === catKey) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
+    selectRootCategory: (rootId) => {
+        window.modPos.selectedRootCatId = rootId;
+        window.modPos.selectedSubCatId = 'ALL';
+
+        // Cập nhật trạng thái active của pills
+        document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById(rootId === 'ALL' ? 'cat-pill-ALL' : `cat-pill-${rootId}`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        window.modPos.renderCategoryTabs();
         window.modPos.renderProducts();
+    },
+
+    selectSubCategory: (subId) => {
+        window.modPos.selectedSubCatId = subId;
+        window.modPos.renderSubCategoryPills();
+        window.modPos.renderProducts();
+    },
+
+    // Lấy toàn bộ tên danh mục con cháu của 1 node (chuẩn theo modProducts trong admin-products)
+    getBranchCategoryNames: (catId) => {
+        const allCats = window.modPos.categories || [];
+        const names = [];
+        const collect = (id) => {
+            const item = allCats.find(c => String(c.id) === String(id));
+            if (item && item.name) names.push(item.name.toLowerCase().trim());
+            const children = allCats.filter(c => String(c.parent_id) === String(id));
+            children.forEach(ch => collect(ch.id));
+        };
+        collect(catId);
+        return names;
     },
 
     toggleStockFilter: () => {
@@ -543,14 +610,26 @@ window.modPos = {
         const grid = document.getElementById('pos-product-grid');
         const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
 
-        let list = window.modPos.products;
+        let list = [...window.modPos.products];
 
-        // Lọc theo Category Tab
-        if (window.modPos.selectedCategory !== 'ALL') {
-            list = list.filter(p => window.modPos.getProductGroup(p) === window.modPos.selectedCategory);
+        // 1. Lọc theo Danh mục Cây Logic (chuẩn như #admin-products)
+        if (window.modPos.selectedSubCatId !== 'ALL') {
+            const subCatObj = (window.modPos.categories || []).find(c => String(c.id) === String(window.modPos.selectedSubCatId));
+            const subName = subCatObj ? subCatObj.name.toLowerCase().trim() : '';
+            list = list.filter(p => {
+                const pCat = (p.category || '').toLowerCase().trim();
+                return (p.category_id && String(p.category_id) === String(window.modPos.selectedSubCatId)) ||
+                       pCat === subName || (subName && pCat.includes(subName));
+            });
+        } else if (window.modPos.selectedRootCatId !== 'ALL') {
+            const branchNames = window.modPos.getBranchCategoryNames(window.modPos.selectedRootCatId);
+            list = list.filter(p => {
+                const pCat = (p.category || '').toLowerCase().trim();
+                return branchNames.includes(pCat) || branchNames.some(bn => pCat.includes(bn));
+            });
         }
 
-        // Lọc theo Từ khóa tìm kiếm
+        // 2. Lọc theo Từ khóa tìm kiếm
         if (term) {
             list = list.filter(p => 
                 (p.product_name || '').toLowerCase().includes(term) || 
@@ -560,7 +639,7 @@ window.modPos = {
             );
         }
 
-        // Lọc theo Trạng thái còn hàng
+        // 3. Lọc theo Trạng thái còn hàng
         if (window.modPos.onlyInStock) {
             list = list.filter(p => (parseFloat(p.stock_qty || 0) + parseFloat(p.virtual_stock || 0)) > 0);
         }
@@ -573,7 +652,7 @@ window.modPos = {
                 <div class="col-span-full text-center p-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
                     <i class="fas fa-search text-3xl mb-2 text-slate-300"></i>
                     <p class="text-xs font-bold text-slate-600">Không tìm thấy sản phẩm phù hợp</p>
-                    <p class="text-[11px] text-slate-400 mt-1">Thử đổi từ khóa hoặc chọn danh mục "Tất Cả"</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Thử đổi từ khóa hoặc chọn "Tất Cả SP"</p>
                 </div>`;
             return;
         }
@@ -904,7 +983,7 @@ window.modPos = {
         if (ptEl) ptEl.innerText = '+' + fmt(finalTotal * 0.01) + ' đ';
     },
 
-    // Chốt đơn hàng POS
+    // Tạo đơn hàng mới từ POS
     checkout: async () => {
         if (window.modPos.cart.length === 0) {
             alert("❌ Giỏ hàng đang trống! Vui lòng chọn ít nhất 1 sản phẩm.");
@@ -989,7 +1068,7 @@ window.modPos = {
             console.error("POS Checkout Error:", e);
             alert("❌ Lỗi kết nối máy chủ khi tạo đơn hàng!");
         } finally {
-            btn.innerHTML = '<i class="fas fa-check-circle text-base"></i> <span>Xác Nhận Chốt Đơn</span>';
+            btn.innerHTML = '<i class="fas fa-plus-circle text-base"></i> <span>Tạo Đơn Mới</span>';
             btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     },

@@ -42,20 +42,18 @@ router.get('/', async (req, res) => {
 
 router.post('/sync-pending', async (req, res) => {
     try {
-        const orders = await pool.query(`SELECT * FROM orders WHERE status = 'Đã Hoàn Tất'`);
+        const orders = await pool.query(`SELECT * FROM orders WHERE status IN ('Đã Hoàn Tất', 'COMPLETED', 'SHIPPED')`);
         for (let o of orders.rows) {
             const check = await pool.query(`SELECT id FROM invoices WHERE ref_id = $1`, [o.order_code]);
             if (check.rowCount === 0) {
-                const crm = await pool.query(`SELECT * FROM customers WHERE phone = $1`, [o.customer_phone]);
+                const crm = await pool.query(`SELECT * FROM customers WHERE phone = $1 OR id = $2`, [o.customer_phone, o.customer_id]);
                 const cData = crm.rowCount > 0 ? crm.rows[0] : {};
-                if(cData.tax_code) {
-                    const vatAmount = parseFloat(o.total_amount) * 0.08; 
-                    await pool.query(
-                        `INSERT INTO invoices (ref_type, ref_id, customer_name, tax_code, company_name, company_address, vat_email, total_amount, vat_rate, vat_amount) 
-                         VALUES ('ORDER', $1, $2, $3, $4, $5, $6, $7, 8, $8)`,
-                        [o.order_code, cData.full_name, cData.tax_code, cData.company_name, cData.company_address, cData.vat_email, o.total_amount, vatAmount]
-                    );
-                }
+                const vatAmount = parseFloat(o.total_amount || 0) * 0.08; 
+                await pool.query(
+                    `INSERT INTO invoices (ref_type, ref_id, customer_name, tax_code, company_name, company_address, vat_email, total_amount, vat_rate, vat_amount, status) 
+                     VALUES ('ORDER', $1, $2, $3, $4, $5, $6, $7, 8, $8, 'Chờ Phát Hành')`,
+                    [o.order_code, o.customer_name || cData.full_name, cData.vat_taxcode || cData.tax_code || '', cData.vat_company || cData.company_name || o.customer_name, cData.vat_address || cData.company_address || '', cData.vat_email || '', o.total_amount, vatAmount]
+                );
             }
         }
         res.json({ success: true, message: 'Đã đồng bộ đơn hàng chờ xuất VAT' });
