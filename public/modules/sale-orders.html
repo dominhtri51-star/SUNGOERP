@@ -1,298 +1,756 @@
+<!-- ==================================================================== -->
+<!-- PHÂN HỆ: TẠO ĐƠN HÀNG (POS BÁN LẺ & DỰ ÁN) - SUNGO ERP -->
+<!-- ==================================================================== -->
 
-<!-- [CRM SYNC] Khu vực chọn khách hàng CRM & Tự động áp giá VIP -->
-<div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-4">
-  <div class="flex justify-between items-center mb-2">
-    <label class="block text-sm font-bold text-gray-800">Khách Hàng (CRM Sync)</label>
-    <button type="button" onclick="openPosQuickCustomerModal()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1 rounded-md shadow-sm transition">
-      + Thêm khách mới
-    </button>
-  </div>
+<style>
+/* Tùy chỉnh thanh cuộn & hiệu ứng cho POS */
+.pos-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.pos-scroll::-webkit-scrollbar-track { background: transparent; }
+.pos-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+.pos-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-  <div id="pos-cust-search-box" class="relative">
-    <input type="text" id="pos-customer-search-input" 
-           placeholder="🔍 Gõ SĐT, Tên hoặc Mã KH để tìm..." 
-           autocomplete="off"
-           class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-           oninput="onPosSearchCustomer(this.value)">
-    <div id="pos-customer-dropdown-results" class="hidden absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto divide-y divide-gray-100"></div>
-  </div>
+.cat-pill {
+    transition: all 0.18s ease-in-out;
+}
+.cat-pill.active {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
+    color: #ffffff !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+}
+.cat-pill.active .cat-badge {
+    background: #ffffff !important;
+    color: #1d4ed8 !important;
+}
 
-  <!-- Thẻ hiển thị Khách hàng đã chọn -->
-  <div id="pos-selected-cust-card" class="hidden bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
-    <div class="flex justify-between items-start">
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-blue-950 text-base" id="pos-card-cust-name">---</span>
-          <span id="pos-card-cust-vip" class="px-2 py-0.5 text-xs font-extrabold rounded-full bg-blue-600 text-white">VIP 1</span>
-        </div>
-        <p class="text-xs text-gray-600 mt-1">
-          📞 SĐT: <strong id="pos-card-cust-phone" class="text-gray-800">---</strong> | 
-          🎁 Điểm: <strong id="pos-card-cust-points" class="text-amber-600">0</strong> đ
-        </p>
-        <p class="text-xs text-gray-500" id="pos-card-cust-address"></p>
-      </div>
-      <button type="button" onclick="resetPosSelectedCustomer()" class="text-xs text-red-600 hover:text-red-800 font-semibold underline ml-2">
-        Đổi KH
-      </button>
-    </div>
-  </div>
-  <input type="hidden" id="pos-hidden-customer-id" value="">
-  <input type="hidden" id="pos-hidden-vip-level" value="1">
-</div>
+@media print {
+    body * { visibility: hidden !important; }
+    #pos-receipt-print-area, #pos-receipt-print-area * { visibility: visible !important; }
+    #pos-receipt-print-area {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        margin: 0 !important;
+        padding: 8px !important;
+        background: white !important;
+        color: black !important;
+        display: block !important;
+    }
+}
+</style>
 
-<!-- Modal tạo nhanh Khách hàng CRM ngay tại POS -->
-<div id="pos-quick-customer-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl">
-    <div class="flex justify-between items-center mb-4 border-b pb-2">
-      <h3 class="text-base font-bold text-gray-900">Thêm Nhanh Khách Hàng CRM</h3>
-      <button type="button" onclick="closePosQuickCustomerModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
-    </div>
-    <form id="pos-quick-customer-form" onsubmit="saveQuickCustomer(event)" class="space-y-3">
-      <div>
-        <label class="block text-xs font-semibold text-gray-700 mb-1">Tên khách hàng *</label>
-        <input type="text" id="quick-cust-name" required class="w-full px-3 py-1.5 text-sm border rounded-lg">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-gray-700 mb-1">Số điện thoại *</label>
-        <input type="tel" id="quick-cust-phone" required class="w-full px-3 py-1.5 text-sm border rounded-lg">
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Hạng VIP</label>
-          <select id="quick-cust-vip" class="w-full px-3 py-1.5 text-sm border rounded-lg">
-            <option value="1">VIP 1 (Giá lẻ)</option>
-            <option value="2">VIP 2</option>
-            <option value="3">VIP 3</option>
-            <option value="4">VIP 4</option>
-            <option value="5">VIP 5 (Giá sỉ)</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Mã số thuế</label>
-          <input type="text" id="quick-cust-tax" class="w-full px-3 py-1.5 text-sm border rounded-lg">
-        </div>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-gray-700 mb-1">Địa chỉ</label>
-        <input type="text" id="quick-cust-address" class="w-full px-3 py-1.5 text-sm border rounded-lg">
-      </div>
-      <div class="flex justify-end gap-2 pt-2 border-t">
-        <button type="button" onclick="closePosQuickCustomerModal()" class="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">Hủy</button>
-        <button type="submit" class="px-4 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-bold">Lưu & Chọn</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<div class="h-full flex flex-col md:flex-row gap-4 relative bg-slate-100 text-sm">
-    <!-- CỘT TRÁI: DANH SÁCH SẢN PHẨM (60%) -->
-    <div class="w-full md:w-[60%] flex flex-col overflow-hidden">
-        <div class="mb-3 shrink-0 flex justify-between items-center">
+<div class="h-full flex flex-col gap-3 text-slate-800 select-none pb-1" id="pos-root-container">
+    
+    <!-- THANH HEADER POS & CHỈ BÁO BẢNG GIÁ VIP -->
+    <div class="bg-white rounded-xl px-4 py-2.5 border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+                <i class="fas fa-cash-register text-lg"></i>
+            </div>
             <div>
-                <h3 class="font-black text-blue-700 text-lg flex items-center gap-2">
-                    <i class="fas fa-shopping-cart"></i> Tạo Đơn Hàng (POS)
-                </h3>
-                <p class="text-[11px] text-slate-500 font-medium">Chọn sản phẩm, tự động áp bảng giá VIP theo khách hàng</p>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-base font-black text-slate-900 tracking-tight">Tạo Đơn Hàng (POS)</h2>
+                    <span id="pos-active-tier-pill" class="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1 shadow-2xs">
+                        <i class="fas fa-tag text-blue-600"></i> <span id="pos-tier-label">VIP 1 • GIÁ LẺ NIÊM YẾT</span>
+                    </span>
+                </div>
+                <p class="text-[11px] text-slate-500 font-medium">Bán lẻ & Dự án Solar • Tự động tính giá VIP theo phân hạng khách hàng</p>
             </div>
         </div>
-        
-        <div class="relative w-full mb-3 shrink-0 border border-slate-200 rounded-lg bg-white flex items-center shadow-sm">
-            <span class="pl-3 text-slate-400"><i class="fas fa-search"></i></span>
-            <input type="text" id="pos-search" oninput="window.modPos.renderProducts()" placeholder="Tìm tên thiết bị, mã SKU..." class="w-full py-2.5 px-3 text-xs font-bold outline-none bg-transparent focus:text-blue-700">
-        </div>
-        
-        <div class="flex-1 overflow-y-auto pr-2 pb-10">
-            <div id="pos-product-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-3"></div>
+
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="window.modPos.openQuickCustomerModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-user-plus"></i> <span>+ Khách Mới</span>
+            </button>
+            <button type="button" onclick="window.modPos.load()" title="Tải lại kho hàng & giá bán" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-sync-alt" id="pos-reload-icon"></i> <span>Làm Mới</span>
+            </button>
         </div>
     </div>
 
-    <!-- CỘT PHẢI: KHÁCH HÀNG & GIỎ HÀNG (40%) -->
-    <div class="w-full md:w-[40%] bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col shrink-0 overflow-hidden">
+    <!-- KHU VỰC THAO TÁC CHÍNH (2 CỘT) -->
+    <div class="flex-1 flex flex-col lg:flex-row gap-3 overflow-hidden min-h-0">
         
-        <!-- KHU VỰC CHỌN KHÁCH HÀNG CRM -->
-        <div class="p-3.5 border-b bg-amber-50/40">
-            <label class="text-[10px] font-black text-amber-800 uppercase mb-1.5 flex items-center gap-1">
-                <i class="fas fa-user-tag"></i> Chọn Khách Hàng (Tự động đổi cấp giá)
-            </label>
-            <div class="relative">
-                <input type="text" id="pos-cust-search" oninput="window.modPos.searchCustomer(this.value)" onclick="window.modPos.searchCustomer(this.value)" placeholder="Gõ Tên hoặc SĐT khách hàng..." class="w-full border border-amber-300 p-2 rounded outline-none text-xs font-bold focus:border-amber-500 shadow-sm bg-white text-slate-800">
-                <div id="pos-cust-dropdown" class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded shadow-xl z-50 hidden max-h-60 overflow-y-auto divide-y divide-slate-100"></div>
-            </div>
-            <div class="mt-2.5 space-y-1">
-                <div class="flex items-center justify-between">
-                    <p class="text-[11px] text-slate-600">Phân hạng: <span id="pc-tier" class="font-bold text-slate-800 uppercase bg-amber-200 px-1.5 py-0.5 rounded shadow-sm text-[10px]">KHÁCH LẺ</span></p>
-                    <button id="pc-clear-btn" onclick="window.modPos.clearCustomer()" class="hidden text-red-500 text-[10px] hover:underline font-bold"><i class="fas fa-times mr-1"></i>Hủy chọn</button>
+        <!-- CỘT TRÁI: DANH MỤC & LƯỚI SẢN PHẨM (62%) -->
+        <div class="w-full lg:w-[62%] flex flex-col bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            
+            <!-- THANH TÌM KIẾM & BỘ LỌC CÒN HÀNG -->
+            <div class="p-3 border-b border-slate-100 bg-slate-50/70 space-y-2 shrink-0">
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fas fa-search text-xs"></i>
+                        </span>
+                        <input type="text" id="pos-search" 
+                               oninput="window.modPos.renderProducts()" 
+                               placeholder="🔍 Gõ tên thiết bị, mã SKU, thương hiệu để tìm nhanh..." 
+                               class="w-full pl-9 pr-8 py-2 text-xs font-bold border border-slate-300 rounded-lg outline-none bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-2xs">
+                        <button type="button" onclick="document.getElementById('pos-search').value=''; window.modPos.renderProducts();" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-300 hover:text-slate-500">
+                            <i class="fas fa-times-circle text-xs"></i>
+                        </button>
+                    </div>
+                    
+                    <button type="button" id="pos-stock-filter-btn" onclick="window.modPos.toggleStockFilter()" class="px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 shadow-2xs transition cursor-pointer">
+                        <i class="fas fa-boxes text-slate-500"></i>
+                        <span id="pos-stock-filter-text">Tất cả kho</span>
+                    </button>
                 </div>
-                <p class="text-[11px] text-slate-600 line-clamp-1">Địa chỉ: <span id="pc-address" class="font-bold text-slate-800">Chưa xác định</span></p>
+
+                <!-- THANH DANH MỤC NHANH (CATEGORY PILL TABS) -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pos-scroll pb-1" id="pos-cat-pill-container">
+                    <button type="button" onclick="window.modPos.filterCategory('ALL')" data-cat="ALL" class="cat-pill active px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                        <i class="fas fa-th-large text-xs"></i> Tất Cả <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-all">0</span>
+                    </button>
+                    <button type="button" onclick="window.modPos.filterCategory('PANEL')" data-cat="PANEL" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                        <i class="fas fa-solar-panel text-amber-500 text-xs"></i> Tấm Pin NLMT <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-panel">0</span>
+                    </button>
+                    <button type="button" onclick="window.modPos.filterCategory('INVERTER')" data-cat="INVERTER" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                        <i class="fas fa-bolt text-blue-500 text-xs"></i> Biến Tần Inverter <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-inverter">0</span>
+                    </button>
+                    <button type="button" onclick="window.modPos.filterCategory('BATTERY')" data-cat="BATTERY" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                        <i class="fas fa-car-battery text-emerald-500 text-xs"></i> Pin Lưu Trữ <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-battery">0</span>
+                    </button>
+                    <button type="button" onclick="window.modPos.filterCategory('PUMP')" data-cat="PUMP" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                        <i class="fas fa-water text-cyan-500 text-xs"></i> Bơm NLMT <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-pump">0</span>
+                    </button>
+                    <button type="button" onclick="window.modPos.filterCategory('CABINET')" data-cat="CABINET" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                        <i class="fas fa-boxes-stacked text-purple-500 text-xs"></i> Tủ Điện & Đóng Cắt <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-cabinet">0</span>
+                    </button>
+                    <button type="button" onclick="window.modPos.filterCategory('ACCESSORY')" data-cat="ACCESSORY" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                        <i class="fas fa-tools text-indigo-500 text-xs"></i> Phụ Kiện & Cáp <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-accessory">0</span>
+                    </button>
+                    <button type="button" onclick="window.modPos.filterCategory('OTHER')" data-cat="OTHER" class="cat-pill px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
+                        <i class="fas fa-box-open text-slate-500 text-xs"></i> Khác <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-other">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- LƯỚI DANH SÁCH SẢN PHẨM -->
+            <div class="flex-1 overflow-y-auto pos-scroll p-3 bg-slate-100/50">
+                <div id="pos-product-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-2.5">
+                    <!-- Cards sản phẩm được render động bằng JS -->
+                </div>
+            </div>
+
+            <!-- FOOTER CỘT TRÁI: THỐNG KÊ NHANH -->
+            <div class="px-4 py-2 border-t border-slate-200 bg-white text-[11px] font-semibold text-slate-500 flex justify-between items-center shrink-0">
+                <span id="pos-product-stat-text">Đang tải sản phẩm...</span>
+                <span class="text-blue-600 font-bold"><i class="fas fa-info-circle mr-1"></i>Bấm vào thẻ sản phẩm để thêm vào giỏ</span>
             </div>
         </div>
 
-        <!-- TIÊU ĐỀ GIỎ HÀNG -->
-        <div class="grid grid-cols-12 gap-1 p-2 bg-slate-50 border-b text-[10px] font-bold text-slate-500 uppercase text-center shrink-0">
-            <div class="col-span-5 text-left pl-2">Thiết bị</div>
-            <div class="col-span-3">Số lượng</div>
-            <div class="col-span-4 text-right pr-3">Đơn giá</div>
+        <!-- CỘT PHẢI: KHÁCH HÀNG & GIỎ HÀNG (38%) -->
+        <div class="w-full lg:w-[38%] flex flex-col bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            
+            <!-- KHU VỰC CHỌN KHÁCH HÀNG (TÍCH HỢP VIP AUTO SYNC) -->
+            <div class="p-3 border-b border-slate-200 bg-gradient-to-r from-amber-50/60 to-orange-50/40 shrink-0">
+                
+                <!-- Khi chưa chọn khách: Hiển thị ô tìm kiếm -->
+                <div id="pos-cust-search-section" class="space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <label class="text-[11px] font-black text-amber-900 uppercase flex items-center gap-1.5">
+                            <i class="fas fa-user-tag text-amber-600"></i> Khách Hàng (Tự Động Áp Giá VIP)
+                        </label>
+                        <button type="button" onclick="window.modPos.openQuickCustomerModal()" class="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer">
+                            <i class="fas fa-plus-circle"></i> Tạo mới
+                        </button>
+                    </div>
+
+                    <div class="relative">
+                        <input type="text" id="pos-cust-search" 
+                               oninput="window.modPos.searchCustomer(this.value)" 
+                               onclick="window.modPos.searchCustomer(this.value)" 
+                               placeholder="🔍 Gõ Tên, SĐT, Nickname hoặc Mã KH..." 
+                               autocomplete="off"
+                               class="w-full border border-amber-300 px-3 py-2 rounded-lg outline-none text-xs font-bold bg-white text-slate-800 focus:border-amber-600 focus:ring-2 focus:ring-amber-100 shadow-2xs">
+                        <div id="pos-cust-dropdown" class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 hidden max-h-56 overflow-y-auto divide-y divide-slate-100 pos-scroll"></div>
+                    </div>
+                </div>
+
+                <!-- Khi đã chọn khách: Hiển thị thẻ VIP chi tiết -->
+                <div id="pos-cust-selected-card" class="hidden bg-white border-2 border-amber-300 rounded-xl p-3 shadow-sm relative space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-slate-900 text-xs leading-tight" id="pc-name">Khách Hàng</h4>
+                                <p class="text-[10px] text-slate-500 font-semibold" id="pc-phone">📞 0900000000</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="window.modPos.clearCustomer()" class="text-red-500 hover:text-red-700 text-[11px] font-black uppercase flex items-center gap-1 cursor-pointer bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition">
+                            <i class="fas fa-times"></i> Đổi KH
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        <div>
+                            <span class="text-slate-400 block font-medium">Hạng VIP & Bảng giá:</span>
+                            <div class="flex items-center gap-1 mt-0.5">
+                                <select id="pc-tier-select" onchange="window.modPos.changeActiveTier(this.value)" class="text-[11px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 outline-none cursor-pointer">
+                                    <option value="1">VIP 1: Khách Lẻ</option>
+                                    <option value="2">VIP 2: Chốt Sale</option>
+                                    <option value="3">VIP 3: Thợ / Đại Lý</option>
+                                    <option value="4">VIP 4: Sỉ Cấp 1</option>
+                                    <option value="5">VIP 5: Sỉ VIP</option>
+                                    <option value="6">VIP 6: NPP / Cắt Lô</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block font-medium">Quỹ điểm & Công nợ:</span>
+                            <p class="font-bold text-slate-700 mt-0.5">
+                                Điểm: <strong id="pc-points" class="text-amber-600 font-black">0 đ</strong> | 
+                                Nợ: <strong id="pc-debt" class="text-red-500 font-bold">0 đ</strong>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <p class="text-[10px] text-slate-500 line-clamp-1">
+                        📍 <span id="pc-address" class="font-medium">Chưa cập nhật địa chỉ</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- TIÊU ĐỀ BẢNG GIỎ HÀNG -->
+            <div class="px-3 py-2 bg-slate-100 border-b border-slate-200 flex justify-between items-center text-[10px] font-black text-slate-500 uppercase tracking-wider shrink-0">
+                <span class="flex items-center gap-1"><i class="fas fa-shopping-basket text-blue-600"></i> Giỏ Hàng (<span id="pos-cart-count">0</span> món)</span>
+                <button type="button" onclick="window.modPos.clearCart()" id="btn-clear-cart" class="text-slate-400 hover:text-red-600 font-bold lowercase transition hidden cursor-pointer">
+                    <i class="fas fa-trash-alt mr-0.5"></i> xóa tất cả
+                </button>
+            </div>
+
+            <!-- DANH SÁCH MÓN TRONG GIỎ HÀNG -->
+            <div class="flex-1 overflow-y-auto pos-scroll p-2 bg-white space-y-1.5" id="pos-cart-items">
+                <!-- Nội dung giỏ hàng render động -->
+            </div>
+
+            <!-- PHẦN TÍNH TIỀN & CHỐT ĐƠN HÀNG (FOOTER PHẢI) -->
+            <div class="bg-slate-900 text-white p-3.5 shrink-0 border-t border-slate-800 space-y-2.5 shadow-2xl">
+                <div class="space-y-1 text-xs">
+                    <div class="flex justify-between items-center text-slate-400">
+                        <span>Tiền hàng:</span>
+                        <span id="pos-subtotal" class="font-bold text-white">0 đ</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-slate-400">
+                        <div class="flex items-center gap-1">
+                            <span>Chiết khấu:</span>
+                            <input type="text" id="pos-discount-input" placeholder="0" oninput="window.modPos.onDiscountChange(this.value)" class="w-20 bg-slate-800 text-amber-400 text-right px-1.5 py-0.5 rounded text-xs font-bold border border-slate-700 outline-none focus:border-amber-500">
+                        </div>
+                        <span id="pos-discount-amount" class="font-bold text-amber-400">-0 đ</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-slate-400 text-[11px]">
+                        <span><i class="fas fa-gift text-amber-400 mr-1"></i>Tích lũy 1% quỹ điểm:</span>
+                        <span id="pos-point" class="font-bold text-amber-400">+0 đ</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-2 flex justify-between items-center">
+                    <span class="text-xs font-black uppercase text-slate-300 tracking-wider">Tổng thanh toán:</span>
+                    <span id="pos-total" class="text-xl font-black text-emerald-400 tracking-tight">0 đ</span>
+                </div>
+
+                <!-- PHƯƠNG THỨC THANH TOÁN & GHI CHÚ -->
+                <div class="grid grid-cols-3 gap-1 text-[10px] font-bold">
+                    <button type="button" onclick="window.modPos.setPaymentMethod('TIEN_MAT')" id="pm-TIEN_MAT" class="py-1.5 rounded bg-blue-600 text-white font-black text-center transition border border-blue-500 cursor-pointer">
+                        <i class="fas fa-money-bill-wave mr-0.5"></i> Tiền Mặt
+                    </button>
+                    <button type="button" onclick="window.modPos.setPaymentMethod('CHUYEN_KHOAN')" id="pm-CHUYEN_KHOAN" class="py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center transition border border-slate-700 cursor-pointer">
+                        <i class="fas fa-university mr-0.5"></i> CK / QR
+                    </button>
+                    <button type="button" onclick="window.modPos.setPaymentMethod('CONG_NO')" id="pm-CONG_NO" class="py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center transition border border-slate-700 cursor-pointer">
+                        <i class="fas fa-file-invoice mr-0.5"></i> Ghi Nợ
+                    </button>
+                </div>
+
+                <div>
+                    <input type="text" id="pos-order-note" placeholder="Ghi chú đơn hàng (nếu có)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs px-2.5 py-1.5 rounded-lg outline-none focus:border-blue-500 placeholder-slate-500 font-medium">
+                </div>
+
+                <!-- NÚT CHỐT ĐƠN HÀNG -->
+                <button type="button" onclick="window.modPos.checkout()" id="btn-pos-checkout" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm py-2.5 rounded-lg shadow-lg transition flex justify-center items-center gap-2 uppercase tracking-wider cursor-pointer">
+                    <i class="fas fa-check-circle text-base"></i> <span>Xác Nhận Chốt Đơn</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================================== -->
+<!-- MODAL: THÊM NHANH KHÁCH HÀNG CRM MỚI NGAY TẠI POS -->
+<!-- ==================================================================== -->
+<div id="pos-quick-cust-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2.5">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h3 class="text-sm font-black text-slate-900">Thêm Nhanh Khách Hàng CRM</h3>
+            </div>
+            <button type="button" onclick="window.modPos.closeQuickCustomerModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer">&times;</button>
         </div>
 
-        <!-- DANH SÁCH GIỎ HÀNG -->
-        <div class="flex-1 overflow-y-auto p-2 bg-white" id="pos-cart-items"></div>
+        <form id="pos-quick-cust-form" onsubmit="window.modPos.saveQuickCustomer(event)" class="space-y-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Tên khách hàng / Đối tác <span class="text-red-500">*</span></label>
+                <input type="text" id="qc-name" required placeholder="VD: Nguyễn Văn A hoặc Cty Solar Ánh Dương" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-bold text-slate-800 focus:border-blue-600">
+            </div>
 
-        <!-- FOOTER CHỐT ĐƠN -->
-        <div class="bg-slate-900 text-white p-4 shrink-0 shadow-inner">
-            <div class="flex justify-between items-center mb-1">
-                <span class="text-xs font-bold text-slate-400 uppercase">Tổng thanh toán:</span>
-                <span id="pos-total" class="text-2xl font-black text-emerald-400">0 đ</span>
+            <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
+                    <input type="tel" id="qc-phone" required placeholder="0909xxxxxx" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-bold text-slate-800 focus:border-blue-600">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Tên gợi nhớ (Nickname)</label>
+                    <input type="text" id="qc-nickname" placeholder="VD: Anh A thợ điện" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-bold text-slate-800 focus:border-blue-600">
+                </div>
             </div>
-            <div class="flex justify-between items-center text-xs mb-3">
-                <span class="text-slate-400"><i class="fas fa-gift text-amber-400 mr-1"></i> Tích lũy 1%:</span>
-                <span id="pos-point" class="font-bold text-amber-400">+0 đ</span>
+
+            <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Phân hạng VIP (Bảng giá)</label>
+                    <select id="qc-tier" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-black text-amber-800 bg-amber-50/50 focus:border-amber-600 cursor-pointer">
+                        <option value="1">VIP 1: Khách Lẻ (Giá niêm yết)</option>
+                        <option value="2">VIP 2: Giá Chốt Sale</option>
+                        <option value="3" selected>VIP 3: Thợ / Đại Lý Nhỏ</option>
+                        <option value="4">VIP 4: Sỉ Cấp 1</option>
+                        <option value="5">VIP 5: Sỉ VIP</option>
+                        <option value="6">VIP 6: Nhà Phân Phối / Cắt Lô</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Mã số thuế (nếu có)</label>
+                    <input type="text" id="qc-tax" placeholder="Mã số thuế VAT" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-bold text-slate-800 focus:border-blue-600">
+                </div>
             </div>
-            <button onclick="window.modPos.checkout()" id="btn-pos-checkout" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm py-3 rounded-lg shadow-lg transition flex justify-center items-center gap-2 uppercase">
-                <i class="fas fa-check-circle"></i> Chốt Đơn Hàng
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Địa chỉ giao hàng</label>
+                <input type="text" id="qc-address" placeholder="Địa chỉ nhận hàng hoặc địa chỉ xuất hóa đơn..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-medium text-slate-800 focus:border-blue-600">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="window.modPos.closeQuickCustomerModal()" class="px-4 py-2 text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold cursor-pointer">Hủy</button>
+                <button type="submit" id="btn-save-qc" class="px-5 py-2 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-black shadow-md flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-save"></i> Lưu & Chọn Ngay
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==================================================================== -->
+<!-- MODAL: XÁC NHẬN THÀNH CÔNG & IN PHIẾU HÓA ĐƠN BÁN LẺ -->
+<!-- ==================================================================== -->
+<div id="pos-success-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-150">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner text-2xl">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3 class="text-lg font-black text-slate-900">TẠO ĐƠN HÀNG THÀNH CÔNG!</h3>
+        <p class="text-xs text-slate-500 mt-1">Mã đơn hàng: <strong id="success-order-code" class="text-blue-600 font-mono text-sm font-black">DH-000000</strong></p>
+
+        <div class="my-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-left text-xs space-y-1.5">
+            <div class="flex justify-between"><span class="text-slate-500">Khách hàng:</span> <strong id="success-cust-name" class="text-slate-800">---</strong></div>
+            <div class="flex justify-between"><span class="text-slate-500">Tổng thanh toán:</span> <strong id="success-total-amount" class="text-emerald-600 font-black text-sm">0 đ</strong></div>
+            <div class="flex justify-between"><span class="text-slate-500">Phương thức:</span> <span id="success-payment-method" class="font-bold text-slate-700">Tiền mặt</span></div>
+        </div>
+
+        <div class="flex justify-center gap-2.5 pt-2">
+            <button type="button" onclick="window.modPos.printReceipt()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer">
+                <i class="fas fa-print"></i> In Hóa Đơn (80mm/A4)
+            </button>
+            <button type="button" onclick="window.modPos.closeSuccessModal(true)" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-black shadow-md cursor-pointer">
+                <i class="fas fa-plus mr-1"></i> Tạo Đơn Mới
+            </button>
+            <button type="button" onclick="window.modPos.goToOrderHistory()" class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold cursor-pointer">
+                Xem Lịch Sử
             </button>
         </div>
     </div>
 </div>
 
+<!-- KHUNG CHỨA HÓA ĐƠN ĐỂ IN (ẨN KHI XEM, HIỆN KHI PRINT) -->
+<div id="pos-receipt-print-area" class="hidden"></div>
+
+<!-- ==================================================================== -->
+<!-- LOGIC JAVASCRIPT POS -->
+<!-- ==================================================================== -->
 <script>
 window.modPos = {
-    products: [], customers: [], cart: [], selectedCustomer: null,
-    
+    products: [],
+    customers: [],
+    cart: [],
+    selectedCustomer: null,
+    activeTier: 1, // 1..6
+    selectedCategory: 'ALL',
+    onlyInStock: false,
+    paymentMethod: 'TIEN_MAT',
+    discountVal: 0,
+    lastCreatedOrder: null,
+
+    tierNames: {
+        1: "VIP 1 • GIÁ LẺ NIÊM YẾT",
+        2: "VIP 2 • GIÁ CHỐT SALE",
+        3: "VIP 3 • THỢ / ĐẠI LÝ",
+        4: "VIP 4 • SỈ CẤP 1",
+        5: "VIP 5 • SỈ VIP",
+        6: "VIP 6 • NHÀ PHÂN PHỐI"
+    },
+
+    // Khởi tạo và tải dữ liệu kho + khách hàng
     load: async () => {
         const grid = document.getElementById('pos-product-grid');
-        grid.innerHTML = '<div class="col-span-full text-center p-10 text-slate-400"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2 text-xs">Đang tải kho hàng...</p></div>';
+        const reloadIcon = document.getElementById('pos-reload-icon');
+        if (reloadIcon) reloadIcon.classList.add('fa-spin');
+        
+        grid.innerHTML = '<div class="col-span-full text-center p-12 text-slate-400"><i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i><p class="mt-2 text-xs font-bold">Đang đồng bộ danh mục & kho hàng...</p></div>';
         
         try {
-            const resP = await fetch('/api/products?t=' + Date.now()); 
-            const dataP = await resP.json();
-            if(dataP.success) {
-                window.modPos.products = dataP.data.filter(p => p.product_name);
-                window.modPos.renderProducts();
+            const [resP, resC] = await Promise.all([
+                fetch('/api/products?t=' + Date.now()).then(r => r.json()),
+                fetch('/api/customers?t=' + Date.now()).then(r => r.json())
+            ]);
+
+            if (resP && resP.success) {
+                window.modPos.products = (resP.data || []).filter(p => p && p.product_name);
             }
-            
-            const resC = await fetch('/api/customers?t=' + Date.now());
-            const dataC = await resC.json();
-            if(dataC.success) window.modPos.customers = dataC.data || [];
+            if (resC && resC.success) {
+                window.modPos.customers = resC.data || [];
+            }
+
+            window.modPos.updateCategoryCounts();
+            window.modPos.renderProducts();
         } catch(e) {
-            grid.innerHTML = '<div class="col-span-full text-center text-red-500 font-bold p-6">Lỗi tải sản phẩm!</div>';
+            console.error("POS Load Error:", e);
+            grid.innerHTML = '<div class="col-span-full text-center text-red-500 font-bold p-8 bg-red-50 rounded-xl">Lỗi kết nối máy chủ khi tải sản phẩm! Vui lòng bấm Làm Mới.</div>';
+        } finally {
+            if (reloadIcon) reloadIcon.classList.remove('fa-spin');
         }
     },
-    
+
+    // Phân loại nhóm danh mục cho từng sản phẩm
+    getProductGroup: (p) => {
+        const text = `${p.product_name || ''} ${p.category || ''} ${p.sku || ''} ${p.description || ''}`.toLowerCase();
+        
+        if (text.includes('pin') || text.includes('jinko') || text.includes('rapid') || text.includes('solar panel') || text.includes('tấm pin') || text.includes('615w') || text.includes('620w') || text.includes('580w') || text.includes('bifacial')) {
+            if (!text.includes('lưu trữ') && !text.includes('lithium') && !text.includes('cell pin') && !text.includes('cọc pin') && !text.includes('lifepo4')) {
+                return 'PANEL';
+            }
+        }
+        if (text.includes('inverter') || text.includes('biến tần') || text.includes('hybrid') || text.includes('hòa lưới') || text.includes('hoà lưới') || text.includes('off-grid') || text.includes('offgrid') || text.includes('on-grid') || text.includes('ongrid') || text.includes('sunways') || text.includes('lumentree') || text.includes('deye') || text.includes('growatt') || text.includes('goodwe') || text.includes('vfd')) {
+            if (!text.includes('bơm')) return 'INVERTER';
+        }
+        if (text.includes('lithium') || text.includes('lifepo4') || text.includes('lưu trữ') || text.includes('cell pin') || text.includes('bms') || text.includes('seplos') || text.includes('apess') || text.includes('ebox') || text.includes('jaixi') || text.includes('pin lưu')) {
+            return 'BATTERY';
+        }
+        if (text.includes('bơm') || text.includes('solpump') || text.includes('everrun') || text.includes('everun') || text.includes('hỏa tiễn') || text.includes('pumping')) {
+            return 'PUMP';
+        }
+        if (text.includes('tủ điện') || text.includes('tụ điện') || text.includes('ats') || text.includes('mcb') || text.includes('mccb') || text.includes('cb ') || text.includes('spd') || text.includes('thoát sét') || text.includes('chống sét') || text.includes('meter') || text.includes('vỏ tủ')) {
+            return 'CABINET';
+        }
+        if (text.includes('rail') || text.includes('kẹp') || text.includes('mc4') || text.includes('dây dc') || text.includes('cáp dc') || text.includes('dây điện') || text.includes('cáp điện') || text.includes('jack') || text.includes('chân l') || text.includes('bát z') || text.includes('tiếp địa') || text.includes('ốc') || text.includes('bulong')) {
+            return 'ACCESSORY';
+        }
+        return 'OTHER';
+    },
+
+    // Cập nhật số đếm trên thanh category tabs
+    updateCategoryCounts: () => {
+        const counts = { ALL: 0, PANEL: 0, INVERTER: 0, BATTERY: 0, PUMP: 0, CABINET: 0, ACCESSORY: 0, OTHER: 0 };
+        window.modPos.products.forEach(p => {
+            counts.ALL++;
+            const grp = window.modPos.getProductGroup(p);
+            counts[grp] = (counts[grp] || 0) + 1;
+        });
+
+        const setCnt = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        setCnt('cat-cnt-all', counts.ALL);
+        setCnt('cat-cnt-panel', counts.PANEL);
+        setCnt('cat-cnt-inverter', counts.INVERTER);
+        setCnt('cat-cnt-battery', counts.BATTERY);
+        setCnt('cat-cnt-pump', counts.PUMP);
+        setCnt('cat-cnt-cabinet', counts.CABINET);
+        setCnt('cat-cnt-accessory', counts.ACCESSORY);
+        setCnt('cat-cnt-other', counts.OTHER);
+    },
+
+    filterCategory: (catKey) => {
+        window.modPos.selectedCategory = catKey;
+        document.querySelectorAll('.cat-pill').forEach(btn => {
+            if (btn.getAttribute('data-cat') === catKey) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        window.modPos.renderProducts();
+    },
+
+    toggleStockFilter: () => {
+        window.modPos.onlyInStock = !window.modPos.onlyInStock;
+        const btn = document.getElementById('pos-stock-filter-btn');
+        const txt = document.getElementById('pos-stock-filter-text');
+        if (window.modPos.onlyInStock) {
+            btn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+            btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
+            txt.innerText = 'Chỉ còn hàng';
+        } else {
+            btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+            btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
+            txt.innerText = 'Tất cả kho';
+        }
+        window.modPos.renderProducts();
+    },
+
+    // Hàm lấy giá chuẩn xác theo phân hạng VIP (Tier 1..6)
+    getPriceForTier: (product, tier) => {
+        const t = parseInt(tier) || 1;
+        const parse = (v) => {
+            if (v === null || v === undefined || v === '') return 0;
+            const n = typeof v === 'number' ? v : parseFloat(String(v).replace(/[^0-9.-]/g, ''));
+            return isNaN(n) ? 0 : n;
+        };
+
+        const retail = parse(product.retail_price);
+        let tierPrice = 0;
+        switch(t) {
+            case 2: tierPrice = parse(product.price_2); break;
+            case 3: tierPrice = parse(product.price_3); break;
+            case 4: tierPrice = parse(product.price_4); break;
+            case 5: tierPrice = parse(product.price_5); break;
+            case 6: tierPrice = parse(product.price_6); break;
+            default: tierPrice = retail; break;
+        }
+        return tierPrice > 0 ? tierPrice : retail;
+    },
+
+    getCurrentTierPrice: (product) => {
+        return window.modPos.getPriceForTier(product, window.modPos.activeTier);
+    },
+
+    // Render danh sách sản phẩm trong kho
+    renderProducts: () => {
+        const searchEl = document.getElementById('pos-search');
+        const term = (searchEl ? searchEl.value : '').toLowerCase().trim();
+        const grid = document.getElementById('pos-product-grid');
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+        let list = window.modPos.products;
+
+        // Lọc theo Category Tab
+        if (window.modPos.selectedCategory !== 'ALL') {
+            list = list.filter(p => window.modPos.getProductGroup(p) === window.modPos.selectedCategory);
+        }
+
+        // Lọc theo Từ khóa tìm kiếm
+        if (term) {
+            list = list.filter(p => 
+                (p.product_name || '').toLowerCase().includes(term) || 
+                (p.sku || '').toLowerCase().includes(term) ||
+                (p.category || '').toLowerCase().includes(term) ||
+                (p.description || '').toLowerCase().includes(term)
+            );
+        }
+
+        // Lọc theo Trạng thái còn hàng
+        if (window.modPos.onlyInStock) {
+            list = list.filter(p => (parseFloat(p.stock_qty || 0) + parseFloat(p.virtual_stock || 0)) > 0);
+        }
+
+        const statEl = document.getElementById('pos-product-stat-text');
+        if (statEl) statEl.innerText = `Hiển thị ${list.length} / ${window.modPos.products.length} sản phẩm`;
+
+        if (list.length === 0) {
+            grid.innerHTML = `
+                <div class="col-span-full text-center p-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
+                    <i class="fas fa-search text-3xl mb-2 text-slate-300"></i>
+                    <p class="text-xs font-bold text-slate-600">Không tìm thấy sản phẩm phù hợp</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Thử đổi từ khóa hoặc chọn danh mục "Tất Cả"</p>
+                </div>`;
+            return;
+        }
+
+        const curTier = window.modPos.activeTier;
+
+        grid.innerHTML = list.map(p => {
+            const stockReal = parseFloat(p.stock_qty || 0);
+            const stockVirt = parseFloat(p.virtual_stock || 0);
+            const totalStock = stockReal + stockVirt;
+            
+            const retailPrice = parseFloat(p.retail_price) || 0;
+            const tierPrice = window.modPos.getPriceForTier(p, curTier);
+            const isVipApplied = curTier > 1 && tierPrice < retailPrice;
+
+            const hasImg = p.image_url && p.image_url.trim() !== '';
+            const imgHtml = hasImg 
+                ? `<img src="${p.image_url.trim()}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-solar-panel text-slate-300 text-xl\'></i>';" class="w-full h-full object-cover">` 
+                : `<i class="fas fa-solar-panel text-slate-300 text-xl"></i>`;
+
+            const stockBadge = totalStock > 0 
+                ? `<span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Còn: ${totalStock}</span>`
+                : `<span class="text-[9px] font-extrabold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Tạm hết</span>`;
+
+            return `
+            <div onclick="window.modPos.addToCart(${p.id})" 
+                 class="bg-white border border-slate-200 hover:border-blue-500 hover:shadow-md rounded-xl p-2.5 cursor-pointer transition flex items-center gap-3 group relative overflow-hidden">
+                <div class="w-14 h-14 bg-slate-50 border border-slate-100 rounded-lg overflow-hidden shrink-0 flex justify-center items-center group-hover:scale-105 transition-transform duration-200">
+                    ${imgHtml}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1 mb-0.5">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase truncate">SKU: ${p.sku || 'N/A'}</span>
+                    </div>
+                    <p class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">${p.product_name}</p>
+                    <div class="flex items-center justify-between mt-1.5">
+                        ${stockBadge}
+                        <div class="text-right">
+                            ${isVipApplied ? `<span class="text-[10px] text-slate-400 line-through mr-1">${fmt(retailPrice)} đ</span>` : ''}
+                            <span class="font-black ${isVipApplied ? 'text-emerald-600' : 'text-blue-600'} text-xs">${fmt(tierPrice)} đ</span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="w-7 h-7 rounded-lg bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors shadow-2xs">
+                    <i class="fas fa-plus text-xs"></i>
+                </button>
+            </div>`;
+        }).join('');
+    },
+
+    // Tìm kiếm khách hàng (CRM Search)
     searchCustomer: (term) => {
         const drop = document.getElementById('pos-cust-dropdown');
-        if(!term || term.trim().length < 1) { drop.classList.add('hidden'); return; }
+        if (!term || term.trim().length < 1) { 
+            drop.classList.add('hidden'); 
+            return; 
+        }
         
         const q = term.toLowerCase().trim();
         const filtered = window.modPos.customers.filter(c => 
             (c.full_name || '').toLowerCase().includes(q) || 
-            (c.phone || '').includes(q)
-        ).slice(0, 5);
+            (c.name || '').toLowerCase().includes(q) ||
+            (c.phone || '').includes(q) ||
+            (c.nickname || '').toLowerCase().includes(q) ||
+            (c.customer_code || '').toLowerCase().includes(q) ||
+            (c.vat_company || '').toLowerCase().includes(q)
+        ).slice(0, 7);
         
-        if(filtered.length === 0) {
-            drop.innerHTML = '<div class="p-3 text-center text-xs text-slate-400 font-bold">Khách Hàng Mới (Tính giá lẻ)</div>';
+        if (filtered.length === 0) {
+            drop.innerHTML = `
+                <div class="p-3 text-center text-xs text-slate-500">
+                    <p class="font-bold">Không tìm thấy khách hàng</p>
+                    <button type="button" onclick="window.modPos.openQuickCustomerModal('${term.replace(/'/g, "\\'")}')" class="mt-1.5 text-blue-600 hover:underline font-bold text-[11px] block mx-auto cursor-pointer">
+                        + Bấm để thêm mới khách "${term}"
+                    </button>
+                </div>`;
         } else {
-            drop.innerHTML = filtered.map(c => `
-                <div onclick="window.modPos.selectCustomer(${c.id})" class="p-2.5 hover:bg-amber-50 cursor-pointer transition border-b border-slate-50">
-                    <p class="font-bold text-slate-800 text-xs">${c.full_name || 'Khách'} ${c.nickname ? `<span class="text-amber-600">(${c.nickname})</span>` : ''}</p>
-                    <p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-phone-alt mr-1"></i> ${c.phone || 'Chưa có SĐT'}</p>
-                </div>
-            `).join('');
+            drop.innerHTML = filtered.map(c => {
+                const tierVal = parseInt(c.tier || c.vip_level || c.customer_tier || 1) || 1;
+                return `
+                <div onclick="window.modPos.selectCustomer(${c.id})" class="p-2.5 hover:bg-amber-50 cursor-pointer transition border-b border-slate-50 flex justify-between items-center text-left">
+                    <div>
+                        <p class="font-bold text-slate-800 text-xs">
+                            ${c.full_name || c.name || 'Khách Hàng'} 
+                            ${c.nickname ? `<span class="text-amber-600 font-semibold text-[10px]">(${c.nickname})</span>` : ''}
+                        </p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">
+                            <i class="fas fa-phone-alt mr-1 text-slate-400"></i> ${c.phone || 'Chưa có SĐT'} 
+                            ${c.address ? `• ${c.address}` : ''}
+                        </p>
+                    </div>
+                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 font-black text-[10px] rounded-full border border-amber-200 shrink-0">
+                        VIP ${tierVal}
+                    </span>
+                </div>`;
+            }).join('');
         }
         drop.classList.remove('hidden');
     },
-    
+
+    // Chọn khách hàng & tự động áp bảng giá VIP
     selectCustomer: (id) => {
         const cust = window.modPos.customers.find(c => c.id === id);
-        if(!cust) return;
+        if (!cust) return;
         
+        const tier = parseInt(cust.tier || cust.vip_level || cust.customer_tier || 1) || 1;
+        cust.tier = tier;
         window.modPos.selectedCustomer = cust;
+        window.modPos.activeTier = tier;
+
         document.getElementById('pos-cust-dropdown').classList.add('hidden');
-        document.getElementById('pos-cust-search').value = (cust.full_name || 'Khách') + ' - ' + (cust.phone || '');
+        document.getElementById('pos-cust-search-section').classList.add('hidden');
+        document.getElementById('pos-cust-selected-card').classList.remove('hidden');
+
+        // Hiển thị thông tin khách hàng
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+        document.getElementById('pc-name').innerText = `${cust.full_name || cust.name || 'Khách Hàng'} ${cust.nickname ? '(' + cust.nickname + ')' : ''}`;
+        document.getElementById('pc-phone').innerText = `📞 ${cust.phone || 'Chưa có SĐT'} ${cust.vat_company ? '• ' + cust.vat_company : ''}`;
+        document.getElementById('pc-address').innerText = cust.address || 'Chưa cập nhật địa chỉ';
+        document.getElementById('pc-points').innerText = fmt(cust.reward_points || 0) + ' đ';
+        document.getElementById('pc-debt').innerText = fmt(cust.current_debt || 0) + ' đ';
         
-        document.getElementById('pc-address').innerText = cust.address || 'Chưa cập nhật';
-        document.getElementById('pc-clear-btn').classList.remove('hidden');
-        
-        const tierNames = ["KHÁCH LẺ", "KHÁCH LẺ", "CHỐT SALE", "THỢ / ĐẠI LÝ", "SỈ CẤP 1", "SỈ VIP", "NHÀ PHÂN PHỐI"];
-        const t = cust.tier || 1;
-        document.getElementById('pc-tier').innerText = tierNames[t] || "KHÁCH LẺ";
+        document.getElementById('pc-tier-select').value = tier;
+        window.modPos.updateActiveTierHeader();
+
+        // Tự động cập nhật lại toàn bộ đơn giá giỏ hàng & danh sách sản phẩm theo VIP
         window.modPos.recalculateCartPrices();
     },
-    
+
+    // Hủy chọn khách hàng
     clearCustomer: () => {
         window.modPos.selectedCustomer = null;
+        window.modPos.activeTier = 1;
+        
         document.getElementById('pos-cust-search').value = '';
-        document.getElementById('pc-address').innerText = 'Chưa xác định';
-        document.getElementById('pc-tier').innerText = 'KHÁCH LẺ';
-        document.getElementById('pc-clear-btn').classList.add('hidden');
+        document.getElementById('pos-cust-selected-card').classList.add('hidden');
+        document.getElementById('pos-cust-search-section').classList.remove('hidden');
+        
+        window.modPos.updateActiveTierHeader();
         window.modPos.recalculateCartPrices();
     },
-    
-    getPriceForCurrentTier: (product) => {
-        const tier = window.modPos.selectedCustomer ? (window.modPos.selectedCustomer.tier || 1) : 1;
-        switch(tier) {
-            case 2: return parseFloat(product.price_2) || parseFloat(product.retail_price) || 0;
-            case 3: return parseFloat(product.price_3) || parseFloat(product.retail_price) || 0;
-            case 4: return parseFloat(product.price_4) || parseFloat(product.retail_price) || 0;
-            case 5: return parseFloat(product.price_5) || parseFloat(product.retail_price) || 0;
-            case 6: return parseFloat(product.price_6) || parseFloat(product.retail_price) || 0;
-            default: return parseFloat(product.retail_price) || 0;
+
+    // Chuyển đổi thủ công cấp VIP cho đơn hàng hiện tại
+    changeActiveTier: (tierVal) => {
+        window.modPos.activeTier = parseInt(tierVal) || 1;
+        window.modPos.updateActiveTierHeader();
+        window.modPos.recalculateCartPrices();
+    },
+
+    updateActiveTierHeader: () => {
+        const tier = window.modPos.activeTier;
+        const pill = document.getElementById('pos-active-tier-pill');
+        const label = document.getElementById('pos-tier-label');
+        if (label) label.innerText = window.modPos.tierNames[tier] || `VIP ${tier}`;
+
+        if (pill) {
+            if (tier > 1) {
+                pill.className = "px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs";
+            } else {
+                pill.className = "px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1 shadow-2xs";
+            }
         }
     },
-    
-    recalculateCartPrices: () => {
-        window.modPos.cart.forEach(item => {
-            const p = window.modPos.products.find(x => x.id === item.product_id);
-            if(p) item.price = window.modPos.getPriceForCurrentTier(p);
-        });
-        window.modPos.renderCart();
-        window.modPos.renderProducts();
-    },
 
-    renderProducts: () => {
-        const term = document.getElementById('pos-search').value.toLowerCase().trim();
-        const grid = document.getElementById('pos-product-grid');
-        let filtered = window.modPos.products;
-        
-        if (term) filtered = filtered.filter(p => (p.product_name || '').toLowerCase().includes(term) || (p.sku || '').toLowerCase().includes(term));
-        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+    // Thêm sản phẩm vào giỏ hàng
+    addToCart: (productId) => {
+        const p = window.modPos.products.find(x => x.id === productId);
+        if (!p) return;
 
-        grid.innerHTML = filtered.map(p => {
-            const totalStock = parseFloat(p.stock_qty || 0) + parseFloat(p.virtual_stock || 0);
-            const validUrl = p.image_url && p.image_url.trim() !== '';
-            const imgHtml = validUrl 
-                ? `<img src="${p.image_url.trim()}" onerror="this.onerror=null; this.outerHTML='<i class=\'fas fa-box text-slate-300 text-2xl\'></i>';" class="w-full h-full object-cover">` 
-                : `<i class="fas fa-box text-slate-300 text-2xl"></i>`;
-
-            const displayPrice = window.modPos.getPriceForCurrentTier(p);
-
-            return `
-            <div onclick="window.modPos.addToCart(${p.id})" class="bg-white border-2 border-slate-100 hover:border-blue-500 rounded-xl p-3 cursor-pointer transition flex items-center gap-3 shadow-sm group">
-                <div class="w-14 h-14 bg-slate-50 border border-slate-100 rounded-lg overflow-hidden shrink-0 flex justify-center items-center">
-                    ${imgHtml}
-                </div>
-                <div class="flex-1 flex justify-between items-center">
-                    <div class="flex-1 pr-2">
-                        <p class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 mb-1 group-hover:text-blue-600">${p.product_name}</p>
-                        <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">Kho: ${totalStock}</span>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <p class="font-black text-blue-600 text-sm">${fmt(displayPrice)} đ</p>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-    },
-    
-    addToCart: (id) => {
-        const p = window.modPos.products.find(x => x.id === id);
-        const existing = window.modPos.cart.find(x => x.product_id === id);
-        if(existing) {
+        const existing = window.modPos.cart.find(x => x.product_id === productId);
+        if (existing) {
             existing.quantity += 1;
         } else {
-            const price = window.modPos.getPriceForCurrentTier(p);
+            const price = window.modPos.getCurrentTierPrice(p);
             window.modPos.cart.push({
                 product_id: p.id,
-                sku: p.sku,
+                sku: p.sku || '',
                 product_name: p.product_name,
                 price: price,
                 quantity: 1,
@@ -301,88 +759,180 @@ window.modPos = {
         }
         window.modPos.renderCart();
     },
-    
+
+    // Tăng giảm số lượng sản phẩm
     updateQty: (productId, delta) => {
         const item = window.modPos.cart.find(x => x.product_id === productId);
-        if(item) {
+        if (item) {
             item.quantity += delta;
-            if(item.quantity <= 0) {
+            if (item.quantity <= 0) {
                 window.modPos.cart = window.modPos.cart.filter(x => x.product_id !== productId);
             }
         }
         window.modPos.renderCart();
     },
 
+    // Chỉnh sửa đơn giá trực tiếp trong giỏ hàng
     updateItemPrice: (productId, newPriceVal) => {
         const item = window.modPos.cart.find(x => x.product_id === productId);
-        if(item) {
+        if (item) {
             const rawVal = parseFloat(newPriceVal.toString().replace(/[^0-9]/g, '')) || 0;
             item.price = rawVal;
         }
-        window.modPos.renderCart();
-    },
-    
-    renderCart: () => {
-        const cartDiv = document.getElementById('pos-cart-items');
-        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
-        
-        if(window.modPos.cart.length === 0) {
-            cartDiv.innerHTML = '<div class="h-full flex flex-col items-center justify-center text-slate-300 mt-8"><i class="fas fa-shopping-basket text-4xl mb-2"></i><p class="text-xs font-bold">Chưa chọn thiết bị nào</p></div>';
-            window.modPos.updateTotal(); 
-            return;
-        }
-        
-        cartDiv.innerHTML = window.modPos.cart.map(item => `
-            <div class="grid grid-cols-12 gap-1 items-center py-2 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition px-1 rounded">
-                <div class="col-span-5 pl-1">
-                    <p class="font-bold text-slate-800 text-[11px] leading-tight line-clamp-2">${item.product_name}</p>
-                </div>
-                <div class="col-span-3 flex justify-center">
-                    <div class="flex items-center bg-white border border-slate-200 rounded shadow-sm">
-                        <button onclick="window.modPos.updateQty(${item.product_id}, -1)" class="w-5 h-5 flex items-center justify-center text-slate-500 hover:bg-slate-100 font-bold">-</button>
-                        <span class="w-6 text-center text-xs font-black border-x border-slate-200">${item.quantity}</span>
-                        <button onclick="window.modPos.updateQty(${item.product_id}, 1)" class="w-5 h-5 flex items-center justify-center text-slate-500 hover:bg-slate-100 font-bold">+</button>
-                    </div>
-                </div>
-                <div class="col-span-4 flex justify-end items-center gap-1 pr-1">
-                    <input type="text" value="${fmt(item.price)}" 
-                           oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, ''))"
-                           onchange="window.modPos.updateItemPrice(${item.product_id}, this.value)" 
-                           class="w-[85px] text-right font-black text-blue-600 text-xs bg-blue-50 border border-blue-200 rounded px-1 py-1 outline-none">
-                    <button onclick="window.modPos.updateQty(${item.product_id}, -999)" class="text-slate-300 hover:text-red-500 ml-1"><i class="fas fa-trash text-[10px]"></i></button>
-                </div>
-            </div>
-        `).join('');
         window.modPos.updateTotal();
     },
-    
+
+    // Xóa tất cả trong giỏ
+    clearCart: () => {
+        if (window.modPos.cart.length === 0) return;
+        if (confirm("Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng?")) {
+            window.modPos.cart = [];
+            window.modPos.renderCart();
+        }
+    },
+
+    // Tự động tính lại đơn giá toàn bộ giỏ hàng khi đổi khách hoặc đổi cấp VIP
+    recalculateCartPrices: () => {
+        window.modPos.cart.forEach(item => {
+            const p = window.modPos.products.find(x => x.id === item.product_id);
+            if (p) {
+                item.price = window.modPos.getCurrentTierPrice(p);
+            }
+        });
+        window.modPos.renderCart();
+        window.modPos.renderProducts();
+    },
+
+    // Render danh sách sản phẩm trong giỏ hàng
+    renderCart: () => {
+        const cartDiv = document.getElementById('pos-cart-items');
+        const clearBtn = document.getElementById('btn-clear-cart');
+        const countSpan = document.getElementById('pos-cart-count');
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+        if (countSpan) countSpan.innerText = window.modPos.cart.reduce((sum, i) => sum + i.quantity, 0);
+
+        if (window.modPos.cart.length === 0) {
+            if (clearBtn) clearBtn.classList.add('hidden');
+            if (cartDiv) {
+                cartDiv.innerHTML = `
+                    <div class="h-full min-h-[160px] flex flex-col items-center justify-center text-slate-300 py-8">
+                        <i class="fas fa-shopping-basket text-4xl mb-2 text-slate-200"></i>
+                        <p class="text-xs font-bold text-slate-400">Giỏ hàng đang trống</p>
+                        <p class="text-[10px] text-slate-300 mt-0.5">Chọn thiết bị bên trái để thêm vào giỏ</p>
+                    </div>`;
+            }
+            window.modPos.updateTotal();
+            return;
+        }
+
+        if (clearBtn) clearBtn.classList.remove('hidden');
+
+        if (cartDiv) {
+            cartDiv.innerHTML = window.modPos.cart.map(item => {
+                const itemTotal = item.quantity * item.price;
+                return `
+                <div class="p-2 bg-slate-50 hover:bg-amber-50/40 rounded-lg border border-slate-200/80 transition space-y-1.5">
+                    <div class="flex justify-between items-start gap-1">
+                        <p class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 flex-1">${item.product_name}</p>
+                        <button type="button" onclick="window.modPos.updateQty(${item.product_id}, -999)" class="text-slate-300 hover:text-red-500 px-1 transition cursor-pointer" title="Xóa món này">
+                            <i class="fas fa-trash-alt text-[10px]"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex justify-between items-center gap-2 pt-0.5">
+                        <!-- Bộ tăng giảm số lượng -->
+                        <div class="flex items-center bg-white border border-slate-200 rounded-md shadow-2xs overflow-hidden">
+                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, -1)" class="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-black text-xs cursor-pointer">-</button>
+                            <span class="w-7 text-center text-xs font-black border-x border-slate-200 text-slate-800">${item.quantity}</span>
+                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, 1)" class="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-black text-xs cursor-pointer">+</button>
+                        </div>
+
+                        <!-- Đơn giá & Thành tiền -->
+                        <div class="flex items-center gap-1.5 text-right">
+                            <input type="text" value="${fmt(item.price)}" 
+                                   oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, ''))"
+                                   onchange="window.modPos.updateItemPrice(${item.product_id}, this.value)" 
+                                   title="Click để sửa đơn giá"
+                                   class="w-[82px] text-right font-black text-blue-600 text-xs bg-white border border-slate-200 rounded px-1.5 py-0.5 outline-none focus:border-blue-500">
+                            <span class="font-black text-slate-900 text-xs min-w-[70px]">${fmt(itemTotal)} đ</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        window.modPos.updateTotal();
+    },
+
+    onDiscountChange: (val) => {
+        const raw = parseFloat((val || '').toString().replace(/[^0-9]/g, '')) || 0;
+        window.modPos.discountVal = raw;
+        window.modPos.updateTotal();
+    },
+
+    setPaymentMethod: (method) => {
+        window.modPos.paymentMethod = method;
+        ['TIEN_MAT', 'CHUYEN_KHOAN', 'CONG_NO'].forEach(m => {
+            const btn = document.getElementById('pm-' + m);
+            if (btn) {
+                if (m === method) {
+                    btn.className = "py-1.5 rounded bg-blue-600 text-white font-black text-center transition border border-blue-500 shadow-xs cursor-pointer";
+                } else {
+                    btn.className = "py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center transition border border-slate-700 cursor-pointer";
+                }
+            }
+        });
+    },
+
     updateTotal: () => {
         const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
-        let total = 0;
-        window.modPos.cart.forEach(item => { total += item.quantity * item.price; });
-        
-        document.getElementById('pos-total').innerText = fmt(total) + ' đ';
-        document.getElementById('pos-point').innerText = '+' + fmt(total * 0.01) + ' đ'; 
+        let subtotal = 0;
+        window.modPos.cart.forEach(item => { subtotal += item.quantity * item.price; });
+
+        const discount = Math.min(subtotal, window.modPos.discountVal || 0);
+        const finalTotal = Math.max(0, subtotal - discount);
+
+        const subEl = document.getElementById('pos-subtotal');
+        const discEl = document.getElementById('pos-discount-amount');
+        const totEl = document.getElementById('pos-total');
+        const ptEl = document.getElementById('pos-point');
+
+        if (subEl) subEl.innerText = fmt(subtotal) + ' đ';
+        if (discEl) discEl.innerText = '-' + fmt(discount) + ' đ';
+        if (totEl) totEl.innerText = fmt(finalTotal) + ' đ';
+        if (ptEl) ptEl.innerText = '+' + fmt(finalTotal * 0.01) + ' đ';
     },
-    
+
+    // Chốt đơn hàng POS
     checkout: async () => {
-        if(window.modPos.cart.length === 0) return alert("❌ Giỏ hàng đang trống!");
-        
-        let total = 0;
-        window.modPos.cart.forEach(item => { total += item.quantity * item.price; });
-        
+        if (window.modPos.cart.length === 0) {
+            alert("❌ Giỏ hàng đang trống! Vui lòng chọn ít nhất 1 sản phẩm.");
+            return;
+        }
+
+        let subtotal = 0;
+        window.modPos.cart.forEach(item => { subtotal += item.quantity * item.price; });
+        const discount = Math.min(subtotal, window.modPos.discountVal || 0);
+        const finalTotal = Math.max(0, subtotal - discount);
+
         let customerId = null;
-        let customerName = document.getElementById('pos-cust-search').value.split(' - ')[0] || 'Khách Lẻ';
-        
+        let customerName = 'Khách Lẻ';
         if (window.modPos.selectedCustomer) {
             customerId = window.modPos.selectedCustomer.id;
-            customerName = window.modPos.selectedCustomer.full_name || customerName;
+            customerName = window.modPos.selectedCustomer.full_name || window.modPos.selectedCustomer.name || 'Khách Lẻ';
         }
-        
+
+        const noteInput = document.getElementById('pos-order-note');
+        const notes = noteInput ? noteInput.value.trim() : '';
+
         const payload = {
             customer_id: customerId,
             customer_name: customerName,
-            total_amount: total,
+            total_amount: finalTotal,
+            paid_amount: window.modPos.paymentMethod === 'CONG_NO' ? 0 : finalTotal,
+            payment_method: window.modPos.paymentMethod,
+            notes: notes,
             items: window.modPos.cart.map(i => ({
                 product_id: i.product_id,
                 quantity: i.quantity,
@@ -393,207 +943,201 @@ window.modPos = {
         const btn = document.getElementById('btn-pos-checkout');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ĐANG TẠO ĐƠN...';
         btn.classList.add('opacity-50', 'pointer-events-none');
-        
+
         try {
             const res = await fetch('/api/orders', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
-            if(data.success) {
-                alert("✅ CHỐT ĐƠN THÀNH CÔNG! Mã: " + data.order_code);
+            
+            if (data.success) {
+                window.modPos.lastCreatedOrder = {
+                    order_code: data.order_code,
+                    customer_name: customerName,
+                    customer_phone: window.modPos.selectedCustomer ? window.modPos.selectedCustomer.phone : '',
+                    customer_address: window.modPos.selectedCustomer ? window.modPos.selectedCustomer.address : '',
+                    total_amount: finalTotal,
+                    payment_method: window.modPos.paymentMethod,
+                    notes: notes,
+                    items: [...window.modPos.cart],
+                    created_at: new Date().toLocaleString('vi-VN')
+                };
+
+                // Hiển thị modal thành công
+                const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+                document.getElementById('success-order-code').innerText = data.order_code;
+                document.getElementById('success-cust-name').innerText = customerName;
+                document.getElementById('success-total-amount').innerText = fmt(finalTotal) + ' đ';
+                
+                const pMethodNames = { 'TIEN_MAT': 'Tiền Mặt', 'CHUYEN_KHOAN': 'Chuyển Khoản', 'CONG_NO': 'Ghi Nợ' };
+                document.getElementById('success-payment-method').innerText = pMethodNames[window.modPos.paymentMethod] || 'Tiền Mặt';
+                document.getElementById('pos-success-modal').classList.remove('hidden');
+
+                // Xóa giỏ hàng & ghi chú
                 window.modPos.cart = [];
-                window.modPos.clearCustomer();
-                if(typeof loadModule === 'function') {
-                    loadModule('order-history', 'Quản Lý Đơn Hàng');
-                }
+                window.modPos.discountVal = 0;
+                const discInput = document.getElementById('pos-discount-input');
+                if (discInput) discInput.value = '';
+                if (noteInput) noteInput.value = '';
+                window.modPos.renderCart();
             } else {
-                alert("❌ Lỗi: " + data.error);
+                alert("❌ Lỗi tạo đơn: " + (data.error || "Không xác định"));
             }
-        } catch (e) {
-            alert("❌ Lỗi kết nối máy chủ!");
+        } catch(e) {
+            console.error("POS Checkout Error:", e);
+            alert("❌ Lỗi kết nối máy chủ khi tạo đơn hàng!");
         } finally {
-            btn.innerHTML = '<i class="fas fa-check-circle"></i> CHỐT ĐƠN HÀNG';
+            btn.innerHTML = '<i class="fas fa-check-circle text-base"></i> <span>Xác Nhận Chốt Đơn</span>';
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+
+    closeSuccessModal: (resetCustomer = false) => {
+        document.getElementById('pos-success-modal').classList.add('hidden');
+        if (resetCustomer) {
+            window.modPos.clearCustomer();
+        }
+    },
+
+    goToOrderHistory: () => {
+        window.modPos.closeSuccessModal();
+        if (typeof loadModule === 'function') {
+            loadModule('order-history', 'Quản Lý Đơn Hàng');
+        }
+    },
+
+    // In hóa đơn bán lẻ (POS Receipt Template 80mm / A4)
+    printReceipt: () => {
+        const order = window.modPos.lastCreatedOrder;
+        if (!order) return;
+
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+        const printArea = document.getElementById('pos-receipt-print-area');
+        
+        const pMethodNames = { 'TIEN_MAT': 'Tiền Mặt', 'CHUYEN_KHOAN': 'Chuyển Khoản', 'CONG_NO': 'Ghi Nợ' };
+
+        printArea.innerHTML = `
+            <div style="font-family: 'Courier New', monospace; width: 300px; margin: 0 auto; padding: 10px; font-size: 12px; color: #000;">
+                <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
+                    <h2 style="font-size: 16px; font-weight: bold; margin: 0;">SUNGO SOLAR ERP</h2>
+                    <p style="font-size: 10px; margin: 2px 0;">Hệ Thống Năng Lượng Mặt Trời</p>
+                    <p style="font-size: 10px; margin: 2px 0;">Hotline: 0900.000.000</p>
+                    <h3 style="font-size: 13px; font-weight: bold; margin: 6px 0 0 0;">PHIẾU HÓA ĐƠN BÁN LẺ</h3>
+                </div>
+
+                <div style="font-size: 11px; margin-bottom: 8px; line-height: 1.4;">
+                    <div>Mã đơn: <strong>${order.order_code}</strong></div>
+                    <div>Ngày: ${order.created_at}</div>
+                    <div>Khách hàng: <strong>${order.customer_name}</strong></div>
+                    ${order.customer_phone ? `<div>SĐT: ${order.customer_phone}</div>` : ''}
+                    ${order.customer_address ? `<div>Đ/C: ${order.customer_address}</div>` : ''}
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; margin-bottom: 8px;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 1px solid #ddd;">
+                            <th style="padding: 4px 0;">Thiết bị</th>
+                            <th style="padding: 4px 0; text-align: center;">SL</th>
+                            <th style="padding: 4px 0; text-align: right;">Đơn giá</th>
+                            <th style="padding: 4px 0; text-align: right;">T.Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${order.items.map(item => `
+                            <tr>
+                                <td style="padding: 4px 0;">${item.product_name}</td>
+                                <td style="padding: 4px 0; text-align: center;">${item.quantity}</td>
+                                <td style="padding: 4px 0; text-align: right;">${fmt(item.price)}</td>
+                                <td style="padding: 4px 0; text-align: right; font-weight: bold;">${fmt(item.quantity * item.price)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div style="font-size: 12px; text-align: right; margin-bottom: 12px;">
+                    <div style="font-size: 14px; font-weight: bold;">TỔNG CỘNG: ${fmt(order.total_amount)} đ</div>
+                    <div style="font-size: 11px; margin-top: 2px;">Hình thức: ${pMethodNames[order.payment_method] || 'Tiền Mặt'}</div>
+                </div>
+
+                <div style="text-align: center; font-size: 10px; border-top: 1px dashed #000; padding-top: 8px;">
+                    <p style="margin: 2px 0;">Cảm ơn Quý Khách đã tin tưởng SUNGO!</p>
+                    <p style="margin: 2px 0;">Hàng mua được bảo hành chính hãng</p>
+                </div>
+            </div>
+        `;
+
+        window.print();
+    },
+
+    // Modal tạo nhanh khách hàng mới
+    openQuickCustomerModal: (prefillName = '') => {
+        document.getElementById('pos-quick-cust-form').reset();
+        if (prefillName) document.getElementById('qc-name').value = prefillName;
+        document.getElementById('pos-quick-cust-modal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('qc-name').focus(), 100);
+    },
+
+    closeQuickCustomerModal: () => {
+        document.getElementById('pos-quick-cust-modal').classList.add('hidden');
+    },
+
+    saveQuickCustomer: async (e) => {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('qc-name').value.trim(),
+            full_name: document.getElementById('qc-name').value.trim(),
+            phone: document.getElementById('qc-phone').value.trim(),
+            nickname: document.getElementById('qc-nickname').value.trim(),
+            tier: parseInt(document.getElementById('qc-tier').value) || 1,
+            vip_level: parseInt(document.getElementById('qc-tier').value) || 1,
+            vat_taxcode: document.getElementById('qc-tax').value.trim(),
+            address: document.getElementById('qc-address').value.trim()
+        };
+
+        const btn = document.getElementById('btn-save-qc');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const res = await fetch('/api/customers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                const newCust = {
+                    id: data.id,
+                    name: payload.name,
+                    full_name: payload.full_name,
+                    phone: payload.phone,
+                    nickname: payload.nickname,
+                    tier: payload.tier,
+                    vip_level: payload.vip_level,
+                    address: payload.address,
+                    reward_points: 0,
+                    current_debt: 0
+                };
+
+                // Thêm vào danh sách local và chọn ngay
+                window.modPos.customers.unshift(newCust);
+                window.modPos.closeQuickCustomerModal();
+                window.modPos.selectCustomer(newCust.id);
+            } else {
+                alert("❌ Lỗi: " + (data.error || "Không thể lưu khách hàng"));
+            }
+        } catch(err) {
+            alert("❌ Lỗi kết nối máy chủ: " + err.message);
+        } finally {
+            btn.innerHTML = '<i class="fas fa-save"></i> Lưu & Chọn Ngay';
             btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     }
 };
 
+// Khởi chạy POS khi load module
 window.modPos.load();
-</script>
-
-
-<script>
-let posCustomerDebounce = null;
-
-function onPosSearchCustomer(val) {
-  clearTimeout(posCustomerDebounce);
-  const dropdown = document.getElementById('pos-customer-dropdown-results');
-  if (!val || val.trim().length < 1) {
-    dropdown.innerHTML = '';
-    dropdown.classList.add('hidden');
-    return;
-  }
-  posCustomerDebounce = setTimeout(async () => {
-    try {
-      const res = await fetch(`/api/crm/search?q=${encodeURIComponent(val.trim())}`);
-      const list = await res.json();
-      if (!list || list.length === 0) {
-        dropdown.innerHTML = '<div class="p-3 text-xs text-gray-500 text-center">Không tìm thấy khách hàng nào</div>';
-        dropdown.classList.remove('hidden');
-        return;
-      }
-      dropdown.innerHTML = list.map(c => `
-        <div onclick='selectPosCustomer(${JSON.stringify(c).replace(/'/g, "&apos;")})' 
-             class="p-2.5 hover:bg-blue-50 cursor-pointer text-left transition flex justify-between items-center">
-          <div>
-            <div class="text-sm font-bold text-gray-800">${c.full_name} <span class="text-xs font-normal text-gray-500">(${c.customer_code || 'KH'})</span></div>
-            <div class="text-xs text-gray-600">📞 ${c.phone} ${c.address ? '• ' + c.address : ''}</div>
-          </div>
-          <span class="px-2 py-0.5 text-xs font-bold rounded bg-blue-100 text-blue-800">VIP ${c.vip_level || 1}</span>
-        </div>
-      `).join('');
-      dropdown.classList.remove('hidden');
-    } catch(err) {
-      console.error('Lỗi tìm kiếm CRM:', err);
-    }
-  }, 250);
-}
-
-function selectPosCustomer(cust) {
-  document.getElementById('pos-hidden-customer-id').value = cust.id;
-  document.getElementById('pos-hidden-vip-level').value = cust.vip_level || 1;
-  document.getElementById('pos-card-cust-name').innerText = `${cust.full_name} (${cust.customer_code || 'KH'})`;
-  document.getElementById('pos-card-cust-phone').innerText = cust.phone;
-  document.getElementById('pos-card-cust-points').innerText = Number(cust.reward_points || 0).toLocaleString();
-  document.getElementById('pos-card-cust-address').innerText = cust.address || '';
-  document.getElementById('pos-card-cust-vip').innerText = `VIP ${cust.vip_level || 1}`;
-
-  document.getElementById('pos-customer-dropdown-results').classList.add('hidden');
-  document.getElementById('pos-cust-search-box').classList.add('hidden');
-  document.getElementById('pos-selected-cust-card').classList.remove('hidden');
-
-  // Kích hoạt cập nhật đơn giá giỏ hàng theo VIP
-  if (typeof updateCartPricingByVip === 'function') {
-    updateCartPricingByVip(cust.vip_level || 1);
-  }
-}
-
-function resetPosSelectedCustomer() {
-  document.getElementById('pos-hidden-customer-id').value = '';
-  document.getElementById('pos-hidden-vip-level').value = '1';
-  document.getElementById('pos-selected-cust-card').classList.add('hidden');
-  document.getElementById('pos-cust-search-box').classList.remove('hidden');
-  document.getElementById('pos-customer-search-input').value = '';
-  document.getElementById('pos-customer-search-input').focus();
-
-  if (typeof updateCartPricingByVip === 'function') {
-    updateCartPricingByVip(1);
-  }
-}
-
-function openPosQuickCustomerModal() {
-  document.getElementById('pos-quick-customer-form').reset();
-  document.getElementById('pos-quick-customer-modal').classList.remove('hidden');
-}
-
-function closePosQuickCustomerModal() {
-  document.getElementById('pos-quick-customer-modal').classList.add('hidden');
-}
-
-async function saveQuickCustomer(e) {
-  e.preventDefault();
-  const payload = {
-    full_name: document.getElementById('quick-cust-name').value.trim(),
-    phone: document.getElementById('quick-cust-phone').value.trim(),
-    vip_level: parseInt(document.getElementById('quick-cust-vip').value) || 1,
-    tax_code: document.getElementById('quick-cust-tax').value.trim(),
-    address: document.getElementById('quick-cust-address').value.trim()
-  };
-
-  try {
-    const res = await fetch('/api/crm', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const result = await res.json();
-    if (res.ok) {
-      closePosQuickCustomerModal();
-      selectPosCustomer(result.data || result);
-    } else {
-      alert('Không thể lưu khách hàng: ' + (result.error || 'Lỗi'));
-    }
-  } catch(err) {
-    alert('Lỗi kết nối máy chủ: ' + err.message);
-  }
-}
-</script>
-
-<script>
-// VÁ LỖI CRM POS: Ép hệ thống gọi trực tiếp Database để lấy Khách hàng và cập nhật VIP
-setTimeout(() => {
-    if (window.modPos) {
-        Object.assign(window.modPos, {
-            searchCustomer: async (term) => {
-                const drop = document.getElementById('pos-cust-dropdown');
-                if(!term || term.trim().length < 1) { drop.classList.add('hidden'); return; }
-                
-                try {
-                    // Cào trực tiếp từ API CRM để luôn có data mới nhất
-                    const res = await fetch('/api/customers?t=' + Date.now());
-                    const data = await res.json();
-                    const custs = data.data || [];
-                    
-                    const q = term.toLowerCase().trim();
-                    const filtered = custs.filter(c => 
-                        (c.full_name || '').toLowerCase().includes(q) || 
-                        (c.phone || '').includes(q) ||
-                        (c.customer_code || '').toLowerCase().includes(q)
-                    ).slice(0, 8);
-                    
-                    if(filtered.length === 0) {
-                        drop.innerHTML = '<div class="p-3 text-center text-xs text-slate-400 font-bold">Khách Hàng Mới (Tính giá lẻ)</div>';
-                    } else {
-                        window.modPos.customers = filtered; // Cập nhật lại mảng local để hàm select dùng
-                        drop.innerHTML = filtered.map(c => `
-                            <div onclick="window.modPos.selectCustomer(${c.id})" class="p-2.5 hover:bg-amber-50 cursor-pointer transition border-b border-slate-50 flex justify-between items-center">
-                                <div>
-                                    <p class="font-bold text-slate-800 text-xs">${c.full_name || 'Khách'} ${c.company_name ? '<span class="text-[10px] text-slate-400 font-normal"> - ' + c.company_name + '</span>' : ''}</p>
-                                    <p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-phone-alt mr-1"></i> ${c.phone || 'N/A'}</p>
-                                </div>
-                                <span class="px-1.5 py-0.5 bg-amber-100 text-amber-700 font-black text-[9px] rounded">VIP ${c.vip_level || c.tier || 1}</span>
-                            </div>
-                        `).join('');
-                    }
-                    drop.classList.remove('hidden');
-                } catch(e) {
-                    console.error("Lỗi lấy CRM:", e);
-                }
-            },
-            
-            selectCustomer: (id) => {
-                const cust = window.modPos.customers.find(c => c.id === id);
-                if(!cust) return;
-                
-                // Đồng nhất VIP level từ CRM sang tier để tính giá
-                const vip = cust.vip_level || cust.tier || 1;
-                cust.tier = vip; 
-                window.modPos.selectedCustomer = cust;
-                
-                document.getElementById('pos-cust-dropdown').classList.add('hidden');
-                document.getElementById('pos-cust-search').value = (cust.full_name || 'Khách Lẻ') + ' - ' + (cust.phone || '');
-                document.getElementById('pc-address').innerText = cust.address || 'Chưa cập nhật địa chỉ';
-                document.getElementById('pc-clear-btn').classList.remove('hidden');
-                
-                const tierNames = ["KHÁCH LẺ", "KHÁCH LẺ", "CHỐT SALE", "THỢ / ĐẠI LÝ", "SỈ CẤP 1", "SỈ VIP", "NHÀ PHÂN PHỐI"];
-                document.getElementById('pc-tier').innerText = tierNames[vip] || "KHÁCH LẺ";
-                
-                // Áp giá mới ngay lập tức vào giỏ hàng
-                window.modPos.recalculateCartPrices();
-            }
-        });
-    }
-}, 500);
 </script>

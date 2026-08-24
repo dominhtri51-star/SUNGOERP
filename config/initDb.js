@@ -22,10 +22,13 @@ async function autoInitDatabase() {
         await pool.query(`
             INSERT INTO users (emp_id, username, password, full_name, role) VALUES
             ('EMP001', 'admin', '123456', 'Quản Trị Viên', 'ADMIN'),
-            ('EMP002', 'minhtri', '123456', 'Minh Trí', 'ADMIN')
-            ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password;
+            ('EMP002', 'minhtri', '123456', 'Minh Trí', 'ADMIN'),
+            ('TC001', 'thauthicong', '123456', 'Đội Thi Công Solar Fast', 'NHA_THAU_THI_CONG'),
+            ('GS001', 'thaugiamsat', '123456', 'Đơn Vị Giám Sát EPC Pro', 'NHA_THAU_GIAM_SAT'),
+            ('NCC001', 'nhacungcap', '123456', 'Nhà Cung Cấp Pin & Inverter SunPower', 'NHA_CUNG_CAP')
+            ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password, role = EXCLUDED.role, full_name = EXCLUDED.full_name;
         `);
-        console.log("✅ Đã khởi tạo bảng users và tài khoản admin/minhtri (pass: 123456) thành công!");
+        console.log("✅ Đã khởi tạo bảng users và các tài khoản nhà thầu / admin (pass: 123456) thành công!");
 
         // 3. Thực thi file schema.sql để tạo tất cả các bảng còn lại
         const schemaPath = path.join(__dirname, "..", "database", "schema.sql");
@@ -34,6 +37,24 @@ async function autoInitDatabase() {
             await pool.query(schemaSql);
             console.log("✅ Toàn bộ 16 bảng CSDL đã được khởi tạo tự động!");
         }
+
+        // 4. Tạo bảng customer_logs và customer_gifts nếu chưa có
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS customer_logs (
+                id SERIAL PRIMARY KEY,
+                customer_id INTEGER REFERENCES customers(id) ON DELETE CASCADE,
+                note TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS customer_gifts (
+                id SERIAL PRIMARY KEY,
+                customer_id INTEGER REFERENCES customers(id) ON DELETE CASCADE,
+                gift_name VARCHAR(255) NOT NULL,
+                gift_value NUMERIC DEFAULT 0,
+                note TEXT DEFAULT '',
+                gift_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
     } catch (err) {
         console.error("⚠️ Cảnh báo khởi tạo CSDL:", err.message);
     }

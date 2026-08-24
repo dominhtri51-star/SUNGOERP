@@ -10,18 +10,108 @@ const baseMenus = [
         { id: 'procurement-inventory', icon: 'fa-warehouse', title: 'Tồn Kho & Giá Vốn' } 
     ] },
     
-    { group: 'Kho Vận & Đóng Gói (WMS)', roles: ['ADMIN', 'NHAN_VIEN_KHO'], items: [ { id: 'inventory-dash', icon: 'fa-boxes', title: 'Sơ Đồ Tồn Kho' }, { id: 'warehouse-in', icon: 'fa-box-open', title: 'Lệnh Nhập Kho' }, { id: 'warehouse-out', icon: 'fa-dolly', title: 'Lệnh Xuất & Đóng Gói' } ] },
-    { group: 'Kỹ Thuật & Thi Công', roles: ['ADMIN', 'BAO_HANH'], items: [ { id: 'project-list', icon: 'fa-hard-hat', title: 'Quản Trị Dự Án' }, { id: 'om-schedule', icon: 'fa-tools', title: 'Lịch Bảo Trì O&M' }, { id: 'warranty-list', icon: 'fa-barcode', title: 'Quản Lý Mã Serial' } ] },
-    { group: 'Kế Toán & Tài Chính', roles: ['ADMIN', 'KE_TOAN'], items: [ { id: 'accounting-cash', icon: 'fa-wallet', title: 'Sổ Quỹ & Công Nợ' },{ id: 'accounting-payments', icon: 'fa-wallet', title: 'Sổ Quỹ & Thanh Toán' }, { id: 'contract-billing', icon: 'fa-file-contract', title: 'Hợp Đồng & Thanh Toán' }, { id: 'accounting-vat', icon: 'fa-file-invoice', title: 'Quản Lý Hóa Đơn VAT' }, { id: 'accounting-tax', icon: 'fa-file-excel', title: 'Báo Cáo Thuế (HTKK)' } ] }
+    // NHÓM CHỨC NĂNG LỚN: SÀN CÔNG TRÌNH & ĐẤU THẦU NHÀ THẦU EPC
+    { 
+        group: 'Sàn Công Trình & Nhà Thầu', 
+        roles: ['ADMIN', 'SUPER_ADMIN', 'NHA_THAU_THI_CONG', 'NHA_THAU_GIAM_SAT', 'NHA_CUNG_CAP', 'BAO_HANH', 'SALE'], 
+        items: [ 
+            { id: 'bidding-marketplace', icon: 'fa-gavel', title: 'Sàn Đấu Thầu Công Trình' }, 
+            { id: 'contractor-progress', icon: 'fa-tasks', title: 'Tiến Độ & Check-in GPS' }, 
+            { id: 'contractor-handover', icon: 'fa-camera-retro', title: '6 Ảnh Nghiệm Thu & App' }, 
+            { id: 'contractor-eval', icon: 'fa-star', title: 'Quyết Toán & Đánh Giá ★' }, 
+            { id: 'contractor-teams', icon: 'fa-user-shield', title: 'Hồ Sơ Năng Lực Nhà Thầu' } 
+        ] 
+    },
+
+    { group: 'Kế Toán & Tài Chính', roles: ['ADMIN', 'KE_TOAN'], items: [ { id: 'accounting-vault', icon: 'fa-vault', title: 'Két Sắt Hồ Sơ & Thuế' }, { id: 'accounting-cash', icon: 'fa-wallet', title: 'Sổ Quỹ & Công Nợ' },{ id: 'accounting-payments', icon: 'fa-wallet', title: 'Sổ Quỹ & Thanh Toán' }, { id: 'contract-billing', icon: 'fa-file-contract', title: 'Hợp Đồng & Thanh Toán' }, { id: 'accounting-vat', icon: 'fa-file-invoice', title: 'Quản Lý Hóa Đơn VAT' }, { id: 'accounting-tax', icon: 'fa-file-excel', title: 'Báo Cáo Thuế (HTKK)' } ] }
 ];
 
 function getMenuForRole(role) { 
-    // Nếu là SUPER_ADMIN -> Cho phép xem toàn bộ chức năng của hệ thống
-    if (role === 'SUPER_ADMIN') return baseMenus; 
+    // Nếu là SUPER_ADMIN hoặc ADMIN -> Toàn quyền hệ thống
+    if (role === 'SUPER_ADMIN' || role === 'ADMIN') return baseMenus; 
     
+    // 1. NHÀ THẦU THI CÔNG (ĐỐI TÁC NGOÀI / FREELANCER) - CHỈ XEM CỔNG THI CÔNG
+    if (role === 'NHA_THAU_THI_CONG' || role === 'THAU_THI_CONG') {
+        return [
+            {
+                group: 'Cổng Đối Tác Thi Công',
+                roles: ['NHA_THAU_THI_CONG'],
+                items: [
+                    { id: 'contractor-bidding', icon: 'fa-gavel', title: 'Sàn Tìm Việc & Báo Giá' },
+                    { id: 'contractor-active', icon: 'fa-hard-hat', title: 'Công Trình Đang Thi Công' },
+                    { id: 'contractor-payout', icon: 'fa-wallet', title: 'Quyết Toán & Điểm Uy Tín ★' },
+                    { id: 'contractor-my-profile', icon: 'fa-id-card', title: 'Hồ Sơ Năng Lực Đội Thợ' }
+                ]
+            }
+        ];
+    }
+
+    // 2. NHÀ THẦU GIÁM SÁT (ĐỐI TÁC NGOÀI / FREELANCER) - CHỈ XEM CỔNG GIÁM SÁT
+    if (role === 'NHA_THAU_GIAM_SAT' || role === 'GIAM_SAT') {
+        return [
+            {
+                group: 'Cổng Đối Tác Giám Sát',
+                roles: ['NHA_THAU_GIAM_SAT'],
+                items: [
+                    { id: 'supervisor-projects', icon: 'fa-clipboard-check', title: 'Giám Sát Hiện Trường' },
+                    { id: 'supervisor-inspection', icon: 'fa-camera-retro', title: 'Kiểm Tra 6 Ảnh & Nghiệm Thu' },
+                    { id: 'supervisor-evaluation', icon: 'fa-star', title: 'Chấm Điểm & Đánh Giá Đội Thợ' }
+                ]
+            }
+        ];
+    }
+
+    // 3. NHÀ CUNG CẤP VẬT TƯ (ĐỐI TÁC NGOÀI) - CHỈ XEM CỔNG NHÀ CUNG CẤP
+    if (role === 'NHA_CUNG_CAP' || role === 'SUPPLIER') {
+        return [
+            {
+                group: 'Cổng Đối Tác Cung Cấp Vật Tư',
+                roles: ['NHA_CUNG_CAP'],
+                items: [
+                    { id: 'supplier-bom-requests', icon: 'fa-boxes', title: 'Nhu Cầu Vật Tư (BOM)' },
+                    { id: 'supplier-quotes', icon: 'fa-file-invoice-dollar', title: 'Chào Giá Cung Ứng' },
+                    { id: 'supplier-products', icon: 'fa-tags', title: 'Danh Mục Sản Phẩm' }
+                ]
+            }
+        ];
+    }
+
+    // TRƯỜNG HỢP SALE ADMIN (Trưởng phòng Sale): Quyền Sale + Duyệt Báo Giá + Sơ Đồ Tồn Kho
+    if (role === 'SALE_ADMIN' || role === 'ADMIN_SALE' || role === 'TRUONG_PHONG_SALE') {
+        return [
+            { 
+                group: 'Bán Hàng & CRM', 
+                roles: ['SALE_ADMIN'], 
+                items: [ 
+                    { id: 'sale-crm', icon: 'fa-users', title: 'Khách Hàng (CRM)' }, 
+                    { id: 'sale-orders', icon: 'fa-shopping-cart', title: 'Tạo Đơn Hàng' }, 
+                    { id: 'order-history', icon: 'fa-receipt', title: 'Quản Lý Đơn Hàng' }, 
+                    { id: 'sale-boq', icon: 'fa-file-invoice-dollar', title: 'Báo Giá Dự Án (BOQ)' }, 
+                    { id: 'boq-list', icon: 'fa-history', title: 'Danh Sách BOQ' } 
+                ] 
+            },
+            { 
+                group: 'Quản Trị & Phê Duyệt Sale', 
+                roles: ['SALE_ADMIN'], 
+                items: [ 
+                    { id: 'admin-approve', icon: 'fa-check-double', title: 'Duyệt Báo Giá' },
+                    { id: 'inventory-dash', icon: 'fa-boxes', title: 'Sơ Đồ Tồn Kho' }
+                ] 
+            },
+            {
+                group: 'Sàn Công Trình & Nhà Thầu',
+                roles: ['SALE_ADMIN'],
+                items: [
+                    { id: 'bidding-marketplace', icon: 'fa-gavel', title: 'Sàn Đấu Thầu Công Trình' }
+                ]
+            }
+        ];
+    }
+
     const userRole = role === 'KY_THUAT' ? 'BAO_HANH' : role; 
     return baseMenus.filter(g => g.roles.includes(userRole)); 
 }
+window.getMenuForRole = getMenuForRole;
 
 function logout() { 
     localStorage.removeItem('sungo_user'); 
@@ -37,36 +127,52 @@ window.getCurrentEmployeeId = function() {
     return 'UNKNOWN';
 };
 
+window.__appInitialized = false;
+
 function initApp() {
+    if (window.__appInitialized) return;
+    window.__appInitialized = true;
+
     const userDataStr = localStorage.getItem('sungo_user');
     if (!userDataStr) return window.location.href = '/index.html';
     
     const currentUser = JSON.parse(userDataStr);
-    document.getElementById('user-name').innerText = currentUser.name;
+    const userNameEl = document.getElementById('user-name');
+    if (userNameEl) userNameEl.innerText = currentUser.name;
     
-    // --- CẬP NHẬT: Hiển thị chức vụ và Mã Nhân Viên (KPI) trên Sidebar ---
-    document.getElementById('user-role').innerText = `${currentUser.role} | Mã NV: ${currentUser.empId || 'N/A'}`;
+    const userRoleEl = document.getElementById('user-role');
+    if (userRoleEl) userRoleEl.innerText = `${currentUser.role} | Mã NV: ${currentUser.empId || 'N/A'}`;
     
     const userGroups = getMenuForRole(currentUser.role);
-    if(userGroups.length === 0) return logout();
+    if (userGroups.length === 0) return logout();
     
     let menuHtml = ''; 
     let firstMenu = null;
+    let targetMenu = null;
+    const hashModule = window.location.hash ? window.location.hash.replace('#', '') : null;
     
     userGroups.forEach(group => {
         menuHtml += `<div class="px-6 py-2 mt-4 border-t border-slate-700/50 pt-4 first:border-0 first:mt-0 first:pt-2"><p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">${group.group}</p></div>`;
         group.items.forEach(m => {
-            if(!firstMenu) firstMenu = m;
+            if (!firstMenu) firstMenu = m;
+            if (hashModule && m.id === hashModule) targetMenu = m;
             menuHtml += `<a id="menu-btn-${m.id}" onclick="loadModule('${m.id}', '${m.title}')" class="menu-item flex items-center px-6 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-amber-400 cursor-pointer transition"><i class="fas ${m.icon} w-5 text-center"></i><span class="ml-3">${m.title}</span></a>`;
         });
     });
     
-    document.getElementById('sidebar-menu').innerHTML = menuHtml;
-    if (firstMenu) loadModule(firstMenu.id, firstMenu.title);
+    const sidebarEl = document.getElementById('sidebar-menu');
+    if (sidebarEl) sidebarEl.innerHTML = menuHtml;
+    
+    const menuToLoad = targetMenu || firstMenu;
+    if (menuToLoad) loadModule(menuToLoad.id, menuToLoad.title);
 }
 
+const moduleCache = {};
+
 async function loadModule(moduleId, title) {
-    document.getElementById('page-title').innerText = title;
+    window.location.hash = moduleId;
+    const pageTitleEl = document.getElementById('page-title');
+    if (pageTitleEl) pageTitleEl.innerText = title;
     
     document.querySelectorAll('.menu-item').forEach(el => { 
         el.classList.remove('text-amber-400', 'bg-slate-800', 'border-r-4', 'border-amber-400'); 
@@ -74,22 +180,26 @@ async function loadModule(moduleId, title) {
     });
     
     const activeBtn = document.getElementById(`menu-btn-${moduleId}`);
-    if(activeBtn) { 
+    if (activeBtn) { 
         activeBtn.classList.remove('text-slate-400'); 
         activeBtn.classList.add('text-amber-400', 'bg-slate-800', 'border-r-4', 'border-amber-400'); 
     }
     
     const contentDiv = document.getElementById('main-content');
-    contentDiv.innerHTML = `<div class="p-6 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải module...</div>`;
+    if (!contentDiv) return;
     
     try {
-        const res = await fetch(`/modules/${moduleId}.html?v=` + new Date().getTime());
-        if (!res.ok) throw new Error("Chưa có file");
+        let html = moduleCache[moduleId];
+        if (!html) {
+            contentDiv.innerHTML = `<div class="p-6 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải module...</div>`;
+            const res = await fetch(`/modules/${moduleId}.html?v=` + Date.now());
+            if (!res.ok) throw new Error("Chưa có file");
+            html = await res.text();
+            moduleCache[moduleId] = html;
+        }
         
-        contentDiv.innerHTML = await res.text();
+        contentDiv.innerHTML = html;
         
-        // TRẢ LẠI LUỒNG CHẠY SCRIPT GỐC
-        // Bỏ cơ chế bọc IIFE toàn cục vì nó làm ẩn các hàm của các module khác
         const scripts = contentDiv.querySelectorAll('script');
         scripts.forEach(oldScript => {
             const newScript = document.createElement('script');
@@ -108,4 +218,8 @@ async function loadModule(moduleId, title) {
     }
 }
 
-window.onload = initApp;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}

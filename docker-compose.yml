@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: solar_postgres_mac
+    environment:
+      POSTGRES_USER: solar_admin
+      POSTGRES_PASSWORD: SolarPass123!
+      POSTGRES_DB: solar_rms_local
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_mac:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    container_name: solar_redis_mac
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata_mac:
+

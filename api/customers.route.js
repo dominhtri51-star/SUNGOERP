@@ -2,6 +2,32 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 
+// TÌM KIẾM KHÁCH HÀNG (DÙNG CHO POS / AUTOCOMPLETE)
+router.get('/search', async (req, res) => {
+    try {
+        const q = (req.query.q || '').trim();
+        if (!q) return res.json([]);
+        const { rows } = await pool.query(`
+            SELECT id, 
+                   COALESCE(NULLIF(name, ''), full_name, 'Khách Lẻ') as name, 
+                   COALESCE(NULLIF(full_name, ''), name, 'Khách Lẻ') as full_name, 
+                   phone, address, customer_code, nickname, 
+                   vat_company, vat_taxcode, vat_address, vat_email, 
+                   reward_points, COALESCE(current_debt, 0) as current_debt, total_sales, 
+                   COALESCE(tier, vip_level, 1) as customer_tier,
+                   COALESCE(tier, vip_level, 1) as vip_level,
+                   COALESCE(tier, vip_level, 1) as tier
+            FROM customers 
+            WHERE name ILIKE $1 OR full_name ILIKE $1 OR phone ILIKE $1 OR nickname ILIKE $1 OR customer_code ILIKE $1 OR vat_taxcode ILIKE $1 OR vat_company ILIKE $1 OR address ILIKE $1
+            ORDER BY id DESC
+            LIMIT 20
+        `, [`%${q}%`]);
+        res.json(rows);
+    } catch (e) {
+        res.json([]);
+    }
+});
+
 // LẤY DANH SÁCH KHÁCH HÀNG
 router.get('/', async (req, res) => {
     try {
@@ -12,13 +38,15 @@ router.get('/', async (req, res) => {
                    phone, address, customer_code, nickname, 
                    vat_company, vat_taxcode, vat_address, vat_email, 
                    reward_points, COALESCE(current_debt, 0) as current_debt, total_sales, 
-                   COALESCE(tier, vip_level, 1) as customer_tier 
+                   COALESCE(tier, vip_level, 1) as customer_tier,
+                   COALESCE(tier, vip_level, 1) as vip_level,
+                   COALESCE(tier, vip_level, 1) as tier
             FROM customers 
             ORDER BY id DESC
         `);
         res.json({ success: true, data: rows });
     } catch (e) {
-        res.json({ success: false, error: e.message });
+        res.json({ success: false, error: e.message, data: [] });
     }
 });
 
@@ -125,6 +153,60 @@ router.get('/:id/transactions', async (req, res) => {
 
     } catch (e) {
         console.error("API TX ERROR:", e);
+        res.json({ success: false, error: e.message });
+    }
+});
+
+// NHẬT KÝ CHĂM SÓC KHÁCH HÀNG (LOGS)
+router.get('/:id/logs', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT id, customer_id, note, created_at FROM customer_logs WHERE customer_id = $1 ORDER BY created_at DESC',
+            [req.params.id]
+        );
+        res.json({ success: true, data: rows });
+    } catch (e) {
+        res.json({ success: false, error: e.message, data: [] });
+    }
+});
+
+router.post('/:id/logs', async (req, res) => {
+    try {
+        const { note } = req.body;
+        if (!note || !note.trim()) return res.json({ success: false, error: 'Ghi chú không được để trống' });
+        await pool.query(
+            'INSERT INTO customer_logs (customer_id, note) VALUES ($1, $2)',
+            [req.params.id, note.trim()]
+        );
+        res.json({ success: true });
+    } catch (e) {
+        res.json({ success: false, error: e.message });
+    }
+});
+
+// QUÀ TẶNG / TRI ÂN KHÁCH HÀNG (GIFTS)
+router.get('/:id/gifts', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT id, customer_id, gift_name, gift_value, note, gift_date FROM customer_gifts WHERE customer_id = $1 ORDER BY gift_date DESC',
+            [req.params.id]
+        );
+        res.json({ success: true, data: rows });
+    } catch (e) {
+        res.json({ success: false, error: e.message, data: [] });
+    }
+});
+
+router.post('/:id/gifts', async (req, res) => {
+    try {
+        const { gift_name, gift_value, note } = req.body;
+        if (!gift_name || !gift_name.trim()) return res.json({ success: false, error: 'Tên quà tặng không được để trống' });
+        await pool.query(
+            'INSERT INTO customer_gifts (customer_id, gift_name, gift_value, note) VALUES ($1, $2, $3, $4)',
+            [req.params.id, gift_name.trim(), parseFloat(gift_value) || 0, note || '']
+        );
+        res.json({ success: true });
+    } catch (e) {
         res.json({ success: false, error: e.message });
     }
 });

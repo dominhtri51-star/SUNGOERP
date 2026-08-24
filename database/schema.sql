@@ -224,3 +224,40 @@ INSERT INTO system_settings (setting_key, setting_value) VALUES
 ('quote_notes', 'Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của chúng tôi!'),
 ('delivery_notes', 'Hàng hóa đã xuất kho vui lòng kiểm tra kỹ. Không nhận đổi trả nếu không phải lỗi từ Nhà sản xuất.')
 ON CONFLICT (setting_key) DO NOTHING;
+
+-- 17. BẢNG KÉT SẮT CHỨNG TỪ PHÁP LÝ & BÁO CÁO THUẾ (TAX_VAULT_DOCUMENTS)
+CREATE TABLE IF NOT EXISTS tax_vault_documents (
+    id SERIAL PRIMARY KEY,
+    vault_code VARCHAR(100) UNIQUE,
+    category VARCHAR(100) NOT NULL,
+    sub_category VARCHAR(100),
+    title VARCHAR(255) NOT NULL,
+    doc_number VARCHAR(100),
+    doc_date DATE,
+    partner_name VARCHAR(255),
+    partner_tax_code VARCHAR(50),
+    amount NUMERIC DEFAULT 0,
+    vat_amount NUMERIC DEFAULT 0,
+    file_url TEXT,
+    file_name VARCHAR(255),
+    file_type VARCHAR(50),
+    note TEXT,
+    period_tag VARCHAR(20),
+    is_verified BOOLEAN DEFAULT true,
+    is_locked BOOLEAN DEFAULT false,
+    source_module VARCHAR(100) DEFAULT 'MANUAL_DEPOSIT',
+    ref_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100) DEFAULT 'ADMIN'
+);
+
+-- 18. BẢNG KHÓA SỔ NIÊM PHONG KÉT SẮT THEO KỲ THUẾ (TAX_VAULT_LOCKS)
+CREATE TABLE IF NOT EXISTS tax_vault_locks (
+    id SERIAL PRIMARY KEY,
+    period_key VARCHAR(50) UNIQUE NOT NULL,
+    period_type VARCHAR(20) DEFAULT 'MONTH',
+    locked_by VARCHAR(100) DEFAULT 'ADMIN',
+    lock_reason TEXT,
+    locked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

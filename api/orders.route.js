@@ -46,22 +46,31 @@ router.post('/', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const { customer_id, customer_name, total_amount, items } = req.body;
+        const { customer_id, customer_name, total_amount, paid_amount, payment_method, notes, items } = req.body;
         const order_code = 'DH-' + Math.floor(Date.now() / 1000).toString();
+        const finalTotal = parseFloat(total_amount) || 0;
+        const finalPaid = paid_amount !== undefined ? parseFloat(paid_amount) : finalTotal;
+        const finalPaymentMethod = payment_method || 'TIEN_MAT';
+        const finalNotes = notes || '';
+
         const orderRes = await client.query(
-            "INSERT INTO orders (order_code, customer_id, customer_name, total_amount, status, created_at) VALUES ($1, $2, $3, $4, 'PENDING', NOW()) RETURNING id",
-            [order_code, customer_id || null, customer_name || 'Khách Lẻ', total_amount || 0]
+            "INSERT INTO orders (order_code, customer_id, customer_name, total_amount, paid_amount, payment_method, notes, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING', NOW()) RETURNING id",
+            [order_code, customer_id || null, customer_name || 'Khách Lẻ', finalTotal, finalPaid, finalPaymentMethod, finalNotes]
         );
         const orderId = orderRes.rows[0].id;
         
         // TRỪ KHO NGAY KHI TẠO ĐƠN & GHI ĐÚNG CỘT QUANTITY
-        for (let item of items) {
-            const itemTotal = item.quantity * item.price;
-            await client.query(
-                "INSERT INTO order_items (order_id, product_id, quantity, price, total) VALUES ($1, $2, $3, $4, $5)", 
-                [orderId, item.product_id, item.quantity, item.price, itemTotal]
-            );
-            await client.query("UPDATE products SET stock_qty = stock_qty - $1 WHERE id = $2 AND stock_qty >= $1", [item.quantity, item.product_id]);
+        if (items && Array.isArray(items)) {
+            for (let item of items) {
+                const qty = parseFloat(item.quantity) || 1;
+                const price = parseFloat(item.price) || 0;
+                const itemTotal = qty * price;
+                await client.query(
+                    "INSERT INTO order_items (order_id, product_id, quantity, price, total) VALUES ($1, $2, $3, $4, $5)", 
+                    [orderId, item.product_id, qty, price, itemTotal]
+                );
+                await client.query("UPDATE products SET stock_qty = GREATEST(0, stock_qty - $1) WHERE id = $2", [qty, item.product_id]);
+            }
         }
         await client.query('COMMIT');
         res.json({ success: true, orderId, order_code });

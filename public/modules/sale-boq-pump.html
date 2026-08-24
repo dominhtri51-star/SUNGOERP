@@ -655,20 +655,36 @@ window.modSalePump = {
             };
         });
 
+        let empName = 'Nguyễn Văn A (Sale)';
+        try {
+            const u = JSON.parse(localStorage.getItem('sungo_user') || '{}');
+            if (u.name) empName = `${u.name} (${u.role || 'Sale'})`;
+        } catch(e) {}
+
         try {
             const res = await fetch('/api/quotations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    store_id: 1, brand_name: `SUNGO PUMP (${pumpType}) ${hpVal}HP`,
-                    customer_name: name, monthly_bill: 0, system_kwp: parseFloat(hpVal), 
-                    total_amount: total, payback_years: 0, npv_amount: 0, roe_percent: 0,
-                    status: statusReq || 'DRAFT', items: payloadItems
+                    store_id: 1, 
+                    brand_name: `SUNGO PUMP (${pumpType}) ${hpVal}HP`,
+                    project_name: `Hệ Bơm Nước Năng Lượng Mặt Trời ${hpVal}HP - ${name}`,
+                    customer_name: name, 
+                    sale_name: empName,
+                    system_type: 'PUMP',
+                    monthly_bill: 0, 
+                    system_kwp: parseFloat(hpVal), 
+                    total_amount: total, 
+                    payback_years: 0, 
+                    npv_amount: 0, 
+                    roe_percent: 0,
+                    status: statusReq || (total < 50000000 ? 'PENDING_APPROVAL' : 'QUOTING'), 
+                    items: payloadItems
                 })
             });
             const data = await res.json();
             if(data.success) {
-                alert(`✅ Tạo Báo Giá Bơm Nước Thành Công! Mã: ${data.quotation.quotation_code}`);
+                alert(`✅ Tạo Báo Giá Bơm Nước Thành Công! Mã: ${data.quotation.quotation_code}\nTrạng thái: ${data.quotation.status === 'PENDING_APPROVAL' ? 'Chờ Admin Phê Duyệt' : 'Sẵn Sàng Báo Giá'}`);
                 window.modSalePump.loadHistory();
             }
         } catch(e) { 

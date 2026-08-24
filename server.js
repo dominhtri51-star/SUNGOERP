@@ -40,10 +40,10 @@ if (fs.existsSync(apiDir)) {
 // ==========================================
 // KẾT NỐI API THỦ CÔNG (Nếu không dùng Auto)
 // ==========================================
-// Đã dán router O&M xuống dưới này, an toàn 100%
 try { app.use('/api/om-schedules', require('./api/om.route')); } catch(e) {}
 try { app.use('/api/crm', require('./api/customers.route')); } catch(e){}
-try { app.use('/api/vault', require('./api/imports.route')); } catch(e){}
+try { app.use('/api/imports', require('./api/imports.route')); } catch(e){}
+try { app.use('/api/vault', require('./api/vault.route')); } catch(e){}
 
 // ==========================================
 // CHỐNG SẬP GIAO DIỆN & TRÁNH LỖI LỒNG TRANG

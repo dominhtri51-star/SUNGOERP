@@ -1,0 +1,1016 @@
+<div class="h-full flex flex-col space-y-4 font-sans">
+    
+    <!-- HEADER & ACTION BAR -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="p-2 bg-gradient-to-tr from-amber-600 to-amber-400 text-white rounded-lg shadow-md">
+                    <i class="fas fa-vault text-xl"></i>
+                </span>
+                <div>
+                    <h2 class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2">
+                        KÉT SẮT HỒ SƠ & BÁO CÁO THUẾ
+                        <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full border border-blue-200 uppercase">Pháp Lý & Giải Trình</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">Tự động gom và lưu trữ chứng từ toàn hệ thống (C/O, C/Q, Hải quan, Nhập kho, Xuất kho, Báo giá, Hợp đồng, HĐĐT, Sổ quỹ) phục vụ thanh tra & giải trình thuế.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="window.modVault.syncAll(this)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-sync-alt"></i> <span>Đồng Bộ Két Sắt</span>
+            </button>
+            <button onclick="window.modVault.openDepositModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-plus-circle"></i> <span>Nạp Chứng Từ Mới</span>
+            </button>
+            <button onclick="window.modVault.openLockModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-lock text-amber-400"></i> <span>Niêm Phong Kỳ</span>
+            </button>
+            <button onclick="window.modVault.exportCSV()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-file-excel"></i> <span>Xuất Bảng Kê</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- RADAR KPI & RISK CARDS -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 shrink-0">
+        <!-- 1. TỔNG CHỨNG TỪ -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-black shrink-0">
+                <i class="fas fa-folder-open text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Tổng Chứng Từ</p>
+                <h4 class="text-xl font-black text-slate-900 truncate" id="kpi-total-docs">0</h4>
+                <p class="text-[10px] text-blue-600 font-semibold" id="kpi-verified-docs">Đã định danh an toàn</p>
+            </div>
+        </div>
+
+        <!-- 2. ĐIỂM SẴN SÀNG THANH TRA -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-black shrink-0">
+                <i class="fas fa-shield-halved text-lg"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Sẵn Sàng Thanh Tra</p>
+                <div class="flex items-baseline gap-1">
+                    <h4 class="text-xl font-black text-emerald-600" id="kpi-readiness">100%</h4>
+                    <span class="text-[10px] text-slate-500 font-bold" id="kpi-readiness-label">Đầy đủ mắt xích</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                    <div id="kpi-readiness-bar" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. CẢNH BÁO RỦI RO THUẾ -->
+        <div class="bg-white p-3.5 rounded-xl border border-red-200 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-red-50/50 transition" onclick="window.modVault.filterByRisk()">
+            <div class="w-10 h-10 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600 font-black shrink-0 animate-pulse">
+                <i class="fas fa-triangle-exclamation text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-red-500 tracking-wider">Cảnh Báo Rủi Ro Thuế</p>
+                <h4 class="text-xl font-black text-red-600" id="kpi-risk-count">0</h4>
+                <p class="text-[9px] text-slate-500 font-bold truncate" id="kpi-risk-detail">Nhấn để lọc hồ sơ cần xử lý</p>
+            </div>
+        </div>
+
+        <!-- 4. DOANH THU & THUẾ GTGT BÁN RA -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 font-black shrink-0">
+                <i class="fas fa-file-invoice-dollar text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Thuế GTGT Bán Ra</p>
+                <h4 class="text-lg font-black text-amber-600 truncate" id="kpi-vat-out">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold" id="kpi-rev-out">Doanh thu: 0 đ</p>
+            </div>
+        </div>
+
+        <!-- 5. TÌNH TRẠNG NIÊM PHONG KÉT SẮT -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-700 font-black shrink-0">
+                <i class="fas fa-stamp text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Niêm Phong Két</p>
+                <h4 class="text-sm font-black text-slate-800 truncate" id="kpi-lock-status">Sổ Mở Tự Do</h4>
+                <p class="text-[9px] text-emerald-600 font-bold" id="kpi-lock-detail">Sẵn sàng nhận dữ liệu</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN VAULT COMPARTMENTS CONTAINER -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden min-h-0">
+        
+        <!-- COMPARTMENTS NAVIGATION (6 KHOANG KHOA HỌC) -->
+        <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-3 pt-2 gap-1.5">
+            <button onclick="window.modVault.switchTab('TAB_BUNDLES')" id="tab-btn-TAB_BUNDLES" class="px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-amber-500 text-amber-800 rounded-t-lg shadow-sm transition flex items-center gap-1.5">
+                <i class="fas fa-landmark text-amber-600"></i> 1. Hồ Sơ Thanh Tra & Giải Trình
+                <span class="bg-amber-100 text-amber-800 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1" id="badge-bundles-count">0</span>
+            </button>
+            <button onclick="window.modVault.switchTab('TAB_ORIGIN')" id="tab-btn-TAB_ORIGIN" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-ship text-blue-500"></i> 2. Nguồn Gốc & Nhập Khẩu (CO/CQ/HQ)
+                <span class="bg-slate-200 text-slate-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1" id="badge-origin-count">0</span>
+            </button>
+            <button onclick="window.modVault.switchTab('TAB_INBOUND')" id="tab-btn-TAB_INBOUND" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-boxes-packing text-emerald-500"></i> 3. Mua Hàng & Nhập Kho (PO/WMS/HĐ Mua)
+                <span class="bg-slate-200 text-slate-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1" id="badge-inbound-count">0</span>
+            </button>
+            <button onclick="window.modVault.switchTab('TAB_OUTBOUND')" id="tab-btn-TAB_OUTBOUND" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-truck-fast text-indigo-500"></i> 4. Xuất Kho & Vận Chuyển (Phiếu Xuất/Serial)
+                <span class="bg-slate-200 text-slate-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1" id="badge-outbound-count">0</span>
+            </button>
+            <button onclick="window.modVault.switchTab('TAB_CONTRACT')" id="tab-btn-TAB_CONTRACT" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-file-contract text-purple-500"></i> 5. Báo Giá & Hợp Đồng (BOQ/EPC/6 Ảnh)
+                <span class="bg-slate-200 text-slate-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1" id="badge-contract-count">0</span>
+            </button>
+            <button onclick="window.modVault.switchTab('TAB_INVOICE')" id="tab-btn-TAB_INVOICE" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-file-invoice text-rose-500"></i> 6. Hóa Đơn GTGT & Dòng Tiền (VinInvoice/Sổ Quỹ)
+                <span class="bg-slate-200 text-slate-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1" id="badge-invoice-count">0</span>
+            </button>
+        </div>
+
+        <!-- SEARCH & FILTER TOOLBAR -->
+        <div class="p-3 bg-white border-b border-slate-200 flex flex-wrap justify-between items-center gap-3 shrink-0">
+            <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
+                <div class="relative flex-1 max-w-md">
+                    <i class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="v-search" oninput="window.modVault.renderCurrentView()" placeholder="Tìm kiếm nhanh mã chứng từ, PO, HĐ, khách hàng, MST, serial..." class="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-slate-50/50">
+                </div>
+                
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-slate-500">Kỳ:</span>
+                    <select id="v-period" onchange="window.modVault.changePeriodFilter()" class="border border-slate-300 py-2 px-2.5 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-amber-500 bg-white">
+                        <option value="ALL">Tất cả thời gian</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-slate-500">Bộ lọc:</span>
+                    <select id="v-filter-status" onchange="window.modVault.renderCurrentView()" class="border border-slate-300 py-2 px-2.5 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-amber-500 bg-white">
+                        <option value="ALL">Tất cả tình trạng</option>
+                        <option value="VALID">✅ Đầy đủ hợp lệ</option>
+                        <option value="RISK">⚠️ Cảnh báo rủi ro / Thiếu hồ sơ</option>
+                        <option value="HAS_FILES">📎 Có file đính kèm</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-500" id="v-showing-count">Đang hiển thị: 0</span>
+                <button onclick="window.modVault.printCurrentView()" class="border border-slate-300 hover:bg-slate-100 text-slate-700 py-1.5 px-2.5 rounded text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                    <i class="fas fa-print"></i> In bảng kê
+                </button>
+            </div>
+        </div>
+
+        <!-- CONTENT AREA: 6 KHOANG CHỨNG TỪ -->
+        <div class="flex-1 overflow-y-auto p-4 bg-slate-50 min-h-0 relative" id="vault-content-container">
+            
+            <!-- KHOANG 1: HỒ SƠ THANH TRA THEO KỲ & DỰ ÁN (AUDIT BUNDLES) -->
+            <div id="view-TAB_BUNDLES" class="space-y-4">
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900 font-medium">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-info-circle text-amber-600 text-sm"></i>
+                        <span><b>Bộ Hồ Sơ Thanh Tra Chuẩn Thuế:</b> Tự động đóng gói chuỗi 6 mắt xích liên hoàn (Hợp đồng -> HĐĐT -> Xuất kho -> Nhập kho -> UNC ngân hàng -> Nguồn gốc C/O C/Q) theo từng kỳ quyết toán.</span>
+                    </div>
+                </div>
+                <div id="bundle-list-container" class="grid grid-cols-1 gap-4">
+                    <!-- Dynamic Audit Bundle Cards -->
+                </div>
+            </div>
+
+            <!-- KHOANG 2 ĐẾN 6: DANH SÁCH BẢNG CHỨNG TỪ CHI TIẾT -->
+            <div id="view-TAB_DETAILS" class="hidden h-full flex flex-col">
+                <div class="overflow-y-auto flex-1 border border-slate-200 rounded-lg bg-white shadow-sm">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-slate-100 text-slate-700 sticky top-0 uppercase font-black tracking-wider text-[11px] shadow-sm z-10">
+                            <tr>
+                                <th class="p-3 border-b">Mã Két Sắt / Ref</th>
+                                <th class="p-3 border-b">Loại Hồ Sơ & Tiêu Đề</th>
+                                <th class="p-3 border-b">Đối Tác / Khách Hàng / MST</th>
+                                <th class="p-3 border-b text-right">Doanh Số / Giá Trị</th>
+                                <th class="p-3 border-b text-right">Thuế GTGT</th>
+                                <th class="p-3 border-b text-center">Tệp Đính Kèm</th>
+                                <th class="p-3 border-b text-center">Kiểm Tra Thuế</th>
+                                <th class="p-3 border-b text-center w-24">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbl-vault-docs" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                            <!-- Dynamic Table Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 1: XEM CHI TIẾT & PREVIEW CHỨNG TỪ (DOCUMENT PREVIEWER) -->
+<!-- ========================================================================= -->
+<div id="vault-preview-modal" class="fixed inset-0 bg-slate-900 bg-opacity-70 hidden items-center justify-center z-[80] p-4">
+    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-scale-up">
+        <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 px-6 flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-2.5">
+                <span class="p-2 bg-amber-500 text-slate-900 rounded-lg font-black text-xs">
+                    <i class="fas fa-shield-alt"></i>
+                </span>
+                <div>
+                    <h3 class="font-black text-base text-amber-400" id="prev-title">Hồ Sơ Két Sắt</h3>
+                    <p class="text-[11px] text-slate-300 font-mono" id="prev-code">Mã: VLT-XXXX</p>
+                </div>
+            </div>
+            <button onclick="window.modVault.closePreview()" class="text-slate-400 hover:text-white text-xl cursor-pointer p-1"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+            <!-- THÔNG TIN ĐỊNH DANH PHÁP LÝ -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+                <div><span class="block text-slate-400 font-bold text-[10px] uppercase">Khoang Lưu Trữ:</span><p class="font-bold text-slate-800" id="prev-category">-</p></div>
+                <div><span class="block text-slate-400 font-bold text-[10px] uppercase">Phân Loại Con:</span><p class="font-bold text-blue-700" id="prev-subcategory">-</p></div>
+                <div><span class="block text-slate-400 font-bold text-[10px] uppercase">Ngày Lập / Kỳ:</span><p class="font-bold text-slate-800" id="prev-date">-</p></div>
+                <div><span class="block text-slate-400 font-bold text-[10px] uppercase">Tình Trạng Niêm Phong:</span><p class="font-bold" id="prev-lock-tag">-</p></div>
+                <div><span class="block text-slate-400 font-bold text-[10px] uppercase">Đối Tác / Khách Hàng:</span><p class="font-bold text-slate-800" id="prev-partner">-</p></div>
+                <div><span class="block text-slate-400 font-bold text-[10px] uppercase">Mã Số Thuế (MST):</span><p class="font-mono font-bold text-slate-700" id="prev-taxcode">-</p></div>
+                <div><span class="block text-slate-400 font-bold text-[10px] uppercase">Tổng Giá Trị:</span><p class="font-black text-slate-900 text-sm" id="prev-amount">0 đ</p></div>
+                <div><span class="block text-slate-400 font-bold text-[10px] uppercase">Tiền Thuế GTGT:</span><p class="font-black text-red-600 text-sm" id="prev-vat">0 đ</p></div>
+            </div>
+
+            <!-- CẢNH BÁO RỦI RO THUẾ (NẾU CÓ) -->
+            <div id="prev-risk-container" class="hidden bg-red-50 border border-red-200 p-3 rounded-xl">
+                <h5 class="text-xs font-black text-red-800 flex items-center gap-1.5 mb-1"><i class="fas fa-triangle-exclamation"></i> LƯU Ý THANH TRA & RỦI RO THUẾ:</h5>
+                <ul class="text-xs text-red-700 list-disc list-inside space-y-0.5" id="prev-risk-list"></ul>
+            </div>
+
+            <!-- DANH SÁCH TẬP TIN / CHỨNG TỪ ĐÍNH KÈM -->
+            <div>
+                <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span><i class="fas fa-paperclip text-amber-500 mr-1"></i> Tài Liệu Số & Bản Scan Đính Kèm</span>
+                    <span class="text-[10px] text-slate-400 font-normal" id="prev-files-count">0 tệp tin</span>
+                </h4>
+                <div id="prev-files-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+
+            <!-- KHUNG XEM TRƯỚC HÌNH ẢNH / EMBED -->
+            <div id="prev-embed-container" class="border border-slate-200 rounded-xl p-2 bg-slate-900 min-h-[300px] flex items-center justify-center text-slate-400">
+                <p class="text-xs">Bấm "Xem trực tiếp" ở file bên trên để mở xem trước.</p>
+            </div>
+        </div>
+
+        <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
+            <span class="text-[11px] text-slate-500 font-mono">Bảo vệ toàn vẹn dữ liệu bởi SUNGO ERP Legal Vault</span>
+            <button onclick="window.modVault.closePreview()" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-bold">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 2: NẠP CHỨNG TỪ MỚI VÀO KÉT SẮT (DEPOSIT MODAL) -->
+<!-- ========================================================================= -->
+<div id="vault-deposit-modal" class="fixed inset-0 bg-slate-900 bg-opacity-70 hidden items-center justify-center z-[80] p-4">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl p-6 flex flex-col max-h-[95vh] overflow-y-auto">
+        <div class="flex justify-between items-center border-b pb-3 mb-4">
+            <h3 class="font-black text-lg text-slate-800 flex items-center gap-2">
+                <i class="fas fa-plus-circle text-emerald-600"></i> Nạp Chứng Từ Vào Két Sắt
+            </h3>
+            <button onclick="window.modVault.closeDepositModal()" class="text-slate-400 hover:text-slate-700 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+        </div>
+
+        <form id="vault-deposit-form" onsubmit="window.modVault.submitDeposit(event)" class="space-y-3.5 text-xs">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Khoang Lưu Trữ <span class="text-red-500">*</span></label>
+                    <select id="dep-category" required class="w-full border p-2 rounded-lg font-bold text-slate-800 bg-slate-50 outline-none focus:border-emerald-500">
+                        <option value="ORIGIN_CO_CQ">1. Nguồn Gốc & Nhập Khẩu (CO/CQ/HQ)</option>
+                        <option value="INBOUND_PURCHASE">2. Mua Hàng & Nhập Kho (PO/HĐ Mua)</option>
+                        <option value="OUTBOUND_DISPATCH">3. Xuất Kho & Vận Chuyển</option>
+                        <option value="CONTRACT_BOQ">4. Báo Giá & Hợp Đồng</option>
+                        <option value="TAX_INVOICE">5. Hóa Đơn GTGT & Báo Cáo Thuế</option>
+                        <option value="LEGAL_COMPLIANCE">6. Hồ Sơ Pháp Lý & Thanh Tra Khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Phân Loại Cụ Thể</label>
+                    <input type="text" id="dep-subcategory" placeholder="VD: Tờ khai HQ, Giấy nộp thuế, UNC..." class="w-full border p-2 rounded-lg font-medium outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-600 mb-1">Tiêu Đề Chứng Từ / Hồ Sơ <span class="text-red-500">*</span></label>
+                <input type="text" id="dep-title" required placeholder="VD: Tờ khai hải quan lô 500 biến tần tháng 08/2026..." class="w-full border p-2 rounded-lg font-bold text-slate-800 outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Số Chứng Từ / Số HĐ</label>
+                    <input type="text" id="dep-docnumber" placeholder="VD: 1059483920..." class="w-full border p-2 rounded-lg font-mono font-bold outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Ngày Lập Chứng Từ</label>
+                    <input type="date" id="dep-docdate" class="w-full border p-2 rounded-lg font-bold text-slate-700 outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Tên Đối Tác / Khách Hàng</label>
+                    <input type="text" id="dep-partner" placeholder="Tên công ty / nhà cung cấp..." class="w-full border p-2 rounded-lg font-medium outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Mã Số Thuế Đối Tác</label>
+                    <input type="text" id="dep-taxcode" placeholder="MST 10 hoặc 13 số..." class="w-full border p-2 rounded-lg font-mono outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Giá Trị (VNĐ)</label>
+                    <input type="number" id="dep-amount" placeholder="0" class="w-full border p-2 rounded-lg font-black text-slate-800 outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Thuế GTGT (VNĐ)</label>
+                    <input type="number" id="dep-vat" placeholder="0" class="w-full border p-2 rounded-lg font-black text-red-500 outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-600 mb-1">Tệp Tin Đính Kèm (PDF, Ảnh Scan, XML, DOCX - Tối đa 50MB)</label>
+                <input type="file" id="dep-file" class="w-full border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50 font-semibold cursor-pointer">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-600 mb-1">Ghi Chú Giải Trình Pháp Lý</label>
+                <textarea id="dep-note" rows="2" placeholder="Ghi chú nội dung giải trình với đoàn thanh tra..." class="w-full border p-2 rounded-lg outline-none focus:border-emerald-500"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3 border-t">
+                <button type="button" onclick="window.modVault.closeDepositModal()" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold">Hủy</button>
+                <button type="submit" id="btn-submit-deposit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow flex items-center gap-1.5">
+                    <i class="fas fa-save"></i> <span>Lưu Vào Két Sắt</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 3: NIÊM PHONG / KHÓA SỔ KÉT SẮT THEO KỲ (LOCK MODAL) -->
+<!-- ========================================================================= -->
+<div id="vault-lock-modal" class="fixed inset-0 bg-slate-900 bg-opacity-70 hidden items-center justify-center z-[80] p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6 flex flex-col">
+        <div class="flex justify-between items-center border-b pb-3 mb-4">
+            <h3 class="font-black text-lg text-slate-800 flex items-center gap-2">
+                <i class="fas fa-lock text-amber-500"></i> Niêm Phong Két Sắt Theo Kỳ
+            </h3>
+            <button onclick="document.getElementById('vault-lock-modal').classList.replace('flex', 'hidden')" class="text-slate-400 hover:text-slate-700 text-xl cursor-pointer"><i class="fas fa-times"></i></button>
+        </div>
+
+        <p class="text-xs text-slate-500 mb-4">Niêm phong két sắt giúp đóng băng toàn bộ chứng từ của kỳ thuế đã quyết toán, ngăn chặn việc sửa đổi hoặc xóa dữ liệu ngoài ý muốn.</p>
+
+        <div class="space-y-3.5 text-xs">
+            <div>
+                <label class="block font-bold text-slate-600 mb-1">Chọn Kỳ Cần Niêm Phong</label>
+                <input type="month" id="lock-period-input" class="w-full border-2 p-2 rounded-lg font-bold text-slate-800 outline-none focus:border-amber-500">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-600 mb-1">Lý Do Niêm Phong / Khóa Sổ</label>
+                <input type="text" id="lock-reason-input" value="Đã nộp tờ khai thuế & Quyết toán số liệu" class="w-full border-2 p-2 rounded-lg font-medium outline-none focus:border-amber-500">
+            </div>
+
+            <div class="bg-amber-50 p-3 rounded-lg border border-amber-200 text-[11px] text-amber-900">
+                <i class="fas fa-shield-halved text-amber-600 mr-1"></i> Admin có thể mở niêm phong bất cứ lúc nào nếu cần bổ sung hồ sơ giải trình.
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 mt-4 border-t">
+            <button onclick="document.getElementById('vault-lock-modal').classList.replace('flex', 'hidden')" class="px-5 py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold">Đóng</button>
+            <button onclick="window.modVault.submitLockPeriod()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold rounded-lg shadow flex items-center gap-1.5">
+                <i class="fas fa-lock"></i> <span>Xác Nhận Niêm Phong</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT CONTROLLER FOR DIGITAL VAULT -->
+<!-- ========================================================================= -->
+<script>
+window.modVault = {
+    allDocs: [],
+    auditBundles: [],
+    summary: {},
+    currentTab: 'TAB_BUNDLES',
+    selectedPeriod: 'ALL',
+
+    // Khởi tạo và nạp dữ liệu
+    init: async () => {
+        // Gán ngày tháng mặc định
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const lockPeriodEl = document.getElementById('lock-period-input');
+        if (lockPeriodEl) lockPeriodEl.value = `${yyyy}-${mm}`;
+        const depDateEl = document.getElementById('dep-docdate');
+        if (depDateEl) depDateEl.value = today.toISOString().split('T')[0];
+
+        await window.modVault.loadData();
+    },
+
+    loadData: async () => {
+        try {
+            const [sumRes, allRes, bunRes] = await Promise.all([
+                fetch('/api/vault/summary'),
+                fetch('/api/vault/all'),
+                fetch('/api/vault/audit-bundles')
+            ]);
+
+            const sumJson = await sumRes.json();
+            const allJson = await allRes.json();
+            const bunJson = await bunRes.json();
+
+            if (sumJson.success) window.modVault.summary = sumJson.summary;
+            if (allJson.success) window.modVault.allDocs = allJson.data;
+            if (bunJson.success) window.modVault.auditBundles = bunJson.data;
+
+            window.modVault.renderKPIs();
+            window.modVault.populatePeriodFilter();
+            window.modVault.renderCurrentView();
+        } catch (e) {
+            console.error('Lỗi nạp dữ liệu Két Sắt:', e);
+        }
+    },
+
+    syncAll: async (btn) => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Đang quét...</span>`;
+        btn.disabled = true;
+        await window.modVault.loadData();
+        btn.innerHTML = `<i class="fas fa-check text-emerald-300"></i> <span>Đã đồng bộ!</span>`;
+        setTimeout(() => {
+            btn.innerHTML = orig;
+            btn.disabled = false;
+        }, 1500);
+    },
+
+    renderKPIs: () => {
+        const s = window.modVault.summary || {};
+        const cats = s.categories || {};
+        const risks = s.risks || {};
+        const fins = s.financials || {};
+
+        document.getElementById('kpi-total-docs').innerText = s.total_documents || 0;
+        document.getElementById('kpi-verified-docs').innerText = `${s.valid_documents || 0} chứng từ chuẩn hóa`;
+
+        const score = s.readiness_score !== undefined ? s.readiness_score : 100;
+        document.getElementById('kpi-readiness').innerText = `${score}%`;
+        document.getElementById('kpi-readiness-bar').style.width = `${score}%`;
+        if (score >= 90) {
+            document.getElementById('kpi-readiness').className = 'text-xl font-black text-emerald-600';
+            document.getElementById('kpi-readiness-bar').className = 'bg-emerald-500 h-1.5 rounded-full';
+            document.getElementById('kpi-readiness-label').innerText = 'Chuẩn giải trình';
+        } else if (score >= 60) {
+            document.getElementById('kpi-readiness').className = 'text-xl font-black text-amber-500';
+            document.getElementById('kpi-readiness-bar').className = 'bg-amber-500 h-1.5 rounded-full';
+            document.getElementById('kpi-readiness-label').innerText = 'Cần rà soát';
+        } else {
+            document.getElementById('kpi-readiness').className = 'text-xl font-black text-red-600';
+            document.getElementById('kpi-readiness-bar').className = 'bg-red-500 h-1.5 rounded-full';
+            document.getElementById('kpi-readiness-label').innerText = 'Thiếu chứng từ';
+        }
+
+        document.getElementById('kpi-risk-count').innerText = risks.total_risks || 0;
+        document.getElementById('kpi-risk-detail').innerText = `Thiếu UNC: ${risks.missing_unc_count || 0} | CO/CQ: ${risks.missing_cocq_count || 0}`;
+
+        document.getElementById('kpi-vat-out').innerText = `${new Intl.NumberFormat('vi-VN').format(fins.vat_output || 0)} đ`;
+        document.getElementById('kpi-rev-out').innerText = `Doanh thu: ${new Intl.NumberFormat('vi-VN').format(fins.total_revenue || 0)} đ`;
+
+        const locks = s.locks || [];
+        if (locks.length > 0) {
+            document.getElementById('kpi-lock-status').innerText = `Khóa ${locks.length} Kỳ Thuế`;
+            document.getElementById('kpi-lock-status').className = 'text-sm font-black text-amber-600 truncate';
+            document.getElementById('kpi-lock-detail').innerText = `Kỳ gần nhất: ${locks[0].period_key}`;
+        } else {
+            document.getElementById('kpi-lock-status').innerText = 'Sổ Mở Tự Do';
+            document.getElementById('kpi-lock-status').className = 'text-sm font-black text-slate-800 truncate';
+            document.getElementById('kpi-lock-detail').innerText = 'Sẵn sàng nhận dữ liệu';
+        }
+
+        // Cập nhật badges
+        document.getElementById('badge-bundles-count').innerText = window.modVault.auditBundles.length;
+        document.getElementById('badge-origin-count').innerText = cats.ORIGIN_CO_CQ || 0;
+        document.getElementById('badge-inbound-count').innerText = (cats.INBOUND_PURCHASE || 0);
+        document.getElementById('badge-outbound-count').innerText = cats.OUTBOUND_DISPATCH || 0;
+        document.getElementById('badge-contract-count').innerText = cats.CONTRACT_BOQ || 0;
+        document.getElementById('badge-invoice-count').innerText = (cats.TAX_INVOICE || 0) + (cats.CASH_BANKING || 0);
+    },
+
+    populatePeriodFilter: () => {
+        const select = document.getElementById('v-period');
+        const periods = new Set();
+        window.modVault.allDocs.forEach(d => {
+            if (d.period_tag && d.period_tag !== 'UNKNOWN') periods.add(d.period_tag);
+        });
+
+        const sorted = Array.from(periods).sort().reverse();
+        let html = '<option value="ALL">Tất cả thời gian</option>';
+        sorted.forEach(p => {
+            html += `<option value="${p}">Tháng ${p.replace('-', '/')}</option>`;
+        });
+        select.innerHTML = html;
+        if (window.modVault.selectedPeriod !== 'ALL') {
+            select.value = window.modVault.selectedPeriod;
+        }
+    },
+
+    changePeriodFilter: () => {
+        window.modVault.selectedPeriod = document.getElementById('v-period').value;
+        window.modVault.renderCurrentView();
+    },
+
+    filterByRisk: () => {
+        document.getElementById('v-filter-status').value = 'RISK';
+        if (window.modVault.currentTab === 'TAB_BUNDLES') {
+            window.modVault.switchTab('TAB_INBOUND');
+        } else {
+            window.modVault.renderCurrentView();
+        }
+    },
+
+    switchTab: (tab) => {
+        window.modVault.currentTab = tab;
+        const tabs = ['TAB_BUNDLES', 'TAB_ORIGIN', 'TAB_INBOUND', 'TAB_OUTBOUND', 'TAB_CONTRACT', 'TAB_INVOICE'];
+        
+        tabs.forEach(t => {
+            const btn = document.getElementById(`tab-btn-${t}`);
+            if (btn) {
+                if (t === tab) {
+                    btn.className = 'px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-amber-500 text-amber-800 rounded-t-lg shadow-sm transition flex items-center gap-1.5';
+                } else {
+                    btn.className = 'px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5';
+                }
+            }
+        });
+
+        if (tab === 'TAB_BUNDLES') {
+            document.getElementById('view-TAB_BUNDLES').classList.remove('hidden');
+            document.getElementById('view-TAB_DETAILS').classList.add('hidden');
+        } else {
+            document.getElementById('view-TAB_BUNDLES').classList.add('hidden');
+            document.getElementById('view-TAB_DETAILS').classList.remove('hidden');
+        }
+
+        window.modVault.renderCurrentView();
+    },
+
+    getFilteredDocs: () => {
+        let docs = [...window.modVault.allDocs];
+        const tab = window.modVault.currentTab;
+
+        if (tab === 'TAB_ORIGIN') {
+            docs = docs.filter(d => d.category === 'ORIGIN_CO_CQ');
+        } else if (tab === 'TAB_INBOUND') {
+            docs = docs.filter(d => d.category === 'INBOUND_PURCHASE');
+        } else if (tab === 'TAB_OUTBOUND') {
+            docs = docs.filter(d => d.category === 'OUTBOUND_DISPATCH');
+        } else if (tab === 'TAB_CONTRACT') {
+            docs = docs.filter(d => d.category === 'CONTRACT_BOQ');
+        } else if (tab === 'TAB_INVOICE') {
+            docs = docs.filter(d => d.category === 'TAX_INVOICE' || d.category === 'CASH_BANKING');
+        }
+
+        const period = document.getElementById('v-period')?.value || 'ALL';
+        if (period !== 'ALL') {
+            docs = docs.filter(d => d.period_tag === period || d.date?.startsWith(period));
+        }
+
+        const statusFilter = document.getElementById('v-filter-status')?.value || 'ALL';
+        if (statusFilter === 'VALID') {
+            docs = docs.filter(d => d.compliance_status === 'VALID' && (!d.risk_notes || d.risk_notes.length === 0));
+        } else if (statusFilter === 'RISK') {
+            docs = docs.filter(d => d.risk_notes && d.risk_notes.length > 0);
+        } else if (statusFilter === 'HAS_FILES') {
+            docs = docs.filter(d => d.docs_count > 0);
+        }
+
+        const search = (document.getElementById('v-search')?.value || '').toLowerCase().trim();
+        if (search) {
+            docs = docs.filter(d =>
+                (d.code || '').toLowerCase().includes(search) ||
+                (d.title || '').toLowerCase().includes(search) ||
+                (d.partner_name || '').toLowerCase().includes(search) ||
+                (d.partner_tax_code || '').toLowerCase().includes(search) ||
+                (d.vault_code || '').toLowerCase().includes(search) ||
+                (d.items_summary || '').toLowerCase().includes(search)
+            );
+        }
+
+        return docs;
+    },
+
+    renderCurrentView: () => {
+        if (window.modVault.currentTab === 'TAB_BUNDLES') {
+            window.modVault.renderAuditBundles();
+        } else {
+            window.modVault.renderTableDocs();
+        }
+    },
+
+    // 1. RENDER KHOANG 1: HỒ SƠ THANH TRA THEO KỲ
+    renderAuditBundles: () => {
+        const container = document.getElementById('bundle-list-container');
+        let bundles = [...window.modVault.auditBundles];
+
+        const period = document.getElementById('v-period')?.value || 'ALL';
+        if (period !== 'ALL') {
+            bundles = bundles.filter(b => b.period === period);
+        }
+
+        const search = (document.getElementById('v-search')?.value || '').toLowerCase().trim();
+        if (search) {
+            bundles = bundles.filter(b => b.title.toLowerCase().includes(search) || b.period.toLowerCase().includes(search));
+        }
+
+        document.getElementById('v-showing-count').innerText = `Đang hiển thị: ${bundles.length} gói hồ sơ kỳ`;
+
+        if (bundles.length === 0) {
+            container.innerHTML = `
+                <div class="bg-white p-12 text-center rounded-xl border border-slate-200 text-slate-400">
+                    <i class="fas fa-folder-open text-4xl mb-3 text-amber-500"></i>
+                    <p class="font-bold text-sm">Chưa có gói hồ sơ thanh tra nào phù hợp với bộ lọc.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = bundles.map(b => {
+            const isLock = b.is_locked;
+            const c = b.chain;
+
+            const renderLinkPill = (title, count, icon, colorClass, linkNum) => {
+                const has = count > 0;
+                return `
+                    <div class="flex items-center justify-between p-2.5 rounded-lg border ${has ? 'bg-white border-slate-200' : 'bg-red-50/60 border-red-200 text-red-700'}">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${has ? colorClass : 'bg-red-100 text-red-600'}">${linkNum}</span>
+                            <div>
+                                <p class="text-[11px] font-bold text-slate-800 flex items-center gap-1">
+                                    <i class="fas ${icon} text-[10px] text-slate-400"></i> ${title}
+                                </p>
+                                <span class="text-[10px] ${has ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold'}">${has ? `Đã có ${count} chứng từ` : '⚠️ Chưa có chứng từ'}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs">${has ? '✅' : '❌'}</span>
+                    </div>
+                `;
+            };
+
+            return `
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-slate-100">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-black text-slate-900 text-base">${b.title}</h3>
+                                ${isLock ? '<span class="bg-slate-900 text-amber-400 text-[10px] font-black px-2 py-0.5 rounded flex items-center gap-1"><i class="fas fa-lock text-[9px]"></i> ĐÃ NIÊM PHONG</span>' : '<span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded">SỔ ĐANG MỞ</span>'}
+                            </div>
+                            <p class="text-xs text-slate-500 mt-0.5">Tổng số chứng từ được gom: <b class="text-slate-800">${b.total_docs} hồ sơ</b> | Doanh thu xuất HĐ: <b class="text-emerald-600">${new Intl.NumberFormat('vi-VN').format(b.total_amount_out)} đ</b></p>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 block">Độ Hoàn Thiện</span>
+                                <span class="text-lg font-black ${b.completeness === 100 ? 'text-emerald-600' : 'text-amber-500'}">${b.completeness}% [${b.readiness_badge}]</span>
+                            </div>
+                            <button onclick="window.modVault.viewBundleDetails('${b.period}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3.5 rounded-lg transition shadow flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-list-check"></i> Xem 6 Mắt Xích
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 6 MẮT XÍCH LIÊN HOÀN CHUẨN THANH TRA -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 mt-4">
+                        ${renderLinkPill('Báo Giá & Hợp Đồng', c.link1_quote_contract.length, 'fa-file-contract', 'bg-purple-100 text-purple-700', '1')}
+                        ${renderLinkPill('Hóa Đơn GTGT Bán Ra', c.link2_invoice_out.length, 'fa-file-invoice', 'bg-emerald-100 text-emerald-700', '2')}
+                        ${renderLinkPill('Phiếu Xuất Kho & Nghiệm Thu', c.link3_dispatch_wms.length, 'fa-truck-fast', 'bg-indigo-100 text-indigo-700', '3')}
+                        ${renderLinkPill('Hóa Đơn Mua & Nhập Kho', c.link4_invoice_in.length, 'fa-boxes-packing', 'bg-blue-100 text-blue-700', '4')}
+                        ${renderLinkPill('Chứng Từ Ngân Hàng / UNC', c.link5_bank_payment.length, 'fa-wallet', 'bg-amber-100 text-amber-700', '5')}
+                        ${renderLinkPill('Hải Quan, C/O, C/Q Nguồn Gốc', c.link6_origin_cocq.length, 'fa-ship', 'bg-teal-100 text-teal-700', '6')}
+                    </div>
+
+                    ${b.missing_links.length > 0 ? `
+                        <div class="mt-3.5 bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-xs text-amber-800 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle text-amber-600"></i>
+                            <span><b>Cần bổ sung trước khi thanh tra:</b> ${b.missing_links.join('; ')}</span>
+                        </div>
+                    ` : `
+                        <div class="mt-3.5 bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-xs text-emerald-800 flex items-center gap-2">
+                            <i class="fas fa-check-circle text-emerald-600"></i>
+                            <span><b>Hồ sơ hoàn hảo:</b> Đầy đủ 6 mắt xích chứng từ đối ứng hợp lệ theo quy định thanh tra thuế.</span>
+                        </div>
+                    `}
+                </div>
+            `;
+        }).join('');
+    },
+
+    // 2. RENDER BẢNG CHỨNG TỪ CHI TIẾT
+    renderTableDocs: () => {
+        const tbody = document.getElementById('tbl-vault-docs');
+        const docs = window.modVault.getFilteredDocs();
+
+        document.getElementById('v-showing-count').innerText = `Đang hiển thị: ${docs.length} chứng từ`;
+
+        if (docs.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="p-12 text-center text-slate-400 font-medium">
+                        <i class="fas fa-folder-open text-3xl mb-2 text-slate-300"></i>
+                        <p>Không tìm thấy chứng từ nào trong khoang này phù hợp với bộ lọc.</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = docs.map(d => {
+            const hasRisk = d.risk_notes && d.risk_notes.length > 0;
+            const hasFiles = d.docs && d.docs.length > 0;
+
+            let fileBadges = '';
+            if (hasFiles) {
+                fileBadges = `
+                    <button onclick="window.modVault.openPreview('${d.id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2 py-1 rounded text-[10px] font-bold inline-flex items-center gap-1 transition cursor-pointer">
+                        <i class="fas fa-paperclip"></i> ${d.docs.length} file
+                    </button>
+                `;
+            } else {
+                fileBadges = `<span class="text-slate-300 text-[10px]">Chưa đính kèm</span>`;
+            }
+
+            let complianceBadge = '';
+            if (hasRisk) {
+                complianceBadge = `
+                    <span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1" title="${d.risk_notes.join('; ')}">
+                        <i class="fas fa-triangle-exclamation"></i> Cần lưu ý
+                    </span>
+                `;
+            } else {
+                complianceBadge = `
+                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1">
+                        <i class="fas fa-check-circle"></i> Hợp lệ
+                    </span>
+                `;
+            }
+
+            return `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="p-3">
+                        <p class="font-mono font-bold text-slate-900">${d.vault_code}</p>
+                        <span class="text-[10px] font-mono text-blue-600 font-bold block">#${d.code}</span>
+                    </td>
+                    <td class="p-3 max-w-xs">
+                        <p class="font-bold text-slate-800 line-clamp-1 leading-snug" title="${d.title}">${d.title}</p>
+                        <span class="text-[10px] text-slate-500 font-medium">${d.sub_category} | Ngày: ${d.date}</span>
+                    </td>
+                    <td class="p-3">
+                        <p class="font-bold text-slate-800 line-clamp-1">${d.partner_name || 'Nội bộ'}</p>
+                        ${d.partner_tax_code ? `<span class="text-[10px] font-mono text-slate-500 font-bold block">MST: ${d.partner_tax_code}</span>` : ''}
+                    </td>
+                    <td class="p-3 text-right font-black text-slate-800">
+                        ${d.amount > 0 ? new Intl.NumberFormat('vi-VN').format(d.amount) + ' ' + (d.currency || 'đ') : '-'}
+                    </td>
+                    <td class="p-3 text-right font-bold text-red-600">
+                        ${d.vat_amount > 0 ? new Intl.NumberFormat('vi-VN').format(d.vat_amount) + ' đ' : '-'}
+                    </td>
+                    <td class="p-3 text-center">
+                        ${fileBadges}
+                    </td>
+                    <td class="p-3 text-center">
+                        ${complianceBadge}
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="window.modVault.openPreview('${d.id}')" class="bg-slate-800 hover:bg-slate-900 text-white py-1 px-2.5 rounded text-[10px] font-bold transition cursor-pointer" title="Xem chi tiết hồ sơ">
+                            <i class="fas fa-eye"></i> Xem
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    // 3. MỞ PREVIEW CHI TIẾT CHỨNG TỪ
+    openPreview: (docId) => {
+        const doc = window.modVault.allDocs.find(d => d.id === docId);
+        if (!doc) return alert('Không tìm thấy thông tin chứng từ trong két sắt!');
+
+        document.getElementById('prev-title').innerText = doc.title;
+        document.getElementById('prev-code').innerText = `Mã Két Sắt: ${doc.vault_code} | Ref: ${doc.code}`;
+        document.getElementById('prev-category').innerText = doc.category_label || doc.category;
+        document.getElementById('prev-subcategory').innerText = doc.sub_category || '-';
+        document.getElementById('prev-date').innerText = `${doc.date} (Kỳ: ${doc.period_tag})`;
+        document.getElementById('prev-partner').innerText = doc.partner_name || 'Nội bộ công ty';
+        document.getElementById('prev-taxcode').innerText = doc.partner_tax_code || 'Không có';
+        document.getElementById('prev-amount').innerText = `${new Intl.NumberFormat('vi-VN').format(doc.amount || 0)} ${doc.currency || 'đ'}`;
+        document.getElementById('prev-vat').innerText = `${new Intl.NumberFormat('vi-VN').format(doc.vat_amount || 0)} đ`;
+
+        const lockTag = document.getElementById('prev-lock-tag');
+        if (doc.is_locked) {
+            lockTag.innerHTML = '<span class="text-amber-600 font-black"><i class="fas fa-lock"></i> Đã niêm phong kỳ</span>';
+        } else {
+            lockTag.innerHTML = '<span class="text-emerald-600 font-black"><i class="fas fa-unlock"></i> Sổ đang mở</span>';
+        }
+
+        // Render Rủi ro
+        const riskContainer = document.getElementById('prev-risk-container');
+        const riskList = document.getElementById('prev-risk-list');
+        if (doc.risk_notes && doc.risk_notes.length > 0) {
+            riskList.innerHTML = doc.risk_notes.map(r => `<li>${r}</li>`).join('');
+            riskContainer.classList.remove('hidden');
+        } else {
+            riskContainer.classList.add('hidden');
+        }
+
+        // Render Files
+        const filesCount = document.getElementById('prev-files-count');
+        const filesList = document.getElementById('prev-files-list');
+        const embedContainer = document.getElementById('prev-embed-container');
+        const docs = doc.docs || [];
+
+        filesCount.innerText = `${docs.length} tệp tin`;
+
+        if (docs.length === 0) {
+            filesList.innerHTML = `<p class="text-xs text-slate-400 col-span-2">Chưa có file scan / tệp tin đính kèm cho chứng từ này.</p>`;
+            embedContainer.innerHTML = `<p class="text-xs text-slate-400">Không có file xem trước.</p>`;
+        } else {
+            filesList.innerHTML = docs.map((f, idx) => {
+                return `
+                    <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <i class="fas ${f.type === 'pdf' ? 'fa-file-pdf text-red-500' : (f.type === 'xml' ? 'fa-file-code text-blue-500' : 'fa-file-image text-emerald-500')} text-lg shrink-0"></i>
+                            <span class="font-bold text-slate-800 truncate" title="${f.name}">${f.name}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            ${f.url ? `
+                                <button onclick="window.modVault.embedFile('${f.url}', '${f.type}')" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-2 py-1 rounded cursor-pointer">
+                                    <i class="fas fa-eye"></i> Xem
+                                </button>
+                                <a href="${f.url}" target="_blank" download class="bg-slate-700 hover:bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            ` : `<span class="text-[10px] text-slate-400">HĐĐT TCT</span>`}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Tự động load file đầu tiên nếu có url
+            const firstValid = docs.find(f => f.url);
+            if (firstValid) {
+                window.modVault.embedFile(firstValid.url, firstValid.type);
+            } else {
+                embedContainer.innerHTML = `<p class="text-xs text-slate-400">Không có bản xem trước trực tiếp.</p>`;
+            }
+        }
+
+        document.getElementById('vault-preview-modal').classList.replace('hidden', 'flex');
+    },
+
+    embedFile: (url, type) => {
+        const container = document.getElementById('prev-embed-container');
+        if (type === 'image' || url.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
+            container.innerHTML = `<img src="${url}" class="max-h-[450px] max-w-full rounded shadow object-contain" alt="Document Preview">`;
+        } else if (type === 'pdf' || url.endsWith('.pdf')) {
+            container.innerHTML = `<iframe src="${url}" class="w-full h-[450px] rounded border-0" title="PDF Preview"></iframe>`;
+        } else {
+            container.innerHTML = `
+                <div class="text-center p-6">
+                    <i class="fas fa-file text-4xl text-slate-400 mb-2"></i>
+                    <p class="text-xs text-slate-300">Tệp tin dạng đặc biệt. Nhấn nút tải về để xem chi tiết.</p>
+                    <a href="${url}" target="_blank" class="mt-3 inline-block bg-blue-600 text-white text-xs font-bold py-1.5 px-4 rounded">Mở tệp tin ngoài tab mới</a>
+                </div>
+            `;
+        }
+    },
+
+    closePreview: () => {
+        document.getElementById('vault-preview-modal').classList.replace('flex', 'hidden');
+    },
+
+    viewBundleDetails: (period) => {
+        document.getElementById('v-period').value = period;
+        window.modVault.selectedPeriod = period;
+        window.modVault.switchTab('TAB_ORIGIN');
+    },
+
+    // 4. NẠP CHỨNG TỪ THỦ CÔNG
+    openDepositModal: () => {
+        document.getElementById('vault-deposit-form').reset();
+        document.getElementById('dep-docdate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('vault-deposit-modal').classList.replace('hidden', 'flex');
+    },
+
+    closeDepositModal: () => {
+        document.getElementById('vault-deposit-modal').classList.replace('flex', 'hidden');
+    },
+
+    submitDeposit: async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-submit-deposit');
+        const orig = btn.innerHTML;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang lưu...`;
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('category', document.getElementById('dep-category').value);
+            formData.append('sub_category', document.getElementById('dep-subcategory').value);
+            formData.append('title', document.getElementById('dep-title').value);
+            formData.append('doc_number', document.getElementById('dep-docnumber').value);
+            formData.append('doc_date', document.getElementById('dep-docdate').value);
+            formData.append('partner_name', document.getElementById('dep-partner').value);
+            formData.append('partner_tax_code', document.getElementById('dep-taxcode').value);
+            formData.append('amount', document.getElementById('dep-amount').value || 0);
+            formData.append('vat_amount', document.getElementById('dep-vat').value || 0);
+            formData.append('note', document.getElementById('dep-note').value);
+
+            const fileInput = document.getElementById('dep-file');
+            if (fileInput.files[0]) {
+                formData.append('file', fileInput.files[0]);
+            }
+
+            const res = await fetch('/api/vault/deposit', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                window.modVault.closeDepositModal();
+                await window.modVault.loadData();
+            } else {
+                alert(`❌ Lỗi: ${data.error}`);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối máy chủ khi nạp chứng từ!');
+        } finally {
+            btn.innerHTML = orig;
+            btn.disabled = false;
+        }
+    },
+
+    // 5. NIÊM PHONG KỲ THUẾ
+    openLockModal: () => {
+        document.getElementById('vault-lock-modal').classList.replace('hidden', 'flex');
+    },
+
+    submitLockPeriod: async () => {
+        const periodKey = document.getElementById('lock-period-input').value;
+        const reason = document.getElementById('lock-reason-input').value;
+        if (!periodKey) return alert('Vui lòng chọn kỳ cần niêm phong!');
+
+        try {
+            const res = await fetch('/api/vault/lock-period', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ period_key: periodKey, action: 'LOCK', lock_reason: reason })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('vault-lock-modal').classList.replace('flex', 'hidden');
+                await window.modVault.loadData();
+            } else {
+                alert(`❌ Lỗi: ${data.error}`);
+            }
+        } catch (e) {
+            alert('Lỗi kết nối máy chủ khi niêm phong kỳ!');
+        }
+    },
+
+    // 6. XUẤT CSV BẢNG KÊ
+    exportCSV: () => {
+        const period = document.getElementById('v-period')?.value || 'ALL';
+        const category = window.modVault.currentTab === 'TAB_ORIGIN' ? 'ORIGIN_CO_CQ' :
+                         (window.modVault.currentTab === 'TAB_INBOUND' ? 'INBOUND_PURCHASE' :
+                         (window.modVault.currentTab === 'TAB_OUTBOUND' ? 'OUTBOUND_DISPATCH' :
+                         (window.modVault.currentTab === 'TAB_CONTRACT' ? 'CONTRACT_BOQ' :
+                         (window.modVault.currentTab === 'TAB_INVOICE' ? 'TAX_INVOICE' : 'ALL'))));
+
+        window.open(`/api/vault/export-csv?period=${period}&category=${category}`, '_blank');
+    },
+
+    printCurrentView: () => {
+        window.print();
+    }
+};
+
+// Tự động khởi động module
+window.modVault.init();
+</script>

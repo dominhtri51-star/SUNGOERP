@@ -1,0 +1,69 @@
+<div class="h-full flex flex-col space-y-4 overflow-hidden">
+  <div class="bg-gradient-to-r from-slate-900 to-blue-950 rounded-2xl p-5 text-white shadow-lg shrink-0">
+    <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded text-xs border border-emerald-400/30">CỔNG NHÀ CUNG CẤP VẬT TƯ</span>
+    <h2 class="text-xl font-black text-white mt-1 flex items-center gap-2">
+      <i class="fas fa-boxes text-amber-400"></i> Nhu Cầu Vật Tư Thiết Bị Công Trình (BOM)
+    </h2>
+    <p class="text-xs text-slate-300 mt-0.5">Theo dõi danh mục vật tư cần xuất cho các dự án để chuẩn bị kho và chào giá thiết bị.</p>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex-1 overflow-hidden flex flex-col">
+    <div class="p-4 border-b">
+      <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider">Danh Mục BOM Vật Tư Các Dự Án Trên Sàn</h3>
+    </div>
+    <div class="overflow-y-auto flex-1 p-4 space-y-4" id="sup-bom-list">
+      <!-- Dynamic BOM Cards -->
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  fetch("/api/bidding/projects?role=NHA_CUNG_CAP&t=" + Date.now())
+    .then(r => r.json())
+    .then(json => {
+      if (!json.success) return;
+      const list = document.getElementById("sup-bom-list");
+      if (!list) return;
+      list.innerHTML = (json.data || []).map(p => {
+        const bomRows = (p.bom_items || []).map((b, idx) => `
+          <tr class="hover:bg-slate-50 text-xs">
+            <td class="p-2 text-center text-slate-400 font-bold">${idx + 1}</td>
+            <td class="p-2 font-bold text-slate-800">${b.name}</td>
+            <td class="p-2 text-center font-bold text-blue-600">${b.qty} ${b.unit}</td>
+            <td class="p-2 text-slate-500">${b.note || "---"}</td>
+          </tr>
+        `).join("") || `<tr><td colspan="4" class="p-3 text-center text-slate-400 text-xs">Chưa có BOM chi tiết</td></tr>`;
+
+        return `
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="px-2 py-0.5 bg-blue-100 text-blue-800 font-mono font-bold text-xs rounded">${p.project_code}</span>
+                <strong class="text-slate-900 text-sm ml-2">${p.project_name}</strong>
+                <p class="text-xs text-slate-500 mt-0.5">Khu vực: <strong>${p.district || ""}, ${p.province_city || ""}</strong> • Công suất: <strong class="text-amber-600">${p.capacity_kwp} kWp</strong></p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-slate-200 text-slate-700 text-xs font-bold">${p.system_type}</span>
+            </div>
+
+            <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+              <table class="w-full text-left">
+                <thead class="bg-slate-100 text-[11px] font-black text-slate-600 uppercase border-b">
+                  <tr>
+                    <th class="p-2 text-center w-10">#</th>
+                    <th class="p-2">Tên Thiết Bị / Vật Tư</th>
+                    <th class="p-2 text-center">Số Lượng</th>
+                    <th class="p-2">Ghi Chú</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${bomRows}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join("");
+    });
+})();
+</script>

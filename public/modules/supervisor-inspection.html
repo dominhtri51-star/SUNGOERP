@@ -1,0 +1,90 @@
+<div class="h-full flex flex-col space-y-4 overflow-hidden">
+  <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-5 text-white shadow-lg shrink-0">
+    <span class="px-2.5 py-0.5 bg-purple-500/20 text-purple-300 font-bold rounded text-xs border border-purple-400/30">CỔNG NHÀ THẦU GIÁM SÁT</span>
+    <h2 class="text-xl font-black text-white mt-1 flex items-center gap-2">
+      <i class="fas fa-camera-retro text-amber-400"></i> Kiểm Tra 6 Ảnh Hiện Trường & Nghiệm Thu Kỹ Thuật
+    </h2>
+    <p class="text-xs text-slate-300 mt-0.5">Duyệt 6 góc ảnh hiện trường do đội thợ chụp và kiểm tra checklist an toàn điện.</p>
+  </div>
+
+  <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between shrink-0">
+    <div class="flex items-center gap-2">
+      <label class="text-xs font-bold text-slate-600">Chọn Dự Án Cần Nghiệm Thu:</label>
+      <select id="sup-ins-select" onchange="window.modSupInspection.loadDetail(this.value)" class="text-xs border rounded-xl px-3 py-2 outline-none font-bold bg-slate-50 min-w-[280px]">
+        <!-- Options -->
+      </select>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-y-auto pr-1">
+    <div id="sup-ins-container" class="space-y-5">
+      <!-- Dynamic Inspection -->
+    </div>
+  </div>
+</div>
+
+<script>
+window.modSupInspection = {
+  projects: [],
+  init: async () => {
+    const res = await fetch("/api/bidding/projects?role=NHA_THAU_GIAM_SAT&t=" + Date.now());
+    const json = await res.json();
+    if (json.success) {
+      window.modSupInspection.projects = json.data || [];
+      const sel = document.getElementById("sup-ins-select");
+      if (sel && window.modSupInspection.projects.length > 0) {
+        sel.innerHTML = window.modSupInspection.projects.map(p => `<option value="${p.id}">${p.project_code} - ${p.project_name}</option>`).join("");
+        window.modSupInspection.loadDetail(window.modSupInspection.projects[0].id);
+      }
+    }
+  },
+
+  loadDetail: async (id) => {
+    const p = window.modSupInspection.projects.find(x => x.id == id);
+    if (!p) return;
+
+    let handover = {};
+    try {
+      const res = await fetch(`/api/bidding/handover/${id}?t=` + Date.now());
+      const json = await res.json();
+      if (json.success && json.data) handover = json.data;
+    } catch(e) {}
+
+    const container = document.getElementById("sup-ins-container");
+    if (!container) return;
+
+    container.innerHTML = `
+      <!-- App Status Box -->
+      <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-md flex justify-between items-center text-xs">
+        <div>
+          <span class="text-amber-400 font-bold uppercase text-[10px]">Tài Khoản App Inverter Bàn Giao</span>
+          <p class="text-sm font-bold mt-0.5">${handover.app_name || "Solarman Smart"} • Tài khoản: <strong class="text-emerald-300">${handover.app_account || "Chưa điền"}</strong> • Pass: <strong class="text-amber-300">${handover.app_password || "---"}</strong></p>
+        </div>
+        <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-lg font-bold">${handover.app_status || "ONLINE 100%"}</span>
+      </div>
+
+      <!-- 6 Ảnh -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h4 class="font-black text-slate-800 text-xs uppercase tracking-wider">6 Ảnh Hiện Trường Thực Tế</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          ${[
+            { title: "1. Tấm Pin Trên Mái", src: handover.img_panels },
+            { title: "2. Tủ Điện AC/DC", src: handover.img_cabinet },
+            { title: "3. Biến Tần Inverter", src: handover.img_inverter },
+            { title: "4. Pin Lưu Trữ Lithium", src: handover.img_battery },
+            { title: "5. Đường Dây & Ống Ruột Gà", src: handover.img_wiring },
+            { title: "6. Màn Hình App Đủ Số Liệu", src: handover.img_app }
+          ].map(img => `
+            <div class="border rounded-2xl p-3 space-y-2 bg-slate-50">
+              <span class="font-bold text-slate-800 block">${img.title}</span>
+              ${img.src ? `<img src="${img.src}" class="w-full h-36 object-cover rounded-xl shadow-sm cursor-pointer" onclick="window.open('${img.src}')">` : `<div class="h-36 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400 font-bold">Chưa chụp ảnh</div>`}
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+};
+
+setTimeout(() => { window.modSupInspection.init(); }, 50);
+</script>

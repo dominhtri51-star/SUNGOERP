@@ -1,37 +1,37 @@
-<div class="h-full flex flex-col space-y-6 relative">
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col overflow-hidden">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 shrink-0 gap-4">
+<div class="space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div>
-                <h3 class="font-black text-slate-900 text-xl"><i class="fas fa-crown text-amber-500"></i> Hệ Sinh Thái Khách Hàng (CRM PRO)</h3>
+                <h3 class="font-black text-slate-900 text-xl"><i class="fas fa-crown text-amber-500 mr-2"></i>Hệ Sinh Thái Khách Hàng (CRM PRO)</h3>
                 <p class="text-xs text-slate-500 mt-1 font-medium">Tạo hồ sơ, hóa đơn VAT, phân hạng đại lý, theo dõi điểm thưởng và quà tặng.</p>
             </div>
             <div class="flex gap-3 w-full md:w-auto">
-                <div class="relative flex-1 md:w-80">
+                <form autocomplete="off" onsubmit="event.preventDefault(); return false;" class="relative flex-1 md:w-80">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search"></i></span>
-                    <input type="text" id="crm-search" oninput="window.modCRM.render()" placeholder="Tìm tên, SĐT, Nickname, MST..." class="w-full border-2 border-slate-200 rounded-lg py-2.5 pl-10 pr-4 outline-none focus:border-amber-500 font-bold text-sm">
-                </div>
-                <button onclick="window.modCRM.openDrawer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold shadow text-sm whitespace-nowrap transition"><i class="fas fa-plus mr-1"></i> Tạo Khách Mới</button>
+                    <input type="search" id="crm-search" name="crm_search_field_no_fill" autocomplete="off" data-lpignore="true" data-form-type="other" oninput="window.modCRM.render()" placeholder="Tìm tên, SĐT, Nickname, MST..." class="w-full border-2 border-slate-200 rounded-lg py-2.5 pl-10 pr-4 outline-none focus:border-amber-500 font-bold text-sm bg-slate-50 focus:bg-white transition">
+                </form>
+                <button type="button" onclick="window.modCRM.openDrawer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold shadow text-sm whitespace-nowrap transition flex items-center gap-1.5"><i class="fas fa-plus"></i> Tạo Khách Mới</button>
             </div>
         </div>
-        <div class="overflow-y-auto flex-1 border rounded-xl shadow-inner bg-slate-50">
+        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm bg-white min-h-[300px]">
             <table class="w-full text-left text-sm bg-white">
-                <thead class="bg-slate-100 text-[11px] uppercase text-slate-600 sticky top-0 shadow-sm z-10">
+                <thead class="bg-slate-100 text-[11px] uppercase text-slate-600 font-black border-b border-slate-200 sticky top-0 shadow-xs z-10">
                     <tr>
-                        <th class="p-4 font-black border-b w-[30%]">Hồ Sơ Đối Tác</th>
-                        <th class="p-4 font-black border-b w-[20%]">Thông Tin VAT</th>
-                        <th class="p-4 font-black border-b text-center">Hạng & Cấp Bậc</th>
-                        <th class="p-4 font-black border-b text-right">Doanh Số / Nợ</th>
-                        <th class="p-4 font-black border-b text-center text-amber-600">Điểm Quỹ (đ)</th>
-                        <th class="p-4 font-black border-b text-center w-24">Thao Tác</th>
+                        <th class="p-4 border-b w-[30%]">Hồ Sơ Đối Tác</th>
+                        <th class="p-4 border-b w-[20%]">Thông Tin VAT</th>
+                        <th class="p-4 border-b text-center">Hạng & Cấp Bậc</th>
+                        <th class="p-4 border-b text-right">Doanh Số / Nợ</th>
+                        <th class="p-4 border-b text-center text-amber-600">Điểm Quỹ (đ)</th>
+                        <th class="p-4 border-b text-center w-28">Thao Tác</th>
                     </tr>
                 </thead>
-                <tbody id="tbl-crm" class="divide-y text-slate-700"></tbody>
+                <tbody id="tbl-crm" class="divide-y divide-slate-100 text-slate-700"></tbody>
             </table>
         </div>
     </div>
 </div>
 
-<div id="crm-drawer" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden z-[60] flex justify-end">
+<div id="crm-drawer" onclick="if(event.target === this) window.modCRM.closeDrawer()" class="fixed inset-0 bg-slate-900/60 hidden z-[60] justify-end backdrop-blur-xs">
     <div class="bg-white w-full md:w-[650px] h-full shadow-2xl flex flex-col animate-slide-in-right">
         <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 shrink-0 shadow-md relative flex justify-between items-center">
             <div>
@@ -119,51 +119,110 @@
         </div>
     </div>
 </div>
+
+<!-- POPUP XÓA KHÁCH HÀNG CRM -->
+<div id="modal-delete-crm-customer" class="fixed inset-0 bg-slate-900/80 z-[110] hidden items-center justify-center backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-transform border-2 border-red-500">
+        <div class="bg-slate-900 p-4 flex items-center justify-between">
+            <h3 class="text-white font-black uppercase"><i class="fas fa-radiation text-red-500 mr-2"></i>QUYỀN QUẢN TRỊ VIÊN</h3>
+            <button onclick="window.modCRM.closeDeleteModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        <form autocomplete="off" onsubmit="event.preventDefault(); return false;" class="p-6 space-y-4">
+            <div class="bg-red-50 text-red-600 p-3 rounded-lg text-xs font-bold border border-red-100 text-center">
+                ⚠️ Cảnh báo: Hành động này sẽ xóa sạch dữ liệu khách hàng khỏi hệ thống CRM. Không thể khôi phục!
+            </div>
+            <div>
+                <label class="block text-[11px] font-black text-slate-700 uppercase mb-2 text-center text-red-500"><i class="fas fa-lock mr-1"></i> Nhập Mật Khẩu Admin</label>
+                <input type="password" id="admin-del-crm-pass" name="admin_delete_pass_isolated" autocomplete="new-password" placeholder="••••••••" readonly onfocus="this.removeAttribute('readonly');" class="w-full border-2 border-slate-300 rounded-xl p-3 outline-none focus:border-red-500 text-lg font-black text-slate-800 text-center tracking-widest shadow-inner bg-slate-50">
+            </div>
+            <button type="button" onclick="window.modCRM.confirmDeleteCustomer()" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3.5 rounded-xl mt-2 shadow-md transition uppercase tracking-wide">Xác Nhận Tiêu Hủy</button>
+        </form>
+    </div>
+</div>
+
 <style>
     @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
     .animate-slide-in-right { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 </style>
+
 <script>
     window.modCRM = {
         list: [],
         load: async () => {
             const tbody = document.getElementById('tbl-crm');
-            if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-amber-500 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Đang tải dữ liệu CRM...</td></tr>';
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-amber-500 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Đang tải dữ liệu CRM...</td></tr>';
+            }
             try {
-                const res = await fetch('/api/customers');
-                if(!res.ok) throw new Error('HTTP ' + res.status);
+                const res = await fetch('/api/customers?t=' + Date.now());
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
-                if(data.success) { window.modCRM.list = data.data || []; window.modCRM.render(); }
-                else if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Lỗi Database: ' + data.error + '</td></tr>';
-            } catch(e) { if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Mất kết nối máy chủ API! ' + e.message + '</td></tr>'; }
+                if (data.success) {
+                    window.modCRM.list = data.data || [];
+                    const searchEl = document.getElementById('crm-search');
+                    if (searchEl) searchEl.value = '';
+                    window.modCRM.render();
+                } else if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Lỗi Database: ' + (data.error || 'Không thể đọc dữ liệu') + '</td></tr>';
+                }
+            } catch (e) {
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Mất kết nối máy chủ API! ' + e.message + '</td></tr>';
+                }
+            }
         },
         render: () => {
-            const term = document.getElementById('crm-search').value.toLowerCase();
+            const searchEl = document.getElementById('crm-search');
+            const term = searchEl ? searchEl.value.trim().toLowerCase() : '';
             const tbody = document.getElementById('tbl-crm');
-            let filtered = window.modCRM.list.filter(c => 
-                String(c.name).toLowerCase().includes(term) || 
-                String(c.nickname||'').toLowerCase().includes(term) ||
-                String(c.phone||'').includes(term) || 
-                String(c.vat_taxcode||'').includes(term)
-            );
-            
-            if(filtered.length === 0) return tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold">Không có dữ liệu đối tác.</td></tr>';
+            if (!tbody) return;
 
-            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num)||0);
-            const tiers = { 1: {n:'1. Khách Lẻ',c:'bg-slate-100 text-slate-600'}, 2: {n:'2. Chốt Sale',c:'bg-emerald-50 text-emerald-700'}, 3: {n:'3. Đại Lý',c:'bg-blue-50 text-blue-700'}, 4: {n:'4. Sỉ C1',c:'bg-amber-50 text-amber-700'}, 5: {n:'5. Sỉ VIP',c:'bg-orange-50 text-orange-700'}, 6: {n:'6. NPP',c:'bg-purple-100 text-purple-800 font-black'} };
+            let filtered = (window.modCRM.list || []).filter(c => {
+                if (!term) return true;
+                const name = String(c.name || c.full_name || '').toLowerCase();
+                const nickname = String(c.nickname || '').toLowerCase();
+                const phone = String(c.phone || '');
+                const code = String(c.customer_code || '').toLowerCase();
+                const tax = String(c.vat_taxcode || '').toLowerCase();
+                const company = String(c.vat_company || '').toLowerCase();
+                const addr = String(c.address || '').toLowerCase();
+                return name.includes(term) || nickname.includes(term) || phone.includes(term) || code.includes(term) || tax.includes(term) || company.includes(term) || addr.includes(term);
+            });
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold">Không có dữ liệu đối tác phù hợp.</td></tr>';
+                return;
+            }
+
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num) || 0);
+            const tiers = {
+                1: { n: '1. Khách Lẻ', c: 'bg-slate-100 text-slate-600' },
+                2: { n: '2. Chốt Sale', c: 'bg-emerald-50 text-emerald-700' },
+                3: { n: '3. Đại Lý', c: 'bg-blue-50 text-blue-700' },
+                4: { n: '4. Sỉ C1', c: 'bg-amber-50 text-amber-700' },
+                5: { n: '5. Sỉ VIP', c: 'bg-orange-50 text-orange-700' },
+                6: { n: '6. NPP', c: 'bg-purple-100 text-purple-800 font-black' }
+            };
 
             tbody.innerHTML = filtered.map(c => {
-                const t = tiers[c.customer_tier] || tiers[1];
-                const warns = (c.customer_tier > 3 && c.last_purchase_date && Math.floor((new Date()-new Date(c.last_purchase_date))/86400000) > 60) ? '<p class="text-[9px] text-red-500 font-bold mt-1.5"><i class="fas fa-exclamation-triangle"></i> Cảnh báo KPI</p>' : '';
-                const vatInfo = c.vat_company ? `<p class="font-bold text-slate-700 text-xs truncate max-w-[200px]" title="${c.vat_company}">${c.vat_company}</p><p class="text-[10px] font-mono text-blue-600">MST: ${c.vat_taxcode}</p>` : '<span class="text-[10px] text-slate-400 italic">Chưa có VAT</span>';
+                const tierVal = c.customer_tier || c.tier || c.vip_level || 1;
+                const t = tiers[tierVal] || tiers[1];
+                const warns = (tierVal > 3 && c.last_purchase_date && Math.floor((new Date() - new Date(c.last_purchase_date)) / 86400000) > 60)
+                    ? '<p class="text-[9px] text-red-500 font-bold mt-1.5"><i class="fas fa-exclamation-triangle"></i> Cảnh báo KPI</p>'
+                    : '';
+                const vatInfo = c.vat_company
+                    ? `<p class="font-bold text-slate-700 text-xs truncate max-w-[200px]" title="${c.vat_company}">${c.vat_company}</p><p class="text-[10px] font-mono text-blue-600">MST: ${c.vat_taxcode || '---'}</p>`
+                    : '<span class="text-[10px] text-slate-400 italic">Chưa có VAT</span>';
                 
+                const displayName = c.name || c.full_name || 'Khách Lẻ';
                 const nicknameHTML = c.nickname ? `<span class="text-amber-600 font-bold text-xs ml-1">(${c.nickname})</span>` : '';
                 const addressHTML = c.address ? ` | <i class="fas fa-map-marker-alt text-[10px] text-emerald-600 ml-1"></i> <span class="truncate max-w-[120px] inline-block align-bottom" title="${c.address}">${c.address}</span>` : '';
+                const debt = parseFloat(c.current_debt) || 0;
 
                 return `
                 <tr class="hover:bg-amber-50/30 transition">
                     <td class="p-4 border-b">
-                        <p class="font-black text-slate-800 text-sm">${c.name} ${nicknameHTML}</p>
+                        <p class="font-black text-slate-800 text-sm">${displayName} ${nicknameHTML}</p>
                         <p class="text-[11px] font-mono font-bold text-slate-500 mt-1 whitespace-nowrap"><i class="fas fa-phone-alt opacity-50 mr-1"></i> ${c.phone || '---'} ${addressHTML}</p>
                     </td>
                     <td class="p-4 border-b">${vatInfo}</td>
@@ -172,7 +231,7 @@
                     </td>
                     <td class="p-4 text-right border-b">
                         <p class="font-bold text-slate-700 mb-0.5" title="Tổng doanh số">${fmt(c.total_sales)} đ</p>
-                        <p class="font-black text-[11px] ${c.current_debt > 0 ? 'text-red-600 bg-red-50 px-1 rounded inline-block' : 'text-slate-400'}">Nợ: ${fmt(c.current_debt)}</p>
+                        <p class="font-black text-[11px] ${debt > 0 ? 'text-red-600 bg-red-50 px-1 rounded inline-block' : 'text-slate-400'}">Nợ: ${fmt(debt)}</p>
                     </td>
                     <td class="p-4 text-center border-b border-x border-amber-100 bg-amber-50/50">
                         <span class="font-black text-amber-600 text-sm">${fmt(c.reward_points)}</span>
@@ -184,294 +243,298 @@
             `}).join('');
         },
         switchTab: (id) => {
-            ['profile', 'tier', 'gifts', 'logs'].forEach(t => {
-                document.getElementById('tab-'+t).classList.replace('flex','hidden');
-                document.getElementById('tab-'+t).classList.replace('block','hidden');
-                document.getElementById('tab-btn-'+t).classList.remove('border-amber-500','text-amber-600', 'bg-white');
+            const tabs = ['profile', 'tier', 'gifts', 'logs'];
+            tabs.forEach(t => {
+                const tabEl = document.getElementById('tab-' + t);
+                const btnEl = document.getElementById('tab-btn-' + t);
+                if (tabEl) {
+                    tabEl.classList.add('hidden');
+                    tabEl.classList.remove('flex', 'block');
+                }
+                if (btnEl) {
+                    btnEl.classList.remove('border-amber-500', 'text-amber-600', 'bg-white');
+                    btnEl.classList.add('border-transparent', 'text-slate-500');
+                }
             });
-            const target = document.getElementById('tab-'+id);
-            if(id==='gifts' || id==='logs') target.classList.replace('hidden','flex');
-            else target.classList.replace('hidden','block');
-            document.getElementById('tab-btn-'+id).classList.add('border-amber-500','text-amber-600', 'bg-white');
+            const target = document.getElementById('tab-' + id);
+            const targetBtn = document.getElementById('tab-btn-' + id);
+            if (target) {
+                target.classList.remove('hidden');
+                if (id === 'gifts' || id === 'logs') {
+                    target.classList.add('flex');
+                } else {
+                    target.classList.add('block');
+                }
+            }
+            if (targetBtn) {
+                targetBtn.classList.remove('border-transparent', 'text-slate-500');
+                targetBtn.classList.add('border-amber-500', 'text-amber-600', 'bg-white');
+            }
         },
         openDrawer: (id = null) => {
-            document.getElementById('crm-drawer').classList.replace('hidden', 'flex');
+            const drawer = document.getElementById('crm-drawer');
+            if (drawer) {
+                drawer.classList.remove('hidden');
+                drawer.classList.add('flex');
+            }
             const tabs = document.getElementById('drawer-tabs');
-            if(id) {
-                const c = window.modCRM.list.find(x=>x.id==id);
+            const btnDel = document.getElementById('btn-del');
+            const btnSave = document.getElementById('btn-save-profile');
+            
+            if (id) {
+                const c = (window.modCRM.list || []).find(x => x.id == id);
+                if (!c) return;
                 document.getElementById('dr-title').innerText = "Hồ Sơ Đối Tác";
                 document.getElementById('dr-subtitle').innerText = "ID Hệ thống: #" + c.id;
-                tabs.classList.remove('hidden');
-                document.getElementById('btn-del').classList.remove('hidden');
-                document.getElementById('btn-save-profile').innerHTML = '<i class="fas fa-save"></i> CẬP NHẬT HỒ SƠ';
+                if (tabs) tabs.classList.remove('hidden');
+                if (btnDel) btnDel.classList.remove('hidden');
+                if (btnSave) btnSave.innerHTML = '<i class="fas fa-save mr-1"></i> CẬP NHẬT HỒ SƠ';
                 
                 document.getElementById('dr-id').value = c.id; 
-                document.getElementById('p-name').value = c.name; document.getElementById('p-phone').value = c.phone || '';
-                document.getElementById('p-nickname').value = c.nickname || ''; document.getElementById('p-address').value = c.address || '';
-                document.getElementById('p-vat-company').value = c.vat_company || ''; document.getElementById('p-vat-tax').value = c.vat_taxcode || '';
-                document.getElementById('p-vat-address').value = c.vat_address || ''; document.getElementById('p-vat-email').value = c.vat_email || '';
-                document.getElementById('dr-tier').value = c.customer_tier || 1; document.getElementById('dr-debt').value = c.current_debt || 0; 
+                document.getElementById('p-name').value = c.name || c.full_name || '';
+                document.getElementById('p-phone').value = c.phone || '';
+                document.getElementById('p-nickname').value = c.nickname || '';
+                document.getElementById('p-address').value = c.address || '';
+                document.getElementById('p-vat-company').value = c.vat_company || '';
+                document.getElementById('p-vat-tax').value = c.vat_taxcode || '';
+                document.getElementById('p-vat-address').value = c.vat_address || '';
+                document.getElementById('p-vat-email').value = c.vat_email || '';
+                document.getElementById('dr-tier').value = c.customer_tier || c.tier || c.vip_level || 1;
+                document.getElementById('dr-debt').value = c.current_debt || 0; 
                 document.getElementById('dr-points').value = c.reward_points || 0;
                 
                 window.modCRM.switchTab('profile');
-                window.modCRM.loadLogs(id); window.modCRM.loadGifts(id);
+                window.modCRM.loadLogs(id);
+                window.modCRM.loadGifts(id);
             } else {
                 document.getElementById('dr-title').innerText = "Tạo Khách Hàng Mới";
                 document.getElementById('dr-subtitle').innerText = "Vui lòng nhập thông tin cơ bản để lưu vào CSDL.";
-                tabs.classList.add('hidden');
-                document.getElementById('btn-del').classList.add('hidden');
-                document.getElementById('btn-save-profile').innerHTML = '<i class="fas fa-plus"></i> TẠO MỚI NGAY';
+                if (tabs) tabs.classList.add('hidden');
+                if (btnDel) btnDel.classList.add('hidden');
+                if (btnSave) btnSave.innerHTML = '<i class="fas fa-plus mr-1"></i> TẠO MỚI NGAY';
                 
-                ['dr-id', 'p-name', 'p-phone', 'p-nickname', 'p-address', 'p-vat-company', 'p-vat-tax', 'p-vat-address', 'p-vat-email'].forEach(el => document.getElementById(el).value = '');
+                ['dr-id', 'p-name', 'p-phone', 'p-nickname', 'p-address', 'p-vat-company', 'p-vat-tax', 'p-vat-address', 'p-vat-email'].forEach(elId => {
+                    const el = document.getElementById(elId);
+                    if (el) el.value = '';
+                });
+                const drTier = document.getElementById('dr-tier');
+                if (drTier) drTier.value = '1';
+                const drDebt = document.getElementById('dr-debt');
+                if (drDebt) drDebt.value = '0';
+                const drPoints = document.getElementById('dr-points');
+                if (drPoints) drPoints.value = '0';
+                
                 window.modCRM.switchTab('profile');
             }
         },
-        closeDrawer: () => document.getElementById('crm-drawer').classList.replace('flex', 'hidden'),
+        closeDrawer: () => {
+            const drawer = document.getElementById('crm-drawer');
+            if (drawer) {
+                drawer.classList.add('hidden');
+                drawer.classList.remove('flex');
+            }
+        },
         saveProfile: async () => {
             const id = document.getElementById('dr-id').value;
             const payload = {
-                name: document.getElementById('p-name').value.trim(), phone: document.getElementById('p-phone').value.trim(),
-                nickname: document.getElementById('p-nickname').value.trim(), address: document.getElementById('p-address').value.trim(),
-                vat_company: document.getElementById('p-vat-company').value.trim(), vat_taxcode: document.getElementById('p-vat-tax').value.trim(),
-                vat_address: document.getElementById('p-vat-address').value.trim(), vat_email: document.getElementById('p-vat-email').value.trim()
+                name: document.getElementById('p-name').value.trim(),
+                phone: document.getElementById('p-phone').value.trim(),
+                nickname: document.getElementById('p-nickname').value.trim(),
+                address: document.getElementById('p-address').value.trim(),
+                vat_company: document.getElementById('p-vat-company').value.trim(),
+                vat_taxcode: document.getElementById('p-vat-tax').value.trim(),
+                vat_address: document.getElementById('p-vat-address').value.trim(),
+                vat_email: document.getElementById('p-vat-email').value.trim()
             };
-            if(!payload.name) return alert('Bắt buộc nhập tên đối tác!');
+            if (!payload.name) return alert('Bắt buộc nhập tên đối tác!');
             try {
-                if(id) await fetch(`/api/customers/${id}/profile`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-                else await fetch('/api/customers', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-                window.modCRM.closeDrawer(); window.modCRM.load();
-            } catch(e) { alert("Lỗi lưu dữ liệu!"); }
+                let res;
+                if (id) {
+                    res = await fetch(`/api/customers/${id}/profile`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    res = await fetch('/api/customers', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+                const data = await res.json();
+                if (data.success) {
+                    alert(id ? '✅ Đã cập nhật hồ sơ khách hàng!' : '✅ Đã tạo mới khách hàng!');
+                    window.modCRM.closeDrawer();
+                    window.modCRM.load();
+                } else {
+                    alert('❌ Lỗi: ' + (data.error || 'Không thể lưu hồ sơ'));
+                }
+            } catch (e) {
+                alert('❌ Lỗi kết nối lưu dữ liệu!');
+            }
         },
         saveTier: async () => {
             const id = document.getElementById('dr-id').value;
-            await fetch(`/api/customers/${id}/tier`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({tier: document.getElementById('dr-tier').value, debt: document.getElementById('dr-debt').value, points: document.getElementById('dr-points').value})});
-            window.modCRM.load(); alert('Đã cập nhật trạng thái phân hạng!');
+            if (!id) return alert('Chưa chọn khách hàng!');
+            try {
+                const res = await fetch(`/api/customers/${id}/tier`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tier: document.getElementById('dr-tier').value,
+                        debt: document.getElementById('dr-debt').value,
+                        points: document.getElementById('dr-points').value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ Đã cập nhật trạng thái phân hạng!');
+                    window.modCRM.load();
+                } else {
+                    alert('❌ Lỗi: ' + (data.error || 'Không thể cập nhật'));
+                }
+            } catch (e) {
+                alert('❌ Lỗi kết nối cập nhật phân hạng!');
+            }
         },
-        deleteCustomer: async () => {
+        deleteCustomer: () => {
+            const modal = document.getElementById('modal-delete-crm-customer');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+            setTimeout(() => {
+                const passInput = document.getElementById('admin-del-crm-pass');
+                if (passInput) passInput.focus();
+            }, 100);
+        },
+        closeDeleteModal: () => {
+            const modal = document.getElementById('modal-delete-crm-customer');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            const passInput = document.getElementById('admin-del-crm-pass');
+            if (passInput) passInput.value = '';
+        },
+        confirmDeleteCustomer: async () => {
+            const pass = document.getElementById('admin-del-crm-pass').value;
+            if (pass !== 'sungo123') {
+                alert('❌ Mật khẩu Admin không chính xác!');
+                return;
+            }
+
+            if (!confirm('⚠️ Xác nhận lần cuối: Bạn có chắc chắn muốn xóa đối tác này? Toàn bộ lịch sử và công nợ sẽ bị mất!')) return;
+
             const id = document.getElementById('dr-id').value;
-            if(!confirm('⚠️ Xóa đối tác sẽ mất luôn lịch sử và công nợ. Chắc chắn xóa?')) return;
-            await fetch(`/api/customers/${id}`, { method: 'DELETE' });
-            window.modCRM.closeDrawer(); window.modCRM.load();
+            try {
+                const res = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                
+                if (data.success !== false) { 
+                    alert('✅ Đã xóa khách hàng thành công!');
+                    window.modCRM.closeDeleteModal();
+                    window.modCRM.closeDrawer(); 
+                    window.modCRM.load();
+                } else {
+                    alert('❌ Lỗi khi xóa: ' + (data.error || 'Vui lòng thử lại.'));
+                }
+            } catch (e) {
+                alert('❌ Lỗi mạng hoặc máy chủ!');
+            }
         },
         loadLogs: async (id) => {
+            const logContainer = document.getElementById('log-list');
+            if (!logContainer) return;
             try {
-                const res = await fetch(`/api/customers/${id}/logs`); const data = await res.json();
-                document.getElementById('log-list').innerHTML = (data.success && data.data.length) ? data.data.map(l => `<div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-sm"><p class="font-medium">${l.note}</p><p class="text-[10px] text-blue-500 mt-2 font-bold">${new Date(l.created_at).toLocaleString('vi-VN')}</p></div>`).join('') : '<p class="text-xs text-center py-6 text-slate-400">Trống</p>';
-            } catch(e) {}
+                const res = await fetch(`/api/customers/${id}/logs?t=` + Date.now());
+                const data = await res.json();
+                if (data.success && data.data && data.data.length > 0) {
+                    logContainer.innerHTML = data.data.map(l => `
+                        <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-sm">
+                            <p class="font-medium text-slate-800">${l.note}</p>
+                            <p class="text-[10px] text-blue-500 mt-2 font-bold"><i class="far fa-clock mr-1"></i>${new Date(l.created_at).toLocaleString('vi-VN')}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    logContainer.innerHTML = '<p class="text-xs text-center py-6 text-slate-400">Chưa có nhật ký chăm sóc nào.</p>';
+                }
+            } catch (e) {
+                logContainer.innerHTML = '<p class="text-xs text-center py-6 text-slate-400">Chưa có nhật ký</p>';
+            }
         },
         addLog: async () => {
-            const id = document.getElementById('dr-id').value; const note = document.getElementById('l-note').value;
-            if(!note) return;
-            await fetch(`/api/customers/${id}/logs`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({note})});
-            document.getElementById('l-note').value=''; window.modCRM.loadLogs(id);
+            const id = document.getElementById('dr-id').value;
+            const noteInput = document.getElementById('l-note');
+            const note = noteInput ? noteInput.value.trim() : '';
+            if (!note) return alert('Vui lòng nhập nội dung ghi chú!');
+            try {
+                const res = await fetch(`/api/customers/${id}/logs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ note })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (noteInput) noteInput.value = '';
+                    window.modCRM.loadLogs(id);
+                } else {
+                    alert('❌ Lỗi lưu ghi chú: ' + (data.error || ''));
+                }
+            } catch (e) {
+                alert('❌ Lỗi kết nối máy chủ!');
+            }
         },
         loadGifts: async (id) => {
+            const giftContainer = document.getElementById('gift-list');
+            if (!giftContainer) return;
             try {
-                const res = await fetch(`/api/customers/${id}/gifts`); const data = await res.json();
-                document.getElementById('gift-list').innerHTML = (data.success && data.data.length) ? data.data.map(g => `<div class="flex justify-between items-center bg-emerald-50 p-3 rounded-lg border border-emerald-100"><div><p class="text-sm font-bold"><i class="fas fa-gift text-emerald-500 mr-1"></i> ${g.gift_name}</p><p class="text-[10px] text-emerald-600 mt-1 font-bold">${new Date(g.gift_date).toLocaleString('vi-VN')}</p></div><span class="font-black text-emerald-700 text-sm">${new Intl.NumberFormat('vi-VN').format(g.gift_value)} đ</span></div>`).join('') : '<p class="text-xs text-center py-6 text-slate-400">Trống</p>';
-            } catch(e) {}
+                const res = await fetch(`/api/customers/${id}/gifts?t=` + Date.now());
+                const data = await res.json();
+                if (data.success && data.data && data.data.length > 0) {
+                    giftContainer.innerHTML = data.data.map(g => `
+                        <div class="flex justify-between items-center bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                            <div>
+                                <p class="text-sm font-bold text-slate-800"><i class="fas fa-gift text-emerald-500 mr-1"></i> ${g.gift_name}</p>
+                                <p class="text-[10px] text-emerald-600 mt-1 font-bold"><i class="far fa-clock mr-1"></i>${new Date(g.gift_date).toLocaleString('vi-VN')}</p>
+                            </div>
+                            <span class="font-black text-emerald-700 text-sm">${new Intl.NumberFormat('vi-VN').format(g.gift_value || 0)} đ</span>
+                        </div>
+                    `).join('');
+                } else {
+                    giftContainer.innerHTML = '<p class="text-xs text-center py-6 text-slate-400">Chưa có quà tặng nào.</p>';
+                }
+            } catch (e) {
+                giftContainer.innerHTML = '<p class="text-xs text-center py-6 text-slate-400">Chưa có quà tặng</p>';
+            }
         },
         addGift: async () => {
-            const id = document.getElementById('dr-id').value; const gift_name = document.getElementById('g-name').value; const gift_value = document.getElementById('g-val').value;
-            if(!gift_name) return;
-            await fetch(`/api/customers/${id}/gifts`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({gift_name, gift_value})});
-            document.getElementById('g-name').value=''; document.getElementById('g-val').value=''; window.modCRM.loadGifts(id);
+            const id = document.getElementById('dr-id').value;
+            const giftNameInput = document.getElementById('g-name');
+            const giftValInput = document.getElementById('g-val');
+            const gift_name = giftNameInput ? giftNameInput.value.trim() : '';
+            const gift_value = giftValInput ? giftValInput.value.trim() : '0';
+            if (!gift_name) return alert('Vui lòng nhập tên quà tặng!');
+            try {
+                const res = await fetch(`/api/customers/${id}/gifts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gift_name, gift_value })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (giftNameInput) giftNameInput.value = '';
+                    if (giftValInput) giftValInput.value = '';
+                    window.modCRM.loadGifts(id);
+                } else {
+                    alert('❌ Lỗi lưu quà tặng: ' + (data.error || ''));
+                }
+            } catch (e) {
+                alert('❌ Lỗi kết nối máy chủ!');
+            }
         }
     };
+
     window.modCRM.load();
-</script>
-
-<script>
-// [AUTO-FIX] Hàm gửi dữ liệu tạo khách hàng mới đồng bộ chuẩn PostgreSQL
-async function submitCrmCustomer(event) {
-  if (event) event.preventDefault();
-  
-  const fullNameInput = document.querySelector('#cust_name, #full_name, [name="full_name"], [name="name"]');
-  const phoneInput = document.querySelector('#cust_phone, #phone, [name="phone"]');
-  const addressInput = document.querySelector('#cust_address, #address, [name="address"]');
-  const vipInput = document.querySelector('#cust_vip, #vip_level, [name="vip_level"]');
-  const taxInput = document.querySelector('#cust_tax, #tax_code, [name="tax_code"]');
-  const companyInput = document.querySelector('#cust_company, #vat_company, [name="vat_company"]');
-
-  const payload = {
-    full_name: fullNameInput ? fullNameInput.value.trim() : '',
-    phone: phoneInput ? phoneInput.value.trim() : '',
-    address: addressInput ? addressInput.value.trim() : '',
-    vip_level: vipInput ? parseInt(vipInput.value) : 1,
-    vat_taxcode: taxInput ? taxInput.value.trim() : '',
-    vat_company: companyInput ? companyInput.value.trim() : ''
-  };
-
-  if (!payload.full_name || !payload.phone) {
-    alert('Vui lòng nhập đầy đủ Họ tên và Số điện thoại!');
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/crm', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const result = await res.json();
-    if (res.ok && result.success) {
-      alert('🎉 Tạo khách hàng CRM thành công!');
-      if (typeof loadCustomers === 'function') loadCustomers();
-      if (typeof fetchCrmList === 'function') fetchCrmList();
-      const modal = document.querySelector('#customer-modal, #create-customer-modal');
-      if (modal) modal.classList.add('hidden');
-    } else {
-      alert('Lỗi tạo khách hàng: ' + (result.error || 'Kiểm tra lại dữ liệu'));
-    }
-  } catch (err) {
-    alert('Lỗi kết nối máy chủ: ' + err.message);
-  }
-}
-</script>
-
-
-<!-- MODAL CHỈNH SỬA TOÀN DIỆN KHÁCH HÀNG CRM PRO -->
-<div id="crm-edit-customer-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-    <div class="flex justify-between items-center mb-4 border-b pb-3">
-      <h3 class="text-lg font-bold text-gray-900">Chỉnh Sửa Hồ Sơ Khách Hàng (CRM PRO)</h3>
-      <button type="button" onclick="closeCrmEditModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
-    </div>
-    <form id="crm-edit-customer-form" onsubmit="submitUpdateCrmCustomer(event)" class="space-y-4">
-      <input type="hidden" id="edit-cust-id">
-      
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Tên khách hàng / Đại lý *</label>
-          <input type="text" id="edit-cust-name" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Số điện thoại *</label>
-          <input type="text" id="edit-cust-phone" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3 bg-blue-50/60 p-3 rounded-xl border border-blue-100">
-        <div>
-          <label class="block text-xs font-bold text-blue-900 mb-1">Hạng thành viên (VIP Level)</label>
-          <select id="edit-cust-vip" class="w-full px-3 py-2 text-sm border border-blue-200 rounded-lg font-semibold text-blue-950 focus:ring-2 focus:ring-blue-500">
-            <option value="1">VIP 1 - Khách Lẻ (Giá Lẻ)</option>
-            <option value="2">VIP 2 - Khách Thân Thiết</option>
-            <option value="3">VIP 3 - Đại Lý Cấp 2</option>
-            <option value="4">VIP 4 - Đại Lý Cấp 1</option>
-            <option value="5">VIP 5 - Nhà Phân Phối (Giá Sỉ)</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-amber-900 mb-1">Điểm thưởng tích lũy (VNĐ)</label>
-          <input type="number" id="edit-cust-points" step="any" class="w-full px-3 py-2 text-sm border border-amber-200 rounded-lg font-bold text-amber-700 focus:ring-2 focus:ring-amber-500">
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-xs font-bold text-gray-700 mb-1">Địa chỉ giao hàng / Liên hệ</label>
-        <input type="text" id="edit-cust-address" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
-      </div>
-
-      <div class="border-t pt-3 space-y-3">
-        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Thông Tin Xuất Hóa Đơn VAT</p>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Tên Công Ty Xuất VAT</label>
-            <input type="text" id="edit-cust-company" class="w-full px-3 py-1.5 text-sm border rounded-lg">
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Mã Số Thuế (MST)</label>
-            <input type="text" id="edit-cust-tax" class="w-full px-3 py-1.5 text-sm border rounded-lg">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Địa Chỉ Thuế</label>
-            <input type="text" id="edit-cust-vat-address" class="w-full px-3 py-1.5 text-sm border rounded-lg">
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Email Nhận Hóa Đơn</label>
-            <input type="email" id="edit-cust-vat-email" class="w-full px-3 py-1.5 text-sm border rounded-lg">
-          </div>
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-3 border-t">
-        <button type="button" onclick="closeCrmEditModal()" class="px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">Hủy</button>
-        <button type="submit" class="px-5 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-bold shadow-md">Lưu Thay Đổi</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-// Hàm mở Modal và nạp toàn bộ trường dữ liệu
-function openEditCustomerModal(cust) {
-  if (typeof cust === 'string') {
-    try { cust = JSON.parse(cust); } catch(e) {}
-  }
-  if (!cust) return;
-
-  document.getElementById('edit-cust-id').value = cust.id || '';
-  document.getElementById('edit-cust-name').value = cust.full_name || cust.name || '';
-  document.getElementById('edit-cust-phone').value = cust.phone || '';
-  document.getElementById('edit-cust-vip').value = cust.vip_level || cust.tier || 1;
-  document.getElementById('edit-cust-points').value = cust.reward_points !== undefined ? cust.reward_points : (cust.points || 0);
-  document.getElementById('edit-cust-address').value = cust.address || '';
-  document.getElementById('edit-cust-company').value = cust.vat_company || cust.company_name || '';
-  document.getElementById('edit-cust-tax').value = cust.vat_taxcode || cust.tax_code || '';
-  document.getElementById('edit-cust-vat-address').value = cust.vat_address || cust.company_address || '';
-  document.getElementById('edit-cust-vat-email').value = cust.vat_email || '';
-
-  document.getElementById('crm-edit-customer-modal').classList.remove('hidden');
-}
-
-function closeCrmEditModal() {
-  const modal = document.getElementById('crm-edit-customer-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-// Hàm gửi request cập nhật toàn bộ biến
-async function submitUpdateCrmCustomer(e) {
-  if (e) e.preventDefault();
-  const id = document.getElementById('edit-cust-id').value;
-  if (!id) {
-    alert('Không tìm thấy ID khách hàng!');
-    return;
-  }
-
-  const payload = {
-    full_name: document.getElementById('edit-cust-name').value.trim(),
-    phone: document.getElementById('edit-cust-phone').value.trim(),
-    vip_level: parseInt(document.getElementById('edit-cust-vip').value) || 1,
-    reward_points: parseFloat(document.getElementById('edit-cust-points').value) || 0,
-    address: document.getElementById('edit-cust-address').value.trim(),
-    vat_company: document.getElementById('edit-cust-company').value.trim(),
-    vat_taxcode: document.getElementById('edit-cust-tax').value.trim(),
-    vat_address: document.getElementById('edit-cust-vat-address').value.trim(),
-    vat_email: document.getElementById('edit-cust-vat-email').value.trim()
-  };
-
-  try {
-    const res = await fetch(`/api/crm/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const result = await res.json();
-    if (res.ok && result.success) {
-      alert('🎉 Đã cập nhật thành công toàn bộ thông tin khách hàng!');
-      closeCrmEditModal();
-      if (typeof loadCustomers === 'function') loadCustomers();
-      if (typeof fetchCustomers === 'function') fetchCustomers();
-      if (typeof renderCustomers === 'function') renderCustomers();
-      if (typeof window.location.reload === 'function') window.location.reload();
-    } else {
-      alert('Lỗi cập nhật: ' + (result.error || 'Vui lòng kiểm tra lại'));
-    }
-  } catch(err) {
-    alert('Lỗi máy chủ: ' + err.message);
-  }
-}
 </script>

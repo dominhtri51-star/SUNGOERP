@@ -1,0 +1,26 @@
+<div id="bidding-submodule-container" class="h-full"></div>
+<script>
+(async () => {
+    try {
+        const res = await fetch("/modules/bidding-marketplace.html?t=" + Date.now());
+        const html = await res.text();
+        const container = document.getElementById("bidding-submodule-container");
+        if (container) {
+            container.innerHTML = html;
+            const scripts = container.querySelectorAll("script");
+            scripts.forEach(s => {
+                const newScript = document.createElement("script");
+                newScript.textContent = s.textContent;
+                document.body.appendChild(newScript);
+            });
+            setTimeout(() => {
+                if (window.modBidding && window.modBidding.switchTab) {
+                    window.modBidding.switchTab("tab-settlement");
+                }
+            }, 100);
+        }
+    } catch(e) {
+        console.error("Lỗi nạp sub-module:", e);
+    }
+})();
+</script>
