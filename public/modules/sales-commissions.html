@@ -1,0 +1,441 @@
+<div class="h-full flex flex-col space-y-4 sm:space-y-6 font-sans relative pb-10">
+    <!-- HEADER & THANH CÔNG CỤ -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shrink-0">
+                    <i class="fas fa-hand-holding-usd text-xl"></i>
+                </span>
+                <div>
+                    <h2 class="text-lg sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+                        TÍNH HOA HỒNG KINH DOANH & DỰ ÁN
+                        <span class="text-[10px] bg-amber-100 text-amber-900 font-black px-2.5 py-0.5 rounded-full border border-amber-200 uppercase tracking-wide">Tùy Chỉnh Theo Nhân Viên</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Tự động tính hoa hồng theo % Lợi nhuận gộp riêng và kiểm soát <b>Ngưỡng LN Gộp Tối Thiểu</b> (bù lương cứng).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-auto flex flex-wrap items-center justify-between lg:justify-end gap-2">
+            <button onclick="window.modComm.syncOrders()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-2 px-3.5 rounded-xl text-xs transition shadow-xs flex items-center gap-1.5">
+                <i class="fas fa-sync-alt"></i> <span>Quét Đơn Sỉ</span>
+            </button>
+            <button onclick="window.modComm.syncBoq()" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-slate-950 font-black py-2 px-3.5 rounded-xl text-xs transition shadow-xs flex items-center gap-1.5">
+                <i class="fas fa-file-invoice-dollar"></i> <span>Quét BOQ / EPC</span>
+            </button>
+            <button onclick="window.modComm.load()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition text-xs font-bold" title="Làm mới">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- BANNER VAI TRÒ & PHÂN QUYỀN -->
+    <div id="comm-role-banner" class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-3.5 sm:p-4 rounded-2xl flex items-center justify-between shadow-xs">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-amber-400 text-sm">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div>
+                <div class="text-xs font-black uppercase tracking-wide flex items-center gap-2">
+                    <span id="comm-current-role-title">Đang xác thực quyền hạn...</span>
+                    <span id="comm-current-role-badge" class="text-[9px] px-2 py-0.5 rounded-full font-mono font-black uppercase bg-amber-400 text-slate-950">RBAC</span>
+                </div>
+                <p id="comm-current-role-desc" class="text-[11px] text-slate-300">Đang nạp phạm vi xem dữ liệu hoa hồng...</p>
+            </div>
+        </div>
+        <div class="text-right hidden sm:block">
+            <span class="text-[10px] text-slate-400 uppercase font-bold block">Tài khoản thao tác</span>
+            <span id="comm-current-user-name" class="text-xs font-black text-amber-300">N/A</span>
+        </div>
+    </div>
+
+    <!-- THẺ THỐNG KÊ HOA HỒNG -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng Hoa Hồng Phát Sinh</p>
+                <h3 class="text-lg sm:text-xl font-black text-slate-800 truncate" id="comm-stat-total">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Đủ Điều Kiện Chi</p>
+                <h3 class="text-lg sm:text-xl font-black text-emerald-600 truncate" id="comm-stat-eligible">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Chờ Khách Thanh Toán</p>
+                <h3 class="text-lg sm:text-xl font-black text-amber-600 truncate" id="comm-stat-pending">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-money-check-alt"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Đã Gom Vào Bảng Lương</p>
+                <h3 class="text-lg sm:text-xl font-black text-purple-600 truncate" id="comm-stat-paid">0 đ</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHU VỰC TIẾN ĐỘ KPI & NGƯỠNG LỢI NHUẬN GỘP TỐI THIỂU TỪNG NHÂN VIÊN -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xs">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-wide">Tiến Độ Lợi Nhuận Gộp & Ngưỡng Kích Hoạt Hoa Hồng</h3>
+                    <p class="text-[11px] text-slate-500">Chỉ khi tổng Lợi Nhuận Gộp đạt Ngưỡng Tối Thiểu thì nhân viên mới đủ điều kiện nhận hoa hồng (bù chi phí lương cứng cho công ty).</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="comm-threshold-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            <div class="p-6 text-center text-slate-400 font-bold col-span-full">
+                <i class="fas fa-spinner fa-spin text-xl mb-1"></i> Đang tải tiến độ KPI...
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG DANH SÁCH HOA HỒNG CHI TIẾT -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col overflow-hidden">
+        <!-- Bộ lọc -->
+        <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <select id="comm-filter-type" onchange="window.modComm.applyFilter()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-amber-500">
+                    <option value="">-- Tất cả nguồn (Sỉ & BOQ) --</option>
+                    <option value="ORDER">Đơn hàng Khách sỉ</option>
+                    <option value="CONTRACT">Báo giá Dự án BOQ / EPC</option>
+                </select>
+
+                <select id="comm-filter-status" onchange="window.modComm.applyFilter()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-amber-500">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="ELIGIBLE">Đủ điều kiện chi (Khách đã trả đủ)</option>
+                    <option value="PENDING">Chờ duyệt (Chưa thanh toán xong)</option>
+                    <option value="INCLUDED_PAYROLL">Đã vào bảng lương tháng</option>
+                    <option value="PAID">Đã chi tiền</option>
+                </select>
+
+                <select id="comm-filter-emp" onchange="window.modComm.applyFilter()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-amber-500">
+                    <option value="">-- Tất cả nhân viên trong quyền xem --</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Bảng dữ liệu -->
+        <div class="flex-1 overflow-x-auto overflow-y-auto">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-slate-100/80 text-slate-600 text-[11px] uppercase font-black tracking-wider border-b border-slate-200 sticky top-0 z-10">
+                    <tr>
+                        <th class="p-3.5 pl-4">Mã Giao Dịch</th>
+                        <th class="p-3.5">Phân Loại & Khách Hàng</th>
+                        <th class="p-3.5 text-right">Doanh Thu</th>
+                        <th class="p-3.5 text-right">Giá Vốn COGS</th>
+                        <th class="p-3.5 text-right">Lợi Nhuận Gộp</th>
+                        <th class="p-3.5 text-center">Tỷ Lệ Riêng %</th>
+                        <th class="p-3.5 text-right">Tiền Hoa Hồng</th>
+                        <th class="p-3.5">Nhân Viên Thụ Hưởng</th>
+                        <th class="p-3.5 text-center">Trạng Thái</th>
+                        <th class="p-3.5 text-center pr-4">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="comm-tbody" class="divide-y divide-slate-100 text-xs">
+                    <tr>
+                        <td colspan="10" class="p-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Đang nạp dữ liệu hoa hồng...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modComm = {
+    commissions: [],
+    employees: [],
+    summaryData: null,
+    currentUser: null,
+
+    getCurrentUser: () => {
+        try {
+            const raw = localStorage.getItem('sungo_user');
+            if (raw) return JSON.parse(raw);
+        } catch(e){}
+        return { role: 'ADMIN', username: 'admin', empId: 'EMP001', full_name: 'Quản Trị Viên' };
+    },
+
+    load: async () => {
+        try {
+            const user = window.modComm.getCurrentUser();
+            window.modComm.currentUser = user;
+
+            // Render Banner Vai Trò
+            const role = (user.role || 'ADMIN').toUpperCase();
+            const roleTitle = document.getElementById('comm-current-role-title');
+            const roleBadge = document.getElementById('comm-current-role-badge');
+            const roleDesc = document.getElementById('comm-current-role-desc');
+            const userName = document.getElementById('comm-current-user-name');
+
+            userName.innerText = `${user.full_name || user.username} (${user.empId || 'N/A'})`;
+            roleBadge.innerText = role;
+
+            if (role === 'SALE') {
+                roleTitle.innerText = 'Chế Độ: Nhân Viên Kinh Doanh';
+                roleDesc.innerText = 'Bạn đang xem bảng hoa hồng cá nhân của chính mình. Hoa hồng sẽ được cộng vào lương tháng khi đạt Ngưỡng LN Gộp tối thiểu.';
+                roleBadge.className = 'text-[9px] px-2 py-0.5 rounded-full font-mono font-black uppercase bg-blue-400 text-slate-950';
+            } else if (['TRUONG_PHONG_KD', 'SALE_LEAD', 'SALE_ADMIN'].includes(role)) {
+                roleTitle.innerText = 'Chế Độ: Trưởng Phòng Kinh Doanh';
+                roleDesc.innerText = 'Bạn được quyền xem hoa hồng của chính mình và toàn bộ các thành viên trong đội ngũ kinh doanh do bạn quản lý.';
+                roleBadge.className = 'text-[9px] px-2 py-0.5 rounded-full font-mono font-black uppercase bg-amber-400 text-slate-950';
+            } else {
+                roleTitle.innerText = 'Chế Độ: Quản Trị / Kế Toán Toàn Công Ty';
+                roleDesc.innerText = 'Bạn có toàn quyền theo dõi, cấu hình và duyệt chi hoa hồng cho tất cả nhân sự trong doanh nghiệp.';
+                roleBadge.className = 'text-[9px] px-2 py-0.5 rounded-full font-mono font-black uppercase bg-emerald-400 text-slate-950';
+            }
+
+            const queryParams = `user_role=${encodeURIComponent(role)}&user_empid=${encodeURIComponent(user.empId || user.username)}`;
+
+            // 1. Tải nhân viên
+            const empRes = await fetch(`/api/hr/employees`);
+            const empData = await empRes.json();
+            if (empData.success) {
+                window.modComm.employees = empData.data;
+                const empSelect = document.getElementById('comm-filter-emp');
+                let optHtml = '<option value="">-- Tất cả nhân viên trong quyền xem --</option>';
+                empData.data.forEach(e => {
+                    optHtml += `<option value="${e.id}">${e.full_name} (${e.emp_code})</option>`;
+                });
+                empSelect.innerHTML = optHtml;
+            }
+
+            // 2. Tải danh sách hoa hồng (kèm phân quyền)
+            const res = await fetch(`/api/commissions?${queryParams}`);
+            const data = await res.json();
+            if (data.success) {
+                window.modComm.commissions = data.data;
+                window.modComm.applyFilter();
+            }
+
+            // 3. Tải thống kê & Tiến độ Ngưỡng tối thiểu
+            const sumRes = await fetch(`/api/commissions/summary?${queryParams}`);
+            const sumData = await sumRes.json();
+            if (sumData.success) {
+                window.modComm.summaryData = sumData;
+                const s = sumData.summary;
+                document.getElementById('comm-stat-total').innerText = (parseFloat(s.total_commission) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('comm-stat-eligible').innerText = (parseFloat(s.eligible_commission) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('comm-stat-pending').innerText = (parseFloat(s.pending_commission) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('comm-stat-paid').innerText = (parseFloat(s.paid_commission) || 0).toLocaleString('vi-VN') + ' đ';
+
+                window.modComm.renderThresholdCards(sumData.byEmployee || []);
+            }
+        } catch (err) {
+            console.error('Lỗi tải hoa hồng:', err);
+        }
+    },
+
+    renderThresholdCards: (empList) => {
+        const container = document.getElementById('comm-threshold-container');
+        if (!empList || empList.length === 0) {
+            container.innerHTML = '<div class="p-6 text-center text-slate-400 font-bold col-span-full">Không có dữ liệu nhân viên kinh doanh phù hợp.</div>';
+            return;
+        }
+
+        container.innerHTML = empList.map(e => {
+            const minThreshold = parseFloat(e.min_gross_profit_threshold) || 0;
+            const totalGross = parseFloat(e.total_gross_profit) || 0;
+            const progress = e.threshold_progress_percent || 0;
+            const isReached = e.is_threshold_reached;
+            const comm = parseFloat(e.total_commission) || 0;
+
+            let cardBorder = isReached ? 'border-emerald-300 bg-emerald-50/20' : 'border-rose-200 bg-rose-50/20';
+            let barColor = isReached ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-gradient-to-r from-rose-500 to-amber-500';
+            let badgeHtml = isReached
+                ? '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fas fa-check-circle"></i> ĐÃ ĐẠT NGƯỠNG</span>'
+                : '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fas fa-exclamation-triangle"></i> CHƯA ĐẠT NGƯỠNG</span>';
+
+            let roleTag = e.department_role === 'MANAGER'
+                ? '<span class="text-[9px] font-black bg-amber-200 text-amber-900 px-1.5 py-0.2 rounded border border-amber-300">TRƯỞNG PHÒNG</span>'
+                : '<span class="text-[9px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded">SALE</span>';
+
+            return `
+                <div class="border rounded-2xl p-4 shadow-xs flex flex-col justify-between ${cardBorder}">
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-black text-slate-900 text-sm">${e.full_name}</span>
+                                    <span class="font-mono text-xs font-bold text-amber-700">(${e.emp_code})</span>
+                                    ${roleTag}
+                                </div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">
+                                    Chính sách: <b class="text-blue-600">${e.rate_wholesale}% Sỉ</b> | <b class="text-purple-600">${e.rate_boq}% BOQ</b>
+                                </div>
+                            </div>
+                            <div>${badgeHtml}</div>
+                        </div>
+
+                        <!-- Thanh Tiến Độ -->
+                        <div class="my-3">
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span class="text-slate-600">LN Gộp: <b class="text-slate-900">${totalGross.toLocaleString('vi-VN')} đ</b></span>
+                                <span class="text-slate-500">Ngưỡng: <b class="text-rose-700">${minThreshold > 0 ? minThreshold.toLocaleString('vi-VN') + ' đ' : '0 đ (Không áp dụng)'}</b></span>
+                            </div>
+                            <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                                <div class="${barColor} h-full transition-all duration-500" style="width: ${progress}%"></div>
+                            </div>
+                            <div class="text-right text-[10px] font-bold text-slate-500 mt-0.5">Tiến độ đạt: <b class="${isReached ? 'text-emerald-700' : 'text-rose-600'}">${progress}%</b></div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 font-bold">Hoa hồng thực hưởng:</span>
+                        <span class="font-mono font-black text-sm ${comm > 0 ? 'text-orange-600' : 'text-slate-400'}">${comm.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    applyFilter: () => {
+        const type = document.getElementById('comm-filter-type').value;
+        const status = document.getElementById('comm-filter-status').value;
+        const empId = document.getElementById('comm-filter-emp').value;
+
+        const filtered = window.modComm.commissions.filter(c => {
+            if (type && c.ref_type !== type) return false;
+            if (status && c.paid_status !== status) return false;
+            if (empId && String(c.employee_id) !== String(empId)) return false;
+            return true;
+        });
+
+        const tbody = document.getElementById('comm-tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400 font-bold">Không tìm thấy bản ghi hoa hồng nào phù hợp trong quyền hạn của bạn</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(c => {
+            let typeBadge = c.ref_type === 'ORDER'
+                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-700 border border-blue-200">Đơn Sỉ</span>'
+                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">Dự Án BOQ</span>';
+
+            let statusBadge = '';
+            if (c.paid_status === 'ELIGIBLE') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">Đủ điều kiện chi</span>';
+            } else if (c.paid_status === 'PENDING') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 border border-amber-200">Chờ khách trả đủ</span>';
+            } else if (c.paid_status === 'INCLUDED_PAYROLL') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700 border border-purple-200">Đã vào bảng lương</span>';
+            } else {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-200">Đã chi trả</span>';
+            }
+
+            return `
+                <tr class="hover:bg-amber-50/40 transition border-b border-slate-100">
+                    <td class="p-3.5 pl-4 font-black text-slate-900 font-mono">${c.ref_code}</td>
+                    <td class="p-3.5">
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            ${typeBadge}
+                            <span class="font-bold text-slate-800">${c.customer_name || 'Khách hàng'}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400">${c.notes || ''}</div>
+                    </td>
+                    <td class="p-3.5 text-right font-bold text-slate-700">${(parseFloat(c.revenue_amount) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3.5 text-right font-medium text-slate-500">${(parseFloat(c.cogs_amount) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3.5 text-right font-bold text-emerald-700">${(parseFloat(c.gross_profit) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3.5 text-center font-black text-amber-600 font-mono">${c.commission_rate}%</td>
+                    <td class="p-3.5 text-right font-black text-orange-600 font-mono text-sm">${(parseFloat(c.commission_amount) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-indigo-700">${c.employee_name || 'Chưa gán'}</div>
+                        <div class="text-[10px] text-slate-400 font-mono">${c.emp_code || ''}</div>
+                    </td>
+                    <td class="p-3.5 text-center">${statusBadge}</td>
+                    <td class="p-3.5 text-center pr-4">
+                        ${c.paid_status === 'PENDING' ? `
+                            <button onclick="window.modComm.changeStatus(${c.id}, 'ELIGIBLE')" class="text-emerald-600 hover:text-emerald-800 font-bold text-xs p-1.5 rounded-lg hover:bg-emerald-50 mr-1" title="Duyệt đủ điều kiện chi">
+                                <i class="fas fa-check"></i> Duyệt
+                            </button>
+                        ` : ''}
+                        ${c.paid_status === 'ELIGIBLE' ? `
+                            <button onclick="window.modComm.changeStatus(${c.id}, 'PAID')" class="text-purple-600 hover:text-purple-800 font-bold text-xs p-1.5 rounded-lg hover:bg-purple-50 mr-1" title="Đánh dấu đã chi trực tiếp">
+                                <i class="fas fa-receipt"></i> Đã chi
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    syncOrders: async () => {
+        try {
+            const res = await fetch('/api/commissions/sync-orders', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.modComm.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    syncBoq: async () => {
+        try {
+            const res = await fetch('/api/commissions/sync-boq', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.modComm.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    changeStatus: async (id, status) => {
+        try {
+            const res = await fetch(`/api/commissions/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paid_status: status })
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.modComm.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    }
+};
+
+// Tự động tải
+window.modComm.load();
+</script>

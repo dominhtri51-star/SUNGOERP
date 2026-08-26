@@ -1,301 +1,691 @@
-<div class="h-full flex flex-col space-y-4">
+<div class="h-full flex flex-col space-y-4 font-sans">
     
-    <div class="flex flex-col md:flex-row justify-between items-center shrink-0">
-        <div>
-            <h3 class="font-black text-slate-900 text-xl"><i class="fas fa-building text-blue-800"></i> Kế Toán Tổng Hợp & Thuế (Chuẩn TT200)</h3>
-            <p class="text-xs text-slate-500 font-bold mt-1">Hệ thống đồng bộ API Tổng cục Thuế, VNACCS & iHTKK.</p>
+    <!-- HEADER & ACTION BAR -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
+                <i class="fas fa-file-excel text-xl"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2">
+                        KẾ TOÁN TỔNG HỢP & TRỢ LÝ BÁO CÁO THUẾ
+                    </h2>
+                    <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-2.5 py-0.5 rounded-full border border-blue-200 uppercase">Hỗ Trợ Kế Toán Trưởng</span>
+                </div>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Lưu trữ chứng từ gốc • Bóc tách HĐ XML • Lập bảng kê 01-1/01-2 & Bảng hỗ trợ BCTC (Không nộp tờ khai trực tiếp lên cơ quan thuế).</p>
+            </div>
         </div>
-        <div class="flex gap-2">
-            <span class="bg-red-100 border border-red-300 text-red-700 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center shadow-sm animate-pulse">
-                <i class="far fa-clock mr-2"></i> Hạn nộp Tờ khai: 20/08/2026
-            </span>
-            <button class="bg-slate-800 text-white font-bold py-1.5 px-4 rounded-lg text-xs transition shadow flex items-center gap-2">
-                <i class="fas fa-plug"></i> Cổng API: Trực Tuyến
+
+        <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                <label class="text-[11px] font-bold text-slate-600 pl-1">Kỳ Thuế:</label>
+                <input type="month" id="tax-period-selector" class="border border-slate-300 bg-white p-1 rounded font-bold text-xs outline-none focus:border-blue-500" onchange="window.modTax.loadAll()">
+            </div>
+            <button onclick="window.modTax.exportHTKK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-file-csv"></i> <span>Xuất File HTKK</span>
+            </button>
+            <button onclick="window.modTax.exportFinancialExcel()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-file-excel"></i> <span>Xuất BCTC Excel</span>
             </button>
         </div>
     </div>
 
-    <!-- HỆ THỐNG MENU 4 PHÂN HỆ -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden mt-2">
-        <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-2 pt-2 gap-1">
-            <button onclick="window.modTax.switchTab('EINV')" id="tab-btn-EINV" class="px-4 py-2 font-bold text-[11px] bg-white border-t-2 border-blue-500 text-blue-700 rounded-t-lg shadow-[0_-2px_4px_rgba(0,0,0,0.05)] transition"><i class="fas fa-file-invoice mr-1"></i> 1. Hóa Đơn TCT & Đầu Vào</button>
-            <button onclick="window.modTax.switchTab('VAT_PIT')" id="tab-btn-VAT_PIT" class="px-4 py-2 font-bold text-[11px] border-t-2 border-transparent text-slate-500 hover:text-slate-700 transition"><i class="fas fa-calendar-check mr-1"></i> 2. Kê Khai Thuế Tháng (GTGT, TNCN)</button>
-            <button onclick="window.modTax.switchTab('IMPORT')" id="tab-btn-IMPORT" class="px-4 py-2 font-bold text-[11px] border-t-2 border-transparent text-slate-500 hover:text-slate-700 transition"><i class="fas fa-ship mr-1"></i> 3. Ngoại Thương & Giá Vốn</button>
-            <button onclick="window.modTax.switchTab('YEAR_END')" id="tab-btn-YEAR_END" class="px-4 py-2 font-bold text-[11px] border-t-2 border-transparent text-slate-500 hover:text-slate-700 transition"><i class="fas fa-file-excel mr-1"></i> 4. Quyết Toán TNDN & BCTC</button>
-        </div>
-
-        <!-- 1. HÓA ĐƠN ĐIỆN TỬ (XML / TCT) -->
-        <div id="tab-EINV" class="flex-1 flex flex-col p-4 bg-white min-h-0">
-            <div class="flex justify-between items-center mb-3">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm"><i class="fas fa-sync-alt"></i> Quản Lý Hóa Đơn Đầu Vào</h4>
-                    <p class="text-[10px] text-slate-500">Tải lên file XML nhận từ nhà cung cấp để hệ thống tự bóc tách dữ liệu.</p>
-                </div>
-                <label id="btn-upload-xml" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-xs shadow cursor-pointer transition flex items-center gap-2">
-                    <i class="fas fa-upload"></i> Tải Lên File XML
-                    <input type="file" accept=".xml" class="hidden" onchange="window.modTax.uploadXML(this)">
-                </label>
-            </div>
-            <div class="overflow-y-auto border rounded-lg flex-1">
-                <table class="w-full text-left text-[11px]">
-                    <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase">
-                        <tr><th class="p-3">Ngày Lập / Số HĐ</th><th class="p-3">Nhà Cung Cấp</th><th class="p-3 text-right">Tổng Tiền (Sau Thuế)</th><th class="p-3 text-center">Xác thực XML</th><th class="p-3 text-center">UNC (>20Tr)</th></tr>
-                    </thead>
-                    <tbody id="tbl-einv-list" class="divide-y text-slate-700 font-medium"></tbody>
-                </table>
+    <!-- BANNER NGUYÊN TẮC AN TOÀN PHÁP LÝ -->
+    <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-3 rounded-xl border border-slate-700 shadow-sm flex flex-col md:flex-row justify-between items-center gap-2 text-xs shrink-0">
+        <div class="flex items-center gap-2">
+            <span class="p-1.5 bg-amber-500 text-slate-900 rounded-lg font-black"><i class="fas fa-shield-halved"></i></span>
+            <div>
+                <p class="font-bold text-amber-300">Nguyên Tắc An Toàn & Chuẩn Xác 100%:</p>
+                <p class="text-[11px] text-slate-300">Phần mềm nội bộ chỉ hỗ trợ lưu trữ chứng từ, bóc tách XML và tổng hợp số liệu. Kế toán trưởng sẽ sử dụng phần mềm chuyên dụng và chữ ký số USB Token để kiểm tra và nộp lên Tổng Cục Thuế.</p>
             </div>
         </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg font-bold text-[10px] flex items-center gap-1">
+                <i class="fas fa-check-circle"></i> Sẵn sàng xuất số liệu
+            </span>
+        </div>
+    </div>
 
-        <!-- 2. KÊ KHAI THUẾ HÀNG THÁNG (BỔ SUNG HĐ NGOẠI TUYẾN & XUẤT HTKK) -->
-        <div id="tab-VAT_PIT" class="flex-1 flex flex-col p-4 bg-white min-h-0 hidden">
-            
-            <div class="flex justify-between items-center mb-4 shrink-0 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                <div class="flex items-center gap-3">
-                    <label class="text-xs font-bold text-slate-700">Kỳ Kê Khai:</label>
-                    <input type="month" id="tax-period" class="border border-slate-300 p-1.5 rounded text-xs font-bold outline-none focus:border-blue-500" onchange="window.modTax.loadTaxData()">
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="window.modTax.openManualModal()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-1.5 px-3 rounded shadow-sm text-xs"><i class="fas fa-edit mr-1"></i> + HĐ Ngoại Tuyến (Bán lẻ)</button>
-                    <button onclick="window.modTax.exportHTKK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded shadow-sm text-xs"><i class="fas fa-file-excel mr-1"></i> Xuất Bảng Kê HTKK (CSV)</button>
-                </div>
+    <!-- RADAR KPI CARDS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
+        <!-- 1. NGHĨA VỤ THUẾ GTGT -->
+        <div class="bg-white p-3.5 rounded-xl border border-red-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600 font-black shrink-0">
+                <i class="fas fa-hand-holding-dollar text-lg"></i>
             </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-red-600 tracking-wider">Thuế GTGT Phải Nộp [40]</p>
+                <h4 class="text-lg font-black text-red-600 truncate" id="kpi-tax-payable">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold" id="kpi-tax-status">Đã bù trừ đầu vào</p>
+            </div>
+        </div>
 
-            <div class="grid grid-cols-2 gap-4 h-full min-h-0">
+        <!-- 2. THUẾ GTGT ĐẦU RA (BÁN RA) -->
+        <div class="bg-white p-3.5 rounded-xl border border-amber-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 font-black shrink-0">
+                <i class="fas fa-file-invoice-dollar text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-amber-700 tracking-wider">Thuế Bán Ra (01-1)</p>
+                <h4 class="text-lg font-black text-amber-600 truncate" id="kpi-vat-out-total">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold" id="kpi-rev-out-total">D.Thu: 0 đ</p>
+            </div>
+        </div>
+
+        <!-- 3. THUẾ GTGT ĐẦU VÀO (MUA VÀO) -->
+        <div class="bg-white p-3.5 rounded-xl border border-blue-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-black shrink-0">
+                <i class="fas fa-receipt text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-blue-700 tracking-wider">Được Khấu Trừ (01-2)</p>
+                <h4 class="text-lg font-black text-blue-600 truncate" id="kpi-vat-in-total">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold" id="kpi-cost-in-total">Chi phí: 0 đ</p>
+            </div>
+        </div>
+
+        <!-- 4. CẢNH BÁO UNC > 20 TRIỆU -->
+        <div class="bg-white p-3.5 rounded-xl border border-purple-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 font-black shrink-0">
+                <i class="fas fa-money-check-dollar text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-purple-700 tracking-wider">Chứng Từ UNC (>20Tr)</p>
+                <h4 class="text-lg font-black text-purple-700 truncate" id="kpi-unc-warning">0 HĐ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate">Cần chứng từ NH để khấu trừ</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN MODULES CONTAINER -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+        <!-- TABS HEADER -->
+        <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-3 pt-2 gap-1">
+            <button onclick="window.modTax.switchTab('VAT_DECLARATION')" id="tax-tab-btn-VAT_DECLARATION" class="px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-blue-600 text-blue-700 rounded-t-lg shadow-sm transition flex items-center gap-1.5">
+                <i class="fas fa-table-list text-blue-600"></i> 1. Bảng Kê Thuế GTGT (Bán Ra & Mua Vào)
+            </button>
+            <button onclick="window.modTax.switchTab('INPUT_XML')" id="tax-tab-btn-INPUT_XML" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-file-code text-indigo-500"></i> 2. Hóa Đơn Đầu Vào & Bóc Tách XML
+            </button>
+            <button onclick="window.modTax.switchTab('FINANCIAL_ASSISTANT')" id="tax-tab-btn-FINANCIAL_ASSISTANT" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-chart-pie text-emerald-600"></i> 3. Bảng Hỗ Trợ Báo Cáo Tài Chính (P&L, Công Nợ)
+            </button>
+            <button onclick="window.modTax.switchTab('TAX_VAULT_LINK')" id="tax-tab-btn-TAX_VAULT_LINK" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-vault text-amber-500"></i> 4. Két Sắt Chứng Từ Pháp Lý
+            </button>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 1: BẢNG KÊ THUẾ GTGT (BÁN RA 01-1 & MUA VÀO 01-2) -->
+        <!-- ========================================================= -->
+        <div id="tax-tab-VAT_DECLARATION" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-4 overflow-y-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+                
                 <!-- BẢNG KÊ BÁN RA (MẪU 01-1/GTGT) -->
-                <div class="border rounded-lg flex flex-col border-emerald-200">
-                    <div class="bg-emerald-50 p-3 border-b border-emerald-200 flex justify-between items-center">
-                        <h4 class="font-bold text-emerald-800 text-sm">Bảng kê Bán Ra (01-1/GTGT)</h4>
-                        <span class="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-200 shadow-sm" id="tax-out-total">Tổng Thuế: 0 đ</span>
+                <div class="border border-amber-200 rounded-xl flex flex-col overflow-hidden shadow-sm">
+                    <div class="bg-amber-50/80 p-3 border-b border-amber-200 flex justify-between items-center shrink-0">
+                        <div>
+                            <h4 class="font-black text-amber-900 text-xs uppercase flex items-center gap-1.5">
+                                <i class="fas fa-arrow-up-from-bracket text-amber-600"></i> Bảng Kê Hóa Đơn Bán Ra (Mẫu 01-1/GTGT)
+                            </h4>
+                            <p class="text-[10px] text-slate-500">Chỉ tính hóa đơn ĐÃ PHÁT HÀNH chính thức + Ngoại tuyến</p>
+                        </div>
+                        <span class="text-[11px] font-black text-amber-700 bg-white px-2.5 py-1 rounded-lg border border-amber-200" id="box-vat-out-sum">Thuế: 0 đ</span>
                     </div>
-                    <div class="flex-1 overflow-y-auto bg-white">
-                        <table class="w-full text-left text-[10px]">
-                            <thead class="bg-slate-50 text-slate-500 sticky top-0 uppercase">
-                                <tr><th class="p-2">Ngày/Số HĐ</th><th class="p-2">Khách Hàng</th><th class="p-2 text-right">Doanh Thu</th><th class="p-2 text-right text-emerald-600">Thuế (8-10%)</th></tr>
+                    <div class="flex-1 overflow-y-auto">
+                        <table class="w-full text-left text-[11px]">
+                            <thead class="bg-slate-50 text-slate-600 sticky top-0 uppercase font-bold text-[9px]">
+                                <tr>
+                                    <th class="p-2.5">Số HĐ / Ngày</th>
+                                    <th class="p-2.5">Người Mua / MST</th>
+                                    <th class="p-2.5 text-right">Doanh Thu</th>
+                                    <th class="p-2.5 text-right">Thuế VAT</th>
+                                </tr>
                             </thead>
-                            <tbody id="tbl-tax-out" class="divide-y text-slate-700 font-medium"></tbody>
+                            <tbody id="tbl-tax-out-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
                         </table>
                     </div>
                 </div>
 
                 <!-- BẢNG KÊ MUA VÀO (MẪU 01-2/GTGT) -->
-                <div class="border rounded-lg flex flex-col border-blue-200">
-                    <div class="bg-blue-50 p-3 border-b border-blue-200 flex justify-between items-center">
-                        <h4 class="font-bold text-blue-800 text-sm">Bảng kê Mua Vào (01-2/GTGT)</h4>
-                        <span class="text-[10px] font-bold text-blue-700 bg-white px-2 py-0.5 rounded border border-blue-200 shadow-sm" id="tax-in-total">Được Khấu Trừ: 0 đ</span>
+                <div class="border border-blue-200 rounded-xl flex flex-col overflow-hidden shadow-sm">
+                    <div class="bg-blue-50/80 p-3 border-b border-blue-200 flex justify-between items-center shrink-0">
+                        <div>
+                            <h4 class="font-black text-blue-900 text-xs uppercase flex items-center gap-1.5">
+                                <i class="fas fa-arrow-down-to-bracket text-blue-600"></i> Bảng Kê Hóa Đơn Mua Vào (Mẫu 01-2/GTGT)
+                            </h4>
+                            <p class="text-[10px] text-slate-500">Hóa đơn đầu vào hợp lệ đủ điều kiện khấu trừ</p>
+                        </div>
+                        <span class="text-[11px] font-black text-blue-700 bg-white px-2.5 py-1 rounded-lg border border-blue-200" id="box-vat-in-sum">Khấu trừ: 0 đ</span>
                     </div>
-                    <div class="flex-1 overflow-y-auto bg-white">
-                        <table class="w-full text-left text-[10px]">
-                            <thead class="bg-slate-50 text-slate-500 sticky top-0 uppercase">
-                                <tr><th class="p-2">Ngày/Số HĐ</th><th class="p-2">Nhà Cung Cấp</th><th class="p-2 text-right">Chi Phí</th><th class="p-2 text-right text-blue-600">Thuế VAT</th></tr>
+                    <div class="flex-1 overflow-y-auto">
+                        <table class="w-full text-left text-[11px]">
+                            <thead class="bg-slate-50 text-slate-600 sticky top-0 uppercase font-bold text-[9px]">
+                                <tr>
+                                    <th class="p-2.5">Số HĐ / Ngày</th>
+                                    <th class="p-2.5">Nhà Cung Cấp / MST</th>
+                                    <th class="p-2.5 text-right">Chi Phí</th>
+                                    <th class="p-2.5 text-right">Thuế VAT</th>
+                                </tr>
                             </thead>
-                            <tbody id="tbl-tax-in" class="divide-y text-slate-700 font-medium"></tbody>
+                            <tbody id="tbl-tax-in-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-            
-            <div class="mt-3 bg-red-50 border border-red-200 p-3 rounded-lg flex justify-between items-center shrink-0">
-                <span class="font-bold text-red-800 text-sm uppercase">TỔNG THUẾ GTGT PHẢI NỘP KỲ NÀY:</span>
-                <span class="font-black text-red-600 text-xl" id="tax-payable">0 VNĐ</span>
-            </div>
-        </div>
 
-        <!-- 3. NGOẠI THƯƠNG -->
-        <div id="tab-IMPORT" class="flex-1 flex flex-col p-4 bg-white min-h-0 hidden">
-            <div class="flex justify-center items-center h-full flex-col text-slate-400">
-                <i class="fas fa-ship text-5xl mb-4 text-blue-100"></i>
-                <p class="font-bold">Module Phân bổ Chi phí L/C, VNACCS đang được nạp...</p>
             </div>
-        </div>
 
-        <!-- 4. QUYẾT TOÁN TNDN -->
-        <div id="tab-YEAR_END" class="flex-1 flex flex-col p-4 bg-white min-h-0 hidden">
-            <div class="flex justify-center items-center h-full flex-col text-slate-400">
-                <i class="fas fa-file-excel text-5xl mb-4 text-emerald-100"></i>
-                <p class="font-bold">Module Báo cáo Tài chính XML đang được nạp...</p>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<!-- MODAL THÊM HÓA ĐƠN NGOẠI TUYẾN (DÙNG CHUNG) -->
-<div id="manual-vat-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden items-center justify-center z-[70] p-4">
-    <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
-        <h3 class="font-black text-xl mb-4 border-b-2 border-amber-500 pb-2 text-slate-800"><i class="fas fa-edit text-amber-500"></i> Khai Báo Hóa Đơn Ngoại Tuyến</h3>
-        <p class="text-xs text-slate-500 mb-4">Ghi nhận các hóa đơn xuất trực tiếp trên cổng VinInvoice để đồng bộ Báo cáo Thuế.</p>
-        
-        <div class="space-y-3">
-            <div class="grid grid-cols-2 gap-3">
-                <div><label class="block text-xs font-bold text-slate-600 mb-1">Số HĐ (VinInvoice) <span class="text-red-500">*</span></label><input type="text" id="vat-mo-inv" class="w-full border-2 p-2 rounded outline-none font-bold text-amber-600"></div>
-                <div><label class="block text-xs font-bold text-slate-600 mb-1">Ngày Xuất HĐ <span class="text-red-500">*</span></label><input type="date" id="vat-mo-date" class="w-full border-2 p-2 rounded outline-none"></div>
-            </div>
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">Khách Hàng (Người mua)</label><input type="text" id="vat-mo-company" placeholder="Tên công ty hoặc Khách lẻ..." class="w-full border-2 p-2 rounded outline-none text-sm"></div>
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">Mã Số Thuế</label><input type="text" id="vat-mo-tax" class="w-full border-2 p-2 rounded outline-none font-mono text-sm"></div>
-            
-            <div class="grid grid-cols-3 gap-3">
-                <div class="col-span-1"><label class="block text-xs font-bold text-slate-600 mb-1">Thuế suất</label>
-                    <select id="vat-mo-rate" class="w-full border-2 p-2 rounded outline-none font-bold" onchange="window.modTax.calcManualVAT()"><option value="8">8%</option><option value="10">10%</option><option value="0">0%</option></select>
+            <!-- TỔNG KẾT NGHĨA VỤ THUẾ GTGT -->
+            <div class="bg-slate-900 text-white p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-3 shrink-0 shadow-lg">
+                <div>
+                    <h4 class="font-bold text-sm text-slate-100 flex items-center gap-2">
+                        <i class="fas fa-calculator text-amber-400"></i> CÂN ĐỐI THUẾ GTGT TRONG KỲ:
+                    </h4>
+                    <p class="text-xs text-slate-400 mt-0.5">Thuế Đầu Ra - Thuế Đầu Vào = Số thuế phải nộp (hoặc còn được khấu trừ chuyển kỳ sau)</p>
                 </div>
-                <div class="col-span-2"><label class="block text-xs font-bold text-slate-600 mb-1">Doanh Thu (Chưa Thuế) <span class="text-red-500">*</span></label>
-                    <input type="number" id="vat-mo-rev" class="w-full border-2 p-2 rounded outline-none font-black text-slate-700" oninput="window.modTax.calcManualVAT()">
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-400 uppercase font-bold">Kết quả tạm tính:</p>
+                        <h3 class="text-xl font-black text-amber-400" id="box-tax-final-calc">0 VNĐ</h3>
+                    </div>
+                    <button onclick="window.modTax.exportHTKK()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition shadow flex items-center gap-1.5">
+                        <i class="fas fa-download"></i> Kết Xuất Bảng Kê HTKK (CSV)
+                    </button>
                 </div>
             </div>
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">Tiền Thuế VAT</label><input type="number" id="vat-mo-vat" class="w-full border-2 p-2 rounded bg-slate-50 font-black text-red-500" readonly></div>
         </div>
-        <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
-            <button onclick="window.modTax.closeManualModal()" class="px-5 py-2.5 bg-slate-200 text-slate-700 rounded font-bold hover:bg-slate-300">Hủy</button>
-            <button onclick="window.modTax.saveManualVAT()" class="px-5 py-2.5 bg-amber-500 text-white rounded font-bold hover:bg-amber-600"><i class="fas fa-save mr-1"></i> Lưu Hóa Đơn</button>
+
+        <!-- ========================================================= -->
+        <!-- TAB 2: QUẢN LÝ HÓA ĐƠN ĐẦU VÀO & BÓC TÁCH XML -->
+        <!-- ========================================================= -->
+        <div id="tax-tab-INPUT_XML" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div>
+                    <h4 class="font-bold text-slate-900 text-xs uppercase flex items-center gap-1.5">
+                        <i class="fas fa-file-code text-indigo-600"></i> Bóc Tách File Hóa Đơn Điện Tử XML (Chuẩn Tổng Cục Thuế)
+                    </h4>
+                    <p class="text-[11px] text-slate-500">Tải lên file XML nhận từ nhà cung cấp để hệ thống tự động nhận diện MST, Tên NCC, Giá trị và Thuế VAT.</p>
+                </div>
+                <label id="btn-upload-xml" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow cursor-pointer transition flex items-center gap-2 shrink-0">
+                    <i class="fas fa-upload"></i> Tải Lên File XML HĐĐT
+                    <input type="file" accept=".xml" class="hidden" onchange="window.modTax.uploadXML(this)">
+                </label>
+            </div>
+
+            <div class="overflow-y-auto border border-slate-200 rounded-xl flex-1">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase font-bold text-[10px]">
+                        <tr>
+                            <th class="p-3">Ngày Lập / Số HĐ</th>
+                            <th class="p-3">Nhà Cung Cấp & MST</th>
+                            <th class="p-3">Nội Dung Diễn Giải</th>
+                            <th class="p-3 text-right">Chi Phí Trước Thuế</th>
+                            <th class="p-3 text-right">Tiền Thuế VAT</th>
+                            <th class="p-3 text-right">Tổng Thanh Toán</th>
+                            <th class="p-3 text-center">Điều Kiện UNC</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-xml-invoices-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 3: BẢNG HỖ TRỢ BÁO CÁO TÀI CHÍNH (P&L, COGS, CÔNG NỢ) -->
+        <!-- ========================================================= -->
+        <div id="tax-tab-FINANCIAL_ASSISTANT" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-4 overflow-y-auto hidden">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 shrink-0">
+                <!-- THẺ DOANH THU THUẦN -->
+                <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-200">
+                    <p class="text-[10px] font-black uppercase text-blue-700">1. Doanh Thu Bán Hàng & Dịch Vụ</p>
+                    <h3 class="text-xl font-black text-blue-900 mt-1" id="pnl-net-rev">0 đ</h3>
+                    <p class="text-[10px] text-slate-500 mt-1">Từ các đơn hàng bán ra trong kỳ</p>
+                </div>
+                <!-- THẺ GIÁ VỐN HÀNG BÁN -->
+                <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200">
+                    <p class="text-[10px] font-black uppercase text-amber-700">2. Giá Vốn Hàng Bán (COGS)</p>
+                    <h3 class="text-xl font-black text-amber-900 mt-1" id="pnl-cogs">0 đ</h3>
+                    <p class="text-[10px] text-slate-500 mt-1">Theo giá vốn nhập kho từng mặt hàng</p>
+                </div>
+                <!-- THẺ LỢI NHUẬN GỘP -->
+                <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200">
+                    <p class="text-[10px] font-black uppercase text-emerald-700">3. Lợi Nhuận Gộp (Gross Profit)</p>
+                    <h3 class="text-xl font-black text-emerald-900 mt-1" id="pnl-gross-profit">0 đ</h3>
+                    <p class="text-[10px] text-emerald-700 font-bold mt-1" id="pnl-gross-margin">Biên lợi nhuận: 0%</p>
+                </div>
+            <!-- BẢNG P&L CHI TIẾT -->
+            <div class="overflow-y-auto border border-slate-200 rounded-xl flex-1 bg-white">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-100 text-slate-700 sticky top-0 uppercase font-bold text-[10px] shadow-sm z-10">
+                        <tr>
+                            <th class="p-3">Chỉ Tiêu Doanh Thu & Chi Phí</th>
+                            <th class="p-3 text-center">Mã Số</th>
+                            <th class="p-3 text-right text-emerald-800">Có Hóa Đơn (Thuế)</th>
+                            <th class="p-3 text-right text-rose-800">Không Hóa Đơn (Nội Bộ/B4)</th>
+                            <th class="p-3 text-right font-black text-slate-900 bg-slate-200/60">TỔNG THỰC TẾ</th>
+                            <th class="p-3">Ghi Chú Nguồn</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        <tr class="font-bold">
+                            <td class="p-3">1. Doanh thu bán hàng và cung cấp dịch vụ</td>
+                            <td class="p-3 text-center font-mono text-slate-400">01</td>
+                            <td class="p-3 text-right text-slate-800" id="pl-01-inv">0</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right font-black text-blue-900 bg-slate-50" id="pl-01">0</td>
+                            <td class="p-3 text-slate-500">Tổng giá trị đơn hàng bán ra</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3">2. Các khoản giảm trừ doanh thu</td>
+                            <td class="p-3 text-center font-mono text-slate-400">02</td>
+                            <td class="p-3 text-right text-slate-600" id="pl-02-inv">0</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right font-bold text-slate-600 bg-slate-50" id="pl-02">0</td>
+                            <td class="p-3 text-slate-500">Chiết khấu thương mại, giảm giá</td>
+                        </tr>
+                        <tr class="bg-blue-50/40 font-bold">
+                            <td class="p-3 text-blue-950">3. Doanh thu thuần (10 = 01 - 02)</td>
+                            <td class="p-3 text-center font-mono text-blue-700">10</td>
+                            <td class="p-3 text-right text-blue-900" id="pl-10-inv">0</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right font-black text-blue-950 bg-blue-100/40" id="pl-10">0</td>
+                            <td class="p-3 text-blue-700">Doanh thu bán hàng thực</td>
+                        </tr>
+                        <tr class="font-bold">
+                            <td class="p-3 text-amber-900">4. Giá vốn hàng bán (COGS)</td>
+                            <td class="p-3 text-center font-mono text-amber-700">11</td>
+                            <td class="p-3 text-right text-amber-800" id="pl-11-inv">0</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right font-black text-amber-800 bg-amber-50/50" id="pl-11">0</td>
+                            <td class="p-3 text-slate-500">Giá vốn xuất kho thiết bị</td>
+                        </tr>
+                        <tr class="bg-emerald-50/60 font-black">
+                            <td class="p-3 text-emerald-950">5. LỢI NHUẬN GỘP (20 = 10 - 11)</td>
+                            <td class="p-3 text-center font-mono text-emerald-700">20</td>
+                            <td class="p-3 text-right text-emerald-800" id="pl-20-inv">0</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right text-emerald-900 text-sm bg-emerald-100/50" id="pl-20">0</td>
+                            <td class="p-3 text-emerald-700" id="pnl-gross-margin">Biên lãi gộp</td>
+                        </tr>
+                        
+                        <!-- CÁC NHÓM CHI PHÍ QUẢN TRỊ TRỌNG YẾU -->
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-800">📦 6. Chi phí Giao hàng & Logistics</td>
+                            <td class="p-3 text-center font-mono text-slate-400">21</td>
+                            <td class="p-3 text-right font-bold text-emerald-700" id="pl-ship-inv">0</td>
+                            <td class="p-3 text-right font-bold text-rose-600" id="pl-ship-non">0</td>
+                            <td class="p-3 text-right font-black text-slate-800 bg-slate-50" id="pl-ship-tot">0</td>
+                            <td class="p-3 text-slate-500">Hãng vận chuyển & xe ba gác, ship lẻ</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-800">🏢 7. Chi phí Thuê Kho, Mặt Bằng & Văn Phòng</td>
+                            <td class="p-3 text-center font-mono text-slate-400">22</td>
+                            <td class="p-3 text-right font-bold text-emerald-700" id="pl-rent-inv">0</td>
+                            <td class="p-3 text-right font-bold text-rose-600" id="pl-rent-non">0</td>
+                            <td class="p-3 text-right font-black text-slate-800 bg-slate-50" id="pl-rent-tot">0</td>
+                            <td class="p-3 text-slate-500">HĐ thuê cá nhân / Bảng kê 01 / Cty</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-800">👷 8. Chi phí Nhân công Thời vụ / Bốc xếp</td>
+                            <td class="p-3 text-center font-mono text-slate-400">23</td>
+                            <td class="p-3 text-right font-bold text-emerald-700" id="pl-labor-inv">0</td>
+                            <td class="p-3 text-right font-bold text-rose-600" id="pl-labor-non">0</td>
+                            <td class="p-3 text-right font-black text-slate-800 bg-slate-50" id="pl-labor-tot">0</td>
+                            <td class="p-3 text-slate-500">Khoán việc / Cam kết 08 / Trả công nhật</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-800">💰 9. Chi phí Vay mượn Vốn Chủ sở hữu</td>
+                            <td class="p-3 text-center font-mono text-slate-400">24</td>
+                            <td class="p-3 text-right font-bold text-emerald-700" id="pl-owner-inv">0</td>
+                            <td class="p-3 text-right font-bold text-rose-600" id="pl-owner-non">0</td>
+                            <td class="p-3 text-right font-black text-slate-800 bg-slate-50" id="pl-owner-tot">0</td>
+                            <td class="p-3 text-slate-500">Lãi vay chủ sở hữu / Vay mượn vốn 0%</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-800">👥 10. Chi phí Tiền lương chính thức & BHXH</td>
+                            <td class="p-3 text-center font-mono text-slate-400">25</td>
+                            <td class="p-3 text-right font-bold text-emerald-700" id="pl-25">0</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right font-black text-slate-800 bg-slate-50" id="pl-25-tot">0</td>
+                            <td class="p-3 text-slate-500">Bảng lương + BHXH + Thưởng</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-800">🏦 11. Chi phí Lãi vay ngân hàng</td>
+                            <td class="p-3 text-center font-mono text-slate-400">26</td>
+                            <td class="p-3 text-right font-bold text-emerald-700" id="pl-22">0</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right font-black text-slate-800 bg-slate-50" id="pl-22-tot">0</td>
+                            <td class="p-3 text-slate-500">Hợp đồng tín dụng ngân hàng</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-800">⚙️ 12. Chi phí Quản lý vận hành khác</td>
+                            <td class="p-3 text-center font-mono text-slate-400">27</td>
+                            <td class="p-3 text-right font-bold text-emerald-700" id="pl-gen-inv">0</td>
+                            <td class="p-3 text-right font-bold text-rose-600" id="pl-gen-non">0</td>
+                            <td class="p-3 text-right font-black text-slate-800 bg-slate-50" id="pl-gen-tot">0</td>
+                            <td class="p-3 text-slate-500">Tiếp khách, VPP, điện nước, đồ dùng lẻ</td>
+                        </tr>
+
+                        <!-- TỔNG KẾT THỰC TẾ & BỎ TÚI -->
+                        <tr class="bg-amber-50/70 font-bold">
+                            <td class="p-3 text-amber-950">13. LỢI NHUẬN TRƯỚC THUẾ THỰC TẾ</td>
+                            <td class="p-3 text-center font-mono text-amber-700">40</td>
+                            <td class="p-3 text-right text-slate-500" id="pl-tax-book-profit">0 (Sổ thuế)</td>
+                            <td class="p-3 text-right text-rose-700 font-bold" id="pl-b4-total">0 (Chỉ tiêu B4)</td>
+                            <td class="p-3 text-right font-black text-amber-900 text-sm bg-amber-100/60" id="pl-real-pretax">0</td>
+                            <td class="p-3 text-amber-800">Lãi thật trước khi nộp thuế</td>
+                        </tr>
+                        <tr class="font-bold text-red-700">
+                            <td class="p-3">14. Thuế TNDN ước tính phải nộp (theo Sổ Thuế)</td>
+                            <td class="p-3 text-center font-mono text-slate-400">50</td>
+                            <td class="p-3 text-right font-bold text-red-600" id="pl-cit-tax">0</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right font-black text-red-600 bg-red-50" id="pl-cit-tax-tot">0</td>
+                            <td class="p-3 text-slate-500">20% trên Lãi sổ thuế (Do bị loại trừ B4)</td>
+                        </tr>
+                        <tr class="bg-slate-900 text-white font-black text-sm">
+                            <td class="p-3 text-emerald-400 flex items-center gap-1.5">
+                                <i class="fas fa-sack-dollar text-emerald-400 text-base"></i> 15. LỢI NHUẬN RÒNG THỰC SỰ BỎ TÚI SẾP
+                            </td>
+                            <td class="p-3 text-center font-mono text-slate-400">60</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right text-slate-400">-</td>
+                            <td class="p-3 text-right text-emerald-400 text-base bg-slate-950 font-black" id="pl-30">0 VNĐ</td>
+                            <td class="p-3 text-emerald-300 font-normal text-xs">Số tiền thực tế còn lại sau thuế</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CHỈ TIÊU CÔNG NỢ 131 & 331 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
+                <div class="p-4 rounded-xl border border-blue-200 bg-blue-50/30">
+                    <h4 class="font-black text-xs text-blue-900 uppercase mb-1">
+                        <i class="fas fa-user-tag text-blue-600"></i> Phải Thu Khách Hàng (Tài Khoản 131)
+                    </h4>
+                    <h3 class="text-xl font-black text-blue-800" id="ar-131-total">0 đ</h3>
+                    <p class="text-[11px] text-slate-500 mt-1">Tổng công nợ tiền hàng khách chưa thanh toán</p>
+                </div>
+                <div class="p-4 rounded-xl border border-red-200 bg-red-50/30">
+                    <h4 class="font-black text-xs text-red-900 uppercase mb-1">
+                        <i class="fas fa-truck-field text-red-600"></i> Phải Trả Nhà Cung Cấp (Tài Khoản 331)
+                    </h4>
+                    <h3 class="text-xl font-black text-red-700" id="ap-331-total">0 đ</h3>
+                    <p class="text-[11px] text-slate-500 mt-1">Tổng tiền hàng mua vào / nhập kho có hóa đơn</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 4: KÉT SẮT CHỨNG TỪ PHÁP LÝ & GIẢI TRÌNH THUẾ -->
+        <!-- ========================================================= -->
+        <div id="tax-tab-TAX_VAULT_LINK" class="flex-1 flex flex-col p-6 bg-white min-h-0 items-center justify-center text-center space-y-3 hidden">
+            <div class="w-16 h-16 rounded-2xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center text-3xl shadow-md">
+                <i class="fas fa-vault"></i>
+            </div>
+            <h3 class="font-black text-base text-slate-900">Két Sắt Chứng Từ Pháp Lý & Hồ Sơ Giải Trình Thuế</h3>
+            <p class="text-xs text-slate-500 max-w-lg">Toàn bộ chứng từ gốc (C/O, C/Q, Tờ khai hải quan VNACCS, Hợp đồng, Biên bản bàn giao, Phiếu chi sổ quỹ) đã được gom tự động trong phân hệ Két Sắt Hồ Sơ.</p>
+            <button onclick="window.location.hash = '#accounting-vault'" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-5 rounded-xl text-xs transition shadow flex items-center gap-2">
+                <i class="fas fa-arrow-right"></i> Mở Phân Hệ Két Sắt Hồ Sơ
+            </button>
+        </div>
+
     </div>
 </div>
 
 <script>
     window.modTax = {
-        outData: [], // Bán ra
-        inData: [],  // Mua vào
+        taxData: null,
+        pnlData: null,
 
         load: async () => {
-            // Set kỳ kê khai mặc định là tháng hiện tại (YYYY-MM)
+            // Mặc định chọn tháng hiện tại (YYYY-MM)
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
-            document.getElementById('tax-period').value = `${yyyy}-${mm}`;
-            
-            await window.modTax.loadTaxData();
+            const selector = document.getElementById('tax-period-selector');
+            if (selector && !selector.value) {
+                selector.value = `${yyyy}-${mm}`;
+            }
+            await window.modTax.loadAll();
         },
 
-        loadTaxData: async () => {
-            const period = document.getElementById('tax-period').value; // Format: YYYY-MM
-            if(!period) return;
+        loadAll: async () => {
+            const period = document.getElementById('tax-period-selector').value;
+            if (!period) return;
 
-            const [resOut, resIn] = await Promise.all([ fetch('/api/invoices'), fetch('/api/invoices/expenses') ]);
-            const [outJson, inJson] = await Promise.all([resOut.json(), resIn.json()]);
-            
-            if(outJson.success) {
-                window.modTax.outData = outJson.data.filter(i => {
-                    if(i.status !== 'Đã Phát Hành' || !i.issued_at) return false;
-                    return i.issued_at.startsWith(period);
-                });
-            }
-            if(inJson.success) {
-                window.modTax.inData = inJson.data.filter(i => {
-                    if(!i.has_invoice) return false; // Chỉ lấy chi phí có Hóa đơn đỏ
-                    return i.expense_date.startsWith(period);
-                });
-            }
+            try {
+                const [resTax, resPnl, resExp] = await Promise.all([
+                    fetch(`/api/accounting/tax-summary?period=${period}`),
+                    fetch(`/api/accounting/financial-statement?period=${period}`),
+                    fetch(`/api/invoices/expenses?period=${period}`)
+                ]);
 
-            window.modTax.renderTaxTables();
-            window.modTax.renderEINV(); // Render lại Tab 1 luôn
+                const [dataTax, dataPnl, dataExp] = await Promise.all([resTax.json(), resPnl.json(), resExp.json()]);
+
+                if (dataTax.success) {
+                    window.modTax.taxData = dataTax;
+                    window.modTax.renderTaxTables(dataTax);
+                }
+
+                if (dataPnl.success) {
+                    window.modTax.pnlData = dataPnl;
+                    window.modTax.renderFinancialStatements(dataPnl);
+                }
+
+                if (dataExp.success) {
+                    window.modTax.renderXMLTable(dataExp.data);
+                }
+            } catch (e) {
+                console.error("Lỗi nạp báo cáo thuế:", e);
+            }
         },
 
-        renderEINV: () => {
-            const tbody = document.getElementById('tbl-einv-list');
-            if(window.modTax.inData.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Chưa có hóa đơn XML nào.</td></tr>`;
+        renderTaxTables: (data) => {
+            const s = data.summary;
+            document.getElementById('kpi-tax-payable').innerText = new Intl.NumberFormat('vi-VN').format(s.vat_payable) + ' đ';
+            document.getElementById('kpi-vat-out-total').innerText = new Intl.NumberFormat('vi-VN').format(s.total_vat_out) + ' đ';
+            document.getElementById('kpi-rev-out-total').innerText = 'D.Thu: ' + new Intl.NumberFormat('vi-VN').format(s.total_rev_out) + ' đ';
+            document.getElementById('kpi-vat-in-total').innerText = new Intl.NumberFormat('vi-VN').format(s.total_vat_in) + ' đ';
+            document.getElementById('kpi-cost-in-total').innerText = 'Chi phí: ' + new Intl.NumberFormat('vi-VN').format(s.total_rev_in) + ' đ';
 
-            tbody.innerHTML = window.modTax.inData.map(i => {
-                const needUNC = parseFloat(i.total_amount) >= 20000000;
-                let uncHtml = needUNC ? `<span class="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded border border-red-300">Thiếu UNC</span>` : `<span class="bg-slate-100 text-slate-400 px-2 py-0.5 rounded text-[9px]">Dưới 20Tr</span>`;
+            document.getElementById('box-vat-out-sum').innerText = 'Thuế: ' + new Intl.NumberFormat('vi-VN').format(s.total_vat_out) + ' đ';
+            document.getElementById('box-vat-in-sum').innerText = 'Khấu trừ: ' + new Intl.NumberFormat('vi-VN').format(s.total_vat_in) + ' đ';
+
+            if (s.vat_payable > 0) {
+                document.getElementById('box-tax-final-calc').innerText = 'Phải nộp: ' + new Intl.NumberFormat('vi-VN').format(s.vat_payable) + ' VNĐ';
+                document.getElementById('box-tax-final-calc').className = 'text-xl font-black text-red-400';
+            } else {
+                document.getElementById('box-tax-final-calc').innerText = 'Còn khấu trừ: ' + new Intl.NumberFormat('vi-VN').format(s.vat_carried_forward) + ' VNĐ';
+                document.getElementById('box-tax-final-calc').className = 'text-xl font-black text-emerald-400';
+            }
+
+            // Render Bán Ra
+            const tbOut = document.getElementById('tbl-tax-out-body');
+            if (!data.vat_out_list || data.vat_out_list.length === 0) {
+                tbOut.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Không có hóa đơn bán ra trong kỳ</td></tr>`;
+            } else {
+                tbOut.innerHTML = data.vat_out_list.map(i => `
+                    <tr class="hover:bg-amber-50/40">
+                        <td class="p-2.5">
+                            <p class="font-mono font-bold text-amber-800">#${i.invoice_no || 'Chưa số'}</p>
+                            <p class="text-[10px] text-slate-400">${new Date(i.issued_at).toLocaleDateString('vi-VN')}</p>
+                        </td>
+                        <td class="p-2.5">
+                            <p class="font-bold text-slate-800 line-clamp-1">${i.company_name}</p>
+                            <p class="text-[10px] font-mono text-slate-500">MST: ${i.tax_code || 'Khách lẻ'}</p>
+                        </td>
+                        <td class="p-2.5 text-right font-bold text-slate-800">${new Intl.NumberFormat('vi-VN').format(i.amount_before_tax)}</td>
+                        <td class="p-2.5 text-right font-black text-amber-600">${new Intl.NumberFormat('vi-VN').format(i.vat_amount)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            // Render Mua Vào
+            const tbIn = document.getElementById('tbl-tax-in-body');
+            let uncCount = 0;
+            if (!data.vat_in_list || data.vat_in_list.length === 0) {
+                tbIn.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Không có hóa đơn mua vào trong kỳ</td></tr>`;
+            } else {
+                tbIn.innerHTML = data.vat_in_list.map(exp => {
+                    if (exp.need_unc) uncCount++;
+                    return `
+                        <tr class="hover:bg-blue-50/40">
+                            <td class="p-2.5">
+                                <p class="font-mono font-bold text-blue-800">#${exp.invoice_no || 'HĐ mua'}</p>
+                                <p class="text-[10px] text-slate-400">${new Date(exp.expense_date).toLocaleDateString('vi-VN')}</p>
+                            </td>
+                            <td class="p-2.5">
+                                <p class="font-bold text-slate-800 line-clamp-1">${exp.vendor_name}</p>
+                                <p class="text-[10px] font-mono text-slate-500">MST: ${exp.vendor_tax_code || '---'}</p>
+                            </td>
+                            <td class="p-2.5 text-right font-bold text-slate-800">${new Intl.NumberFormat('vi-VN').format(exp.amount_before_tax)}</td>
+                            <td class="p-2.5 text-right font-black text-blue-600">${new Intl.NumberFormat('vi-VN').format(exp.vat_amount)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            document.getElementById('kpi-unc-warning').innerText = `${uncCount} HĐ >20Tr`;
+        },
+
+        renderXMLTable: (expenses) => {
+            const tbody = document.getElementById('tbl-xml-invoices-body');
+            const valid = (expenses || []).filter(e => e.has_invoice);
+            if (valid.length === 0) {
+                return tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Chưa có hóa đơn XML nào. Vui lòng tải file XML lên.</td></tr>`;
+            }
+
+            tbody.innerHTML = valid.map(e => {
+                const needUNC = parseFloat(e.total_amount) >= 20000000;
+                const uncBadge = needUNC 
+                    ? `<span class="bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded text-[10px] border border-purple-200">Cần UNC NH</span>`
+                    : `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">< 20 Triệu</span>`;
+
                 return `
-                    <tr class="hover:bg-blue-50/30">
-                        <td class="p-3"><p class="font-bold text-slate-800">${new Date(i.expense_date).toLocaleDateString('vi-VN')}</p><p class="text-[10px] text-blue-600 font-mono font-bold">#${i.invoice_no}</p></td>
-                        <td class="p-3"><p class="font-bold text-slate-800">${i.vendor_name}</p><p class="text-[9px] font-mono text-slate-500">MST: ${i.vendor_tax_code}</p></td>
-                        <td class="p-3 text-right font-black text-slate-700">${new Intl.NumberFormat('vi-VN').format(i.total_amount)}</td>
-                        <td class="p-3 text-center"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[9px] font-bold">Hợp lệ</span></td>
-                        <td class="p-3 text-center">${uncHtml}</td>
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-medium">
+                            <p class="font-mono font-bold text-blue-700">#${e.invoice_no || 'XML'}</p>
+                            <p class="text-[10px] text-slate-400">${new Date(e.expense_date).toLocaleDateString('vi-VN')}</p>
+                        </td>
+                        <td class="p-3 font-medium">
+                            <p class="font-bold text-slate-900">${e.vendor_name}</p>
+                            <p class="text-[10px] font-mono text-slate-500">MST: ${e.vendor_tax_code || '---'}</p>
+                        </td>
+                        <td class="p-3 text-slate-600 text-xs truncate max-w-[200px]" title="${e.description}">${e.description}</td>
+                        <td class="p-3 text-right font-bold text-slate-800">${new Intl.NumberFormat('vi-VN').format(e.amount_before_tax)}</td>
+                        <td class="p-3 text-right font-black text-blue-600">${new Intl.NumberFormat('vi-VN').format(e.vat_amount)}</td>
+                        <td class="p-3 text-right font-black text-slate-900">${new Intl.NumberFormat('vi-VN').format(e.total_amount)}</td>
+                        <td class="p-3 text-center">${uncBadge}</td>
                     </tr>
                 `;
             }).join('');
         },
 
-        renderTaxTables: () => {
-            // Render Bán Ra
-            let tVatOut = 0;
-            const tbOut = document.getElementById('tbl-tax-out');
-            if(window.modTax.outData.length === 0) tbOut.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Không có hóa đơn Bán ra.</td></tr>`;
-            else {
-                tbOut.innerHTML = window.modTax.outData.map(i => {
-                    tVatOut += parseFloat(i.vat_amount || 0);
-                    const tag = i.ref_type === 'MANUAL' ? '<span class="text-[8px] bg-amber-100 text-amber-700 px-1 rounded ml-1">Nhập Tay</span>' : '';
-                    return `
-                        <tr>
-                            <td class="p-2"><p>${new Date(i.issued_at).toLocaleDateString('vi-VN')}</p><p class="text-[9px] font-mono font-bold text-blue-600">#${i.invoice_no}${tag}</p></td>
-                            <td class="p-2"><p class="font-bold line-clamp-1">${i.company_name}</p><p class="text-[9px] font-mono">MST: ${i.tax_code}</p></td>
-                            <td class="p-2 text-right font-bold">${new Intl.NumberFormat('vi-VN').format(i.total_amount)}</td>
-                            <td class="p-2 text-right font-bold text-emerald-600">${new Intl.NumberFormat('vi-VN').format(i.vat_amount)}</td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-            document.getElementById('tax-out-total').innerText = `Tổng Thuế: ${new Intl.NumberFormat('vi-VN').format(tVatOut)} đ`;
+        renderFinancialStatements: (data) => {
+            const p3 = data.pnl_3cols || {};
+            const p = data.pnl || {};
+            const b = data.balance_indicators || {};
+            const fmt = (v) => new Intl.NumberFormat('vi-VN').format(v || 0);
 
-            // Render Mua Vào
-            let tVatIn = 0;
-            const tbIn = document.getElementById('tbl-tax-in');
-            if(window.modTax.inData.length === 0) tbIn.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Không có hóa đơn Mua vào.</td></tr>`;
-            else {
-                tbIn.innerHTML = window.modTax.inData.map(i => {
-                    tVatIn += parseFloat(i.vat_amount || 0);
-                    return `
-                        <tr>
-                            <td class="p-2"><p>${new Date(i.expense_date).toLocaleDateString('vi-VN')}</p><p class="text-[9px] font-mono font-bold text-blue-600">#${i.invoice_no}</p></td>
-                            <td class="p-2"><p class="font-bold line-clamp-1">${i.vendor_name}</p><p class="text-[9px] font-mono">MST: ${i.vendor_tax_code}</p></td>
-                            <td class="p-2 text-right font-bold">${new Intl.NumberFormat('vi-VN').format(i.amount_before_tax)}</td>
-                            <td class="p-2 text-right font-bold text-blue-600">${new Intl.NumberFormat('vi-VN').format(i.vat_amount)}</td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-            document.getElementById('tax-in-total').innerText = `Được Khấu Trừ: ${new Intl.NumberFormat('vi-VN').format(tVatIn)} đ`;
+            // KPI Header Cards
+            document.getElementById('pnl-net-rev').innerText = fmt(p.net_revenue) + ' đ';
+            document.getElementById('pnl-cogs').innerText = fmt(p.cogs) + ' đ';
+            document.getElementById('pnl-gross-profit').innerText = fmt(p.gross_profit) + ' đ';
+            document.getElementById('pnl-gross-margin').innerText = `Biên lãi gộp: ${p.gross_margin || 0}%`;
 
-            // Tính thuế phải nộp
-            const payable = tVatOut - tVatIn;
-            document.getElementById('tax-payable').innerText = `${new Intl.NumberFormat('vi-VN').format(payable > 0 ? payable : 0)} VNĐ`;
+            // 1. Doanh thu & Giá vốn
+            document.getElementById('pl-01-inv').innerText = fmt(p3.revenue?.invoiced || p.gross_revenue);
+            document.getElementById('pl-01').innerText = fmt(p3.revenue?.total || p.gross_revenue);
+            document.getElementById('pl-02-inv').innerText = fmt(p3.revenue?.deductions || p.deductions);
+            document.getElementById('pl-02').innerText = fmt(p3.revenue?.deductions || p.deductions);
+            document.getElementById('pl-10-inv').innerText = fmt(p3.revenue?.invoiced || p.net_revenue);
+            document.getElementById('pl-10').innerText = fmt(p3.revenue?.total || p.net_revenue);
+            document.getElementById('pl-11-inv').innerText = fmt(p3.cogs?.invoiced || p.cogs);
+            document.getElementById('pl-11').innerText = fmt(p3.cogs?.total || p.cogs);
+            document.getElementById('pl-20-inv').innerText = fmt(p3.gross_profit?.invoiced || p.gross_profit);
+            document.getElementById('pl-20').innerText = fmt(p3.gross_profit?.total || p.gross_profit);
+
+            // 2. Chi phí theo 4 nhóm trọng yếu & Vận hành
+            const exp = p3.expenses || {};
+            document.getElementById('pl-ship-inv').innerText = fmt(exp.shipping?.invoiced);
+            document.getElementById('pl-ship-non').innerText = fmt(exp.shipping?.non_invoiced);
+            document.getElementById('pl-ship-tot').innerText = fmt(exp.shipping?.total);
+
+            document.getElementById('pl-rent-inv').innerText = fmt(exp.rent?.invoiced);
+            document.getElementById('pl-rent-non').innerText = fmt(exp.rent?.non_invoiced);
+            document.getElementById('pl-rent-tot').innerText = fmt(exp.rent?.total);
+
+            document.getElementById('pl-labor-inv').innerText = fmt(exp.labor?.invoiced);
+            document.getElementById('pl-labor-non').innerText = fmt(exp.labor?.non_invoiced);
+            document.getElementById('pl-labor-tot').innerText = fmt(exp.labor?.total);
+
+            document.getElementById('pl-owner-inv').innerText = fmt(exp.owner_loan?.invoiced);
+            document.getElementById('pl-owner-non').innerText = fmt(exp.owner_loan?.non_invoiced);
+            document.getElementById('pl-owner-tot').innerText = fmt(exp.owner_loan?.total);
+
+            document.getElementById('pl-25').innerText = fmt(exp.payroll?.invoiced || p.payroll_expenses);
+            document.getElementById('pl-25-tot').innerText = fmt(exp.payroll?.total || p.payroll_expenses);
+
+            document.getElementById('pl-22').innerText = fmt(exp.bank_interest?.invoiced || p.interest_expenses);
+            document.getElementById('pl-22-tot').innerText = fmt(exp.bank_interest?.total || p.interest_expenses);
+
+            document.getElementById('pl-gen-inv').innerText = fmt(exp.general?.invoiced);
+            document.getElementById('pl-gen-non').innerText = fmt(exp.general?.non_invoiced);
+            document.getElementById('pl-gen-tot').innerText = fmt(exp.general?.total);
+
+            // 3. Tổng kết Lợi nhuận trước thuế & Bỏ túi
+            document.getElementById('pl-tax-book-profit').innerText = fmt(p3.profit_tax_book) + ' đ (Sổ thuế)';
+            document.getElementById('pl-b4-total').innerText = fmt(p3.non_deductible_b4) + ' đ (Chỉ tiêu B4)';
+            document.getElementById('pl-real-pretax').innerText = fmt(p3.profit_before_tax_real) + ' đ';
+
+            document.getElementById('pl-cit-tax').innerText = fmt(p3.estimated_cit_tax) + ' đ';
+            document.getElementById('pl-cit-tax-tot').innerText = fmt(p3.estimated_cit_tax) + ' đ';
+
+            document.getElementById('pl-30').innerText = fmt(p3.net_profit_pocket || p.net_profit) + ' VNĐ';
+
+            // 4. Công nợ
+            document.getElementById('ar-131-total').innerText = fmt(b.receivables_131) + ' đ';
+            document.getElementById('ap-331-total').innerText = fmt(b.payables_331) + ' đ';
         },
 
-        // --- HÓA ĐƠN NGOẠI TUYẾN ---
-        openManualModal: () => {
-            document.getElementById('vat-mo-date').valueAsDate = new Date();
-            ['vat-mo-inv', 'vat-mo-company', 'vat-mo-tax', 'vat-mo-rev', 'vat-mo-vat'].forEach(el => document.getElementById(el).value = '');
-            document.getElementById('manual-vat-modal').classList.replace('hidden', 'flex');
-        },
-        closeManualModal: () => document.getElementById('manual-vat-modal').classList.replace('flex', 'hidden'),
-        calcManualVAT: () => {
-            const rev = parseFloat(document.getElementById('vat-mo-rev').value || 0);
-            const rate = parseFloat(document.getElementById('vat-mo-rate').value || 0);
-            document.getElementById('vat-mo-vat').value = Math.round(rev * (rate / 100));
-        },
-        saveManualVAT: async () => {
-            const payload = {
-                invoice_no: document.getElementById('vat-mo-inv').value.trim(),
-                issued_at: document.getElementById('vat-mo-date').value,
-                company_name: document.getElementById('vat-mo-company').value.trim() || 'Khách Lẻ',
-                tax_code: document.getElementById('vat-mo-tax').value.trim(),
-                vat_rate: document.getElementById('vat-mo-rate').value,
-                total_amount: document.getElementById('vat-mo-rev').value,
-                vat_amount: document.getElementById('vat-mo-vat').value
-            };
-            if(!payload.invoice_no || !payload.total_amount) return alert('⚠️ Vui lòng điền đủ Số Hóa Đơn và Doanh Thu!');
+        uploadXML: async (input) => {
+            const file = input.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            const label = document.getElementById('btn-upload-xml');
+            const originalHTML = label.innerHTML;
+            label.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang bóc tách XML...`;
+
             try {
-                const res = await fetch('/api/invoices/manual', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                const res = await fetch('/api/invoices/upload-xml', { method: 'POST', body: formData });
                 const data = await res.json();
-                if(data.success) {
-                    window.modTax.closeManualModal();
-                    window.modTax.loadTaxData(); // Nạp lại dữ liệu Thuế
-                } else alert('Lỗi: ' + data.error);
-            } catch(e) { alert("Lỗi kết nối Server!"); }
+                if (data.success) {
+                    alert(data.message);
+                    await window.modTax.loadAll();
+                } else alert("Lỗi: " + data.error);
+            } catch (e) { alert("Lỗi kết nối máy chủ đọc XML!"); }
+
+            label.innerHTML = originalHTML;
+            input.value = '';
         },
 
-        // --- XUẤT HTKK ---
         exportHTKK: () => {
-            if(window.modTax.outData.length === 0) return alert('Không có dữ liệu Bán Ra trong kỳ này!');
-            const period = document.getElementById('tax-period').value; // YYYY-MM
-            let csv = "\uFEFFSTT,Mẫu số hóa đơn,Ký hiệu hóa đơn,Số hóa đơn,Ngày tháng năm lập,Tên người mua,Mã số thuế người mua,Mặt hàng,Doanh thu chưa thuế,Thuế suất,Thuế GTGT\n";
-            window.modTax.outData.forEach((i, idx) => {
+            if (!window.modTax.taxData || !window.modTax.taxData.vat_out_list || window.modTax.taxData.vat_out_list.length === 0) {
+                return alert("⚠️ Không có dữ liệu hóa đơn Bán Ra chính thức trong kỳ này để xuất HTKK!");
+            }
+            const period = document.getElementById('tax-period-selector').value;
+            let csv = "\uFEFFSTT,Mẫu số HĐ,Ký hiệu HĐ,Số hóa đơn,Ngày tháng năm lập,Tên người mua,Mã số thuế người mua,Mặt hàng,Doanh thu chưa thuế,Thuế suất,Thuế GTGT\n";
+            window.modTax.taxData.vat_out_list.forEach((i, idx) => {
                 const dateStr = new Date(i.issued_at).toLocaleDateString('vi-VN');
-                const safeName = `"${(i.company_name||'').replace(/"/g, '""')}"`;
-                csv += `${idx+1},1C26T,AA/26E,${i.invoice_no},${dateStr},${safeName},${i.tax_code},"Hàng hóa dịch vụ",${i.total_amount},${i.vat_rate},${i.vat_amount}\n`;
+                const safeName = `"${(i.company_name || '').replace(/"/g, '""')}"`;
+                const itemName = (i.items && i.items[0]?.accounting_name) ? `"${i.items[0].accounting_name.replace(/"/g, '""')}"` : '"Hàng hóa dịch vụ năng lượng mặt trời"';
+                csv += `${idx + 1},${i.invoice_symbol?.split('-')[0] || '1C26T'},${i.invoice_symbol?.split('-')[1] || 'AA/26E'},${i.invoice_no},${dateStr},${safeName},${i.tax_code},${itemName},${i.amount_before_tax},${i.vat_rate}%,${i.vat_amount}\n`;
             });
+
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -303,35 +693,55 @@
             link.click();
         },
 
-        uploadXML: async (input) => {
-            const file = input.files[0];
-            if(!file) return;
-            const formData = new FormData(); formData.append('file', file);
-            const label = document.getElementById('btn-upload-xml');
-            const originalHTML = label.innerHTML; label.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang đọc XML...`;
-            try {
-                const res = await fetch('/api/invoices/upload-xml', { method: 'POST', body: formData });
-                const data = await res.json();
-                if(data.success) {
-                    alert(`✅ Đã bóc tách XML Hóa đơn: #${data.data.invoice_no}`);
-                    await window.modTax.loadTaxData();
-                } else alert('Lỗi: ' + data.error);
-            } catch(e) { alert('Lỗi Server!'); }
-            label.innerHTML = originalHTML; input.value = '';
+        exportFinancialExcel: () => {
+            if (!window.modTax.pnlData) return alert("Chưa có số liệu Báo Cáo Tài Chính trong kỳ!");
+            const period = document.getElementById('tax-period-selector').value;
+            const p3 = window.modTax.pnlData.pnl_3cols || {};
+            const p = window.modTax.pnlData.pnl || {};
+            const exp = p3.expenses || {};
+
+            let csv = "\uFEFFSTT,Chỉ Tiêu Báo Cáo Lãi Lỗ Quản Trị,Mã Số,Có Hóa Đơn (Thuế),Không Hóa Đơn (Nội Bộ/B4),Tổng Thực Tế (VNĐ),Ghi Chú Bản Chất\n";
+            csv += `1,"Doanh thu bán hàng và dịch vụ",01,${p3.revenue?.invoiced || p.gross_revenue},0,${p3.revenue?.total || p.gross_revenue},"Tổng đơn hàng bán ra"\n`;
+            csv += `2,"Các khoản giảm trừ doanh thu",02,${p.deductions},0,${p.deductions},"Chiết khấu, giảm giá"\n`;
+            csv += `3,"Doanh thu thuần",10,${p3.revenue?.invoiced || p.net_revenue},0,${p3.revenue?.total || p.net_revenue},"Doanh thu thực tế"\n`;
+            csv += `4,"Giá vốn hàng bán (COGS)",11,${p3.cogs?.invoiced || p.cogs},0,${p3.cogs?.total || p.cogs},"Giá vốn xuất kho"\n`;
+            csv += `5,"Lợi nhuận gộp",20,${p3.gross_profit?.invoiced || p.gross_profit},0,${p3.gross_profit?.total || p.gross_profit},"Biên lãi gộp: ${p.gross_margin}%"\n`;
+            csv += `6,"Chi phí Giao hàng & Logistics",21,${exp.shipping?.invoiced || 0},${exp.shipping?.non_invoiced || 0},${exp.shipping?.total || 0},"Vận chuyển hàng hóa"\n`;
+            csv += `7,"Chi phí Thuê Mặt bằng & Kho",22,${exp.rent?.invoiced || 0},${exp.rent?.non_invoiced || 0},${exp.rent?.total || 0},"HĐ thuê / Bảng kê 01 / Cty"\n`;
+            csv += `8,"Chi phí Nhân công Thời vụ",23,${exp.labor?.invoiced || 0},${exp.labor?.non_invoiced || 0},${exp.labor?.total || 0},"Khoán việc / Cam kết 08"\n`;
+            csv += `9,"Chi phí Vay mượn Vốn Chủ sở hữu",24,${exp.owner_loan?.invoiced || 0},${exp.owner_loan?.non_invoiced || 0},${exp.owner_loan?.total || 0},"Lãi vay / Mượn vốn 0%"\n`;
+            csv += `10,"Chi phí Tiền lương chính thức",25,${exp.payroll?.invoiced || p.payroll_expenses},0,${exp.payroll?.total || p.payroll_expenses},"Bảng lương & BHXH"\n`;
+            csv += `11,"Chi phí Lãi vay ngân hàng",26,${exp.bank_interest?.invoiced || p.interest_expenses},0,${exp.bank_interest?.total || p.interest_expenses},"Lãi tín dụng ngân hàng"\n`;
+            csv += `12,"Chi phí Quản lý vận hành khác",27,${exp.general?.invoiced || 0},${exp.general?.non_invoiced || 0},${exp.general?.total || 0},"Tiếp khách, VPP, điện nước"\n`;
+            csv += `13,"LỢI NHUẬN TRƯỚC THUẾ THỰC TẾ",40,${p3.profit_tax_book || 0},${p3.non_deductible_b4 || 0},${p3.profit_before_tax_real || 0},"Lợi nhuận kinh doanh thực tế"\n`;
+            csv += `14,"Thuế TNDN ước tính theo Sổ Thuế",50,${p3.estimated_cit_tax || 0},0,${p3.estimated_cit_tax || 0},"20% trên Lãi sổ thuế sau loại trừ B4"\n`;
+            csv += `15,"LỢI NHUẬN RÒNG BỎ TÚI SẾP",60,0,0,${p3.net_profit_pocket || p.net_profit},"LÃI THẬT BỎ TÚI CUỐI CÙNG"\n`;
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `P&L_Quan_Tri_3_Cot_Loi_Nhuan_Thuc_${period}.csv`;
+            link.click();
         },
 
         switchTab: (tab) => {
-            ['EINV', 'VAT_PIT', 'IMPORT', 'YEAR_END'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                document.getElementById(`tab-btn-${t}`).classList.replace('border-t-2', 'border-t-2'); 
-                document.getElementById(`tab-btn-${t}`).classList.remove('bg-white', 'border-blue-500', 'text-blue-700', 'shadow-[0_-2px_4px_rgba(0,0,0,0.05)]');
-                document.getElementById(`tab-btn-${t}`).classList.add('border-transparent', 'text-slate-500');
+            ['VAT_DECLARATION', 'INPUT_XML', 'FINANCIAL_ASSISTANT', 'TAX_VAULT_LINK'].forEach(t => {
+                const el = document.getElementById(`tax-tab-${t}`);
+                const btn = document.getElementById(`tax-tab-btn-${t}`);
+                if (el) el.classList.add('hidden');
+                if (btn) {
+                    btn.className = 'px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5';
+                }
             });
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
-            document.getElementById(`tab-btn-${tab}`).classList.remove('border-transparent', 'text-slate-500');
-            document.getElementById(`tab-btn-${tab}`).classList.add('bg-white', 'border-blue-500', 'text-blue-700', 'shadow-[0_-2px_4px_rgba(0,0,0,0.05)]');
+
+            const activeEl = document.getElementById(`tax-tab-${tab}`);
+            const activeBtn = document.getElementById(`tax-tab-btn-${tab}`);
+            if (activeEl) activeEl.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.className = 'px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-blue-600 text-blue-700 rounded-t-lg shadow-sm transition flex items-center gap-1.5';
+            }
         }
     };
-    
+
     window.modTax.load();
 </script>

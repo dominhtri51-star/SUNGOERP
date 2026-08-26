@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer'); // Thêm multer để xử lý Upload file từ WMS
+const pool = require('../config/database');
 const router = express.Router();
 
 const dbFile = path.join(__dirname, '../data/purchases.json');
@@ -23,7 +24,6 @@ const storage = multer.diskStorage({
     }
 });
 const uploadWms = multer({ storage: storage });
-
 
 function readDB() {
     try { return JSON.parse(fs.readFileSync(dbFile, 'utf8')); } catch(e) { return []; }
@@ -62,12 +62,8 @@ router.post('/', (req, res) => {
     } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-// [PUT] Cập nhật Đơn Mua Hàng
-// ===============================================
-// TÍCH HỢP: NHẬN DỮ LIỆU TỪ MODULE KHO (WMS)
-// ===============================================
-// SỬA ĐỔI: Dùng uploadWms.array('receipt_documents', 5) để nhận tối đa 5 ảnh
-router.put('/:id/receive', uploadWms.array('receipt_documents', 5), (req, res) => {
+// [PUT] Cập nhật Đơn Mua Hàng (Nhận hàng từ WMS)
+router.put('/:id/receive', uploadWms.array('receipt_documents', 5), async (req, res) => {
     try {
         let data = readDB();
         const id = parseInt(req.params.id);
@@ -78,14 +74,12 @@ router.put('/:id/receive', uploadWms.array('receipt_documents', 5), (req, res) =
         }
 
         const po = data[index];
-        // Lấy thêm các trường thông tin mới
         const { receive_date, received_items, status, delivery_note, vehicle_info } = req.body;
 
         // 1. Cập nhật thông tin nhận hàng chung
         po.receive_date = receive_date;
         if (status) po.status = status; // Đổi sang 'Hoàn Tất Nhập Kho'
         
-        // Lưu thông tin Số phiếu và Nhà xe
         if (delivery_note !== undefined) po.delivery_note = delivery_note;
         if (vehicle_info !== undefined) po.vehicle_info = vehicle_info;
         
@@ -107,10 +101,41 @@ router.put('/:id/receive', uploadWms.array('receipt_documents', 5), (req, res) =
                     }
                     return item;
                 });
+
+                // Đồng bộ tăng tồn kho vào bảng products trong PostgreSQL
+                for (let rec of parsedItems) {
+                    const actQty = parseFloat(rec.actual_qty) || 0;
+                    const pId = parseInt(rec.product_id || rec.id);
+                    const binLoc = rec.bin_location ? rec.bin_location.trim() : null;
+
+                    if (actQty > 0) {
+                        try {
+                            if (pId && !isNaN(pId)) {
+                                if (binLoc) {
+                                    await pool.query(
+                                        `UPDATE products 
+                                         SET stock_qty = stock_qty + $1, bin_location = COALESCE($2, bin_location) 
+                                         WHERE id = $3`,
+                                        [actQty, binLoc, pId]
+                                    );
+                                } else {
+                                    await pool.query(
+                                        `UPDATE products 
+                                         SET stock_qty = stock_qty + $1 
+                                         WHERE id = $2`,
+                                        [actQty, pId]
+                                    );
+                                }
+                            }
+                        } catch (dbErr) {
+                            console.error('Error incrementing stock on PO receive:', dbErr);
+                        }
+                    }
+                }
             }
         }
 
-        // 3. Đưa biên nhận (Nhiều ảnh) vào két sắt chứng từ (Document Vault)
+        // 3. Đưa biên nhận (Nhiều ảnh) vào két sắt chứng từ
         if (req.files && req.files.length > 0) {
             if (!po.docs || typeof po.docs !== 'object' || Array.isArray(po.docs)) po.docs = {};
             if (!po.docs.wms_receipt) po.docs.wms_receipt = [];
@@ -135,8 +160,6 @@ router.put('/:id/receive', uploadWms.array('receipt_documents', 5), (req, res) =
     }
 });
 
-
-
 // [PUT] Cập nhật trạng thái (Duyệt / Hủy / Nhập Kho)
 router.put('/:id/status', (req, res) => {
     try {
@@ -149,69 +172,6 @@ router.put('/:id/status', (req, res) => {
             res.json({ success: true });
         } else res.status(404).json({ success: false });
     } catch (e) { res.status(500).json({ success: false }); }
-});
-
-// ===============================================
-// TÍCH HỢP: NHẬN DỮ LIỆU TỪ MODULE KHO (WMS)
-// ===============================================
-router.put('/:id/receive', uploadWms.single('receipt_document'), (req, res) => {
-    try {
-        let data = readDB();
-        const id = parseInt(req.params.id);
-        const index = data.findIndex(x => x.id === id);
-        
-        if (index === -1) {
-            return res.status(404).json({ success: false, error: 'Không tìm thấy Lệnh mua hàng' });
-        }
-
-        const po = data[index];
-        const { receive_date, received_items, status } = req.body;
-
-        // 1. Cập nhật thông tin nhận hàng chung
-        po.receive_date = receive_date;
-        if (status) po.status = status; // Đổi sang 'Hoàn Tất Nhập Kho'
-        po.updated_at = new Date().toISOString();
-
-        // 2. Ghi nhận số lượng thực tế & vị trí kệ vào từng vật tư
-        if (received_items) {
-            const parsedItems = JSON.parse(received_items);
-            if (po.items && Array.isArray(po.items)) {
-                po.items = po.items.map(item => {
-                    const rec = parsedItems.find(r => r.id === item.id);
-                    if (rec) {
-                        return { 
-                            ...item, 
-                            actual_qty: rec.actual_qty, 
-                            bin_location: rec.bin_location, 
-                            shelf_status: rec.shelf_status 
-                        };
-                    }
-                    return item;
-                });
-            }
-        }
-
-        // 3. Đưa biên nhận (nếu có) vào két sắt chứng từ (Document Vault)
-        if (req.file) {
-            if (!po.docs || typeof po.docs !== 'object' || Array.isArray(po.docs)) po.docs = {};
-            if (!po.docs.wms_receipt) po.docs.wms_receipt = [];
-            
-            po.docs.wms_receipt.push({
-                name: 'Biên nhận / Bàn giao kho',
-                url: '/uploads/proofs/' + req.file.filename,
-                original_name: req.file.originalname,
-                uploaded_at: new Date().toISOString()
-            });
-        }
-
-        // Lưu dữ liệu
-        data[index] = po;
-        writeDB(data);
-
-        res.json({ success: true, data: po });
-    } catch (error) { 
-        res.status(500).json({ success: false, error: error.message }); 
-    }
 });
 
 module.exports = router;

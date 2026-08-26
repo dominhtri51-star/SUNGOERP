@@ -1,76 +1,89 @@
-<div class="p-4 md:p-6 max-w-6xl mx-auto h-full flex flex-col bg-slate-50">
+<div class="p-4 md:p-6 max-w-7xl mx-auto h-full flex flex-col bg-slate-50">
     <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Cài Đặt Hệ Thống</h2>
-        <button onclick="window.modSettings.save()" id="btn-save-settings" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-black text-sm shadow-lg transition flex items-center">
-            <i class="fas fa-save mr-2"></i> Lưu Cấu Hình
+        <div>
+            <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
+                <i class="fas fa-cogs text-blue-600"></i> Cài Đặt Hệ Thống & Phân Quyền
+            </h2>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Quản lý thông tin doanh nghiệp, kho bãi và cấu hình quyền truy cập (RBAC)</p>
+        </div>
+        <button onclick="window.modSettings.save()" id="btn-save-settings" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-6 py-2.5 rounded-xl font-black text-sm shadow-lg shadow-blue-500/20 transition flex items-center gap-2 cursor-pointer">
+            <i class="fas fa-save"></i> <span>Lưu Cấu Hình</span>
         </button>
     </div>
 
     <div class="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
         <!-- Sidebar Menu -->
-        <div class="w-full md:w-64 shrink-0 bg-white rounded-xl shadow-sm border border-slate-200 p-3 h-fit">
-            <button id="btn-tab-general" onclick="window.modSettings.switchTab('general')" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-bold text-[13px] bg-blue-50 text-blue-600 mb-1 transition">
-                <i class="fas fa-store w-6 text-center"></i> Thông Tin Chung
+        <div class="w-full md:w-64 shrink-0 bg-white rounded-2xl shadow-sm border border-slate-200 p-3 h-fit space-y-1">
+            <button id="btn-tab-general" onclick="window.modSettings.switchTab('general')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] bg-blue-50 text-blue-600 transition flex items-center gap-2.5">
+                <i class="fas fa-store w-5 text-center"></i> Thông Tin Chung
             </button>
-            <button id="btn-tab-warehouses" onclick="window.modSettings.switchTab('warehouses')" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-bold text-[13px] text-slate-600 hover:bg-slate-50 mb-1 transition">
-                <i class="fas fa-warehouse w-6 text-center"></i> Quản Lý Danh Sách Kho
+            <button id="btn-tab-warehouses" onclick="window.modSettings.switchTab('warehouses')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center gap-2.5">
+                <i class="fas fa-warehouse w-5 text-center"></i> Quản Lý Danh Sách Kho
             </button>
-            <button id="btn-tab-quote" onclick="window.modSettings.switchTab('quote')" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-bold text-[13px] text-slate-600 hover:bg-slate-50 mb-1 transition">
-                <i class="fas fa-file-invoice-dollar w-6 text-center"></i> Mẫu Báo Giá
+            <button id="btn-tab-permissions" onclick="window.modSettings.switchTab('permissions')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center justify-between">
+                <span class="flex items-center gap-2.5"><i class="fas fa-user-shield w-5 text-center text-amber-500"></i> Phân Quyền (RBAC)</span>
+                <span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-black">Nâng cao</span>
             </button>
-            <button id="btn-tab-delivery" onclick="window.modSettings.switchTab('delivery')" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition">
-                <i class="fas fa-truck-loading w-6 text-center"></i> Mẫu Phiếu Xuất Kho
+            <button id="btn-tab-quote" onclick="window.modSettings.switchTab('quote')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center gap-2.5">
+                <i class="fas fa-file-invoice-dollar w-5 text-center"></i> Mẫu Báo Giá
+            </button>
+            <button id="btn-tab-delivery" onclick="window.modSettings.switchTab('delivery')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center gap-2.5">
+                <i class="fas fa-truck-loading w-5 text-center"></i> Mẫu Phiếu Xuất Kho
             </button>
         </div>
 
         <!-- Content Area -->
-        <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 p-6 overflow-y-auto relative">
+        <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 overflow-y-auto relative">
             
             <!-- TAB: GENERAL -->
             <div id="tab-general" class="setting-tab space-y-5">
-                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5">Thông Tin Doanh Nghiệp</h3>
+                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5 flex items-center gap-2">
+                    <i class="fas fa-building text-blue-600"></i> Thông Tin Doanh Nghiệp
+                </h3>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Tên Công Ty / Cửa Hàng</label>
-                    <input type="text" id="set-store-name" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-bold outline-none focus:border-blue-500">
+                    <input type="text" id="set-store-name" class="w-full border border-slate-300 rounded-xl p-3 text-sm font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                 </div>
-                <div class="grid grid-cols-2 gap-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Số Điện Thoại</label>
-                        <input type="text" id="set-store-phone" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500">
+                        <input type="text" id="set-store-phone" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mã Số Thuế</label>
-                        <input type="text" id="set-store-tax" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500">
+                        <input type="text" id="set-store-tax" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Địa Chỉ</label>
-                    <input type="text" id="set-store-address" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500">
+                    <input type="text" id="set-store-address" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Link Logo (URL Hình Ảnh)</label>
-                    <input type="text" id="set-store-logo" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 mb-2">
+                    <input type="text" id="set-store-logo" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 mb-2">
                 </div>
             </div>
 
             <!-- TAB: WAREHOUSES -->
             <div id="tab-warehouses" class="setting-tab hidden space-y-5">
                 <div class="flex justify-between items-center border-b pb-3 mb-5">
-                    <h3 class="font-black text-slate-800 uppercase">Quản Lý Đa Kho (WMS)</h3>
-                    <button onclick="window.modSettings.addWarehouse()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm flex items-center">
-                        <i class="fas fa-plus mr-2"></i> Thêm Kho Mới
+                    <h3 class="font-black text-slate-800 uppercase flex items-center gap-2">
+                        <i class="fas fa-warehouse text-emerald-600"></i> Quản Lý Đa Kho (WMS)
+                    </h3>
+                    <button onclick="window.modSettings.addWarehouse()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                        <i class="fas fa-plus"></i> Thêm Kho Mới
                     </button>
                 </div>
                 
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
                     <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
                             <tr>
-                                <th class="p-3 border-b">Mã Kho (ID)</th>
-                                <th class="p-3 border-b">Tên Kho</th>
-                                <th class="p-3 border-b">Địa Chỉ / Vị Trí</th>
-                                <th class="p-3 border-b">Người Phụ Trách</th>
-                                <th class="p-3 border-b text-center">Thao Tác</th>
+                                <th class="p-3.5 border-b">Mã Kho (ID)</th>
+                                <th class="p-3.5 border-b">Tên Kho</th>
+                                <th class="p-3.5 border-b">Địa Chỉ / Vị Trí</th>
+                                <th class="p-3.5 border-b">Người Phụ Trách</th>
+                                <th class="p-3.5 border-b text-center">Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody id="set-warehouses-list" class="divide-y divide-slate-100">
@@ -80,27 +93,146 @@
                 </div>
             </div>
 
+            <!-- TAB: PERMISSIONS (RBAC & USER PERMISSIONS) -->
+            <div id="tab-permissions" class="setting-tab hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                        <h3 class="font-black text-slate-800 uppercase text-base flex items-center gap-2">
+                            <i class="fas fa-shield-alt text-amber-500"></i> Phân Quyền Truy Cập Hệ Thống (RBAC)
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Cấu hình quyền xem module theo Vai Trò hoặc cấp quyền bổ sung riêng cho từng Nhân Viên</p>
+                    </div>
+
+                    <!-- Subtab Switcher -->
+                    <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200">
+                        <button id="btn-subtab-role-perms" onclick="window.modSettings.switchPermSubTab('role')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-white text-blue-600 shadow-xs flex items-center gap-1.5">
+                            <i class="fas fa-user-tag"></i> Theo Vai Trò
+                        </button>
+                        <button id="btn-subtab-user-perms" onclick="window.modSettings.switchPermSubTab('user')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+                            <i class="fas fa-user-plus"></i> Riêng Từng Nhân Viên
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SUBTAB 1: ROLE PERMISSIONS -->
+                <div id="perm-subtab-role" class="space-y-5">
+                    <!-- Danh sách chọn Vai Trò -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">1. Chọn Loại Tài Khoản / Vai Trò Cần Cấu Hình:</label>
+                        <div class="flex flex-wrap gap-2" id="role-selector-container">
+                            <!-- Render bằng JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Bảng Checklist Module theo Nhóm -->
+                    <div class="bg-slate-50/80 rounded-2xl p-4 md:p-5 border border-slate-200 space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-200 pb-3">
+                            <div>
+                                <h4 class="font-black text-slate-800 text-sm flex items-center gap-2" id="selected-role-title">
+                                    <span>👑 Đang cấu hình: <b class="text-blue-600">ADMIN (Ban Giám Đốc)</b></span>
+                                </h4>
+                                <p class="text-xs text-slate-500 mt-0.5" id="selected-role-desc">Toàn quyền xem và thao tác tất cả module hệ thống.</p>
+                            </div>
+                            <div class="flex items-center gap-2" id="role-quick-actions">
+                                <button onclick="window.modSettings.selectAllRoleModules(true)" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition">
+                                    <i class="fas fa-check-double text-emerald-600 mr-1"></i> Chọn Hết
+                                </button>
+                                <button onclick="window.modSettings.selectAllRoleModules(false)" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition">
+                                    <i class="fas fa-times text-red-500 mr-1"></i> Bỏ Chọn Hết
+                                </button>
+                                <button onclick="window.modSettings.resetRoleToDefault()" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition">
+                                    <i class="fas fa-undo text-blue-600 mr-1"></i> Mặc Định
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Danh sách module theo nhóm chức năng -->
+                        <div class="space-y-4" id="role-modules-container">
+                            <!-- Render bằng JavaScript -->
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-200 flex justify-end">
+                            <button onclick="window.modSettings.saveRolePermissions()" id="btn-save-role-perms" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer">
+                                <i class="fas fa-save"></i> <span>Lưu Phân Quyền Cho Vai Trò Này</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBTAB 2: USER SPECIFIC PERMISSIONS -->
+                <div id="perm-subtab-user" class="hidden space-y-5">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        
+                        <!-- Cột Trái: Danh sách Nhân viên & Tìm kiếm -->
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col h-[520px]">
+                            <div class="mb-3">
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1.5">Tìm Nhân Viên / Tài Khoản:</label>
+                                <div class="relative">
+                                    <i class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
+                                    <input type="text" id="user-perm-search" oninput="window.modSettings.filterUsersForPerm()" placeholder="Tìm tên, username, mã NV..." class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="flex-1 overflow-y-auto space-y-1.5 pr-1" id="user-perm-list">
+                                <!-- Render danh sách User bằng JS -->
+                            </div>
+                        </div>
+
+                        <!-- Cột Phải: Phân quyền riêng cho nhân viên được chọn -->
+                        <div class="lg:col-span-2 bg-slate-50/70 rounded-2xl p-4 md:p-5 border border-slate-200 flex flex-col h-[520px]">
+                            <div id="user-perm-detail-header" class="border-b border-slate-200 pb-3.5 mb-3">
+                                <p class="text-xs text-slate-400 text-center py-6">Vui lòng chọn 1 nhân viên ở danh sách bên trái để cấp quyền riêng.</p>
+                            </div>
+
+                            <div class="flex-1 overflow-y-auto pr-1 space-y-4" id="user-perm-modules-container">
+                                <!-- Module list with base-role badges & override checkboxes -->
+                            </div>
+
+                            <div id="user-perm-actions" class="pt-3 border-t border-slate-200 hidden justify-between items-center">
+                                <div class="text-xs text-slate-500">
+                                    <span id="user-perm-count-badge" class="font-bold text-emerald-600">0</span> quyền cấp thêm riêng.
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="window.modSettings.clearUserCustomPerms()" class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-red-50 text-red-600 text-xs font-bold transition">
+                                        <i class="fas fa-trash-alt mr-1"></i> Xóa Quyền Riêng
+                                    </button>
+                                    <button onclick="window.modSettings.saveUserCustomPerms()" id="btn-save-user-perms" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer">
+                                        <i class="fas fa-check-circle"></i> <span>Lưu Quyền Bổ Sung Cho Nhân Viên</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
             <!-- TAB: QUOTE -->
             <div id="tab-quote" class="setting-tab hidden space-y-5">
-                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5">Tùy Chỉnh Mẫu Báo Giá</h3>
+                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5 flex items-center gap-2">
+                    <i class="fas fa-file-invoice-dollar text-blue-600"></i> Tùy Chỉnh Mẫu Báo Giá
+                </h3>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mẫu Báo Giá</label>
-                    <select id="set-quote-template" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500">
-                        <option value="tpl_minimal">Mẫu 1: Tiêu chuẩn</option>
+                    <select id="set-quote-template" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500">
+                        <option value="tpl_minimal">Mẫu 1: Tiêu chuẩn Điện Mặt Trời SUNGO</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Điều Khoản & Ghi Chú</label>
-                    <textarea id="set-quote-notes" rows="6" class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none"></textarea>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Điều Khoản & Ghi Chú Mặc Định</label>
+                    <textarea id="set-quote-notes" rows="6" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500"></textarea>
                 </div>
             </div>
 
             <!-- TAB: DELIVERY -->
             <div id="tab-delivery" class="setting-tab hidden space-y-5">
-                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5">Tùy Chỉnh Phiếu Xuất Kho</h3>
+                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5 flex items-center gap-2">
+                    <i class="fas fa-truck-loading text-amber-600"></i> Tùy Chỉnh Phiếu Xuất Kho
+                </h3>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Quy Định Kho</label>
-                    <textarea id="set-delivery-notes" rows="6" class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none"></textarea>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Quy Định Kho & Xuất Hàng</label>
+                    <textarea id="set-delivery-notes" rows="6" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500"></textarea>
                 </div>
             </div>
 
@@ -111,7 +243,26 @@
 <script>
 window.modSettings = {
     warehouses: [], 
+    rolePermissions: {},
+    usersList: [],
+    selectedRole: 'ADMIN',
+    selectedUser: null,
     
+    // Danh mục vai trò chuẩn hệ thống
+    ROLES_LIST: [
+        { code: 'ADMIN', name: '👑 Ban Giám Đốc (ADMIN)', desc: 'Toàn quyền quản trị và xem toàn bộ các phân hệ trong hệ thống.' },
+        { code: 'SALE_ADMIN', name: '🌟 Trưởng Phòng Sale', desc: 'Quyền bán hàng, duyệt báo giá, xem tồn kho & sàn đấu thầu.' },
+        { code: 'SALE', name: '🤝 Nhân Viên Kinh Doanh (Sale)', desc: 'Quản lý CRM, tạo báo giá BOQ, lập đơn hàng & tính hoa hồng.' },
+        { code: 'THU_MUA', name: '🛒 Thu Mua & Vật Tư', desc: 'Quản lý nhà cung cấp, đơn nhập khẩu, tồn kho & giá vốn.' },
+        { code: 'NHAN_VIEN_KHO', name: '📦 Thủ Kho / Kho Vận', desc: 'Sơ đồ kho, lệnh nhập kho, xuất hàng đóng gói (Mù giá bán).' },
+        { code: 'KE_TOAN', name: '💰 Kế Toán & Tài Chính', desc: 'Két sắt, sổ quỹ, VAT, công nợ 131/331, hợp đồng, lương & CFO.' },
+        { code: 'KY_THUAT', name: '🔧 Kỹ Sư Kỹ Thuật & O&M', desc: 'Hồ sơ dự án, lịch bảo trì bảo dưỡng O&M và tra cứu mã serial.' },
+        { code: 'HR', name: '👥 Quản Lý Nhân Sự', desc: 'Hồ sơ nhân viên, hợp đồng lao động, bảng lương & KPI.' },
+        { code: 'NHA_THAU_THI_CONG', name: '🏗️ Đội Thi Công (Nhà Thầu)', desc: 'Cổng nghiệm thu dự án, tải ảnh thi công & hồ sơ năng lực.' },
+        { code: 'NHA_THAU_GIAM_SAT', name: '🔍 Đơn Vị Giám Sát', desc: 'Cổng nghiệm thu dự án & hồ sơ năng lực giám sát.' },
+        { code: 'NHA_CUNG_CAP', name: '🏭 Nhà Cung Cấp', desc: 'Cổng giao việc dự án & hồ sơ nhà cung cấp.' }
+    ],
+
     load: async () => {
         try {
             const res = await fetch('/api/settings?t=' + Date.now());
@@ -127,7 +278,7 @@ window.modSettings = {
                 document.getElementById('set-quote-template').value = d.quote_template || 'tpl_minimal';
                 document.getElementById('set-delivery-notes').value = d.delivery_notes || '';
                 
-                // --- BẢN VÁ LỖI ÉP KIỂU TẠI ĐÂY ---
+                // Warehouses
                 let whData = [];
                 if (d.warehouses) {
                     if (typeof d.warehouses === 'string') {
@@ -136,31 +287,55 @@ window.modSettings = {
                         whData = d.warehouses;
                     }
                 }
-                
-                // Đảm bảo warehouses luôn luôn là 1 mảng (Array) để dùng được hàm .push()
                 window.modSettings.warehouses = Array.isArray(whData) ? whData : [];
-                
                 window.modSettings.renderWarehouses();
+
+                // Role Permissions
+                let rPerms = d.role_permissions;
+                if (!rPerms || typeof rPerms !== 'object') {
+                    rPerms = window.DEFAULT_ROLE_PERMISSIONS || {};
+                }
+                window.modSettings.rolePermissions = JSON.parse(JSON.stringify(rPerms));
+                window.modSettings.renderRoleSelector();
+                window.modSettings.renderRoleModules();
             }
+
+            // Tải danh sách Users phục vụ Tab User Permissions
+            await window.modSettings.loadUsers();
+
         } catch(e) {
             console.error("Lỗi tải settings:", e);
+        }
+    },
+
+    loadUsers: async () => {
+        try {
+            const res = await fetch('/api/users?t=' + Date.now());
+            const json = await res.json();
+            if(json.success && json.data) {
+                window.modSettings.usersList = json.data;
+                window.modSettings.renderUsersPermList();
+            }
+        } catch(e) {
+            console.error("Lỗi tải users:", e);
         }
     },
     
     renderWarehouses: () => {
         const tbody = document.getElementById('set-warehouses-list');
+        if(!tbody) return;
         if(window.modSettings.warehouses.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Chưa có kho nào được thiết lập.</td></tr>';
             return;
         }
         tbody.innerHTML = window.modSettings.warehouses.map((w, index) => `
             <tr class="hover:bg-slate-50">
-                <td class="p-3 font-bold text-blue-600">${w.code}</td>
-                <td class="p-3 font-bold text-slate-800">${w.name}</td>
-                <td class="p-3 text-slate-600 text-xs">${w.address}</td>
-                <td class="p-3 text-slate-800 font-medium">${w.manager}</td>
-                <td class="p-3 text-center">
-                    <button onclick="window.modSettings.removeWarehouse(${index})" class="text-red-500 hover:text-red-700 bg-red-50 px-2 py-1 rounded text-xs"><i class="fas fa-trash"></i> Xóa</button>
+                <td class="p-3.5 font-bold text-blue-600">${w.code}</td>
+                <td class="p-3.5 font-bold text-slate-800">${w.name}</td>
+                <td class="p-3.5 text-slate-600 text-xs">${w.address}</td>
+                <td class="p-3.5 text-slate-800 font-medium">${w.manager}</td>
+                <td class="p-3.5 text-center">
+                    <button onclick="window.modSettings.removeWarehouse(${index})" class="text-red-500 hover:text-red-700 bg-red-50 px-2.5 py-1 rounded-lg text-xs font-bold transition"><i class="fas fa-trash"></i> Xóa</button>
                 </td>
             </tr>
         `).join('');
@@ -184,12 +359,464 @@ window.modSettings = {
     },
     
     removeWarehouse: (index) => {
-        if(confirm("Bạn có chắc chắn muốn xóa kho này khỏi hệ thống? (Lưu ý: Dữ liệu tồn kho của kho này có thể bị mồ côi)")) {
+        if(confirm("Bạn có chắc chắn muốn xóa kho này khỏi hệ thống?")) {
             window.modSettings.warehouses.splice(index, 1);
             window.modSettings.renderWarehouses();
         }
     },
-    
+
+    // ============================================================
+    // PHÂN HỆ QUẢN LÝ PHÂN QUYỀN (RBAC & USER OVERRIDES)
+    // ============================================================
+
+    switchPermSubTab: (subTab) => {
+        const isRole = subTab === 'role';
+        document.getElementById('perm-subtab-role').classList.toggle('hidden', !isRole);
+        document.getElementById('perm-subtab-user').classList.toggle('hidden', isRole);
+
+        const btnRole = document.getElementById('btn-subtab-role-perms');
+        const btnUser = document.getElementById('btn-subtab-user-perms');
+        
+        if (isRole) {
+            btnRole.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-white text-blue-600 shadow-xs flex items-center gap-1.5';
+            btnUser.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5';
+        } else {
+            btnUser.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-white text-blue-600 shadow-xs flex items-center gap-1.5';
+            btnRole.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5';
+            window.modSettings.renderUsersPermList();
+        }
+    },
+
+    renderRoleSelector: () => {
+        const container = document.getElementById('role-selector-container');
+        if(!container) return;
+        
+        container.innerHTML = window.modSettings.ROLES_LIST.map(r => {
+            const isSelected = r.code === window.modSettings.selectedRole;
+            const activeCls = isSelected ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 border-blue-600' : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-200';
+            return `
+                <button onclick="window.modSettings.selectRole('${r.code}')" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${activeCls}">
+                    <span>${r.name}</span>
+                </button>
+            `;
+        }).join('');
+    },
+
+    selectRole: (roleCode) => {
+        window.modSettings.selectedRole = roleCode;
+        window.modSettings.renderRoleSelector();
+        window.modSettings.renderRoleModules();
+    },
+
+    renderRoleModules: () => {
+        const role = window.modSettings.selectedRole;
+        const roleInfo = window.modSettings.ROLES_LIST.find(r => r.code === role) || { name: role, desc: '' };
+        
+        document.getElementById('selected-role-title').innerHTML = `<span>👑 Đang cấu hình: <b class="text-blue-600">${roleInfo.name}</b></span>`;
+        document.getElementById('selected-role-desc').innerText = roleInfo.desc;
+
+        const roleQuickActions = document.getElementById('role-quick-actions');
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+            if (roleQuickActions) roleQuickActions.classList.add('hidden');
+        } else {
+            if (roleQuickActions) roleQuickActions.classList.remove('hidden');
+        }
+
+        const container = document.getElementById('role-modules-container');
+        if (!container) return;
+
+        const allGroups = window.ALL_SYSTEM_GROUPS || [];
+        const currentPerms = window.modSettings.rolePermissions[role] || (window.DEFAULT_ROLE_PERMISSIONS ? window.DEFAULT_ROLE_PERMISSIONS[role] : []) || [];
+        const isAll = currentPerms.includes('*') || currentPerms.includes('all') || role === 'ADMIN' || role === 'SUPER_ADMIN';
+
+        let html = '';
+        allGroups.forEach((group, gIdx) => {
+            html += `
+                <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-xs space-y-2.5">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <span class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span> ${group.group}
+                        </span>
+                        ${!isAll ? `
+                        <button onclick="window.modSettings.toggleGroupModules('${group.group}')" class="text-[11px] font-bold text-blue-600 hover:text-blue-800 transition">
+                            Tích/Bỏ nhóm
+                        </button>
+                        ` : ''}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            `;
+
+            group.items.forEach(m => {
+                const isChecked = isAll || currentPerms.includes(m.id);
+                const disabledAttr = (role === 'ADMIN' || role === 'SUPER_ADMIN') ? 'disabled' : '';
+                
+                html += `
+                    <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition cursor-pointer ${isChecked ? 'bg-blue-50/20 border-blue-100' : 'bg-white'}">
+                        <input type="checkbox" id="role-mod-${m.id}" value="${m.id}" ${isChecked ? 'checked' : ''} ${disabledAttr} onchange="window.modSettings.toggleRoleModule('${m.id}')" class="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5">
+                                <i class="fas ${m.icon} text-xs text-amber-500"></i>
+                                <span class="text-xs font-bold text-slate-800 truncate">${m.title}</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 truncate mt-0.5">${m.desc || m.id}</p>
+                        </div>
+                    </label>
+                `;
+            });
+
+            html += `</div></div>`;
+        });
+
+        container.innerHTML = html;
+    },
+
+    toggleRoleModule: (moduleId) => {
+        const role = window.modSettings.selectedRole;
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN') return;
+
+        let perms = window.modSettings.rolePermissions[role] || [];
+        if (perms.includes('*')) {
+            // Chuyển từ all sang mảng cụ thể
+            const allIds = [];
+            (window.ALL_SYSTEM_GROUPS || []).forEach(g => g.items.forEach(i => allIds.push(i.id)));
+            perms = allIds;
+        }
+
+        const idx = perms.indexOf(moduleId);
+        if (idx >= 0) {
+            perms.splice(idx, 1);
+        } else {
+            perms.push(moduleId);
+        }
+
+        window.modSettings.rolePermissions[role] = perms;
+    },
+
+    toggleGroupModules: (groupName) => {
+        const role = window.modSettings.selectedRole;
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN') return;
+
+        const group = (window.ALL_SYSTEM_GROUPS || []).find(g => g.group === groupName);
+        if (!group) return;
+
+        let perms = window.modSettings.rolePermissions[role] || [];
+        const groupItemIds = group.items.map(i => i.id);
+        const allGroupChecked = groupItemIds.every(id => perms.includes(id));
+
+        if (allGroupChecked) {
+            // Bỏ chọn toàn bộ nhóm
+            perms = perms.filter(id => !groupItemIds.includes(id));
+        } else {
+            // Thêm toàn bộ nhóm
+            groupItemIds.forEach(id => {
+                if (!perms.includes(id)) perms.push(id);
+            });
+        }
+
+        window.modSettings.rolePermissions[role] = perms;
+        window.modSettings.renderRoleModules();
+    },
+
+    selectAllRoleModules: (selectAll) => {
+        const role = window.modSettings.selectedRole;
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN') return;
+
+        if (selectAll) {
+            const allIds = [];
+            (window.ALL_SYSTEM_GROUPS || []).forEach(g => g.items.forEach(i => allIds.push(i.id)));
+            window.modSettings.rolePermissions[role] = allIds;
+        } else {
+            window.modSettings.rolePermissions[role] = [];
+        }
+        window.modSettings.renderRoleModules();
+    },
+
+    resetRoleToDefault: () => {
+        const role = window.modSettings.selectedRole;
+        if (!confirm(`Khôi phục quyền mặc định cho vai trò ${role}?`)) return;
+
+        const defaultPerms = window.DEFAULT_ROLE_PERMISSIONS ? window.DEFAULT_ROLE_PERMISSIONS[role] : [];
+        window.modSettings.rolePermissions[role] = JSON.parse(JSON.stringify(defaultPerms || []));
+        window.modSettings.renderRoleModules();
+    },
+
+    saveRolePermissions: async () => {
+        const btn = document.getElementById('btn-save-role-perms');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Đang lưu...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role_permissions: window.modSettings.rolePermissions })
+            });
+
+            if (res.ok) {
+                alert(`✅ Đã lưu cấu hình phân quyền cho vai trò ${window.modSettings.selectedRole} thành công!`);
+                window.__rolePermissions = window.modSettings.rolePermissions;
+                if (typeof window.reloadAppMenu === 'function') window.reloadAppMenu();
+            } else {
+                alert('❌ Lỗi khi lưu cấu hình phân quyền!');
+            }
+        } catch(e) {
+            alert('❌ Lỗi kết nối máy chủ!');
+        } finally {
+            btn.innerHTML = '<i class="fas fa-save"></i> <span>Lưu Phân Quyền Cho Vai Trò Này</span>';
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+
+    // ============================================================
+    // PHÂN HỆ PHÂN QUYỀN RIÊNG CHO NHÂN VIÊN (USER OVERRIDES)
+    // ============================================================
+
+    filterUsersForPerm: () => {
+        window.modSettings.renderUsersPermList();
+    },
+
+    renderUsersPermList: () => {
+        const container = document.getElementById('user-perm-list');
+        if (!container) return;
+
+        const search = (document.getElementById('user-perm-search')?.value || '').toLowerCase().trim();
+        const users = window.modSettings.usersList.filter(u => {
+            if (!search) return true;
+            return (u.full_name || '').toLowerCase().includes(search) || 
+                   (u.username || '').toLowerCase().includes(search) || 
+                   (u.emp_id || '').toLowerCase().includes(search) ||
+                   (u.role || '').toLowerCase().includes(search);
+        });
+
+        if (users.length === 0) {
+            container.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Không tìm thấy nhân viên nào.</p>';
+            return;
+        }
+
+        container.innerHTML = users.map(u => {
+            const isSelected = window.modSettings.selectedUser && window.modSettings.selectedUser.id === u.id;
+            const extraCount = Array.isArray(u.custom_modules) ? u.custom_modules.length : 0;
+            const activeCls = isSelected ? 'bg-blue-600 text-white shadow-md border-blue-600' : 'bg-white text-slate-800 hover:bg-slate-100 border-slate-200';
+
+            return `
+                <div onclick="window.modSettings.selectUserForPerm(${u.id})" class="p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2 ${activeCls}">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-bold text-xs truncate">${u.full_name || u.username}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-[10px] ${isSelected ? 'text-blue-100' : 'text-slate-400'} mt-0.5">
+                            <span>Mã: <b>${u.emp_id || 'N/A'}</b></span>
+                            <span>•</span>
+                            <span>${u.role}</span>
+                        </div>
+                    </div>
+                    ${extraCount > 0 ? `
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${isSelected ? 'bg-white text-blue-700' : 'bg-emerald-100 text-emerald-800'}">
+                        +${extraCount} riêng
+                    </span>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+    },
+
+    selectUserForPerm: (userId) => {
+        const user = window.modSettings.usersList.find(u => u.id === userId);
+        if (!user) return;
+        window.modSettings.selectedUser = JSON.parse(JSON.stringify(user));
+        window.modSettings.renderUsersPermList();
+        window.modSettings.renderUserPermDetail();
+    },
+
+    renderUserPermDetail: () => {
+        const user = window.modSettings.selectedUser;
+        const headerEl = document.getElementById('user-perm-detail-header');
+        const modulesContainer = document.getElementById('user-perm-modules-container');
+        const actionsEl = document.getElementById('user-perm-actions');
+        
+        if (!user) {
+            headerEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Vui lòng chọn 1 nhân viên ở danh sách bên trái để cấp quyền riêng.</p>';
+            modulesContainer.innerHTML = '';
+            actionsEl.classList.add('hidden');
+            actionsEl.classList.remove('flex');
+            return;
+        }
+
+        // Header thông tin nhân viên
+        headerEl.innerHTML = `
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-900 font-black flex items-center justify-center text-sm shadow-md">
+                        ${(user.role || 'US').substring(0,2).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-black text-slate-800 text-sm">${user.full_name}</h4>
+                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md text-[10px] font-black uppercase">${user.role}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">Mã NV: <b>${user.emp_id || 'N/A'}</b> | Tên đăng nhập: <b>${user.username}</b></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="window.modSettings.grantAllUserCustomPerms()" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-bold transition">
+                        <i class="fas fa-star text-amber-500 mr-1"></i> Cấp Tất Cả
+                    </button>
+                    <button onclick="window.modSettings.clearUserCustomPerms()" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-bold transition">
+                        <i class="fas fa-undo text-slate-500 mr-1"></i> Về Vai Trò Gốc
+                    </button>
+                </div>
+            </div>
+            <div class="mt-2.5 p-2.5 bg-blue-50/70 rounded-xl border border-blue-200/60 text-[11px] text-blue-900">
+                <i class="fas fa-info-circle mr-1 text-blue-600"></i> Các quyền được đánh dấu <span class="font-bold text-blue-700">[Vai Trò Gốc]</span> đã được mở mặc định. Bạn có thể <b>tích chọn thêm các module khác</b> bên dưới để cấp quyền xem bổ sung cho nhân viên này.
+            </div>
+        `;
+
+        actionsEl.classList.remove('hidden');
+        actionsEl.classList.add('flex');
+
+        // Danh sách module theo nhóm chức năng
+        const allGroups = window.ALL_SYSTEM_GROUPS || [];
+        const rolePerms = window.modSettings.rolePermissions[user.role] || (window.DEFAULT_ROLE_PERMISSIONS ? window.DEFAULT_ROLE_PERMISSIONS[user.role] : []) || [];
+        const isRoleFull = rolePerms.includes('*') || rolePerms.includes('all') || user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+        const userCustomMods = Array.isArray(user.custom_modules) ? user.custom_modules : [];
+
+        let customCount = 0;
+        let html = '';
+
+        allGroups.forEach(group => {
+            html += `
+                <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-xs space-y-2">
+                    <span class="text-[11px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> ${group.group}
+                    </span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            `;
+
+            group.items.forEach(m => {
+                const isFromRole = isRoleFull || rolePerms.includes(m.id);
+                const isCustomChecked = userCustomMods.includes(m.id);
+                
+                if (!isFromRole && isCustomChecked) customCount++;
+
+                let badgeHtml = '';
+                let isChecked = false;
+                let disabledAttr = '';
+
+                if (isFromRole) {
+                    badgeHtml = '<span class="bg-blue-100 text-blue-700 text-[9px] px-1.5 py-0.5 rounded font-bold">Quyền Vai Trò</span>';
+                    isChecked = true;
+                    disabledAttr = 'disabled';
+                } else if (isCustomChecked) {
+                    badgeHtml = '<span class="bg-emerald-100 text-emerald-800 text-[9px] px-1.5 py-0.5 rounded font-black"><i class="fas fa-plus mr-0.5"></i> Cấp Riêng</span>';
+                    isChecked = true;
+                } else {
+                    badgeHtml = '<span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded font-medium">Chưa có quyền</span>';
+                    isChecked = false;
+                }
+
+                html += `
+                    <label class="flex items-start gap-2.5 p-2.5 rounded-xl border transition cursor-pointer ${isCustomChecked ? 'bg-emerald-50/40 border-emerald-300' : (isFromRole ? 'bg-blue-50/20 border-blue-100 opacity-90' : 'bg-white border-slate-200 hover:border-slate-300')}">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} ${disabledAttr} onchange="window.modSettings.toggleUserCustomPerm('${m.id}')" class="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-1">
+                                <span class="text-xs font-bold text-slate-800 truncate">${m.title}</span>
+                                ${badgeHtml}
+                            </div>
+                            <p class="text-[10px] text-slate-400 truncate mt-0.5">${m.desc || m.id}</p>
+                        </div>
+                    </label>
+                `;
+            });
+
+            html += `</div></div>`;
+        });
+
+        modulesContainer.innerHTML = html;
+        const countBadge = document.getElementById('user-perm-count-badge');
+        if (countBadge) countBadge.innerText = customCount;
+    },
+
+    toggleUserCustomPerm: (moduleId) => {
+        if (!window.modSettings.selectedUser) return;
+        let customMods = window.modSettings.selectedUser.custom_modules || [];
+        if (!Array.isArray(customMods)) customMods = [];
+
+        const idx = customMods.indexOf(moduleId);
+        if (idx >= 0) {
+            customMods.splice(idx, 1);
+        } else {
+            customMods.push(moduleId);
+        }
+
+        window.modSettings.selectedUser.custom_modules = customMods;
+        window.modSettings.renderUserPermDetail();
+    },
+
+    grantAllUserCustomPerms: () => {
+        if (!window.modSettings.selectedUser) return;
+        const allIds = [];
+        (window.ALL_SYSTEM_GROUPS || []).forEach(g => g.items.forEach(i => allIds.push(i.id)));
+        window.modSettings.selectedUser.custom_modules = allIds;
+        window.modSettings.renderUserPermDetail();
+    },
+
+    clearUserCustomPerms: () => {
+        if (!window.modSettings.selectedUser) return;
+        window.modSettings.selectedUser.custom_modules = [];
+        window.modSettings.renderUserPermDetail();
+    },
+
+    saveUserCustomPerms: async () => {
+        const user = window.modSettings.selectedUser;
+        if (!user) return;
+
+        const btn = document.getElementById('btn-save-user-perms');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Đang lưu...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const res = await fetch(`/api/users/${user.id}/permissions`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ custom_modules: user.custom_modules || [] })
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                alert(`✅ Đã cập nhật quyền riêng cho nhân viên ${user.full_name} (${user.username}) thành công!`);
+                
+                // Đồng bộ lại danh sách users nội bộ
+                const idx = window.modSettings.usersList.findIndex(u => u.id === user.id);
+                if (idx >= 0) {
+                    window.modSettings.usersList[idx].custom_modules = user.custom_modules || [];
+                }
+                window.modSettings.renderUsersPermList();
+
+                // Nếu đang chỉnh sửa chính người đang đăng nhập -> Cập nhật session & reload sidebar
+                const curUserStr = localStorage.getItem('sungo_user');
+                if (curUserStr) {
+                    const curUser = JSON.parse(curUserStr);
+                    if (curUser.id === user.id || curUser.empId === user.emp_id) {
+                        curUser.custom_modules = user.custom_modules || [];
+                        localStorage.setItem('sungo_user', JSON.stringify(curUser));
+                        if (typeof window.reloadAppMenu === 'function') window.reloadAppMenu();
+                    }
+                }
+            } else {
+                alert('❌ ' + (json.error || 'Lỗi lưu quyền!'));
+            }
+        } catch(e) {
+            alert('❌ Lỗi kết nối máy chủ!');
+        } finally {
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> <span>Lưu Quyền Bổ Sung Cho Nhân Viên</span>';
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+
+    // ============================================================
+    // LƯU CẤU HÌNH CHUNG & CHUYỂN TAB
+    // ============================================================
+
     save: async () => {
         const payload = {
             store_name: document.getElementById('set-store-name').value,
@@ -200,7 +827,8 @@ window.modSettings = {
             quote_notes: document.getElementById('set-quote-notes').value,
             quote_template: document.getElementById('set-quote-template').value,
             delivery_notes: document.getElementById('set-delivery-notes').value,
-            warehouses: window.modSettings.warehouses 
+            warehouses: window.modSettings.warehouses,
+            role_permissions: window.modSettings.rolePermissions
         };
         const btn = document.getElementById('btn-save-settings');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang lưu...';
@@ -209,8 +837,11 @@ window.modSettings = {
             const res = await fetch('/api/settings', {
                 method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
             });
-            if(res.ok) alert('✅ Đã cập nhật Cấu Hình Hệ Thống thành công!');
-            else alert('❌ Lỗi lưu dữ liệu!');
+            if(res.ok) {
+                alert('✅ Đã cập nhật Cấu Hình Hệ Thống & Phân Quyền thành công!');
+                window.__rolePermissions = window.modSettings.rolePermissions;
+                if (typeof window.reloadAppMenu === 'function') window.reloadAppMenu();
+            } else alert('❌ Lỗi lưu dữ liệu!');
         } catch(e) { alert('❌ Lỗi kết nối!'); }
         finally {
             btn.innerHTML = '<i class="fas fa-save mr-2"></i> Lưu Cấu Hình';
@@ -220,14 +851,18 @@ window.modSettings = {
     
     switchTab: (tabId) => {
         document.querySelectorAll('.setting-tab').forEach(el => el.classList.add('hidden'));
-        document.getElementById('tab-' + tabId).classList.remove('hidden');
+        const targetTab = document.getElementById('tab-' + tabId);
+        if (targetTab) targetTab.classList.remove('hidden');
+        
         document.querySelectorAll('.tab-btn').forEach(el => {
             el.classList.remove('bg-blue-50', 'text-blue-600');
             el.classList.add('text-slate-600');
         });
         const activeBtn = document.getElementById('btn-tab-' + tabId);
-        activeBtn.classList.remove('text-slate-600');
-        activeBtn.classList.add('bg-blue-50', 'text-blue-600');
+        if (activeBtn) {
+            activeBtn.classList.remove('text-slate-600');
+            activeBtn.classList.add('bg-blue-50', 'text-blue-600');
+        }
     }
 };
 

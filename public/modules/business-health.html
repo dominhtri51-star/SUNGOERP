@@ -1,0 +1,1231 @@
+<div class="space-y-4 sm:space-y-6 font-sans relative pb-12">
+    
+    <!-- HEADER & THANH CÔNG CỤ -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-500 text-white flex items-center justify-center shadow-md shrink-0">
+                    <i class="fas fa-heartbeat text-xl"></i>
+                </span>
+                <div>
+                    <h2 class="text-lg sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+                        SỨC KHOẺ DOANH NGHIỆP
+                        <span class="text-[10px] bg-rose-100 text-rose-800 font-black px-2.5 py-0.5 rounded-full border border-rose-200 uppercase tracking-wide">CFO Health Radar</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Phân tích chuyên sâu Cơ cấu Vốn, Chu kỳ tiền mặt (CCC) & Bộ 4 nhóm chỉ số tài chính doanh nghiệp thương mại Solar.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-auto flex flex-wrap items-center justify-between lg:justify-end gap-2">
+            <!-- Bộ lọc thời gian -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto text-xs">
+                <button onclick="window.modHealth.load('month')" id="health-filter-month" class="health-filter px-3 py-1.5 rounded-lg font-bold bg-white text-blue-600 shadow-xs border border-blue-100 transition whitespace-nowrap">Tháng này</button>
+                <button onclick="window.modHealth.load('quarter')" id="health-filter-quarter" class="health-filter px-3 py-1.5 rounded-lg font-bold text-slate-500 hover:text-slate-800 transition whitespace-nowrap">Quý này</button>
+                <button onclick="window.modHealth.load('year')" id="health-filter-year" class="health-filter px-3 py-1.5 rounded-lg font-bold text-slate-500 hover:text-slate-800 transition whitespace-nowrap">Năm nay</button>
+                <button onclick="window.modHealth.load('all')" id="health-filter-all" class="health-filter px-3 py-1.5 rounded-lg font-bold text-slate-500 hover:text-slate-800 transition whitespace-nowrap">Toàn bộ</button>
+            </div>
+
+            <!-- Nút chức năng -->
+            <div class="flex items-center gap-2">
+                <button onclick="window.modHealth.openConfigModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-xs flex items-center gap-1.5">
+                    <i class="fas fa-sliders-h text-amber-400"></i> <span class="hidden sm:inline">Cài Đặt</span> Nguồn Vốn
+                </button>
+                <button onclick="window.modHealth.toggleSimulator()" id="btn-toggle-sim" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-xs flex items-center gap-1.5">
+                    <i class="fas fa-magic text-yellow-300"></i> <span class="hidden sm:inline">Mô Phỏng</span> What-If
+                </button>
+                <button onclick="window.modHealth.load(window.modHealth.currentPeriod)" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition text-xs font-bold" title="Làm mới">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BÁC SĨ TÀI CHÍNH: TỔNG QUAN ĐIỂM SỨC KHỎE (EXECUTIVE HEALTH DIAGNOSIS) -->
+    <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl shadow-xl p-5 sm:p-7 text-white relative overflow-hidden border border-slate-700/60">
+        <!-- Nền họa tiết & Icon mờ -->
+        <div class="absolute -right-6 -bottom-6 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <i class="fas fa-stethoscope absolute right-6 top-6 text-8xl text-slate-700/20 pointer-events-none"></i>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10">
+            <!-- Cột 1: Thang điểm Sức khỏe -->
+            <div class="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col items-center sm:items-start lg:items-center text-center sm:text-left lg:text-center gap-4 border-b lg:border-b-0 lg:border-r border-slate-700/80 pb-6 lg:pb-0 lg:pr-6">
+                <div class="relative flex items-center justify-center">
+                    <svg class="w-32 h-32 transform -rotate-90">
+                        <circle cx="64" cy="64" r="54" stroke="currentColor" stroke-width="12" class="text-slate-700/80" fill="transparent"/>
+                        <circle id="score-circle" cx="64" cy="64" r="54" stroke="currentColor" stroke-width="12" class="text-emerald-400 transition-all duration-1000" fill="transparent" stroke-dasharray="339.29" stroke-dashoffset="60" stroke-linecap="round"/>
+                    </svg>
+                    <div class="absolute flex flex-col items-center justify-center">
+                        <span id="health-score-val" class="text-4xl font-black tracking-tight text-white">--</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">/ 100 Điểm</span>
+                    </div>
+                </div>
+
+                <div>
+                    <span id="health-rating-badge" class="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 mb-1.5 shadow-sm">
+                        Đang chẩn đoán...
+                    </span>
+                    <p class="text-xs text-slate-300">Tổng điểm chẩn đoán 4 nhóm năng lực tài chính & hiệu quả dòng tiền.</p>
+                </div>
+            </div>
+
+            <!-- Cột 2: Radar 4 Trụ Cột Đánh Giá -->
+            <div class="lg:col-span-4 space-y-2.5">
+                <p class="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-2 mb-3">
+                    <i class="fas fa-shield-alt"></i> 4 Trụ Cột Năng Lực Doanh Nghiệp
+                </p>
+
+                <!-- 1. Hiệu quả hoạt động -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-300">1. Hiệu quả hoạt động (Quay vòng kho)</span>
+                        <span id="score-op" class="text-amber-400 font-mono">--/25</span>
+                    </div>
+                    <div class="w-full bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
+                        <div id="bar-op" class="bg-amber-400 h-full rounded-full transition-all duration-700" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 2. Chu kỳ tiền mặt CCC -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-300">2. Sức khỏe dòng tiền (Chu kỳ CCC)</span>
+                        <span id="score-cash" class="text-emerald-400 font-mono">--/25</span>
+                    </div>
+                    <div class="w-full bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
+                        <div id="bar-cash" class="bg-emerald-400 h-full rounded-full transition-all duration-700" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 3. Khả năng sinh lời -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-300">3. Khả năng sinh lời (GPM, NPM, ROE)</span>
+                        <span id="score-profit" class="text-blue-400 font-mono">--/25</span>
+                    </div>
+                    <div class="w-full bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
+                        <div id="bar-profit" class="bg-blue-400 h-full rounded-full transition-all duration-700" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 4. An toàn tài chính -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-300">4. An toàn tài chính (CR, D/E, Trả nợ)</span>
+                        <span id="score-safe" class="text-purple-400 font-mono">--/25</span>
+                    </div>
+                    <div class="w-full bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
+                        <div id="bar-safe" class="bg-purple-400 h-full rounded-full transition-all duration-700" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột 3: Lời khuyên của Bác sĩ Tài chính (Doctor Advice) -->
+            <div class="lg:col-span-4 bg-slate-800/80 rounded-2xl p-4 border border-slate-700">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
+                        <i class="fas fa-lightbulb"></i>
+                    </span>
+                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-200">Chẩn Đoán & Khuyến Nghị CFO</h4>
+                </div>
+                <div id="doctor-advices" class="text-xs text-slate-300 space-y-2 max-h-40 overflow-y-auto pr-1">
+                    <p class="flex items-start gap-1.5"><i class="fas fa-spinner fa-spin text-emerald-400 mt-0.5 shrink-0 text-[11px]"></i> <span>Đang nạp dữ liệu chẩn đoán...</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHU VỰC MÔ PHỎNG KỊCH BẢN WHAT-IF (ẨN/HIỆN KHI BẤM NÚT) -->
+    <div id="whatif-panel" class="hidden bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-3xl p-5 sm:p-6 shadow-sm transition-all duration-300">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+            <div>
+                <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
+                    <i class="fas fa-magic text-blue-600"></i> BỘ MÔ PHỎNG KỊCH BẢN TỐI ƯU DÒNG TIỀN (WHAT-IF SCENARIO)
+                </h3>
+                <p class="text-xs text-slate-600">Thử nghiệm điều chỉnh số ngày lưu kho (DIO), nợ khách hàng (DSO), chiếm dụng NCC (DPO) để xem lượng TIỀN MẶT giải phóng.</p>
+            </div>
+            <button onclick="window.modHealth.resetSimulator()" class="text-xs font-bold text-blue-600 hover:text-blue-800 bg-white px-3 py-1.5 rounded-lg border border-blue-200 shadow-xs">
+                <i class="fas fa-undo mr-1"></i> Khôi phục mặc định
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <!-- Slider 1: DIO -->
+            <div class="bg-white p-4 rounded-2xl border border-blue-100 shadow-xs">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-black text-slate-700 uppercase">1. Giảm Ngày Lưu Kho (DIO)</label>
+                    <span id="sim-dio-val" class="text-sm font-black text-blue-600 font-mono">45 ngày</span>
+                </div>
+                <input type="range" id="sim-dio-slider" min="10" max="120" value="45" step="1" oninput="window.modHealth.recalcSimulator()" class="w-full accent-blue-600 cursor-pointer">
+                <p class="text-[11px] text-slate-400 mt-1">Đẩy nhanh tốc độ bán hàng, giải phóng hàng tồn đọng.</p>
+            </div>
+
+            <!-- Slider 2: DSO -->
+            <div class="bg-white p-4 rounded-2xl border border-blue-100 shadow-xs">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-black text-slate-700 uppercase">2. Rút Ngắn Thu Tiền (DSO)</label>
+                    <span id="sim-dso-val" class="text-sm font-black text-indigo-600 font-mono">20 ngày</span>
+                </div>
+                <input type="range" id="sim-dso-slider" min="5" max="90" value="20" step="1" oninput="window.modHealth.recalcSimulator()" class="w-full accent-indigo-600 cursor-pointer">
+                <p class="text-[11px] text-slate-400 mt-1">Thu hồi nợ khách hàng gắt gao hơn, tránh bị chiếm dụng.</p>
+            </div>
+
+            <!-- Slider 3: DPO -->
+            <div class="bg-white p-4 rounded-2xl border border-blue-100 shadow-xs">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-black text-slate-700 uppercase">3. Kéo Dài Trả Nợ NCC (DPO)</label>
+                    <span id="sim-dpo-val" class="text-sm font-black text-emerald-600 font-mono">45 ngày</span>
+                </div>
+                <input type="range" id="sim-dpo-slider" min="10" max="90" value="45" step="1" oninput="window.modHealth.recalcSimulator()" class="w-full accent-emerald-600 cursor-pointer">
+                <p class="text-[11px] text-slate-400 mt-1">Đàm phán công nợ 30-60 ngày với nhà máy cung ứng (0% lãi).</p>
+            </div>
+        </div>
+
+        <!-- Kết quả mô phỏng -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-4 rounded-2xl border border-blue-200">
+            <div class="text-center sm:text-left">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Chu Kỳ Tiền Mặt Dự Phóng (CCC Mới)</p>
+                <h4 id="sim-ccc-res" class="text-2xl font-black text-blue-600">20.0 ngày</h4>
+                <p id="sim-ccc-eval" class="text-xs font-semibold text-emerald-600">Dòng tiền tối ưu</p>
+            </div>
+            <div class="text-center sm:text-left">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Lượng Tiền Mặt Giải Phóng Thêm</p>
+                <h4 id="sim-cash-unlocked" class="text-2xl font-black text-emerald-600">+ 0 đ</h4>
+                <p class="text-xs text-slate-500 font-medium">Bổ sung ngay vào vốn lưu động khả dụng</p>
+            </div>
+            <div class="text-center sm:text-left">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">ROE Kỳ Vọng Mới</p>
+                <h4 id="sim-roe-res" class="text-2xl font-black text-purple-600">18.5%</h4>
+                <p class="text-xs text-slate-500 font-medium">Hiệu quả sinh lời trên vốn cổ đông</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- PHẦN I: CƠ CẤU VỐN & NGUỒN TÀI TRỢ (CAPITAL STRUCTURE & FUNDING) -->
+    <!-- ============================================================== -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-amber-500 text-slate-900 flex items-center justify-center font-black text-xs shadow-xs">I</span>
+                CƠ CẤU VỐN & NGUỒN TÀI TRỢ DOANH NGHIỆP
+            </h3>
+            <span class="text-xs font-bold text-slate-400">Balance Sheet Dynamics</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+            <!-- 🌟 1. VỐN CHỦ SỞ HỮU (EQUITY) -->
+            <div class="lg:col-span-6 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-md relative overflow-hidden border border-emerald-700/50 flex flex-col justify-between">
+                <i class="fas fa-crown absolute -right-4 -bottom-4 text-9xl text-white/5 pointer-events-none"></i>
+                
+                <div>
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-base border border-emerald-400/30">
+                                🌟
+                            </span>
+                            <div>
+                                <h4 class="text-base sm:text-lg font-black text-white">1. Vốn Chủ Sở Hữu (Equity)</h4>
+                                <span class="text-[10px] font-black text-emerald-300 uppercase tracking-wider bg-emerald-950/90 px-2 py-0.5 rounded border border-emerald-500/30">Nguồn vốn an toàn nhất - 0% Lãi Vay</span>
+                            </div>
+                        </div>
+                        <span id="equity-ratio-badge" class="text-xs font-black px-2.5 py-1 rounded-xl bg-emerald-500 text-slate-950 shadow-xs">
+                            --% Tổng Tài Sản
+                        </span>
+                    </div>
+
+                    <p class="text-xs text-emerald-100/90 leading-relaxed mb-4">
+                        Đây là nguồn vốn an toàn nhất vì doanh nghiệp <b>không phải trả lãi</b> và <b>không bị áp lực đòi nợ</b> từ bất kỳ bên nào.
+                    </p>
+
+                    <!-- Danh sách 2 thành tố vốn chủ -->
+                    <div class="space-y-2.5 bg-slate-950/40 p-4 rounded-2xl border border-emerald-500/20 text-xs">
+                        <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                            <div>
+                                <p class="font-black text-emerald-300">Vốn Góp Ban Đầu (Vốn Điều Lệ)</p>
+                                <p class="text-[11px] text-slate-400">Tiền túi của bạn hoặc các cổ đông cùng góp vào mở công ty.</p>
+                            </div>
+                            <span id="val-initial-equity" class="font-black text-base text-white font-mono">0 đ</span>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-1">
+                            <div>
+                                <p class="font-black text-teal-300">Lợi Nhuận Giữ Lại Tích Lũy</p>
+                                <p class="text-[11px] text-slate-400">Tiền lãi thu được giữ lại tái đầu tư mở rộng kho hàng.</p>
+                            </div>
+                            <span id="val-retained-earnings" class="font-black text-base text-emerald-400 font-mono">0 đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Tổng Vốn Chủ Sở Hữu:</span>
+                    <span id="val-total-equity" class="text-xl sm:text-2xl font-black text-emerald-300 font-mono">0 đ</span>
+                </div>
+            </div>
+
+            <!-- 💳 2. NỢ PHẢI TRẢ (LIABILITIES) -->
+            <div class="lg:col-span-6 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-md relative overflow-hidden border border-indigo-700/50 flex flex-col justify-between">
+                <i class="fas fa-credit-card absolute -right-4 -bottom-4 text-9xl text-white/5 pointer-events-none"></i>
+                
+                <div>
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-base border border-indigo-400/30">
+                                💳
+                            </span>
+                            <div>
+                                <h4 class="text-base sm:text-lg font-black text-white">2. Nợ Phải Trả (Liabilities)</h4>
+                                <span class="text-[10px] font-black text-indigo-300 uppercase tracking-wider bg-indigo-950/90 px-2 py-0.5 rounded border border-indigo-500/30">Đòn bẩy kinh doanh thương mại</span>
+                            </div>
+                        </div>
+                        <span id="liab-ratio-badge" class="text-xs font-black px-2.5 py-1 rounded-xl bg-indigo-500 text-white shadow-xs">
+                            --% Tổng Tài Sản
+                        </span>
+                    </div>
+
+                    <p class="text-xs text-indigo-100/90 leading-relaxed mb-4">
+                        Doanh nghiệp thương mại Solar tận dụng rất mạnh nguồn vốn này để mở rộng quy mô kinh doanh vượt mức vốn tự có.
+                    </p>
+
+                    <!-- Danh sách 3 nguồn nợ phải trả -->
+                    <div class="space-y-2.5 bg-slate-950/40 p-4 rounded-2xl border border-indigo-500/20 text-xs">
+                        <!-- Chiếm dụng NCC -->
+                        <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                            <div>
+                                <p class="font-black text-amber-300 flex items-center gap-1.5">
+                                    Vốn Chiếm Dụng Từ Nhà Cung Cấp
+                                    <span class="text-[9px] bg-amber-400/20 text-amber-300 font-bold px-1.5 py-0.5 rounded">Nguồn béo bở 0% Lãi</span>
+                                </p>
+                                <p class="text-[11px] text-slate-400">Nhập hàng trước, trả sau 30-60 ngày. Bán thu tiền rồi mới trả nợ.</p>
+                            </div>
+                            <span id="val-supplier-payable" class="font-black text-base text-amber-400 font-mono">0 đ</span>
+                        </div>
+
+                        <!-- Vay ngân hàng -->
+                        <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                            <div>
+                                <p class="font-black text-indigo-300">Vay Vốn Ngân Hàng & Tín Dụng</p>
+                                <p class="text-[11px] text-slate-400">Vay ngắn hạn nhập hàng mùa vụ + Vay dài hạn mở kho, showroom.</p>
+                            </div>
+                            <span id="val-bank-debt" class="font-black text-base text-indigo-300 font-mono">0 đ</span>
+                        </div>
+
+                        <!-- Khách hàng trả trước -->
+                        <div class="flex justify-between items-center pt-1">
+                            <div>
+                                <p class="font-black text-cyan-300">Khách Hàng Trả Tiền Trước / Cọc</p>
+                                <p class="text-[11px] text-slate-400">Khách đặt cọc 100% giữ hàng, dùng tiền này mua hàng giao cho họ.</p>
+                            </div>
+                            <span id="val-customer-prepay" class="font-black text-base text-cyan-300 font-mono">0 đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Tổng Nợ Phải Trả:</span>
+                    <span id="val-total-liabilities" class="text-xl sm:text-2xl font-black text-indigo-300 font-mono">0 đ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- PHẦN II: 4 NHÓM CHỈ SỐ SỨC KHỎE TÀI CHÍNH CỐT LÕI -->
+    <!-- ============================================================== -->
+    <div class="space-y-6 mt-6">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div>
+                <h3 class="font-black text-slate-900 text-base sm:text-xl flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-xs">II</span>
+                    BỘ 4 NHÓM CHỈ SỐ TÀI CHÍNH DOANH NGHIỆP THƯƠNG MẠI
+                </h3>
+                <p class="text-xs text-slate-500">Đầy đủ công thức, phân tích ý nghĩa kinh tế & đánh giá mức độ an toàn theo tiêu chuẩn CFO.</p>
+            </div>
+        </div>
+
+        <!-- NHÓM 1: CHỈ SỐ HIỆU QUẢ HOẠT ĐỘNG (OPERATING EFFICIENCY) -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xs border border-slate-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+                <div>
+                    <h4 class="font-black text-slate-900 text-base flex items-center gap-2">
+                        <i class="fas fa-boxes text-amber-500"></i> 1. Nhóm Chỉ Số Hiệu Quả Hoạt Động (Đặc Biệt Quan Trọng)
+                    </h4>
+                    <p class="text-xs text-slate-500 font-medium">Doanh nghiệp thương mại sống bằng tốc độ quay vòng của hàng hóa. Hàng nằm trong kho càng lâu, doanh nghiệp càng yếu.</p>
+                </div>
+                <span class="text-[11px] font-black px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full">
+                    Tốc Độ Luân Chuyển Hàng Hóa
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- 1. Vòng quay hàng tồn kho -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Vòng Quay Tồn Kho</p>
+                            <span class="text-[10px] font-black px-2 py-0.5 rounded bg-blue-100 text-blue-700">Turnover</span>
+                        </div>
+                        <h3 id="ind-turnover" class="text-2xl font-black text-slate-900 mb-1">0.0 lần</h3>
+                        <p class="text-[11px] text-blue-600 font-bold mb-2">Công thức: Giá vốn (COGS) / Tồn kho bình quân</p>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Trong một năm, doanh nghiệp bán hết và thay thế kho hàng mới bao nhiêu lần. <b>Chỉ số này càng cao càng tốt</b>, chứng tỏ hàng bán rất chạy.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 2. Số ngày lưu kho bình quân (DIO) -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Số Ngày Lưu Kho (DIO)</p>
+                            <span id="badge-dio" class="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Tốt</span>
+                        </div>
+                        <h3 id="ind-dio" class="text-2xl font-black text-slate-900 mb-1">0 ngày</h3>
+                        <p class="text-[11px] text-emerald-600 font-bold mb-2">Công thức: 365 / Vòng quay tồn kho</p>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Mất bao nhiêu ngày để bán hết một lô hàng nhập về. Nếu số ngày quá dài, vốn đang bị <b>"chết" trong kho</b>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 3. Kỳ thu tiền bình quân (DSO) -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Kỳ Thu Tiền (DSO)</p>
+                            <span id="badge-dso" class="text-[10px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">An Toàn</span>
+                        </div>
+                        <h3 id="ind-dso" class="text-2xl font-black text-slate-900 mb-1">0 ngày</h3>
+                        <p class="text-[11px] text-indigo-600 font-bold mb-2">Công thức: (Phải thu / Doanh thu) x 365</p>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Khách hàng nợ tiền trong bao lâu mới trả. <b>Số ngày càng ngắn càng tốt</b> để tránh bị chôn vốn lưu động.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 4. Kỳ thanh toán bình quân (DPO) -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Kỳ Thanh Toán (DPO)</p>
+                            <span class="text-[10px] font-black px-2 py-0.5 rounded bg-amber-100 text-amber-700">Tối ưu</span>
+                        </div>
+                        <h3 id="ind-dpo" class="text-2xl font-black text-slate-900 mb-1">0 ngày</h3>
+                        <p class="text-[11px] text-amber-600 font-bold mb-2">Công thức: (Phải trả / Giá vốn) x 365</p>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Doanh nghiệp kéo dài thời gian trả nợ NCC được bao lâu. Dài một cách hợp lý giúp <b>chiếm dụng vốn miễn phí</b>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NHÓM 2: CHỈ SỐ CHU KỲ TIỀN MẶT (CASH CONVERSION CYCLE - CCC) -->
+        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-3xl p-5 sm:p-7 text-white shadow-lg border border-slate-700">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-slate-700">
+                <div>
+                    <h4 class="font-black text-white text-base sm:text-lg flex items-center gap-2">
+                        💵 2. Nhóm Chỉ Số Chu Kỳ Tiền Mặt (Sức Khỏe Dòng Tiền CCC)
+                    </h4>
+                    <p class="text-xs text-slate-300">Nhóm này cho biết dòng tiền thực tế có đang nuôi sống được doanh nghiệp hay không.</p>
+                </div>
+                <span id="ccc-status-pill" class="text-xs font-black px-3.5 py-1 rounded-full bg-emerald-500 text-slate-950 shadow-sm">
+                    Đang tính toán...
+                </span>
+            </div>
+
+            <!-- Công thức trực quan CCC -->
+            <div class="bg-slate-950/60 p-4 sm:p-5 rounded-2xl border border-slate-700/80 mb-6">
+                <div class="text-center mb-3">
+                    <p class="text-xs uppercase font-black text-slate-400 tracking-wider">CÔNG THỨC TOÀN NĂNG CỦA DÒNG TIỀN THƯƠNG MẠI</p>
+                    <p class="text-lg sm:text-xl font-black text-amber-400 font-mono mt-1">
+                        CCC = DIO (Số ngày lưu kho) + DSO (Kỳ thu tiền) - DPO (Kỳ thanh toán)
+                    </p>
+                </div>
+
+                <!-- Box trực quan các số hạng -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center text-center">
+                    <div class="bg-slate-800/90 p-3 rounded-xl border border-slate-700">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold">DIO (Lưu Kho)</span>
+                        <h5 id="calc-dio" class="text-lg font-black text-amber-300 font-mono">0 ngày</h5>
+                    </div>
+                    <div class="bg-slate-800/90 p-3 rounded-xl border border-slate-700">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold">+ DSO (Thu Tiền)</span>
+                        <h5 id="calc-dso" class="text-lg font-black text-indigo-300 font-mono">+ 0 ngày</h5>
+                    </div>
+                    <div class="bg-slate-800/90 p-3 rounded-xl border border-slate-700">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold">- DPO (Trả NCC)</span>
+                        <h5 id="calc-dpo" class="text-lg font-black text-rose-300 font-mono">- 0 ngày</h5>
+                    </div>
+                    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-3.5 rounded-xl text-white shadow-md border border-emerald-400/40">
+                        <span class="text-[10px] text-emerald-100 uppercase font-black tracking-wider">= CHU KỲ CCC</span>
+                        <h5 id="calc-ccc" class="text-2xl font-black font-mono">0 ngày</h5>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ý nghĩa & Đánh giá phân hạng CCC -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div class="bg-slate-800/70 p-4 rounded-2xl border border-slate-700/60 leading-relaxed">
+                    <h5 class="font-black text-amber-300 text-sm mb-1.5 flex items-center gap-1.5">
+                        <i class="fas fa-info-circle"></i> Ý Nghĩa Kinh Tế Thực Chiến
+                    </h5>
+                    <p class="text-slate-300">
+                        Đo lường mất <b>bao nhiêu ngày</b> kể từ khi doanh nghiệp chi tiền mặt mua hàng cho đến khi thu về tiền mặt từ khách hàng.
+                    </p>
+                </div>
+                <div class="bg-slate-800/70 p-4 rounded-2xl border border-slate-700/60 leading-relaxed">
+                    <h5 class="font-black text-emerald-300 text-sm mb-1.5 flex items-center gap-1.5">
+                        <i class="fas fa-trophy"></i> Thang Đo Đánh Giá CFO
+                    </h5>
+                    <p class="text-slate-300">
+                        <b>Càng nhỏ càng tốt</b>. Thậm chí bằng âm (<b>CCC &lt; 0</b>) là xuất sắc: Bạn bán hàng và thu tiền của khách trước khi phải trả tiền cho nhà cung cấp (<i>Bán tay không bắt giặc</i>).
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NHÓM 3: CHỈ SỐ SINH LỜI (PROFITABILITY) & 4: AN TOÀN TÀI CHÍNH -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 📈 3. NHÓM CHỈ SỐ SINH LỜI (HIỆU QUẢ KINH DOANH) -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xs border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
+                        <h4 class="font-black text-slate-900 text-base flex items-center gap-2">
+                            📈 3. Nhóm Chỉ Số Sinh Lời (Hiệu Quả Kinh Doanh)
+                        </h4>
+                        <span class="text-[10px] font-black px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase">Profitability</span>
+                    </div>
+
+                    <p class="text-xs text-slate-500 mb-4">
+                        Doanh nghiệp thương mại thường có biên lợi nhuận gộp mỏng hơn sản xuất/dịch vụ nên phải quản lý chi phí chặt chẽ.
+                    </p>
+
+                    <div class="space-y-3 text-xs">
+                        <!-- GPM -->
+                        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex justify-between items-center">
+                            <div>
+                                <p class="font-black text-slate-800">Biên Lợi Nhuận Gộp (GPM - Gross Margin)</p>
+                                <p class="text-[11px] text-slate-500">Công thức: (Lợi nhuận gộp / Doanh thu thuần) x 100</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Khả năng thương lượng giá mua và bán giá cao.</p>
+                            </div>
+                            <span id="ind-gpm" class="text-xl font-black text-emerald-600 font-mono">0.0%</span>
+                        </div>
+
+                        <!-- EBIT -->
+                        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex justify-between items-center">
+                            <div>
+                                <p class="font-black text-slate-800">EBIT (Earnings Before Interest & Taxes)</p>
+                                <p class="text-[11px] text-slate-500">Lợi nhuận trước lãi vay và thuế = Lãi gộp - OPEX</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Lợi nhuận cốt lõi từ hoạt động kinh doanh Solar.</p>
+                            </div>
+                            <span id="ind-ebit" class="text-xl font-black text-blue-600 font-mono">0 đ</span>
+                        </div>
+
+                        <!-- NPM -->
+                        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex justify-between items-center">
+                            <div>
+                                <p class="font-black text-slate-800">Biên Lợi Nhuận Ròng (NPM - Net Margin)</p>
+                                <p class="text-[11px] text-slate-500">Công thức: (Lợi nhuận sau thuế / Doanh thu thuần) x 100</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Sau mọi chi phí (mặt bằng, nhân viên, quảng cáo, lãi, thuế), thực bỏ túi bao nhiêu %.</p>
+                            </div>
+                            <span id="ind-npm" class="text-xl font-black text-teal-600 font-mono">0.0%</span>
+                        </div>
+
+                        <!-- ROA & ROE -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                                <p class="font-black text-slate-800 text-[11px]">ROA (Sinh lời / Tài sản)</p>
+                                <h4 id="ind-roa" class="text-lg font-black text-indigo-600 font-mono">0.0%</h4>
+                                <p class="text-[10px] text-slate-400">1 đồng tài sản sinh bao nhiêu đồng lời.</p>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                                <p class="font-black text-slate-800 text-[11px]">ROE (Sinh lời / Vốn CSH)</p>
+                                <h4 id="ind-roe" class="text-lg font-black text-purple-600 font-mono">0.0%</h4>
+                                <p class="text-[10px] text-slate-400">1 đồng vốn bỏ ra đem về bao nhiêu đồng lời.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📉 4. NHÓM CHỈ SỐ AN TOÀN TÀI CHÍNH (KHẢ NĂNG CHỊU RỦI RO) -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xs border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
+                        <h4 class="font-black text-slate-900 text-base flex items-center gap-2">
+                            📉 4. Nhóm Chỉ Số An Toàn Tài Chính (Chịu Rủi Ro)
+                        </h4>
+                        <span class="text-[10px] font-black px-2.5 py-0.5 rounded bg-purple-100 text-purple-800 uppercase">Solvency & Risk</span>
+                    </div>
+
+                    <p class="text-xs text-slate-500 mb-4">
+                        Đảm bảo doanh nghiệp luôn có sức chống chịu trước biến động thị trường và không bị mất thanh khoản.
+                    </p>
+
+                    <div class="space-y-3 text-xs">
+                        <!-- Hệ số thanh toán hiện thời CR -->
+                        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <p class="font-black text-slate-800">Hệ Số Thanh Toán Hiện Thời (CR)</p>
+                                    <span id="badge-cr" class="text-[9px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">An toàn</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500">Công thức: Tài sản ngắn hạn / Nợ ngắn hạn</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Đảm bảo luôn đủ tiền, hàng, nợ phải thu để trả các khoản nợ đến hạn trong năm (Chuẩn &gt;= 1.5).</p>
+                            </div>
+                            <span id="ind-cr" class="text-2xl font-black text-slate-900 font-mono">0.00</span>
+                        </div>
+
+                        <!-- Hệ số Nợ trên Vốn CSH (D/E) -->
+                        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <p class="font-black text-slate-800">Hệ Số Nợ / Vốn Chủ Sở Hữu (D/E)</p>
+                                    <span id="badge-de" class="text-[9px] font-black px-2 py-0.5 rounded bg-blue-100 text-blue-800">Đòn bẩy tốt</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500">Công thức: Tổng nợ phải trả / Vốn chủ sở hữu</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Kiểm soát mức độ rủi ro khi dùng đòn bẩy tài chính (đi vay ngân hàng để nhập hàng).</p>
+                            </div>
+                            <span id="ind-de" class="text-2xl font-black text-slate-900 font-mono">0.00</span>
+                        </div>
+
+                        <!-- Khả năng chi trả lãi vay ICR -->
+                        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <p class="font-black text-slate-800">Hệ Số Chi Trả Lãi Vay (ICR)</p>
+                                    <span class="text-[9px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">Coverage</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500">Công thức: EBIT / Chi phí lãi vay ngân hàng</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Mức độ an toàn dùng lợi nhuận hoạt động để trang trải lãi vay ngân hàng.</p>
+                            </div>
+                            <span id="ind-icr" class="text-2xl font-black text-indigo-600 font-mono">0.0 lần</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- KHU VỰC BIỂU ĐỒ TRỰC QUAN (CHART.JS) -->
+    <!-- ============================================================== -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+        <!-- Biểu đồ 1: Thác nước Dòng Tiền & Lợi Nhuận PnL -->
+        <div class="lg:col-span-8 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-black text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                        <i class="fas fa-chart-bar text-blue-600"></i> Phân Bổ Doanh Thu & Cấu Trúc Lợi Nhuận (P&L Flow)
+                    </h4>
+                    <span class="text-[11px] text-slate-400 font-bold">VNĐ</span>
+                </div>
+                <div class="w-full h-64 sm:h-72 relative">
+                    <canvas id="pnlWaterfallChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ 2: Cơ cấu Vốn vs Nợ Doughnut -->
+        <div class="lg:col-span-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-black text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-emerald-600"></i> Tỷ Trọng Nguồn Vốn
+                    </h4>
+                    <span class="text-[11px] text-slate-400 font-bold">%</span>
+                </div>
+                <div class="w-full h-56 relative flex items-center justify-center">
+                    <canvas id="capitalDoughnutChart"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-4 text-xs pt-3 border-t border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+                        <span class="text-slate-600 truncate">Vốn Chủ Sở Hữu</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-indigo-500 shrink-0"></span>
+                        <span class="text-slate-600 truncate">Nợ Phải Trả</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- POPUP MODAL CÀI ĐẶT NGUỒN VỐN & CHI PHÍ DOANH NGHIỆP -->
+    <!-- ============================================================== -->
+    <div id="health-config-modal" class="fixed inset-0 bg-slate-900/70 z-[9999] hidden items-center justify-center backdrop-blur-xs p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden my-8">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-5 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500 text-slate-900 flex items-center justify-center font-black">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-base">Cài Đặt Tham Số Nguồn Vốn & Chi Phí</h3>
+                        <p class="text-[11px] text-slate-400">Cập nhật số liệu thực tế để hệ thống tự động tính toán các chỉ số tài chính.</p>
+                    </div>
+                </div>
+                <button onclick="window.modHealth.closeConfigModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Form Body -->
+            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto text-xs">
+                <!-- Group 1: Vốn chủ sở hữu -->
+                <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-200/60 space-y-3">
+                    <h4 class="font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                        🌟 1. Vốn Chủ Sở Hữu (Equity)
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Vốn góp ban đầu / Vốn điều lệ (VNĐ)</label>
+                            <input type="text" id="cfg-initial-equity" oninput="window.modHealth.formatMoneyInput(this)" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold font-mono text-slate-800 bg-white" placeholder="2,500,000,000">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Lợi nhuận giữ lại từ các năm trước (VNĐ)</label>
+                            <input type="text" id="cfg-retained-earnings" oninput="window.modHealth.formatMoneyInput(this)" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold font-mono text-slate-800 bg-white" placeholder="350,000,000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 2: Vay ngân hàng & Nợ -->
+                <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-200/60 space-y-3">
+                    <h4 class="font-black text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
+                        💳 2. Nợ Vay & Đòn Bẩy Ngân Hàng
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Vay ngắn hạn nhập hàng (VNĐ)</label>
+                            <input type="text" id="cfg-bank-short" oninput="window.modHealth.formatMoneyInput(this)" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold font-mono text-slate-800 bg-white" placeholder="400,000,000">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Vay dài hạn mở kho / xe (VNĐ)</label>
+                            <input type="text" id="cfg-bank-long" oninput="window.modHealth.formatMoneyInput(this)" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold font-mono text-slate-800 bg-white" placeholder="600,000,000">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Lãi suất vay bình quân (%/năm)</label>
+                            <input type="number" step="0.1" id="cfg-interest-rate" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold font-mono text-slate-800 bg-white" placeholder="8.5">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 3: Chi phí vận hành & Tài sản cố định -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                    <h4 class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                        🏢 3. Chi Phí Hoạt Động & Thuế
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Chi phí OPEX cố định / tháng (VNĐ)</label>
+                            <input type="text" id="cfg-monthly-opex" oninput="window.modHealth.formatMoneyInput(this)" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold font-mono text-slate-800 bg-white" placeholder="45,000,000">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Tài sản cố định (Showroom, kho) (VNĐ)</label>
+                            <input type="text" id="cfg-fixed-assets" oninput="window.modHealth.formatMoneyInput(this)" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold font-mono text-slate-800 bg-white" placeholder="800,000,000">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Thuế suất TNDN (%)</label>
+                            <input type="number" id="cfg-tax-rate" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold font-mono text-slate-800 bg-white" placeholder="20">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+                <button onclick="window.modHealth.closeConfigModal()" class="px-4 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-600 hover:bg-slate-100 transition text-xs">
+                    Hủy Bỏ
+                </button>
+                <button onclick="window.modHealth.saveConfig()" id="btn-save-cfg" class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-bold transition text-xs shadow-md flex items-center gap-1.5">
+                    <i class="fas fa-save text-amber-400"></i> Lưu & Tái Tính Toán
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- SCRIPT XỬ LÝ TOÀN BỘ PHÂN HỆ SỨC KHỎE DOANH NGHIỆP -->
+<script>
+window.modHealth = {
+    currentPeriod: 'month',
+    currentData: null,
+    pnlChart: null,
+    capitalChart: null,
+
+    load: async (period = 'month') => {
+        window.modHealth.currentPeriod = period;
+
+        // Cập nhật trạng thái nút lọc
+        document.querySelectorAll('.health-filter').forEach(btn => {
+            btn.className = 'health-filter px-3 py-1.5 rounded-lg font-bold text-slate-500 hover:text-slate-800 transition whitespace-nowrap';
+        });
+        const activeBtn = document.getElementById('health-filter-' + period);
+        if (activeBtn) activeBtn.className = 'health-filter px-3 py-1.5 rounded-lg font-bold bg-white text-blue-600 shadow-xs border border-blue-100 transition whitespace-nowrap';
+
+        try {
+            const res = await fetch(`/api/business-health/summary?period=${period}`);
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error || 'Lỗi lấy dữ liệu sức khỏe');
+
+            window.modHealth.currentData = result.data;
+            window.modHealth.renderUI(result.data);
+        } catch (e) {
+            console.error("Lỗi modHealth:", e);
+        }
+    },
+
+    fmt: (num) => new Intl.NumberFormat('vi-VN').format(Math.round(num || 0)) + ' đ',
+    fmtNum: (num, decimals = 1) => Number(num || 0).toLocaleString('vi-VN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }),
+
+    renderUI: (data) => {
+        const fmt = window.modHealth.fmt;
+        const fmtNum = window.modHealth.fmtNum;
+
+        // 1. Render Điểm Sức Khỏe & Chẩn Đoán
+        const score = Math.round(data.healthScore || 0);
+        const scoreValEl = document.getElementById('health-score-val');
+        if (scoreValEl) scoreValEl.innerText = score;
+        
+        // Vòng tròn SVG stroke-dashoffset (chu vi = 339.29)
+        const circle = document.getElementById('score-circle');
+        if (circle) {
+            const offset = 339.29 - (339.29 * Math.min(100, Math.max(0, score)) / 100);
+            circle.style.strokeDashoffset = offset;
+            if (score >= 80) circle.setAttribute('class', 'text-emerald-400 transition-all duration-1000');
+            else if (score >= 60) circle.setAttribute('class', 'text-blue-400 transition-all duration-1000');
+            else if (score >= 40) circle.setAttribute('class', 'text-amber-400 transition-all duration-1000');
+            else circle.setAttribute('class', 'text-rose-500 transition-all duration-1000');
+        }
+
+        const ratingBadge = document.getElementById('health-rating-badge');
+        if (ratingBadge) {
+            ratingBadge.innerText = data.healthRating || 'BÌNH THƯỜNG';
+            if (score >= 80) ratingBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 mb-1.5 shadow-sm';
+            else if (score >= 60) ratingBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider text-blue-400 bg-blue-950/80 border border-blue-500/30 mb-1.5 shadow-sm';
+            else if (score >= 40) ratingBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-500/30 mb-1.5 shadow-sm';
+            else ratingBadge.className = 'inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider text-rose-400 bg-rose-950/80 border border-rose-500/30 mb-1.5 shadow-sm';
+        }
+
+        // 4 thanh điểm trụ cột
+        const setScore = (id, barId, val) => {
+            const el = document.getElementById(id);
+            const bar = document.getElementById(barId);
+            if (el) el.innerText = `${val}/25`;
+            if (bar) bar.style.width = `${Math.min(100, Math.max(0, (val / 25) * 100))}%`;
+        };
+        setScore('score-op', 'bar-op', data.scores.operating);
+        setScore('score-cash', 'bar-cash', data.scores.cashflow);
+        setScore('score-profit', 'bar-profit', data.scores.profitability);
+        setScore('score-safe', 'bar-safe', data.scores.safety);
+
+        // Lời khuyên của Bác sĩ CFO
+        const adviceContainer = document.getElementById('doctor-advices');
+        if (adviceContainer) {
+            let adviceHtml = '';
+            if (data.diagnostics && data.diagnostics.length > 0) {
+                data.diagnostics.forEach(d => {
+                    const iconColor = d.type === 'success' ? 'text-emerald-400' : (d.type === 'warning' ? 'text-amber-400' : 'text-rose-400');
+                    const icon = d.type === 'success' ? 'fa-check-circle' : (d.type === 'warning' ? 'fa-exclamation-triangle' : 'fa-times-circle');
+                    adviceHtml += `<p class="flex items-start gap-1.5"><i class="fas ${icon} ${iconColor} mt-0.5 shrink-0 text-[11px]"></i> <span>${d.text}</span></p>`;
+                });
+            }
+            if (data.advices && data.advices.length > 0) {
+                data.advices.forEach(a => {
+                    adviceHtml += `<p class="flex items-start gap-1.5 text-amber-300 font-semibold"><i class="fas fa-arrow-alt-circle-right text-amber-400 mt-0.5 shrink-0 text-[11px]"></i> <span>Hành động: ${a}</span></p>`;
+                });
+            }
+            adviceContainer.innerHTML = adviceHtml || '<p class="text-slate-400">Không có cảnh báo rủi ro đặc biệt nào.</p>';
+        }
+
+        // 2. Render PHẦN I: Cơ Cấu Vốn & Nợ
+        const cap = data.capitalStructure;
+        const setVal = (id, text) => { const el = document.getElementById(id); if (el) el.innerText = text; };
+        
+        setVal('val-initial-equity', fmt(cap.equity.initial_equity));
+        setVal('val-retained-earnings', fmt(cap.equity.retained_earnings));
+        setVal('val-total-equity', fmt(cap.equity.total_equity));
+        setVal('equity-ratio-badge', `${fmtNum(cap.equity.equity_ratio, 1)}% Tổng Tài Sản`);
+
+        setVal('val-supplier-payable', fmt(cap.liabilities.supplier_payable));
+        setVal('val-bank-debt', fmt(cap.liabilities.total_bank_debt));
+        setVal('val-customer-prepay', fmt(cap.liabilities.customer_prepayments));
+        setVal('val-total-liabilities', fmt(cap.liabilities.total_liabilities));
+        setVal('liab-ratio-badge', `${fmtNum(cap.liabilities.liabilities_ratio, 1)}% Tổng Tài Sản`);
+
+        // 3. Render PHẦN II: 4 Nhóm Chỉ Số
+        const ind = data.indicators;
+        
+        // Nhóm 1: Hoạt động
+        setVal('ind-turnover', `${fmtNum(ind.operating.inventory_turnover, 2)} lần/kỳ`);
+        setVal('ind-dio', `${fmtNum(ind.operating.dio, 1)} ngày`);
+        setVal('ind-dso', `${fmtNum(ind.operating.dso, 1)} ngày`);
+        setVal('ind-dpo', `${fmtNum(ind.operating.dpo, 1)} ngày`);
+
+        const dioBadge = document.getElementById('badge-dio');
+        if (dioBadge) {
+            if (ind.operating.dio <= 45) { dioBadge.innerText = 'Xuất sắc'; dioBadge.className = 'text-[10px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-700'; }
+            else if (ind.operating.dio <= 75) { dioBadge.innerText = 'Bình thường'; dioBadge.className = 'text-[10px] font-black px-2 py-0.5 rounded bg-blue-100 text-blue-700'; }
+            else { dioBadge.innerText = 'Tồn đọng'; dioBadge.className = 'text-[10px] font-black px-2 py-0.5 rounded bg-rose-100 text-rose-700'; }
+        }
+
+        const dsoBadge = document.getElementById('badge-dso');
+        if (dsoBadge) {
+            if (ind.operating.dso <= 30) { dsoBadge.innerText = 'Thu nhanh'; dsoBadge.className = 'text-[10px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-700'; }
+            else if (ind.operating.dso <= 60) { dsoBadge.innerText = 'An toàn'; dsoBadge.className = 'text-[10px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-700'; }
+            else { dsoBadge.innerText = 'Đọng nợ'; dsoBadge.className = 'text-[10px] font-black px-2 py-0.5 rounded bg-rose-100 text-rose-700'; }
+        }
+
+        // Nhóm 2: Chu kỳ tiền mặt CCC
+        setVal('calc-dio', `${fmtNum(ind.cashflow.dio, 1)} ngày`);
+        setVal('calc-dso', `+ ${fmtNum(ind.cashflow.dso, 1)} ngày`);
+        setVal('calc-dpo', `- ${fmtNum(ind.cashflow.dpo, 1)} ngày`);
+        
+        const cccVal = ind.cashflow.ccc;
+        setVal('calc-ccc', `${fmtNum(cccVal, 1)} ngày`);
+
+        const cccPill = document.getElementById('ccc-status-pill');
+        if (cccPill) {
+            if (cccVal < 0) {
+                cccPill.innerText = `XUẤT SẮC: BÁN TAY KHÔNG BẮT GIẶC (CCC = ${fmtNum(cccVal, 1)} ngày < 0)`;
+                cccPill.className = 'text-xs font-black px-3.5 py-1 rounded-full bg-emerald-400 text-slate-950 shadow-sm animate-pulse';
+            } else if (cccVal <= 30) {
+                cccPill.innerText = `TỐT: DÒNG TIỀN LINH HOẠT (CCC = ${fmtNum(cccVal, 1)} ngày)`;
+                cccPill.className = 'text-xs font-black px-3.5 py-1 rounded-full bg-blue-500 text-white shadow-sm';
+            } else if (cccVal <= 60) {
+                cccPill.innerText = `TRUNG BÌNH: DÒNG TIỀN ỔN ĐỊNH (CCC = ${fmtNum(cccVal, 1)} ngày)`;
+                cccPill.className = 'text-xs font-black px-3.5 py-1 rounded-full bg-amber-500 text-slate-950 shadow-sm';
+            } else {
+                cccPill.innerText = `CẢNH BÁO: NGHẼN DÒNG TIỀN (CCC = ${fmtNum(cccVal, 1)} ngày > 60)`;
+                cccPill.className = 'text-xs font-black px-3.5 py-1 rounded-full bg-rose-600 text-white shadow-sm';
+            }
+        }
+
+        // Nhóm 3: Sinh lời
+        setVal('ind-gpm', `${fmtNum(ind.profitability.gpm, 1)}%`);
+        setVal('ind-ebit', fmt(ind.profitability.ebit));
+        setVal('ind-npm', `${fmtNum(ind.profitability.npm, 1)}%`);
+        setVal('ind-roa', `${fmtNum(ind.profitability.roa, 1)}%`);
+        setVal('ind-roe', `${fmtNum(ind.profitability.roe, 1)}%`);
+
+        // Nhóm 4: An toàn tài chính
+        setVal('ind-cr', fmtNum(ind.safety.current_ratio, 2));
+        setVal('ind-de', fmtNum(ind.safety.debt_to_equity, 2));
+        setVal('ind-icr', ind.safety.interest_coverage_ratio > 50 ? '> 50 lần' : `${fmtNum(ind.safety.interest_coverage_ratio, 1)} lần`);
+
+        const crBadge = document.getElementById('badge-cr');
+        if (crBadge) {
+            if (ind.safety.current_ratio >= 1.5) { crBadge.innerText = 'Rất an toàn'; crBadge.className = 'text-[9px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-800'; }
+            else if (ind.safety.current_ratio >= 1.1) { crBadge.innerText = 'Khả dụng'; crBadge.className = 'text-[9px] font-black px-2 py-0.5 rounded bg-blue-100 text-blue-800'; }
+            else { crBadge.innerText = 'Báo động'; crBadge.className = 'text-[9px] font-black px-2 py-0.5 rounded bg-rose-100 text-rose-800'; }
+        }
+
+        // Render Biểu đồ Chart.js an toàn
+        window.modHealth.renderCharts(data);
+    },
+
+    renderCharts: (data) => {
+        if (typeof Chart === 'undefined') {
+            console.warn("Chart.js chưa sẵn sàng");
+            return;
+        }
+
+        try {
+            // 1. Waterfall / Bar Chart cho P&L
+            const ctxPnl = document.getElementById('pnlWaterfallChart');
+            if (ctxPnl) {
+                if (window.modHealth.pnlChart) {
+                    window.modHealth.pnlChart.destroy();
+                    window.modHealth.pnlChart = null;
+                }
+                
+                const pnl = data.pnl;
+                const labels = ['Doanh Thu', 'Giá Vốn', 'Lãi Gộp', 'OPEX', 'EBIT', 'Lãi Vay', 'Thuế', 'Lãi Ròng'];
+                const values = [
+                    pnl.revenue,
+                    pnl.cogs,
+                    pnl.gross_profit,
+                    pnl.opex_in_period,
+                    pnl.ebit,
+                    pnl.interest_expense,
+                    pnl.tax_expense,
+                    pnl.net_profit
+                ];
+                const bgColors = [
+                    '#3b82f6', // Doanh thu
+                    '#f43f5e', // COGS
+                    '#10b981', // Lãi gộp
+                    '#f59e0b', // OPEX
+                    '#6366f1', // EBIT
+                    '#ec4899', // Lãi vay
+                    '#8b5cf6', // Thuế
+                    pnl.net_profit >= 0 ? '#059669' : '#dc2626' // Lãi ròng
+                ];
+
+                window.modHealth.pnlChart = new Chart(ctxPnl, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Số tiền (VNĐ)',
+                            data: values,
+                            backgroundColor: bgColors,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return new Intl.NumberFormat('vi-VN').format(context.raw) + ' đ';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        if (value >= 1000000000) return (value / 1000000000).toFixed(1) + ' tỷ';
+                                        if (value >= 1000000) return (value / 1000000).toFixed(0) + ' tr';
+                                        return value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. Doughnut Chart cho Nguồn Vốn
+            const ctxCap = document.getElementById('capitalDoughnutChart');
+            if (ctxCap) {
+                if (window.modHealth.capitalChart) {
+                    window.modHealth.capitalChart.destroy();
+                    window.modHealth.capitalChart = null;
+                }
+                
+                const cap = data.capitalStructure;
+                window.modHealth.capitalChart = new Chart(ctxCap, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Vốn Chủ Sở Hữu (Equity)', 'Nợ Phải Trả (Liabilities)'],
+                        datasets: [{
+                            data: [cap.equity.total_equity, cap.liabilities.total_liabilities],
+                            backgroundColor: ['#10b981', '#6366f1'],
+                            hoverOffset: 4,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const val = context.raw;
+                                        const total = cap.equity.total_equity + cap.liabilities.total_liabilities;
+                                        const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                        return `${new Intl.NumberFormat('vi-VN').format(val)} đ (${pct}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
+        } catch (chartErr) {
+            console.error("Lỗi vẽ biểu đồ Chart.js:", chartErr);
+        }
+    },
+
+    // SIMULATOR WHAT-IF
+    toggleSimulator: () => {
+        const p = document.getElementById('whatif-panel');
+        if (!p) return;
+        p.classList.toggle('hidden');
+        if (!p.classList.contains('hidden') && window.modHealth.currentData) {
+            const ind = window.modHealth.currentData.indicators;
+            const dioSlider = document.getElementById('sim-dio-slider');
+            const dsoSlider = document.getElementById('sim-dso-slider');
+            const dpoSlider = document.getElementById('sim-dpo-slider');
+            if (dioSlider) dioSlider.value = Math.min(120, Math.max(10, Math.round(ind.operating.dio || 45)));
+            if (dsoSlider) dsoSlider.value = Math.min(90, Math.max(5, Math.round(ind.operating.dso || 20)));
+            if (dpoSlider) dpoSlider.value = Math.min(90, Math.max(10, Math.round(ind.operating.dpo || 45)));
+            window.modHealth.recalcSimulator();
+        }
+    },
+
+    resetSimulator: () => {
+        if (!window.modHealth.currentData) return;
+        const ind = window.modHealth.currentData.indicators;
+        const dioSlider = document.getElementById('sim-dio-slider');
+        const dsoSlider = document.getElementById('sim-dso-slider');
+        const dpoSlider = document.getElementById('sim-dpo-slider');
+        if (dioSlider) dioSlider.value = Math.min(120, Math.max(10, Math.round(ind.operating.dio || 45)));
+        if (dsoSlider) dsoSlider.value = Math.min(90, Math.max(5, Math.round(ind.operating.dso || 20)));
+        if (dpoSlider) dpoSlider.value = Math.min(90, Math.max(10, Math.round(ind.operating.dpo || 45)));
+        window.modHealth.recalcSimulator();
+    },
+
+    recalcSimulator: () => {
+        if (!window.modHealth.currentData) return;
+        const dioEl = document.getElementById('sim-dio-slider');
+        const dsoEl = document.getElementById('sim-dso-slider');
+        const dpoEl = document.getElementById('sim-dpo-slider');
+        
+        const dio = dioEl ? (parseFloat(dioEl.value) || 0) : 0;
+        const dso = dsoEl ? (parseFloat(dsoEl.value) || 0) : 0;
+        const dpo = dpoEl ? (parseFloat(dpoEl.value) || 0) : 0;
+
+        const dioVal = document.getElementById('sim-dio-val');
+        const dsoVal = document.getElementById('sim-dso-val');
+        const dpoVal = document.getElementById('sim-dpo-val');
+        if (dioVal) dioVal.innerText = `${dio} ngày`;
+        if (dsoVal) dsoVal.innerText = `${dso} ngày`;
+        if (dpoVal) dpoVal.innerText = `${dpo} ngày`;
+
+        const newCcc = dio + dso - dpo;
+        const cccRes = document.getElementById('sim-ccc-res');
+        if (cccRes) cccRes.innerText = `${newCcc.toFixed(1)} ngày`;
+
+        const cccEval = document.getElementById('sim-ccc-eval');
+        if (cccEval) {
+            if (newCcc < 0) {
+                cccEval.innerText = 'Xuất sắc (Bán tay không bắt giặc)';
+                cccEval.className = 'text-xs font-black text-emerald-600';
+            } else if (newCcc <= 30) {
+                cccEval.innerText = 'Dòng tiền rất linh hoạt';
+                cccEval.className = 'text-xs font-bold text-blue-600';
+            } else {
+                cccEval.innerText = 'Dòng tiền mức bình thường';
+                cccEval.className = 'text-xs font-semibold text-slate-500';
+            }
+        }
+
+        // Tính lượng tiền mặt giải phóng
+        const origCcc = window.modHealth.currentData.indicators.cashflow.ccc || 0;
+        const cogs = window.modHealth.currentData.pnl.cogs || 1000000000;
+        const dailyCogs = cogs / 365;
+        const daysSaved = origCcc - newCcc;
+        const cashUnlocked = daysSaved * dailyCogs;
+
+        const cashEl = document.getElementById('sim-cash-unlocked');
+        if (cashEl) {
+            if (cashUnlocked >= 0) {
+                cashEl.innerText = `+ ${new Intl.NumberFormat('vi-VN').format(Math.round(cashUnlocked))} đ`;
+                cashEl.className = 'text-2xl font-black text-emerald-600';
+            } else {
+                cashEl.innerText = `- ${new Intl.NumberFormat('vi-VN').format(Math.round(Math.abs(cashUnlocked)))} đ`;
+                cashEl.className = 'text-2xl font-black text-rose-600';
+            }
+        }
+
+        // Tác động ROE
+        const origRoe = window.modHealth.currentData.indicators.profitability.roe || 15;
+        const roeBoost = daysSaved > 0 ? (daysSaved * 0.15) : (daysSaved * 0.15);
+        const roeRes = document.getElementById('sim-roe-res');
+        if (roeRes) roeRes.innerText = `${Math.max(1, (origRoe + roeBoost)).toFixed(1)}%`;
+    },
+
+    // MODAL CONFIG
+    openConfigModal: () => {
+        if (window.modHealth.currentData && window.modHealth.currentData.configs) {
+            const cfg = window.modHealth.currentData.configs;
+            const fmt = (val) => new Intl.NumberFormat('vi-VN').format(val || 0);
+            
+            const setInp = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+            setInp('cfg-initial-equity', fmt(cfg.initial_equity));
+            setInp('cfg-retained-earnings', fmt(cfg.retained_earnings_accumulated));
+            setInp('cfg-bank-short', fmt(cfg.bank_debt_short));
+            setInp('cfg-bank-long', fmt(cfg.bank_debt_long));
+            setInp('cfg-interest-rate', cfg.bank_interest_rate || 8.5);
+            setInp('cfg-monthly-opex', fmt(cfg.monthly_opex));
+            setInp('cfg-fixed-assets', fmt(cfg.fixed_assets));
+            setInp('cfg-tax-rate', cfg.tax_rate || 20);
+        }
+        const modal = document.getElementById('health-config-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    },
+
+    closeConfigModal: () => {
+        const modal = document.getElementById('health-config-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    },
+
+    formatMoneyInput: (input) => {
+        const raw = input.value.replace(/[^0-9]/g, '');
+        input.value = raw ? new Intl.NumberFormat('vi-VN').format(parseInt(raw, 10)) : '';
+    },
+
+    parseMoneyInput: (id) => {
+        const el = document.getElementById(id);
+        if (!el) return 0;
+        return parseFloat(el.value.replace(/[^0-9]/g, '')) || 0;
+    },
+
+    saveConfig: async () => {
+        const btn = document.getElementById('btn-save-cfg');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ĐANG LƯU...';
+            btn.disabled = true;
+        }
+
+        const payload = {
+            initial_equity: window.modHealth.parseMoneyInput('cfg-initial-equity'),
+            retained_earnings_accumulated: window.modHealth.parseMoneyInput('cfg-retained-earnings'),
+            bank_debt_short: window.modHealth.parseMoneyInput('cfg-bank-short'),
+            bank_debt_long: window.modHealth.parseMoneyInput('cfg-bank-long'),
+            bank_interest_rate: parseFloat(document.getElementById('cfg-interest-rate')?.value) || 8.5,
+            monthly_opex: window.modHealth.parseMoneyInput('cfg-monthly-opex'),
+            fixed_assets: window.modHealth.parseMoneyInput('cfg-fixed-assets'),
+            tax_rate: parseFloat(document.getElementById('cfg-tax-rate')?.value) || 20
+        };
+
+        try {
+            const res = await fetch('/api/business-health/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.modHealth.closeConfigModal();
+                window.modHealth.load(window.modHealth.currentPeriod);
+            } else {
+                alert("Lỗi: " + data.error);
+            }
+        } catch (e) {
+            alert("Lỗi kết nối máy chủ: " + e.message);
+        } finally {
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-save text-amber-400"></i> Lưu & Tái Tính Toán';
+                btn.disabled = false;
+            }
+        }
+    }
+};
+
+// Khởi chạy ngay khi load module
+window.modHealth.load('month');
+</script>

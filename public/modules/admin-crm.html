@@ -1,28 +1,49 @@
-<div class="space-y-6">
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+<div class="space-y-4">
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-3.5 sm:p-5">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3.5 gap-3">
             <div>
-                <h3 class="font-black text-slate-900 text-xl"><i class="fas fa-crown text-amber-500 mr-2"></i>Hệ Sinh Thái Khách Hàng (CRM PRO)</h3>
-                <p class="text-xs text-slate-500 mt-1 font-medium">Tạo hồ sơ, hóa đơn VAT, phân hạng đại lý, theo dõi điểm thưởng và quà tặng.</p>
+                <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-1.5"><i class="fas fa-crown text-amber-500"></i> Quản Lý Khách Hàng (CRM PRO)</h3>
+                <p class="hidden sm:block text-xs text-slate-500 mt-0.5 font-medium">Hồ sơ đối tác, phân hạng đại lý, lịch sử chăm sóc và quản lý quà tặng tri ân.</p>
             </div>
-            <div class="flex gap-3 w-full md:w-auto">
-                <form autocomplete="off" onsubmit="event.preventDefault(); return false;" class="relative flex-1 md:w-80">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search"></i></span>
-                    <input type="search" id="crm-search" name="crm_search_field_no_fill" autocomplete="off" data-lpignore="true" data-form-type="other" oninput="window.modCRM.render()" placeholder="Tìm tên, SĐT, Nickname, MST..." class="w-full border-2 border-slate-200 rounded-lg py-2.5 pl-10 pr-4 outline-none focus:border-amber-500 font-bold text-sm bg-slate-50 focus:bg-white transition">
+            
+            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                <!-- BỘ LỌC QUÀ TẶNG & TRI ÂN -->
+                <div class="relative">
+                    <select id="crm-gift-filter" onchange="window.modCRM.render()" class="border border-slate-200 rounded-xl py-2 px-3 outline-none focus:border-amber-500 font-bold text-xs bg-slate-50 focus:bg-white text-slate-700 cursor-pointer transition shadow-2xs">
+                        <option value="all">🌟 Tất cả đối tác</option>
+                        <option value="has_gifts">🎁 Đã nhận quà tri ân</option>
+                        <option value="no_gifts">⚠️ Chưa từng được tặng quà</option>
+                        <option value="vip_no_recent">💎 VIP > 90 ngày chưa tặng quà</option>
+                    </select>
+                </div>
+
+                <!-- Ô TÌM KIẾM -->
+                <form autocomplete="off" onsubmit="event.preventDefault(); return false;" class="relative flex-1 sm:w-64">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search text-xs"></i></span>
+                    <input type="search" id="crm-search" name="crm_search_field_no_fill" autocomplete="off" data-lpignore="true" data-form-type="other" oninput="window.modCRM.render()" placeholder="🔍 Tìm tên, SĐT, Nickname..." class="w-full border border-slate-200 rounded-xl py-2 pl-9 pr-3 outline-none focus:border-amber-500 font-bold text-xs bg-slate-50 focus:bg-white transition">
                 </form>
-                <button type="button" onclick="window.modCRM.openDrawer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold shadow text-sm whitespace-nowrap transition flex items-center gap-1.5"><i class="fas fa-plus"></i> Tạo Khách Mới</button>
+
+                <!-- NÚT TẠO MỚI -->
+                <button type="button" onclick="window.modCRM.openDrawer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl font-bold shadow-xs text-xs whitespace-nowrap transition flex items-center gap-1.5 shrink-0"><i class="fas fa-plus"></i> <span>Tạo Khách Mới</span></button>
             </div>
         </div>
-        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm bg-white min-h-[300px]">
+
+        <!-- 1. MOBILE SMART CARDS (CHỈ HIỆN TRÊN MOBILE md:hidden) -->
+        <div id="crm-mobile-cards" class="md:hidden space-y-2.5 pb-4">
+            <!-- Rendered by JS -->
+        </div>
+
+        <!-- 2. DESKTOP TABLE VIEW (CHỈ HIỆN TRÊN DESKTOP hidden md:block) -->
+        <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-200 shadow-2xs bg-white min-h-[300px]">
             <table class="w-full text-left text-sm bg-white">
                 <thead class="bg-slate-100 text-[11px] uppercase text-slate-600 font-black border-b border-slate-200 sticky top-0 shadow-xs z-10">
                     <tr>
-                        <th class="p-4 border-b w-[30%]">Hồ Sơ Đối Tác</th>
-                        <th class="p-4 border-b w-[20%]">Thông Tin VAT</th>
+                        <th class="p-4 border-b w-[28%]">Hồ Sơ Đối Tác</th>
+                        <th class="p-4 border-b w-[18%]">Thông Tin VAT</th>
                         <th class="p-4 border-b text-center">Hạng & Cấp Bậc</th>
                         <th class="p-4 border-b text-right">Doanh Số / Nợ</th>
-                        <th class="p-4 border-b text-center text-amber-600">Điểm Quỹ (đ)</th>
-                        <th class="p-4 border-b text-center w-28">Thao Tác</th>
+                        <th class="p-4 border-b text-center text-amber-600 w-[20%]">Điểm & Quà Tri Ân</th>
+                        <th class="p-4 border-b text-center w-24">Thao Tác</th>
                     </tr>
                 </thead>
                 <tbody id="tbl-crm" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -31,84 +52,331 @@
     </div>
 </div>
 
+<!-- DRAWER QUẢN LÝ CHI TIẾT ĐỐI TÁC -->
 <div id="crm-drawer" onclick="if(event.target === this) window.modCRM.closeDrawer()" class="fixed inset-0 bg-slate-900/60 hidden z-[60] justify-end backdrop-blur-xs">
-    <div class="bg-white w-full md:w-[650px] h-full shadow-2xl flex flex-col animate-slide-in-right">
-        <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 shrink-0 shadow-md relative flex justify-between items-center">
+    <div class="bg-white w-full md:w-[700px] h-full shadow-2xl flex flex-col animate-slide-in-right">
+        <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-4 sm:p-6 shrink-0 shadow-md relative flex justify-between items-center">
             <div>
-                <h3 class="font-black text-2xl text-amber-400" id="dr-title">Tạo Khách Hàng Mới</h3>
-                <p class="text-xs text-slate-400 mt-1" id="dr-subtitle">Nhập thông tin cơ bản và dữ liệu xuất hóa đơn.</p>
+                <h3 class="font-black text-lg sm:text-2xl text-amber-400" id="dr-title">Tạo Khách Hàng Mới</h3>
+                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5" id="dr-subtitle">Nhập thông tin cơ bản và dữ liệu xuất hóa đơn.</p>
             </div>
-            <button onclick="window.modCRM.closeDrawer()" class="text-slate-400 hover:text-white transition"><i class="fas fa-times text-3xl"></i></button>
+            <button onclick="window.modCRM.closeDrawer()" class="text-slate-400 hover:text-white transition w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-lg">&times;</button>
             <input type="hidden" id="dr-id">
         </div>
-        <div id="drawer-tabs" class="flex bg-slate-100 border-b shrink-0 text-sm font-bold text-slate-500">
-            <button onclick="window.modCRM.switchTab('profile')" id="tab-btn-profile" class="flex-1 py-3 border-b-2 border-amber-500 text-amber-600 bg-white"><i class="fas fa-id-card mr-1"></i> Hồ Sơ & VAT</button>
-            <button onclick="window.modCRM.switchTab('tier')" id="tab-btn-tier" class="flex-1 py-3 border-b-2 border-transparent hover:text-slate-800"><i class="fas fa-chart-pie mr-1"></i> Hạng & Nợ</button>
-            <button onclick="window.modCRM.switchTab('gifts')" id="tab-btn-gifts" class="flex-1 py-3 border-b-2 border-transparent hover:text-slate-800"><i class="fas fa-gift mr-1"></i> Điểm & Quà</button>
-            <button onclick="window.modCRM.switchTab('logs')" id="tab-btn-logs" class="flex-1 py-3 border-b-2 border-transparent hover:text-slate-800"><i class="fas fa-history mr-1"></i> Nhật Ký</button>
+        <div id="drawer-tabs" class="flex bg-slate-100 border-b shrink-0 text-xs sm:text-sm font-bold text-slate-500 overflow-x-auto">
+            <button onclick="window.modCRM.switchTab('profile')" id="tab-btn-profile" class="flex-1 min-w-[80px] py-2.5 sm:py-3 border-b-2 border-amber-500 text-amber-600 bg-white whitespace-nowrap"><i class="fas fa-id-card mr-1"></i> Hồ Sơ</button>
+            <button onclick="window.modCRM.switchTab('tier')" id="tab-btn-tier" class="flex-1 min-w-[90px] py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-shield-alt mr-1"></i> Hạng & Hạn Mức</button>
+            <button onclick="window.modCRM.switchTab('orders')" id="tab-btn-orders" class="flex-1 min-w-[90px] py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-file-invoice-dollar mr-1"></i> Đơn & Sổ Nợ</button>
+            <button onclick="window.modCRM.switchTab('gifts')" id="tab-btn-gifts" class="flex-1 min-w-[80px] py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-gift mr-1"></i> Điểm & Quà</button>
+            <button onclick="window.modCRM.switchTab('logs')" id="tab-btn-logs" class="flex-1 min-w-[80px] py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-history mr-1"></i> Nhật Ký</button>
         </div>
         <div class="flex-1 overflow-y-auto bg-slate-50 relative">
-            <div id="tab-profile" class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Đối Tác <span class="text-red-500">*</span></label><input type="text" id="p-name" class="w-full border-2 p-2.5 rounded-lg outline-none font-black text-slate-800 focus:border-amber-500"></div>
-                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Số Điện Thoại</label><input type="text" id="p-phone" class="w-full border-2 p-2.5 rounded-lg outline-none font-bold text-slate-800 focus:border-amber-500"></div>
+            <!-- TAB 1: HỒ SƠ & VAT -->
+            <div id="tab-profile" class="p-3.5 sm:p-6 space-y-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Đối Tác <span class="text-red-500">*</span></label><input type="text" id="p-name" class="w-full border p-2.5 rounded-xl outline-none font-bold text-slate-800 focus:border-amber-500 text-base sm:text-sm"></div>
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Số Điện Thoại</label><input type="text" id="p-phone" class="w-full border p-2.5 rounded-xl outline-none font-bold text-slate-800 focus:border-amber-500 text-base sm:text-sm"></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Gợi Nhớ (Nickname)</label><input type="text" id="p-nickname" placeholder="VD: Anh A Thợ Điện" class="w-full border-2 p-2.5 rounded-lg outline-none font-bold text-slate-800 focus:border-amber-500"></div>
-                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Địa Chỉ Nhận Hàng</label><input type="text" id="p-address" placeholder="Lưu để làm báo giá/giao hàng..." class="w-full border-2 p-2.5 rounded-lg outline-none font-bold text-slate-800 focus:border-amber-500"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Gợi Nhớ (Nickname)</label><input type="text" id="p-nickname" placeholder="VD: Anh A Thợ Điện" class="w-full border p-2.5 rounded-xl outline-none font-bold text-slate-800 focus:border-amber-500 text-base sm:text-sm"></div>
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Địa Chỉ Nhận Hàng</label><input type="text" id="p-address" placeholder="Lưu để làm báo giá/giao hàng..." class="w-full border p-2.5 rounded-xl outline-none font-bold text-slate-800 focus:border-amber-500 text-base sm:text-sm"></div>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4 mt-2">
-                    <h4 class="font-black text-xs text-blue-600 uppercase border-b pb-2"><i class="fas fa-file-invoice"></i> Dữ Liệu Xuất Hóa Đơn (VAT)</h4>
-                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Pháp Nhân (Công ty)</label><input type="text" id="p-vat-company" class="w-full border-2 p-2 rounded-lg outline-none font-bold text-sm focus:border-blue-500"></div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Mã Số Thuế</label><input type="text" id="p-vat-tax" class="w-full border-2 p-2 rounded-lg outline-none font-mono font-bold text-sm text-blue-700 focus:border-blue-500"></div>
-                        <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Email Kế Toán</label><input type="text" id="p-vat-email" class="w-full border-2 p-2 rounded-lg outline-none font-bold text-sm focus:border-blue-500"></div>
+                <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3 mt-2">
+                    <h4 class="font-black text-xs text-blue-600 uppercase border-b pb-2"><i class="fas fa-file-invoice mr-1"></i> Dữ Liệu Xuất Hóa Đơn (VAT)</h4>
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Pháp Nhân (Công ty)</label><input type="text" id="p-vat-company" class="w-full border p-2 rounded-xl outline-none font-bold text-xs sm:text-sm focus:border-blue-500"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Mã Số Thuế</label><input type="text" id="p-vat-tax" class="w-full border p-2 rounded-xl outline-none font-mono font-bold text-xs sm:text-sm text-blue-700 focus:border-blue-500"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Email Kế Toán</label><input type="text" id="p-vat-email" class="w-full border p-2 rounded-xl outline-none font-bold text-xs sm:text-sm focus:border-blue-500"></div>
                     </div>
-                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Địa Chỉ Hóa Đơn</label><input type="text" id="p-vat-address" class="w-full border-2 p-2 rounded-lg outline-none font-bold text-sm focus:border-blue-500"></div>
+                    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Địa Chỉ Hóa Đơn</label><input type="text" id="p-vat-address" class="w-full border p-2 rounded-xl outline-none font-bold text-xs sm:text-sm focus:border-blue-500"></div>
                 </div>
-                <div class="flex justify-between pt-4">
-                    <button onclick="window.modCRM.deleteCustomer()" id="btn-del" class="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg font-bold text-sm transition hidden"><i class="fas fa-trash-alt"></i> Xóa Đối Tác</button>
-                    <button onclick="window.modCRM.saveProfile()" id="btn-save-profile" class="bg-emerald-600 text-white px-8 py-3 rounded-lg font-black shadow-lg hover:bg-emerald-700 ml-auto"><i class="fas fa-save"></i> LƯU HỒ SƠ</button>
+                <div class="flex justify-between items-center pt-3 gap-2">
+                    <button onclick="window.modCRM.deleteCustomer()" id="btn-del" class="text-red-500 hover:bg-red-50 px-3 py-2.5 rounded-xl font-bold text-xs transition hidden"><i class="fas fa-trash-alt mr-1"></i> Xóa</button>
+                    <button onclick="window.modCRM.saveProfile()" id="btn-save-profile" class="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-black shadow-md hover:bg-emerald-700 ml-auto text-xs sm:text-sm flex items-center gap-1.5"><i class="fas fa-save"></i> LƯU HỒ SƠ</button>
                 </div>
             </div>
-            <div id="tab-tier" class="p-6 hidden space-y-6 h-full">
-                <div class="bg-white p-5 rounded-xl border shadow-sm grid grid-cols-2 gap-6">
+
+            <!-- TAB 2: HẠNG & HẠN MỨC CÔNG NỢ -->
+            <div id="tab-tier" class="p-4 sm:p-6 hidden space-y-4 h-full">
+                <!-- CẢNH BÁO TRẠNG THÁI HẠN MỨC NỢ -->
+                <div id="tier-debt-gauge-box" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-black uppercase text-slate-700 flex items-center gap-1.5">
+                            <i class="fas fa-chart-line text-blue-500"></i> Kiểm Soát Tình Trạng Công Nợ
+                        </span>
+                        <span id="tier-debt-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase border">An Toàn</span>
+                    </div>
+
+                    <!-- PROGRESS BAR -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs font-bold text-slate-600">
+                            <span>Nợ thực tế: <strong class="text-red-600 font-black text-sm" id="tier-debt-current-text">0 đ</strong></span>
+                            <span>Hạn mức: <strong class="text-slate-800 font-black text-sm" id="tier-debt-limit-text">Không giới hạn</strong></span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
+                            <div id="tier-debt-bar" class="h-full rounded-full transition-all duration-500 bg-emerald-500" style="width: 0%"></div>
+                        </div>
+                        <p id="tier-debt-tip" class="text-[11px] text-slate-500 font-medium">💡 Khách hàng còn trong hạn mức tín dụng cho phép lên đơn.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-600 uppercase mb-1.5">Định vị Cấp Bậc (Tier)</label>
+                            <select id="dr-tier" class="w-full border p-2.5 rounded-xl font-bold text-sm bg-slate-50 focus:border-amber-500 outline-none">
+                                <option value="1">1. Khách Lẻ Mặc Định</option>
+                                <option value="2">2. Giá Chốt Sale</option>
+                                <option value="3">3. Thợ / Đại Lý Nhỏ</option>
+                                <option value="4">4. Sỉ Cấp 1</option>
+                                <option value="5">5. Sỉ VIP</option>
+                                <option value="6">6. NPP / Cắt Lô Dự Án</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-700 uppercase mb-1.5 flex items-center justify-between">
+                                <span>Hạn Mức Công Nợ (VNĐ) <span class="text-rose-500">*</span></span>
+                                <span class="text-[10px] text-slate-400 font-normal">0 = Không khóa</span>
+                            </label>
+                            <input type="number" id="dr-debt-limit" oninput="window.modCRM.updateDebtGaugePreview()" placeholder="VD: 50000000" class="w-full border-2 border-slate-200 p-2.5 rounded-xl font-black text-base text-slate-800 bg-slate-50 focus:border-blue-500 outline-none">
+                            <span class="text-[10px] text-slate-400 font-medium mt-1 block">Chạm ngưỡng này sẽ bị hệ thống tự động khóa lên đơn mới.</span>
+                        </div>
+                    </div>
+
                     <div>
-                        <label class="block text-[11px] font-black text-slate-500 uppercase mb-2">Định vị Cấp Bậc (Tier)</label>
-                        <select id="dr-tier" class="w-full border-2 border-slate-200 p-2.5 rounded-lg font-bold text-sm bg-slate-50 focus:border-amber-500 outline-none">
-                            <option value="1">1. Khách Lẻ Mặc Định</option>
-                            <option value="2">2. Giá Chốt Sale</option>
-                            <option value="3">3. Thợ / Đại Lý Nhỏ</option>
-                            <option value="4">4. Sỉ Cấp 1</option>
-                            <option value="5">5. Sỉ VIP</option>
-                            <option value="6">6. NPP / Cắt Lô Dự Án</option>
+                        <label class="block text-[11px] font-black text-red-600 uppercase mb-1.5 flex items-center gap-1">
+                            <i class="fas fa-lock"></i> Công Nợ Tồn Đọng Tự Động (VNĐ)
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="dr-debt-display" readonly disabled class="w-full border-2 border-red-200 p-3 rounded-xl font-black text-xl text-red-600 bg-red-50/60 cursor-not-allowed outline-none select-none">
+                            <span class="absolute right-3 top-3.5 text-xs text-red-500 font-bold bg-white px-2 py-0.5 rounded-md border border-red-200 shadow-2xs">
+                                <i class="fas fa-shield-alt mr-1"></i>Khóa tự động
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 font-medium mt-1.5 flex items-center gap-1">
+                            <i class="fas fa-info-circle text-blue-500"></i> Công nợ được tính tự động từ toàn bộ đơn hàng chưa trả và các phiếu thu thanh toán, không thể tự ý sửa tay.
+                        </p>
+                    </div>
+
+                    <div class="flex justify-end pt-2 border-t">
+                        <button onclick="window.modCRM.saveTier()" class="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-8 py-3 rounded-xl font-black shadow-md text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+                            <i class="fas fa-save"></i> CẬP NHẬT CẤP BẬC & HẠN MỨC
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: ĐƠN HÀNG & SỔ NỢ (XEM NỢ TỪ ĐÂU RA) -->
+            <div id="tab-orders" class="p-4 sm:p-6 hidden flex-col space-y-4">
+                <!-- TỔNG KẾT ĐƠN HÀNG & NỢ -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs text-center">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Tổng Đơn Hàng</span>
+                        <strong class="font-black text-slate-800 text-sm sm:text-base" id="cust-stat-total-orders">0 đơn</strong>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs text-center">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Tổng Doanh Số</span>
+                        <strong class="font-black text-slate-800 text-sm sm:text-base" id="cust-stat-total-sales">0 đ</strong>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs text-center">
+                        <span class="text-[10px] uppercase font-bold text-emerald-600 block">Đã Thanh Toán</span>
+                        <strong class="font-black text-emerald-600 text-sm sm:text-base" id="cust-stat-total-paid">0 đ</strong>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl border border-red-200 bg-red-50/40 shadow-2xs text-center">
+                        <span class="text-[10px] uppercase font-bold text-red-500 block">Tổng Nợ Tồn Đọng</span>
+                        <strong class="font-black text-red-600 text-sm sm:text-base" id="cust-stat-current-debt">0 đ</strong>
+                    </div>
+                </div>
+
+                <!-- BỘ LỌC ĐƠN HÀNG -->
+                <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-bold text-slate-600"><i class="fas fa-filter text-slate-400"></i> Lọc đơn:</span>
+                        <select id="cust-orders-filter" onchange="window.modCRM.renderCustomerOrdersList()" class="border border-slate-200 rounded-lg py-1 px-2.5 text-xs font-bold bg-slate-50 outline-none text-slate-700">
+                            <option value="all">Tất cả đơn hàng</option>
+                            <option value="unpaid">🔴 Chỉ đơn còn nợ (Chưa trả đủ)</option>
+                            <option value="paid">🟢 Đã thanh toán 100%</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-black text-red-500 uppercase mb-2">Công Nợ Tồn Đọng (VNĐ)</label>
-                        <input type="number" id="dr-debt" class="w-full border-2 border-red-200 p-2.5 rounded-lg font-black text-lg text-red-600 bg-red-50 focus:border-red-500 outline-none">
+                    <span class="text-[11px] font-bold text-slate-400" id="cust-orders-count-badge">0 đơn hàng</span>
+                </div>
+
+                <!-- DANH SÁCH ĐƠN HÀNG (CHI TIẾT NỢ TỪNG ĐƠN) -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                    <div class="p-3 border-b bg-slate-50 flex justify-between items-center">
+                        <h5 class="font-black text-xs uppercase text-slate-700 flex items-center gap-1.5">
+                            <i class="fas fa-boxes text-amber-500"></i> Danh Sách Đơn Hàng & Chi Tiết Nợ
+                        </h5>
+                        <span class="text-[10px] text-slate-400 font-medium">Đối soát chi tiết</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-[350px]">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-[10px] uppercase text-slate-500 font-black border-b sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3">Mã Đơn / Ngày</th>
+                                    <th class="p-3 text-right">Tổng Tiền</th>
+                                    <th class="p-3 text-right">Đã Trả</th>
+                                    <th class="p-3 text-right text-red-600">Còn Nợ</th>
+                                    <th class="p-3 text-center">Trạng Thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbl-cust-orders" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                                <!-- Rendered by JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="flex justify-end pt-4"><button onclick="window.modCRM.saveTier()" class="bg-slate-800 text-white px-8 py-3 rounded-lg font-black shadow hover:bg-black">CẬP NHẬT TRẠNG THÁI</button></div>
+
+                <!-- LỊCH SỬ PHIẾU THU SỔ QUỸ (THANH TOÁN TIỀN NỢ) -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                    <div class="p-3 border-b bg-slate-50 flex justify-between items-center">
+                        <h5 class="font-black text-xs uppercase text-slate-700 flex items-center gap-1.5">
+                            <i class="fas fa-receipt text-emerald-500"></i> Lịch Sử Phiếu Thu / Nộp Tiền (Sổ Quỹ)
+                        </h5>
+                        <span class="text-[10px] text-slate-400 font-medium" id="cust-payments-count-badge">0 phiếu</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-[220px]">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-[10px] uppercase text-slate-500 font-black border-b sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3">Mã Phiếu / Ngày</th>
+                                    <th class="p-3 text-right">Số Tiền Nộp</th>
+                                    <th class="p-3">Phương Thức</th>
+                                    <th class="p-3">Ghi Chú</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbl-cust-payments" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                                <!-- Rendered by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div id="tab-gifts" class="p-6 hidden flex-col h-full">
-                <div class="bg-gradient-to-r from-amber-500 to-orange-500 p-5 rounded-xl shadow-lg text-white mb-6 flex justify-between items-center">
+
+            <!-- TAB 3: ĐIỂM & QUÀ TẶNG TRI ÂN NÂNG CAO -->
+            <div id="tab-gifts" class="p-4 sm:p-6 hidden flex-col space-y-4">
+                <!-- THẺ TỔNG KẾT QUỸ ĐIỂM & NGÂN SÁCH TRI ÂN -->
+                <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 p-4 sm:p-5 rounded-2xl shadow-md text-white">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/20 pb-3 mb-3">
+                        <div>
+                            <p class="text-[10px] font-black text-amber-100 uppercase tracking-widest mb-1">Quỹ Điểm Thưởng Tích Lũy</p>
+                            <div class="flex items-end gap-2">
+                                <input type="number" id="dr-points" class="bg-transparent border-none outline-none font-black text-3xl sm:text-4xl w-44 p-0 text-white placeholder-white/50">
+                                <span class="font-bold text-xs sm:text-sm mb-1 text-amber-100">VNĐ</span>
+                            </div>
+                        </div>
+                        <button onclick="window.modCRM.saveTier()" class="bg-white/20 hover:bg-white/30 px-3.5 py-2 rounded-xl font-bold text-xs border border-white/40 transition flex items-center gap-1.5"><i class="fas fa-save"></i> Cập Nhật Quỹ</button>
+                    </div>
+
+                    <!-- THỐNG KÊ LỊCH SỬ TRI ÂN -->
+                    <div class="grid grid-cols-3 gap-2 pt-1 text-center text-xs">
+                        <div class="bg-black/15 p-2 rounded-xl">
+                            <span class="text-[10px] text-amber-100 font-bold uppercase block">Đã Tri Ân</span>
+                            <strong class="font-black text-white text-sm" id="gift-stat-count">0 lần</strong>
+                        </div>
+                        <div class="bg-black/15 p-2 rounded-xl">
+                            <span class="text-[10px] text-amber-100 font-bold uppercase block">Tổng Giá Trị</span>
+                            <strong class="font-black text-white text-sm" id="gift-stat-value">0 đ</strong>
+                        </div>
+                        <div class="bg-black/15 p-2 rounded-xl truncate" title="Lần tặng gần nhất">
+                            <span class="text-[10px] text-amber-100 font-bold uppercase block">Gần Nhất</span>
+                            <strong class="font-bold text-white text-xs truncate block" id="gift-stat-last">Chưa có</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORM TẶNG QUÀ MỚI & BỘ CHỐNG TRÙNG LẶP -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3.5">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h4 class="font-black text-xs sm:text-sm text-slate-800 uppercase flex items-center gap-1.5">
+                            <i class="fas fa-gift text-rose-500"></i> Ghi Nhận Quà Tặng / Tri Ân Mới
+                        </h4>
+                        <span class="text-[10px] font-bold text-slate-400">Chống tặng quà trùng lặp</span>
+                    </div>
+
+                    <!-- GỢI Ý MÓN QUÀ NHANH -->
                     <div>
-                        <p class="text-[10px] font-black text-amber-100 uppercase mb-1">Quỹ Điểm Thưởng Khách Hàng</p>
-                        <div class="flex items-end gap-2"><input type="number" id="dr-points" class="bg-transparent border-none outline-none font-black text-4xl w-48 p-0 text-white"><span class="font-bold text-sm mb-1 text-amber-100">VNĐ</span></div>
+                        <span class="text-[10px] font-bold text-slate-500 block mb-1.5">Gợi ý món quà phổ biến:</span>
+                        <div class="flex flex-wrap gap-1.5" id="gift-preset-chips">
+                            <button type="button" onclick="window.modCRM.selectPresetGift('🌸 Giỏ Quà Tết Cao Cấp', 1000000, '🌸 Tri ân Tết Nguyên Đán')" class="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 rounded-lg text-[11px] font-bold transition border border-slate-200">🌸 Giỏ Quà Tết</button>
+                            <button type="button" onclick="window.modCRM.selectPresetGift('🍵 Bộ Ấm Chén Sứ Hoàng Gia', 650000, '🤝 Thăm hỏi & Chăm sóc định kỳ')" class="px-2.5 py-1 bg-slate-100 hover:bg-amber-50 hover:text-amber-600 text-slate-600 rounded-lg text-[11px] font-bold transition border border-slate-200">🍵 Bộ Ấm Chén</button>
+                            <button type="button" onclick="window.modCRM.selectPresetGift('👕 Áo Thun Đồng Phục SUNGO', 250000, '🤝 Thăm hỏi & Chăm sóc định kỳ')" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded-lg text-[11px] font-bold transition border border-slate-200">👕 Áo Thun SUNGO</button>
+                            <button type="button" onclick="window.modCRM.selectPresetGift('🍷 Rượu Vang Ngoại Nhập', 850000, '🎂 Sinh nhật đối tác / Giám đốc')" class="px-2.5 py-1 bg-slate-100 hover:bg-purple-50 hover:text-purple-600 text-slate-600 rounded-lg text-[11px] font-bold transition border border-slate-200">🍷 Rượu Vang</button>
+                            <button type="button" onclick="window.modCRM.selectPresetGift('🏆 Kỷ Niệm Chương Đại Lý Xuất Sắc', 500000, '🏆 Tri ân đơn hàng lớn / Doanh số')" class="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 text-slate-600 rounded-lg text-[11px] font-bold transition border border-slate-200">🏆 Kỷ Niệm Chương</button>
+                            <button type="button" onclick="window.modCRM.selectPresetGift('🏷️ Tài Trợ Bảng Hiệu Đại Lý', 3500000, '🏢 Chúc mừng Khai trương / Kỷ niệm')" class="px-2.5 py-1 bg-slate-100 hover:bg-orange-50 hover:text-orange-600 text-slate-600 rounded-lg text-[11px] font-bold transition border border-slate-200">🏷️ Bảng Hiệu Đại Lý</button>
+                        </div>
                     </div>
-                    <button onclick="window.modCRM.saveTier()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold text-xs border border-white/50 transition"><i class="fas fa-save"></i> Cập Nhật Quỹ</button>
-                </div>
-                <div class="bg-white p-4 rounded-xl border shadow-sm mb-4 space-y-3">
-                    <h4 class="font-black text-[11px] text-emerald-600 uppercase border-b pb-1">Chi Quà Tặng / Tri Ân</h4>
-                    <input type="text" id="g-name" placeholder="Tên quà tặng (VD: Bảng hiệu, Áo thun...)" class="w-full border-2 p-2 text-sm rounded-lg bg-slate-50 font-bold outline-none focus:border-emerald-500">
-                    <div class="flex gap-2">
-                        <input type="number" id="g-val" placeholder="Giá trị (đ)" class="w-1/2 border-2 p-2 text-sm rounded-lg bg-slate-50 font-bold text-emerald-600 outline-none focus:border-emerald-500">
-                        <button onclick="window.modCRM.addGift()" class="w-1/2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow"><i class="fas fa-check"></i> Lưu Quà Tặng</button>
+
+                    <!-- CẢNH BÁO TRÙNG LẶP (ANTI-DUPLICATE WARNING) -->
+                    <div id="g-duplicate-warning" class="hidden bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-xl text-xs text-amber-900 shadow-2xs space-y-1">
+                        <p class="font-black flex items-center gap-1.5"><i class="fas fa-exclamation-triangle text-amber-500"></i> CẢNH BÁO: MÓN QUÀ NÀY ĐÃ TỪNG ĐƯỢC TẶNG TRƯỚC ĐÂY!</p>
+                        <p id="g-duplicate-msg" class="text-[11px] text-amber-800 font-medium"></p>
+                    </div>
+
+                    <!-- CÁC TRƯỜNG NHẬP LIỆU -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Món Quà Tri Ân <span class="text-rose-500">*</span></label>
+                            <input type="text" id="g-name" oninput="window.modCRM.checkDuplicateGift(this.value)" placeholder="VD: Bộ ấm chén, Giỏ quà Tết..." class="w-full border p-2.5 text-xs sm:text-sm rounded-xl bg-slate-50 font-bold outline-none focus:border-rose-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Dịp / Lý Do Tặng Quà <span class="text-rose-500">*</span></label>
+                            <select id="g-occasion" class="w-full border p-2.5 text-xs sm:text-sm rounded-xl bg-slate-50 font-bold outline-none focus:border-rose-500 text-slate-700">
+                                <option value="🌸 Tri ân Tết Nguyên Đán">🌸 Tri ân Tết Nguyên Đán</option>
+                                <option value="🎂 Sinh nhật đối tác / Giám đốc">🎂 Sinh nhật đối tác / Giám đốc</option>
+                                <option value="🏆 Tri ân đơn hàng lớn / Doanh số">🏆 Tri ân đơn hàng lớn / Doanh số</option>
+                                <option value="🏢 Chúc mừng Khai trương / Kỷ niệm">🏢 Chúc mừng Khai trương / Kỷ niệm</option>
+                                <option value="🥮 Tết Trung Thu">🥮 Tết Trung Thu</option>
+                                <option value="🤝 Thăm hỏi & Chăm sóc định kỳ" selected>🤝 Thăm hỏi & Chăm sóc định kỳ</option>
+                                <option value="🎁 Quà tặng tri ân đột xuất">🎁 Quà tặng tri ân đột xuất</option>
+                                <option value="📦 Khác">📦 Khác</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Giá Trị Món Quà (VNĐ)</label>
+                            <input type="number" id="g-val" placeholder="0" class="w-full border p-2 text-xs sm:text-sm rounded-xl bg-slate-50 font-black text-rose-600 outline-none focus:border-rose-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Ngày Tặng Quà</label>
+                            <input type="date" id="g-date" class="w-full border p-2 text-xs sm:text-sm rounded-xl bg-slate-50 font-bold text-slate-700 outline-none focus:border-rose-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Người Đại Diện Tặng</label>
+                            <input type="text" id="g-giver" placeholder="Tên nhân viên / Sale..." class="w-full border p-2 text-xs sm:text-sm rounded-xl bg-slate-50 font-bold text-slate-700 outline-none focus:border-rose-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Cảm Nhận / Phản Hồi Của Khách Hàng</label>
+                        <input type="text" id="g-note" placeholder="VD: Khách rất vui, khen quà đẹp, đánh giá cao sự chu đáo..." class="w-full border p-2 text-xs sm:text-sm rounded-xl bg-slate-50 font-medium outline-none focus:border-rose-500">
+                    </div>
+
+                    <div class="flex justify-end pt-1">
+                        <button type="button" onclick="window.modCRM.addGift()" class="w-full sm:w-auto bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white font-black px-6 py-2.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs sm:text-sm">
+                            <i class="fas fa-paper-plane"></i> LƯU QUÀ TẶNG & CẬP NHẬT LỊCH SỬ
+                        </button>
                     </div>
                 </div>
-                <div class="flex-1 overflow-y-auto bg-white rounded-xl border shadow-sm p-4"><div id="gift-list" class="space-y-3"></div></div>
+
+                <!-- DÒNG THỜI GIAN LỊCH SỬ QUÀ TẶNG (TIMELINE UI) -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h4 class="font-black text-xs sm:text-sm text-slate-800 uppercase flex items-center gap-1.5">
+                            <i class="fas fa-history text-amber-500"></i> Dòng Thời Gian Lịch Sử Tặng Quà
+                        </h4>
+                        <span class="text-[10px] text-slate-400 font-bold" id="gift-timeline-count">0 bản ghi</span>
+                    </div>
+
+                    <div id="gift-timeline" class="space-y-3 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-slate-200 before:hidden sm:before:block">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
             </div>
+
+            <!-- TAB 4: NHẬT KÝ CHĂM SÓC -->
             <div id="tab-logs" class="p-6 hidden flex-col h-full">
                 <div class="flex gap-2 mb-4 bg-white p-2 rounded-xl border shadow-sm shrink-0">
                     <input type="text" id="l-note" placeholder="Ghi chú nội dung chăm sóc, khiếu nại..." class="flex-1 border-none px-3 py-2 text-sm outline-none font-medium">
@@ -133,7 +401,7 @@
             </div>
             <div>
                 <label class="block text-[11px] font-black text-slate-700 uppercase mb-2 text-center text-red-500"><i class="fas fa-lock mr-1"></i> Nhập Mật Khẩu Admin</label>
-                <input type="password" id="admin-del-crm-pass" name="admin_delete_pass_isolated" autocomplete="new-password" placeholder="••••••••" readonly onfocus="this.removeAttribute('readonly');" class="w-full border-2 border-slate-300 rounded-xl p-3 outline-none focus:border-red-500 text-lg font-black text-slate-800 text-center tracking-widest shadow-inner bg-slate-50">
+                <input type="text" id="admin-del-crm-pass" name="admin_delete_pass_isolated" autocomplete="off" style="-webkit-text-security: disc; text-security: disc;" placeholder="••••••••" class="w-full border-2 border-slate-300 rounded-xl p-3 outline-none focus:border-red-500 text-lg font-black text-slate-800 text-center tracking-widest shadow-inner bg-slate-50">
             </div>
             <button type="button" onclick="window.modCRM.confirmDeleteCustomer()" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3.5 rounded-xl mt-2 shadow-md transition uppercase tracking-wide">Xác Nhận Tiêu Hủy</button>
         </form>
@@ -148,6 +416,7 @@
 <script>
     window.modCRM = {
         list: [],
+        currentCustomerGifts: [],
         load: async () => {
             const tbody = document.getElementById('tbl-crm');
             if (tbody) {
@@ -174,23 +443,48 @@
         render: () => {
             const searchEl = document.getElementById('crm-search');
             const term = searchEl ? searchEl.value.trim().toLowerCase() : '';
+            const giftFilterEl = document.getElementById('crm-gift-filter');
+            const giftFilter = giftFilterEl ? giftFilterEl.value : 'all';
             const tbody = document.getElementById('tbl-crm');
             if (!tbody) return;
 
             let filtered = (window.modCRM.list || []).filter(c => {
-                if (!term) return true;
-                const name = String(c.name || c.full_name || '').toLowerCase();
-                const nickname = String(c.nickname || '').toLowerCase();
-                const phone = String(c.phone || '');
-                const code = String(c.customer_code || '').toLowerCase();
-                const tax = String(c.vat_taxcode || '').toLowerCase();
-                const company = String(c.vat_company || '').toLowerCase();
-                const addr = String(c.address || '').toLowerCase();
-                return name.includes(term) || nickname.includes(term) || phone.includes(term) || code.includes(term) || tax.includes(term) || company.includes(term) || addr.includes(term);
+                // 1. Lọc theo từ khóa tìm kiếm
+                if (term) {
+                    const name = String(c.name || c.full_name || '').toLowerCase();
+                    const nickname = String(c.nickname || '').toLowerCase();
+                    const phone = String(c.phone || '');
+                    const code = String(c.customer_code || '').toLowerCase();
+                    const tax = String(c.vat_taxcode || '').toLowerCase();
+                    const company = String(c.vat_company || '').toLowerCase();
+                    const addr = String(c.address || '').toLowerCase();
+                    const matchText = name.includes(term) || nickname.includes(term) || phone.includes(term) || code.includes(term) || tax.includes(term) || company.includes(term) || addr.includes(term);
+                    if (!matchText) return false;
+                }
+
+                // 2. Lọc theo trạng thái quà tặng & tri ân
+                const giftCount = parseInt(c.total_gifts_count) || 0;
+                const tierVal = parseInt(c.customer_tier || c.tier || c.vip_level || 1);
+                
+                if (giftFilter === 'has_gifts') {
+                    if (giftCount <= 0) return false;
+                } else if (giftFilter === 'no_gifts') {
+                    if (giftCount > 0) return false;
+                } else if (giftFilter === 'vip_no_recent') {
+                    if (tierVal < 3) return false;
+                    if (c.last_gift_date) {
+                        const daysSinceLastGift = Math.floor((new Date() - new Date(c.last_gift_date)) / 86400000);
+                        if (daysSinceLastGift <= 90) return false;
+                    }
+                }
+                return true;
             });
             
+            const mobileContainer = document.getElementById('crm-mobile-cards');
+            
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold">Không có dữ liệu đối tác phù hợp.</td></tr>';
+                if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold">Không có dữ liệu đối tác phù hợp với bộ lọc.</td></tr>';
+                if (mobileContainer) mobileContainer.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold bg-white rounded-2xl border border-slate-200">Không có dữ liệu đối tác phù hợp.</div>';
                 return;
             }
 
@@ -204,22 +498,56 @@
                 6: { n: '6. NPP', c: 'bg-purple-100 text-purple-800 font-black' }
             };
 
-            tbody.innerHTML = filtered.map(c => {
+            let desktopHtml = '';
+            let mobileHtml = '';
+
+            filtered.forEach(c => {
                 const tierVal = c.customer_tier || c.tier || c.vip_level || 1;
                 const t = tiers[tierVal] || tiers[1];
                 const warns = (tierVal > 3 && c.last_purchase_date && Math.floor((new Date() - new Date(c.last_purchase_date)) / 86400000) > 60)
                     ? '<p class="text-[9px] text-red-500 font-bold mt-1.5"><i class="fas fa-exclamation-triangle"></i> Cảnh báo KPI</p>'
                     : '';
                 const vatInfo = c.vat_company
-                    ? `<p class="font-bold text-slate-700 text-xs truncate max-w-[200px]" title="${c.vat_company}">${c.vat_company}</p><p class="text-[10px] font-mono text-blue-600">MST: ${c.vat_taxcode || '---'}</p>`
+                    ? `<p class="font-bold text-slate-700 text-xs truncate max-w-[180px]" title="${c.vat_company}">${c.vat_company}</p><p class="text-[10px] font-mono text-blue-600">MST: ${c.vat_taxcode || '---'}</p>`
                     : '<span class="text-[10px] text-slate-400 italic">Chưa có VAT</span>';
                 
                 const displayName = c.name || c.full_name || 'Khách Lẻ';
                 const nicknameHTML = c.nickname ? `<span class="text-amber-600 font-bold text-xs ml-1">(${c.nickname})</span>` : '';
                 const addressHTML = c.address ? ` | <i class="fas fa-map-marker-alt text-[10px] text-emerald-600 ml-1"></i> <span class="truncate max-w-[120px] inline-block align-bottom" title="${c.address}">${c.address}</span>` : '';
                 const debt = parseFloat(c.current_debt) || 0;
+                const giftCount = parseInt(c.total_gifts_count) || 0;
+                const giftVal = parseFloat(c.total_gifts_value) || 0;
 
-                return `
+                // Gift Badge HTML
+                let giftBadgeHtml = '';
+                if (giftCount > 0) {
+                    const lastDateStr = c.last_gift_date ? new Date(c.last_gift_date).toLocaleDateString('vi-VN') : '';
+                    giftBadgeHtml = `
+                        <div class="space-y-1">
+                            <div class="font-black text-amber-600 text-sm">${fmt(c.reward_points)} <span class="text-[10px] text-slate-400 font-normal">đ</span></div>
+                            <div>
+                                <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-md text-[10px] font-bold">
+                                    <i class="fas fa-gift text-rose-500"></i> ${giftCount} quà (${fmt(giftVal)} đ)
+                                </span>
+                            </div>
+                            <p class="text-[9px] text-slate-400 font-medium truncate max-w-[170px]" title="Lần cuối: ${c.last_gift_name || ''} (${lastDateStr})">
+                                <i class="far fa-clock"></i> ${lastDateStr}: ${c.last_gift_name || ''}
+                            </p>
+                        </div>`;
+                } else {
+                    giftBadgeHtml = `
+                        <div class="space-y-1">
+                            <div class="font-black text-amber-600 text-sm">${fmt(c.reward_points)} <span class="text-[10px] text-slate-400 font-normal">đ</span></div>
+                            <div>
+                                <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded-md text-[10px] font-bold">
+                                    <i class="fas fa-exclamation-circle text-amber-500"></i> Chưa tặng quà
+                                </span>
+                            </div>
+                        </div>`;
+                }
+
+                // Desktop row
+                desktopHtml += `
                 <tr class="hover:bg-amber-50/30 transition">
                     <td class="p-4 border-b">
                         <p class="font-black text-slate-800 text-sm">${displayName} ${nicknameHTML}</p>
@@ -233,17 +561,59 @@
                         <p class="font-bold text-slate-700 mb-0.5" title="Tổng doanh số">${fmt(c.total_sales)} đ</p>
                         <p class="font-black text-[11px] ${debt > 0 ? 'text-red-600 bg-red-50 px-1 rounded inline-block' : 'text-slate-400'}">Nợ: ${fmt(debt)}</p>
                     </td>
-                    <td class="p-4 text-center border-b border-x border-amber-100 bg-amber-50/50">
-                        <span class="font-black text-amber-600 text-sm">${fmt(c.reward_points)}</span>
+                    <td class="p-4 text-center border-b border-x border-amber-100 bg-amber-50/30">
+                        ${giftBadgeHtml}
                     </td>
                     <td class="p-4 text-center border-b">
-                        <button onclick="window.modCRM.openDrawer(${c.id})" class="bg-white border-2 border-slate-200 hover:border-amber-500 hover:text-amber-600 text-slate-600 px-4 py-2 rounded-xl font-bold text-[11px] transition shadow-sm"><i class="fas fa-edit"></i> Xem / Sửa</button>
+                        <button onclick="window.modCRM.openDrawer(${c.id})" class="bg-white border-2 border-slate-200 hover:border-amber-500 hover:text-amber-600 text-slate-600 px-3.5 py-2 rounded-xl font-bold text-[11px] transition shadow-xs whitespace-nowrap"><i class="fas fa-edit mr-1"></i> Xem / Sửa</button>
                     </td>
-                </tr>
-            `}).join('');
+                </tr>`;
+
+                // Mobile Card
+                mobileHtml += `
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-3.5 space-y-2.5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-black text-slate-900 text-sm flex items-center gap-1">
+                                ${displayName} ${nicknameHTML}
+                            </h4>
+                            <p class="text-xs text-slate-500 font-mono mt-0.5">${c.phone || 'Chưa có SĐT'}</p>
+                        </div>
+                        <span class="${t.c} px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase border">${t.n}</span>
+                    </div>
+
+                    ${c.address ? `<p class="text-xs text-slate-500 truncate"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i>${c.address}</p>` : ''}
+                    ${c.vat_company ? `<p class="text-xs text-blue-600 font-semibold truncate"><i class="fas fa-file-invoice mr-1"></i>${c.vat_company} (${c.vat_taxcode || 'MST'})</p>` : ''}
+
+                    <div class="bg-slate-50 p-2.5 rounded-xl flex justify-between items-center border border-slate-100 text-xs">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Doanh số</span>
+                            <strong class="font-bold text-slate-800">${fmt(c.total_sales)} đ</strong>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Công nợ</span>
+                            <strong class="font-black ${debt > 0 ? 'text-red-600' : 'text-slate-500'}">${debt > 0 ? fmt(debt) + ' đ' : '0 đ'}</strong>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] uppercase font-bold text-rose-500 block">Quà tri ân</span>
+                            <strong class="font-black ${giftCount > 0 ? 'text-rose-600' : 'text-slate-400'}">${giftCount > 0 ? giftCount + ' quà' : 'Chưa có'}</strong>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
+                        ${c.phone ? `<a href="tel:${c.phone}" class="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 rounded-xl text-center text-xs flex items-center justify-center gap-1.5 transition border border-emerald-200"><i class="fas fa-phone-alt"></i> Gọi Điện</a>` : ''}
+                        <button onclick="window.modCRM.openDrawer(${c.id})" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition">
+                            <i class="fas fa-edit"></i> Xem & Sửa
+                        </button>
+                    </div>
+                </div>`;
+            });
+
+            if (tbody) tbody.innerHTML = desktopHtml;
+            if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
         },
         switchTab: (id) => {
-            const tabs = ['profile', 'tier', 'gifts', 'logs'];
+            const tabs = ['profile', 'tier', 'orders', 'gifts', 'logs'];
             tabs.forEach(t => {
                 const tabEl = document.getElementById('tab-' + t);
                 const btnEl = document.getElementById('tab-btn-' + t);
@@ -260,7 +630,7 @@
             const targetBtn = document.getElementById('tab-btn-' + id);
             if (target) {
                 target.classList.remove('hidden');
-                if (id === 'gifts' || id === 'logs') {
+                if (id === 'gifts' || id === 'logs' || id === 'orders') {
                     target.classList.add('flex');
                 } else {
                     target.classList.add('block');
@@ -300,10 +670,15 @@
                 document.getElementById('p-vat-address').value = c.vat_address || '';
                 document.getElementById('p-vat-email').value = c.vat_email || '';
                 document.getElementById('dr-tier').value = c.customer_tier || c.tier || c.vip_level || 1;
-                document.getElementById('dr-debt').value = c.current_debt || 0; 
                 document.getElementById('dr-points').value = c.reward_points || 0;
+                document.getElementById('dr-debt-limit').value = c.debt_limit || 0;
+                
+                const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num) || 0);
+                const debtVal = parseFloat(c.current_debt) || 0;
+                document.getElementById('dr-debt-display').value = `${fmt(debtVal)} VNĐ`;
                 
                 window.modCRM.switchTab('profile');
+                window.modCRM.loadCustomerTransactions(id);
                 window.modCRM.loadLogs(id);
                 window.modCRM.loadGifts(id);
             } else {
@@ -319,10 +694,12 @@
                 });
                 const drTier = document.getElementById('dr-tier');
                 if (drTier) drTier.value = '1';
-                const drDebt = document.getElementById('dr-debt');
-                if (drDebt) drDebt.value = '0';
                 const drPoints = document.getElementById('dr-points');
                 if (drPoints) drPoints.value = '0';
+                const drDebtLimit = document.getElementById('dr-debt-limit');
+                if (drDebtLimit) drDebtLimit.value = '0';
+                const drDebtDisplay = document.getElementById('dr-debt-display');
+                if (drDebtDisplay) drDebtDisplay.value = '0 VNĐ';
                 
                 window.modCRM.switchTab('profile');
             }
@@ -383,13 +760,14 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         tier: document.getElementById('dr-tier').value,
-                        debt: document.getElementById('dr-debt').value,
+                        debt_limit: document.getElementById('dr-debt-limit').value,
                         points: document.getElementById('dr-points').value
                     })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert('✅ Đã cập nhật trạng thái phân hạng!');
+                    alert('✅ Đã cập nhật thành công phân hạng & hạn mức công nợ!');
+                    window.modCRM.loadCustomerTransactions(id);
                     window.modCRM.load();
                 } else {
                     alert('❌ Lỗi: ' + (data.error || 'Không thể cập nhật'));
@@ -397,6 +775,202 @@
             } catch (e) {
                 alert('❌ Lỗi kết nối cập nhật phân hạng!');
             }
+        },
+
+        // --- QUẢN LÝ ĐƠN HÀNG, SỔ NỢ & ĐO LƯỜNG HẠN MỨC ---
+        currentCustomerOrders: [],
+        currentCustomerPayments: [],
+        currentCustomerSummary: {},
+
+        updateDebtGaugePreview: () => {
+            const currentDebt = parseFloat(window.modCRM.currentCustomerSummary.current_debt || 0);
+            const limitInput = document.getElementById('dr-debt-limit');
+            const debtLimit = parseFloat(limitInput ? limitInput.value : 0) || 0;
+            
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+            const curText = document.getElementById('tier-debt-current-text');
+            const limText = document.getElementById('tier-debt-limit-text');
+            const bar = document.getElementById('tier-debt-bar');
+            const badge = document.getElementById('tier-debt-badge');
+            const tip = document.getElementById('tier-debt-tip');
+
+            if (curText) curText.innerText = `${fmt(currentDebt)} đ`;
+            if (limText) limText.innerText = debtLimit > 0 ? `${fmt(debtLimit)} đ` : 'Không giới hạn';
+
+            if (debtLimit <= 0) {
+                if (bar) {
+                    bar.style.width = currentDebt > 0 ? '40%' : '0%';
+                    bar.className = 'h-full rounded-full transition-all duration-500 bg-blue-500';
+                }
+                if (badge) {
+                    badge.innerText = 'Không Giới Hạn';
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase border bg-blue-50 text-blue-700 border-blue-200';
+                }
+                if (tip) tip.innerHTML = '💡 Khách hàng không bị đặt trần hạn mức nợ (Có thể lên đơn tự do).';
+                return;
+            }
+
+            const pct = Math.min(100, Math.round((currentDebt / debtLimit) * 100));
+            if (bar) {
+                bar.style.width = `${pct}%`;
+            }
+
+            if (currentDebt >= debtLimit) {
+                if (bar) bar.className = 'h-full rounded-full transition-all duration-500 bg-red-600 animate-pulse';
+                if (badge) {
+                    badge.innerText = '⛔ ĐÃ CHẠM/VƯỢT HẠN MỨC';
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase border bg-red-500 text-white border-red-600 animate-pulse';
+                }
+                if (tip) tip.innerHTML = '<span class="text-red-600 font-bold">⛔ Khách hàng đã đạt trần công nợ cho phép. Hệ thống đang KHÓA không cho tạo thêm đơn nợ mới!</span>';
+            } else if (pct >= 75) {
+                if (bar) bar.className = 'h-full rounded-full transition-all duration-500 bg-amber-500';
+                if (badge) {
+                    badge.innerText = `Cảnh Báo Nợ (${pct}%)`;
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase border bg-amber-50 text-amber-700 border-amber-200';
+                }
+                if (tip) tip.innerHTML = `<span class="text-amber-700 font-bold">⚠️ Khách đã sử dụng ${pct}% hạn mức công nợ. Sắp chạm ngưỡng khóa đơn.</span>`;
+            } else {
+                if (bar) bar.className = 'h-full rounded-full transition-all duration-500 bg-emerald-500';
+                if (badge) {
+                    badge.innerText = `An Toàn (${pct}%)`;
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase border bg-emerald-50 text-emerald-700 border-emerald-200';
+                }
+                if (tip) tip.innerHTML = `💡 Đã sử dụng ${pct}% hạn mức nợ. Khách hàng vẫn đủ điều kiện mua hàng.`;
+            }
+        },
+
+        loadCustomerTransactions: async (id) => {
+            try {
+                const res = await fetch(`/api/customers/${id}/transactions?t=` + Date.now());
+                const data = await res.json();
+                if (!data.success) return;
+
+                window.modCRM.currentCustomerOrders = data.orders || [];
+                window.modCRM.currentCustomerPayments = data.payments || [];
+                window.modCRM.currentCustomerSummary = data.summary || {};
+
+                const summary = data.summary || {};
+                const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+                // Cập nhật thẻ tổng kết trong Tab Đơn Hàng & Sổ Nợ
+                const totalOrdersEl = document.getElementById('cust-stat-total-orders');
+                const totalSalesEl = document.getElementById('cust-stat-total-sales');
+                const totalPaidEl = document.getElementById('cust-stat-total-paid');
+                const currentDebtEl = document.getElementById('cust-stat-current-debt');
+
+                if (totalOrdersEl) totalOrdersEl.innerText = `${summary.total_orders_count || 0} đơn`;
+                if (totalSalesEl) totalSalesEl.innerText = `${fmt(summary.total_sales)} đ`;
+                if (totalPaidEl) totalPaidEl.innerText = `${fmt(summary.total_paid)} đ`;
+                if (currentDebtEl) currentDebtEl.innerText = `${fmt(summary.current_debt)} đ`;
+
+                // Cập nhật ô công nợ tự động trong Tab Hạng & Nợ
+                const debtDisplay = document.getElementById('dr-debt-display');
+                if (debtDisplay) debtDisplay.value = `${fmt(summary.current_debt)} VNĐ`;
+
+                // Cập nhật hạn mức nợ
+                const debtLimitInput = document.getElementById('dr-debt-limit');
+                if (debtLimitInput) debtLimitInput.value = summary.debt_limit || 0;
+
+                window.modCRM.updateDebtGaugePreview();
+                window.modCRM.renderCustomerOrdersList();
+                window.modCRM.renderCustomerPaymentsList();
+
+            } catch (e) {
+                console.error("Lỗi tải giao dịch khách hàng:", e);
+            }
+        },
+
+        renderCustomerOrdersList: () => {
+            const tbody = document.getElementById('tbl-cust-orders');
+            if (!tbody) return;
+
+            const filterEl = document.getElementById('cust-orders-filter');
+            const filter = filterEl ? filterEl.value : 'all';
+            const orders = window.modCRM.currentCustomerOrders || [];
+
+            let filtered = orders.filter(o => {
+                const debt = parseFloat(o.debt_amount || 0);
+                if (filter === 'unpaid') return debt > 0 && !['CANCELLED', 'RETURNED'].includes(o.status);
+                if (filter === 'paid') return debt <= 0 || ['CANCELLED', 'RETURNED'].includes(o.status);
+                return true;
+            });
+
+            const countBadge = document.getElementById('cust-orders-count-badge');
+            if (countBadge) countBadge.innerText = `${filtered.length} / ${orders.length} đơn hàng`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-bold">Không có đơn hàng nào phù hợp với bộ lọc.</td></tr>';
+                return;
+            }
+
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num) || 0);
+            
+            tbody.innerHTML = filtered.map(o => {
+                const total = parseFloat(o.total_amount || 0);
+                const paid = parseFloat(o.paid_amount || 0);
+                const debt = parseFloat(o.debt_amount || 0);
+                const dDate = new Date(o.created_at);
+                const dateStr = dDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                
+                const isCancelled = ['CANCELLED', 'RETURNED'].includes(o.status);
+                let statusBadge = '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-bold text-[10px]">ĐÃ TRẢ ĐỦ</span>';
+                if (isCancelled) {
+                    statusBadge = '<span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md font-bold text-[10px]">ĐÃ HỦY / TRẢ</span>';
+                } else if (debt > 0) {
+                    statusBadge = `<span class="px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-md font-black text-[10px] animate-pulse">NỢ ${fmt(debt)} đ</span>`;
+                }
+
+                const rowBg = (!isCancelled && debt > 0) ? 'bg-red-50/30 hover:bg-red-50/60' : 'hover:bg-slate-50';
+
+                return `
+                <tr class="${rowBg} transition">
+                    <td class="p-3 border-b">
+                        <strong class="font-mono text-slate-800 font-black">${o.order_code || ('#' + o.id)}</strong>
+                        <p class="text-[10px] text-slate-400 font-bold mt-0.5">${dateStr} • ${o.payment_method || 'TIEN_MAT'}</p>
+                    </td>
+                    <td class="p-3 text-right border-b font-bold text-slate-700">${fmt(total)} đ</td>
+                    <td class="p-3 text-right border-b font-bold text-emerald-600">${fmt(paid)} đ</td>
+                    <td class="p-3 text-right border-b font-black ${debt > 0 && !isCancelled ? 'text-red-600' : 'text-slate-400'}">
+                        ${isCancelled ? '0 đ' : fmt(debt) + ' đ'}
+                    </td>
+                    <td class="p-3 text-center border-b">${statusBadge}</td>
+                </tr>`;
+            }).join('');
+        },
+
+        renderCustomerPaymentsList: () => {
+            const tbody = document.getElementById('tbl-cust-payments');
+            if (!tbody) return;
+
+            const payments = window.modCRM.currentCustomerPayments || [];
+            const countBadge = document.getElementById('cust-payments-count-badge');
+            if (countBadge) countBadge.innerText = `${payments.length} phiếu thu`;
+
+            if (payments.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Chưa có lịch sử phiếu thu riêng trong sổ quỹ.</td></tr>';
+                return;
+            }
+
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num) || 0);
+
+            tbody.innerHTML = payments.map(p => {
+                const dDate = new Date(p.created_at);
+                const dateStr = dDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const isThu = p.type === 'THU';
+
+                return `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 border-b">
+                        <strong class="font-mono text-slate-800 font-bold">${p.code || ('#PT-' + p.id)}</strong>
+                        <p class="text-[10px] text-slate-400 font-bold mt-0.5">${dateStr}</p>
+                    </td>
+                    <td class="p-3 text-right border-b font-black ${isThu ? 'text-emerald-600' : 'text-rose-600'}">
+                        ${isThu ? '+' : '-'}${fmt(p.amount)} đ
+                    </td>
+                    <td class="p-3 border-b text-slate-600 font-medium text-[11px]">${p.payment_method || 'Tiền mặt'}</td>
+                    <td class="p-3 border-b text-slate-500 font-normal italic max-w-[200px] truncate" title="${p.notes || ''}">${p.notes || '---'}</td>
+                </tr>`;
+            }).join('');
         },
         deleteCustomer: () => {
             const modal = document.getElementById('modal-delete-crm-customer');
@@ -486,49 +1060,210 @@
                 alert('❌ Lỗi kết nối máy chủ!');
             }
         },
+
+        // --- XỬ LÝ QUÀ TẶNG & TRI ÂN NÂNG CAO ---
+        selectPresetGift: (name, val, occasion) => {
+            const nameEl = document.getElementById('g-name');
+            const valEl = document.getElementById('g-val');
+            const occEl = document.getElementById('g-occasion');
+            if (nameEl) nameEl.value = name;
+            if (valEl) valEl.value = val;
+            if (occEl) occEl.value = occasion;
+            window.modCRM.checkDuplicateGift(name);
+        },
+
+        checkDuplicateGift: (term) => {
+            const warnBox = document.getElementById('g-duplicate-warning');
+            const warnMsg = document.getElementById('g-duplicate-msg');
+            if (!warnBox || !warnMsg) return;
+
+            if (!term || term.trim().length < 2) {
+                warnBox.classList.add('hidden');
+                return;
+            }
+
+            const q = term.trim().toLowerCase();
+            const gifts = window.modCRM.currentCustomerGifts || [];
+            const matched = gifts.find(g => {
+                const gName = (g.gift_name || '').toLowerCase();
+                return gName.includes(q) || q.includes(gName);
+            });
+
+            if (matched) {
+                const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num) || 0);
+                const dStr = matched.gift_date ? new Date(matched.gift_date).toLocaleDateString('vi-VN') : '';
+                warnMsg.innerHTML = `Khách hàng này đã nhận món quà: <strong>"${matched.gift_name}"</strong> (${fmt(matched.gift_value)} đ) vào ngày <strong>${dStr}</strong> trong dịp <em>"${matched.occasion || 'Tri ân'}"</em>${matched.giver_name ? ` bởi <em>${matched.giver_name}</em>` : ''}. Bạn hãy cân nhắc đổi món quà khác để tăng sự bất ngờ và chu đáo nhé!`;
+                warnBox.classList.remove('hidden');
+            } else {
+                warnBox.classList.add('hidden');
+            }
+        },
+
         loadGifts: async (id) => {
-            const giftContainer = document.getElementById('gift-list');
-            if (!giftContainer) return;
+            const timelineContainer = document.getElementById('gift-timeline');
+            if (!timelineContainer) return;
+            
+            // Set default date to today YYYY-MM-DD
+            const dateEl = document.getElementById('g-date');
+            if (dateEl) {
+                const today = new Date().toISOString().split('T')[0];
+                dateEl.value = today;
+            }
+
+            // Set default giver name from localStorage
+            const giverEl = document.getElementById('g-giver');
+            if (giverEl) {
+                const userData = JSON.parse(localStorage.getItem('sungo_user') || '{}');
+                giverEl.value = userData.name || 'SUNGO Team';
+            }
+
+            const warnBox = document.getElementById('g-duplicate-warning');
+            if (warnBox) warnBox.classList.add('hidden');
+
             try {
                 const res = await fetch(`/api/customers/${id}/gifts?t=` + Date.now());
                 const data = await res.json();
-                if (data.success && data.data && data.data.length > 0) {
-                    giftContainer.innerHTML = data.data.map(g => `
-                        <div class="flex justify-between items-center bg-emerald-50 p-3 rounded-lg border border-emerald-100">
-                            <div>
-                                <p class="text-sm font-bold text-slate-800"><i class="fas fa-gift text-emerald-500 mr-1"></i> ${g.gift_name}</p>
-                                <p class="text-[10px] text-emerald-600 mt-1 font-bold"><i class="far fa-clock mr-1"></i>${new Date(g.gift_date).toLocaleString('vi-VN')}</p>
-                            </div>
-                            <span class="font-black text-emerald-700 text-sm">${new Intl.NumberFormat('vi-VN').format(g.gift_value || 0)} đ</span>
-                        </div>
-                    `).join('');
-                } else {
-                    giftContainer.innerHTML = '<p class="text-xs text-center py-6 text-slate-400">Chưa có quà tặng nào.</p>';
+                const gifts = (data.success && data.data) ? data.data : [];
+                window.modCRM.currentCustomerGifts = gifts;
+
+                const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num) || 0);
+                const count = gifts.length;
+                const totalVal = gifts.reduce((acc, g) => acc + (parseFloat(g.gift_value) || 0), 0);
+
+                // Update Stats Banner
+                const countEl = document.getElementById('gift-stat-count');
+                const valEl = document.getElementById('gift-stat-value');
+                const lastEl = document.getElementById('gift-stat-last');
+                const timelineCountEl = document.getElementById('gift-timeline-count');
+
+                if (countEl) countEl.innerText = count + ' lần';
+                if (valEl) valEl.innerText = fmt(totalVal) + ' đ';
+                if (lastEl) {
+                    if (gifts[0]) {
+                        const dStr = new Date(gifts[0].gift_date).toLocaleDateString('vi-VN');
+                        lastEl.innerText = `${dStr} (${gifts[0].gift_name})`;
+                    } else {
+                        lastEl.innerText = 'Chưa có';
+                    }
                 }
+                if (timelineCountEl) timelineCountEl.innerText = count + ' bản ghi';
+
+                if (gifts.length === 0) {
+                    timelineContainer.innerHTML = `
+                        <div class="text-center py-8 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <i class="fas fa-gift text-3xl mb-2 text-slate-300"></i>
+                            <p class="text-xs font-bold text-slate-600">Chưa có lịch sử quà tặng cho đối tác này.</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Hãy chọn món quà tri ân phía trên để ghi nhận mốc chăm sóc đầu tiên!</p>
+                        </div>`;
+                    return;
+                }
+
+                timelineContainer.innerHTML = gifts.map((g, idx) => {
+                    const gDate = new Date(g.gift_date);
+                    const dateStr = gDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const timeStr = gDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    const occasionStr = g.occasion || 'Tri ân khách hàng';
+                    
+                    return `
+                    <div class="relative pl-0 sm:pl-8 group">
+                        <!-- TIMELINE ICON BULLET -->
+                        <div class="hidden sm:flex absolute left-1.5 top-3.5 -translate-x-1/2 w-6 h-6 rounded-full bg-rose-500 text-white items-center justify-center text-[10px] shadow-xs ring-4 ring-white z-10 font-bold">
+                            <i class="fas fa-gift"></i>
+                        </div>
+
+                        <div class="bg-slate-50 hover:bg-rose-50/40 rounded-2xl p-3.5 sm:p-4 border border-slate-200 transition shadow-2xs space-y-2">
+                            <div class="flex flex-wrap justify-between items-start gap-2">
+                                <div>
+                                    <span class="inline-block bg-rose-100 text-rose-700 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider mb-1">${occasionStr}</span>
+                                    <h5 class="font-black text-slate-900 text-sm flex items-center gap-1.5">
+                                        <i class="fas fa-box-open text-rose-500 sm:hidden"></i> ${g.gift_name}
+                                    </h5>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-black text-rose-600 text-sm block">${fmt(g.gift_value)} đ</span>
+                                    <span class="text-[10px] text-slate-400 font-bold"><i class="far fa-calendar-alt mr-1"></i>${dateStr} (${timeStr})</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap justify-between items-center pt-2 border-t border-slate-200/60 text-xs text-slate-600 gap-2">
+                                <div class="space-y-0.5">
+                                    <p class="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                        <i class="fas fa-user-tie text-blue-500 text-[10px]"></i> Người tặng: <span class="text-blue-700 font-black">${g.giver_name || 'SUNGO Team'}</span>
+                                    </p>
+                                    ${g.note ? `<p class="text-[11px] text-slate-500 italic"><i class="fas fa-comment-dots text-amber-500 mr-1"></i>"${g.note}"</p>` : ''}
+                                </div>
+                                <button type="button" onclick="window.modCRM.deleteGift(${g.id})" class="opacity-70 hover:opacity-100 text-red-500 hover:bg-red-100 px-2.5 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1">
+                                    <i class="fas fa-trash-alt"></i> Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+
             } catch (e) {
-                giftContainer.innerHTML = '<p class="text-xs text-center py-6 text-slate-400">Chưa có quà tặng</p>';
+                timelineContainer.innerHTML = '<p class="text-xs text-center py-6 text-slate-400">Lỗi tải lịch sử quà tặng.</p>';
             }
         },
+
         addGift: async () => {
             const id = document.getElementById('dr-id').value;
+            if (!id) return alert('Chưa chọn khách hàng!');
+            
             const giftNameInput = document.getElementById('g-name');
             const giftValInput = document.getElementById('g-val');
+            const giftOccInput = document.getElementById('g-occasion');
+            const giftDateInput = document.getElementById('g-date');
+            const giftGiverInput = document.getElementById('g-giver');
+            const giftNoteInput = document.getElementById('g-note');
+
             const gift_name = giftNameInput ? giftNameInput.value.trim() : '';
             const gift_value = giftValInput ? giftValInput.value.trim() : '0';
-            if (!gift_name) return alert('Vui lòng nhập tên quà tặng!');
+            const occasion = giftOccInput ? giftOccInput.value.trim() : 'Tri ân khách hàng';
+            const gift_date = giftDateInput ? giftDateInput.value : '';
+            const giver_name = giftGiverInput ? giftGiverInput.value.trim() : 'SUNGO Team';
+            const note = giftNoteInput ? giftNoteInput.value.trim() : '';
+
+            if (!gift_name) return alert('⚠️ Vui lòng nhập tên món quà tặng tri ân!');
+
             try {
                 const res = await fetch(`/api/customers/${id}/gifts`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gift_name, gift_value })
+                    body: JSON.stringify({ gift_name, gift_value, occasion, giver_name, note, gift_date })
                 });
                 const data = await res.json();
                 if (data.success) {
+                    alert('🎁 Đã lưu thành công món quà tri ân vào lịch sử!');
                     if (giftNameInput) giftNameInput.value = '';
                     if (giftValInput) giftValInput.value = '';
+                    if (giftNoteInput) giftNoteInput.value = '';
+                    const warnBox = document.getElementById('g-duplicate-warning');
+                    if (warnBox) warnBox.classList.add('hidden');
+                    
                     window.modCRM.loadGifts(id);
+                    window.modCRM.load(); // Tải lại danh sách CRM ngoài bảng chính
                 } else {
                     alert('❌ Lỗi lưu quà tặng: ' + (data.error || ''));
+                }
+            } catch (e) {
+                alert('❌ Lỗi kết nối máy chủ!');
+            }
+        },
+
+        deleteGift: async (giftId) => {
+            const id = document.getElementById('dr-id').value;
+            if (!id || !giftId) return;
+            
+            if (!confirm('⚠️ Bạn có chắc chắn muốn xóa bản ghi quà tặng này khỏi lịch sử chăm sóc?')) return;
+            
+            try {
+                const res = await fetch(`/api/customers/${id}/gifts/${giftId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    window.modCRM.loadGifts(id);
+                    window.modCRM.load();
+                } else {
+                    alert('❌ Lỗi khi xóa: ' + (data.error || ''));
                 }
             } catch (e) {
                 alert('❌ Lỗi kết nối máy chủ!');

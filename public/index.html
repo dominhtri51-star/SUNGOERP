@@ -8,14 +8,14 @@
         // Cấu hình từ khóa nhận diện Menu cho từng Quyền
         const rolePermissions = {
             'ADMIN': ['all'],
-            'SALES': ['bán hàng', 'crm', 'khách hàng', 'đơn hàng', 'báo giá', 'boq', 'sàn công trình', 'đấu thầu'],
+            'SALES': ['bán hàng', 'crm', 'khách hàng', 'đơn hàng', 'báo giá', 'boq', 'hoa hồng', 'sales-commissions', 'sàn công trình', 'đấu thầu'],
             'TECH': ['kỹ thuật', 'thi công', 'dự án', 'bảo trì', 'o&m', 'serial', 'sàn công trình', 'đấu thầu'],
             'INVENTORY': ['thu mua', 'vật tư', 'tồn kho', 'nhập kho', 'nhà cung cấp', 'sơ đồ', 'sàn công trình'],
             'WAREHOUSE': ['kho vận', 'đóng gói', 'lệnh xuất', 'giao hàng'],
-            'KE_TOAN': ['kế toán', 'sổ quỹ', 'két sắt', 'thuế', 'hóa đơn', 'hợp đồng', 'vat', 'accounting-vault', 'accounting-cash', 'accounting-vat', 'accounting-tax'],
-            'NHA_THAU_THI_CONG': ['tìm việc', 'báo giá', 'đang thi công', 'quyết toán', 'điểm uy tín', 'hồ sơ năng lực', 'contractor-bidding', 'contractor-active', 'contractor-payout', 'contractor-my-profile'],
-            'NHA_THAU_GIAM_SAT': ['giám sát', 'hiện trường', 'kiểm tra 6 ảnh', 'nghiệm thu', 'chấm điểm', 'đánh giá', 'supervisor-projects', 'supervisor-inspection', 'supervisor-evaluation'],
-            'NHA_CUNG_CAP': ['nhu cầu vật tư', 'bom', 'chào giá', 'cung ứng', 'danh mục sản phẩm', 'supplier-bom-requests', 'supplier-quotes', 'supplier-products']
+            'KE_TOAN': ['kế toán', 'sổ quỹ', 'két sắt', 'thuế', 'hóa đơn', 'hợp đồng', 'vat', 'nhân sự', 'tiền lương', 'bảo hiểm', 'hoa hồng', 'lãi vay', 'khoản vay', 'nguồn vốn', 'cổ đông', 'accounting-vault', 'accounting-cashbook', 'accounting-cash', 'accounting-vat', 'accounting-tax', 'hr-employees', 'sales-commissions', 'payroll-manager', 'finance-loans', 'finance-capital'],
+            'NHA_THAU_THI_CONG': ['dự án', 'nghiệm thu', 'tư liệu', 'hồ sơ năng lực', 'contractor-portal', 'contractor-my-profile'],
+            'NHA_THAU_GIAM_SAT': ['dự án', 'nghiệm thu', 'tư liệu', 'hồ sơ năng lực', 'contractor-portal', 'contractor-my-profile'],
+            'NHA_CUNG_CAP': ['dự án', 'nghiệm thu', 'tư liệu', 'hồ sơ năng lực', 'contractor-portal', 'contractor-my-profile']
         };
 
         // Cấu hình màn hình khởi động tự động cho từng Quyền
@@ -26,9 +26,9 @@
             'INVENTORY': 'inventory-map',
             'WAREHOUSE': 'warehouse-out',
             'KE_TOAN': 'accounting-vault',
-            'NHA_THAU_THI_CONG': 'contractor-bidding',
-            'NHA_THAU_GIAM_SAT': 'supervisor-projects',
-            'NHA_CUNG_CAP': 'supplier-bom-requests'
+            'NHA_THAU_THI_CONG': 'contractor-portal',
+            'NHA_THAU_GIAM_SAT': 'contractor-portal',
+            'NHA_CUNG_CAP': 'contractor-portal'
         };
 
         function applyRBAC() {
@@ -98,37 +98,52 @@
 
     
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
     <title>Đăng Nhập - SUNGO ERP</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px)); }
+        .pt-safe { padding-top: max(1rem, env(safe-area-inset-top, 0px)); }
+    </style>
 </head>
-<body class="bg-slate-900 h-screen flex items-center justify-center font-sans">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all hover:scale-[1.01]">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-black text-amber-500 tracking-widest mb-2">SUNGO<span class="text-slate-900">ERP</span></h1>
-            <p class="text-slate-500 text-sm font-medium">Hệ thống Quản trị Năng lượng Thông minh</p>
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-screen flex items-center justify-center font-sans p-4 pt-safe pb-safe">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 transform transition-all border border-slate-100">
+        <div class="text-center mb-6 sm:mb-8">
+            <div class="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 items-center justify-center text-slate-900 shadow-lg shadow-amber-500/20 mb-3">
+                <i class="fas fa-solar-panel text-2xl"></i>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-black text-amber-500 tracking-widest">SUNGO<span class="text-slate-900">ERP</span></h1>
+            <p class="text-slate-500 text-xs sm:text-sm font-semibold mt-1">Hệ thống Quản trị Năng lượng Thông minh</p>
         </div>
         
         <!-- BÊN TRONG FILE index.html (Phần nút bấm & Script) -->
-<!-- FORM ĐĂNG NHẬP THẬT -->
+        <!-- FORM ĐĂNG NHẬP THẬT -->
         <div class="space-y-4">
             <!-- Khu vực hiển thị lỗi -->
-            <div id="login-error" class="hidden bg-red-100 text-red-600 p-3 rounded-lg text-sm font-bold text-center border border-red-200"></div>
+            <div id="login-error" class="hidden bg-red-50 text-red-600 p-3.5 rounded-xl text-xs sm:text-sm font-bold text-center border border-red-200 shadow-xs"></div>
             
             <div>
-                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tên đăng nhập (Username)</label>
-                <input type="text" id="username" class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-amber-500 text-sm font-bold bg-slate-50" placeholder="Nhập tài khoản của bạn...">
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1.5 flex items-center gap-1.5">
+                    <i class="fas fa-user text-amber-500 text-xs"></i> Tên đăng nhập (Username)
+                </label>
+                <input type="text" id="username" autocomplete="username" autocapitalize="none" class="w-full border border-slate-300 rounded-xl p-3.5 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-base sm:text-sm font-bold bg-slate-50 text-slate-900 transition" placeholder="Nhập tài khoản của bạn...">
             </div>
             
             <div>
-                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mật khẩu (Password)</label>
-                <input type="password" id="password" class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-amber-500 text-sm font-bold bg-slate-50" placeholder="••••••••">
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1.5 flex items-center gap-1.5">
+                    <i class="fas fa-lock text-amber-500 text-xs"></i> Mật khẩu (Password)
+                </label>
+                <input type="password" id="password" autocomplete="current-password" class="w-full border border-slate-300 rounded-xl p-3.5 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-base sm:text-sm font-bold bg-slate-50 text-slate-900 transition" placeholder="••••••••">
             </div>
             
-            <button onclick="performLogin()" id="btn-login" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-black py-3.5 rounded-lg mt-4 shadow-md transition uppercase tracking-wide">
-                Đăng Nhập Vào Hệ Thống
+            <button onclick="performLogin()" id="btn-login" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-[0.99] text-slate-900 font-black py-4 rounded-xl mt-4 shadow-lg shadow-amber-500/25 transition uppercase tracking-wider text-sm flex items-center justify-center gap-2 cursor-pointer">
+                <span>Đăng Nhập Vào Hệ Thống</span>
+                <i class="fas fa-arrow-right text-xs"></i>
             </button>
         </div>
     </div> <!-- Kết thúc thẻ div form card -->
@@ -169,10 +184,12 @@
                     const u = data.user;
                     // Đóng gói data để lưu vào localStorage đúng chuẩn hệ thống đang dùng
                     const sessionData = {
+                        id: u.id,
                         role: u.role,
                         name: u.full_name,
                         avatar: '👤',
-                        empId: u.emp_id
+                        empId: u.emp_id,
+                        custom_modules: u.custom_modules || []
                     };
                     localStorage.setItem('sungo_user', JSON.stringify(sessionData));
                     

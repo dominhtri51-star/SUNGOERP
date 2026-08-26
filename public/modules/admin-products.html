@@ -62,28 +62,35 @@
 
         <div class="flex flex-wrap items-center gap-2">
             <!-- Nút Đồng Bộ / Tự Động Phân Loại Từ Sản Phẩm (Chỉ Admin) -->
-            <button id="btn-sync-cats" onclick="window.modCats.syncFromProducts()" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5" title="Tự động phân loại 397 sản phẩm vào cây danh mục chuẩn">
+            <button id="btn-sync-cats" onclick="window.modCats.syncFromProducts()" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5" title="Tự động phân loại toàn bộ sản phẩm vào cây danh mục chuẩn">
                 <i class="fas fa-wand-magic-sparkles"></i> <span>Tự Động Phân Loại SP</span>
             </button>
 
-            <!-- Menu Excel -->
+            <!-- Nút Upload Nhanh Excel (Nổi bật) -->
+            <button onclick="window.modProducts.openUploadModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow-md shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer" title="Nhập danh sách hàng trăm sản phẩm cùng lúc từ file Excel">
+                <i class="fas fa-file-excel"></i> <span>Upload Nhanh Excel</span>
+            </button>
+
+            <!-- Menu Excel (Mở rộng) -->
             <div class="relative group">
                 <button class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5">
-                    <i class="fas fa-file-excel text-emerald-400"></i> Excel <i class="fas fa-chevron-down text-[9px] text-slate-300"></i>
+                    <i class="fas fa-ellipsis-v text-slate-300"></i> Excel <i class="fas fa-chevron-down text-[9px] text-slate-300"></i>
                 </button>
-                <div class="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-40 overflow-hidden divide-y divide-slate-100">
+                <div class="absolute right-0 top-full mt-1.5 w-60 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-40 overflow-hidden divide-y divide-slate-100">
                     <button onclick="window.modProducts.downloadExcelTemplate()" class="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-emerald-50 font-bold flex justify-between items-center transition">
-                        <span>1. Tải File Mẫu Excel</span> <i class="fas fa-download text-emerald-500"></i>
+                        <span>1. Tải File Mẫu Chuẩn Excel</span> <i class="fas fa-download text-emerald-500"></i>
                     </button>
-                    <label class="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-blue-50 font-bold cursor-pointer flex justify-between items-center transition">
-                        <span>2. Upload Dữ Liệu Excel</span> <i class="fas fa-upload text-blue-500"></i>
-                        <input type="file" accept=".xlsx" class="hidden" onchange="window.modProducts.handleExcelUpload(this)">
-                    </label>
+                    <button onclick="window.modProducts.openUploadModal()" class="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-blue-50 font-bold flex justify-between items-center transition">
+                        <span>2. Upload Nhanh & Xem Trước</span> <i class="fas fa-upload text-blue-500"></i>
+                    </button>
+                    <button onclick="window.modProducts.exportToExcel()" class="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-amber-50 font-bold flex justify-between items-center transition">
+                        <span>3. Xuất Danh Sách SP Ra Excel</span> <i class="fas fa-file-export text-amber-500"></i>
+                    </button>
                 </div>
             </div>
 
             <!-- Nút Thêm Mới Thiết Bị -->
-            <button onclick="window.modProducts.openModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5">
+            <button onclick="window.modProducts.openModal()" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
                 <i class="fas fa-plus"></i> <span>Thêm Thiết Bị</span>
             </button>
         </div>
@@ -393,6 +400,40 @@
                 </div>
             </div>
             
+            <!-- KHỐI ĐỊNH DANH KẾ TOÁN & HÓA ĐƠN VAT -->
+            <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-300 space-y-2.5">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-black text-[11px] text-emerald-900 uppercase flex items-center gap-1.5">
+                        <i class="fas fa-file-invoice-dollar text-emerald-600"></i> Định Danh Kế Toán & Xuất Hóa Đơn VAT
+                    </h4>
+                    <button type="button" onclick="window.modProducts.autoSuggestAccounting()" class="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded shadow-sm transition flex items-center gap-1">
+                        <i class="fas fa-wand-magic-sparkles"></i> Lấy từ Tên Thương Mại
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-emerald-800 mb-0.5">Mã Hàng Kế Toán (Accounting Code)</label>
+                        <input type="text" id="p-acc-code" placeholder="VD: INV-DEYE-6KW" class="w-full border border-emerald-300 p-2 rounded-lg bg-white font-mono font-bold text-emerald-900 outline-none focus:border-emerald-500 uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-emerald-800 mb-0.5">Đơn Vị Tính & Thuế Suất VAT</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="p-unit" placeholder="Bộ / Tấm / Cái..." class="w-full border border-emerald-300 p-2 rounded-lg bg-white font-bold text-slate-800 outline-none text-center">
+                            <select id="p-vat-rate" class="w-full border border-emerald-300 p-2 rounded-lg bg-white font-bold text-emerald-800 outline-none">
+                                <option value="8">VAT: 8%</option>
+                                <option value="10">VAT: 10%</option>
+                                <option value="0">VAT: 0%</option>
+                                <option value="-1">KCT (Không chịu thuế)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-emerald-800 mb-0.5">Tên Hàng Hóa Xuất Hóa Đơn Kế Toán <span class="text-slate-400 font-normal">(Chuẩn hồ sơ Hải quan / Thuế, không phải tên thương mại)</span></label>
+                    <input type="text" id="p-acc-name" placeholder="VD: Biến tần quang điện hòa lưới lưu trữ Deye công suất 6kW 1 pha..." class="w-full border border-emerald-300 p-2 rounded-lg bg-white font-bold text-slate-800 outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Mô Tả Ngắn / Quy Cách Kỹ Thuật</label>
@@ -468,6 +509,141 @@
             <button onclick="window.modProducts.save()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-lg transition text-xs flex items-center gap-1.5">
                 <i class="fas fa-save"></i> <span>Lưu Thiết Bị</span>
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL UPLOAD EXCEL SIÊU TỐC & XEM TRƯỚC (PREVIEW MODAL) -->
+<div id="excel-upload-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center z-[80] p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh] transform transition-all">
+        <!-- Header Modal -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-4 text-white flex justify-between items-center shrink-0 border-b border-slate-700">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center text-base shadow-md shadow-emerald-500/20">
+                    <i class="fas fa-file-excel"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-sm text-slate-100 flex items-center gap-2">
+                        Upload & Đồng Bộ Dữ Liệu Excel
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Bulk Upsert Siêu Tốc</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-300">Tự động nhận diện cột thông minh, cập nhật giá 6 cấp & tồn kho tự động theo SKU.</p>
+                </div>
+            </div>
+            <button onclick="window.modProducts.closeUploadModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <div class="p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs">
+            
+            <!-- KHU VỰC KÉO THẢ FILE EXCEL (DROPZONE) -->
+            <div 
+                id="excel-dropzone" 
+                ondragover="window.modProducts.handleDragOverDropzone(event)" 
+                ondragleave="window.modProducts.handleDragLeaveDropzone(event)" 
+                ondrop="window.modProducts.handleDropFile(event)"
+                class="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/60 hover:bg-emerald-50/40 rounded-2xl p-6 text-center transition-all cursor-pointer relative group"
+                onclick="document.getElementById('excel-file-picker').click()"
+            >
+                <input type="file" id="excel-file-picker" accept=".xlsx, .xls, .csv" class="hidden" onchange="window.modProducts.handleFilePicker(this)">
+                
+                <div class="flex flex-col items-center justify-center gap-2">
+                    <div class="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-md group-hover:scale-110 group-hover:border-emerald-400 group-hover:bg-emerald-500 group-hover:text-white text-emerald-600 flex items-center justify-center text-2xl transition duration-200">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                    </div>
+                    <div>
+                        <p class="font-extrabold text-sm text-slate-800 group-hover:text-emerald-700">Kéo & Thả file Excel vào đây, hoặc <span class="text-blue-600 underline">bấm để chọn file</span></p>
+                        <p class="text-[11px] text-slate-500 mt-1">Hỗ trợ định dạng: <b>.xlsx, .xls, .csv</b> (Dung lượng tối đa 50MB, xử lý đến 5.000 dòng)</p>
+                    </div>
+                </div>
+
+                <!-- Thanh công cụ phụ: Tải file mẫu & Hướng dẫn -->
+                <div class="mt-3.5 pt-3 border-t border-slate-200 flex items-center justify-center gap-4 text-xs font-semibold text-slate-600" onclick="event.stopPropagation()">
+                    <button type="button" onclick="window.modProducts.downloadExcelTemplate()" class="text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-200 transition flex items-center gap-1.5 font-bold cursor-pointer">
+                        <i class="fas fa-download"></i> Tải File Mẫu Chuẩn SUNGO (.xlsx)
+                    </button>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-slate-500 text-[11px]"><i class="fas fa-info-circle text-blue-500 mr-1"></i>Hệ thống tự động map tên cột thông minh</span>
+                </div>
+            </div>
+
+            <!-- THANH TRẠNG THÁI & TIẾN TRÌNH XỬ LÝ -->
+            <div id="excel-progress-box" class="hidden bg-slate-900 text-white p-3.5 rounded-xl border border-slate-700 space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                    <span id="excel-progress-text" class="font-bold text-emerald-400 flex items-center gap-2">
+                        <i class="fas fa-spinner fa-spin"></i> Đang đọc file Excel...
+                    </span>
+                    <span id="excel-progress-pct" class="font-mono font-bold text-slate-300">0%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div id="excel-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- KHU VỰC XEM TRƯỚC DỮ LIỆU (PREVIEW AREA) -->
+            <div id="excel-preview-section" class="hidden space-y-3">
+                <!-- Thống kê dữ liệu phân tích được -->
+                <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-slate-700 flex items-center gap-1">
+                            <i class="fas fa-table-list text-blue-600"></i> Tổng số dòng đọc được:
+                            <b id="preview-total-count" class="text-blue-700 font-black ml-1 text-sm">0</b>
+                        </span>
+                        <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+                            <i class="fas fa-check-circle"></i> Hợp lệ: <b id="preview-valid-count" class="font-black">0</b>
+                        </span>
+                        <span id="preview-warn-badge" class="hidden font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                            <i class="fas fa-exclamation-triangle"></i> Bỏ qua (thiếu SKU/Tên): <b id="preview-invalid-count" class="font-black">0</b>
+                        </span>
+                    </div>
+                    <div class="text-[11px] text-slate-500">
+                        <i class="fas fa-bolt text-amber-500 mr-1"></i>Trùng mã SKU sẽ được <b>cập nhật mới nhất</b>
+                    </div>
+                </div>
+
+                <!-- Bảng preview 10 dòng đầu -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                    <div class="p-2 bg-slate-200 text-slate-700 font-bold text-[11px] uppercase flex justify-between items-center">
+                        <span>Bảng Xem Trước Dữ Liệu Phân Tích (Hiển thị tối đa 20 dòng)</span>
+                        <span id="preview-file-name" class="text-slate-500 font-mono font-normal lowercase truncate max-w-xs"></span>
+                    </div>
+                    <div class="max-h-56 overflow-y-auto custom-scrollbar bg-white">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead class="bg-slate-50 text-[10px] uppercase text-slate-600 sticky top-0 border-b border-slate-200 font-bold">
+                                <tr>
+                                    <th class="p-2 w-12 text-center">STT</th>
+                                    <th class="p-2 w-32">Mã SKU</th>
+                                    <th class="p-2 min-w-[200px]">Tên Thiết Bị</th>
+                                    <th class="p-2 w-32">Danh Mục</th>
+                                    <th class="p-2 w-20 text-center">Tồn Kho</th>
+                                    <th class="p-2 w-28 text-right">Giá Lẻ (1)</th>
+                                    <th class="p-2 w-28 text-right">Giá Vốn</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preview-tbody" class="divide-y divide-slate-100 text-slate-700 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
+            <button type="button" onclick="window.modProducts.closeUploadModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition text-xs cursor-pointer">
+                Đóng
+            </button>
+            <div class="flex items-center gap-2">
+                <button 
+                    id="btn-confirm-upload" 
+                    onclick="window.modProducts.confirmBulkUpload()" 
+                    disabled 
+                    class="opacity-50 cursor-not-allowed px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-black shadow-lg shadow-emerald-600/20 transition text-xs flex items-center gap-2"
+                >
+                    <i class="fas fa-cloud-arrow-up"></i> <span id="btn-confirm-upload-text">Tiến Hành Nạp Dữ Liệu</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -1488,6 +1664,10 @@
                 const p = window.modProducts.list.find(x => x.id === id);
                 document.getElementById('p-sku').value = p.sku || '';
                 document.getElementById('p-name').value = p.product_name || '';
+                document.getElementById('p-acc-code').value = p.accounting_code || p.sku || '';
+                document.getElementById('p-acc-name').value = p.accounting_name || p.product_name || '';
+                document.getElementById('p-unit').value = p.unit || 'Bộ';
+                document.getElementById('p-vat-rate').value = p.vat_rate !== undefined ? String(p.vat_rate) : '8';
                 document.getElementById('p-cat-select').value = p.category || 'Khác';
                 document.getElementById('p-desc').value = p.description || '';
                 document.getElementById('p-bin-location').value = p.bin_location || '';
@@ -1525,10 +1705,12 @@
                 }
                 document.getElementById('p-total-stock').value = totalActualStock;
             } else {
-                ['p-sku', 'p-name', 'p-desc', 'p-bin-location', 'p-image', 'p-doc-cocq', 'p-doc-ds', 'p-doc-cat', 'p-doc-man', 'p-virtual-stock', 'p-import', 'p-retail', 'p-price2', 'p-price3', 'p-price4', 'p-price5', 'p-price6'].forEach(fid => {
+                ['p-sku', 'p-name', 'p-acc-code', 'p-acc-name', 'p-desc', 'p-bin-location', 'p-image', 'p-doc-cocq', 'p-doc-ds', 'p-doc-cat', 'p-doc-man', 'p-virtual-stock', 'p-import', 'p-retail', 'p-price2', 'p-price3', 'p-price4', 'p-price5', 'p-price6'].forEach(fid => {
                     const el = document.getElementById(fid);
                     if (el) el.value = '';
                 });
+                document.getElementById('p-unit').value = 'Bộ';
+                document.getElementById('p-vat-rate').value = '8';
                 document.getElementById('p-total-stock').value = '0';
                 if (window.modProducts.currentCatName && window.modProducts.currentCatName !== 'Tất Cả Sản Phẩm') {
                     document.getElementById('p-cat-select').value = window.modProducts.currentCatName;
@@ -1537,6 +1719,22 @@
             }
 
             document.getElementById('product-modal').classList.replace('hidden', 'flex');
+        },
+
+        autoSuggestAccounting: () => {
+            const sku = document.getElementById('p-sku').value.trim().toUpperCase();
+            const name = document.getElementById('p-name').value.trim();
+            if (!sku && !name) return alert('Vui lòng nhập SKU hoặc Tên Thiết Bị trước!');
+            
+            if (!document.getElementById('p-acc-code').value) {
+                document.getElementById('p-acc-code').value = sku;
+            }
+            if (!document.getElementById('p-acc-name').value) {
+                document.getElementById('p-acc-name').value = name;
+            }
+            if (!document.getElementById('p-unit').value) {
+                document.getElementById('p-unit').value = 'Bộ';
+            }
         },
 
         closeModal: () => document.getElementById('product-modal').classList.replace('flex', 'hidden'),
@@ -1557,6 +1755,10 @@
             const payload = {
                 sku: document.getElementById('p-sku').value.trim().toUpperCase(),
                 product_name: document.getElementById('p-name').value.trim(),
+                accounting_code: document.getElementById('p-acc-code').value.trim().toUpperCase() || document.getElementById('p-sku').value.trim().toUpperCase(),
+                accounting_name: document.getElementById('p-acc-name').value.trim() || document.getElementById('p-name').value.trim(),
+                unit: document.getElementById('p-unit').value.trim() || 'Bộ',
+                vat_rate: parseFloat(document.getElementById('p-vat-rate').value || 8),
                 category: selectedCat,
                 category_id: matchedCatObj ? matchedCatObj.id : null,
                 description: document.getElementById('p-desc').value.trim(),
@@ -1608,71 +1810,549 @@
             } catch (e) { alert("Lỗi kết nối xóa thiết bị!"); }
         },
 
-        downloadExcelTemplate: () => {
-            if (typeof XLSX === 'undefined') return alert('Thư viện Excel đang tải, vui lòng thử lại sau 2 giây!');
-            const templateData = [
-                { "Mã SKU": "INV-DE-6KW", "Tên Thiết Bị": "Biến Tần Deye Hybrid 6kW", "Mô Tả Kỹ Thuật": "1 Pha, BH 5 năm", "Danh Mục": "Inverter Hybrid", "Vị Trí Kệ": "A1-01", "Link Ảnh": "", "Link CO/CQ": "", "Link Datasheet": "", "Link Catalog": "", "Link Manual": "", "Tồn Thực Tế": 10, "Kho NCC (Ảo)": 50, "Giá Vốn": 15000000, "Lẻ Mặc Định (1)": 22500000, "Chốt Sale (2)": 21000000, "Giá Thợ (3)": 20000000, "Sỉ Cấp 1 (4)": 19500000, "Sỉ VIP (5)": 19000000, "NPP/Cắt Lô (6)": 18000000 }
-            ];
-            const ws = XLSX.utils.json_to_sheet(templateData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "SUNGO_Template");
-            XLSX.writeFile(wb, "SUNGO_Bieu_Mau_San_Pham.xlsx");
+        // ĐẢM BẢO THƯ VIỆN XLSX ĐƯỢC TẢI
+        ensureXLSX: () => {
+            return new Promise((resolve, reject) => {
+                if (typeof XLSX !== 'undefined') return resolve(window.XLSX);
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+                script.onload = () => resolve(window.XLSX);
+                script.onerror = () => reject(new Error('Không thể tải thư viện XLSX từ CDN!'));
+                document.head.appendChild(script);
+            });
         },
 
-        handleExcelUpload: async (input) => {
-            if (!input.files || input.files.length === 0) return;
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                    let imported = 0;
-                    for (const row of rows) {
-                        const rawStock = parseInt(row["Tồn Thực Tế"]) || 0;
-                        let stocksObject = {};
-                        if (window.modProducts.systemWarehouses.length > 0 && rawStock > 0) {
-                            stocksObject[window.modProducts.systemWarehouses[0].id] = rawStock;
-                        }
-
-                        const catName = String(row["Danh Mục"] || 'Khác').trim();
-                        const matchedCat = window.modCats.data.find(c => c.name.toLowerCase() === catName.toLowerCase());
-
-                        const payload = {
-                            sku: String(row["Mã SKU"] || '').trim().toUpperCase(),
-                            product_name: String(row["Tên Thiết Bị"] || '').trim(),
-                            description: String(row["Mô Tả Kỹ Thuật"] || '').trim(),
-                            category: catName,
-                            category_id: matchedCat ? matchedCat.id : null,
-                            bin_location: String(row["Vị Trí Kệ"] || '').trim(),
-                            image_url: String(row["Link Ảnh"] || '').trim(),
-                            doc_cocq: String(row["Link CO/CQ"] || '').trim(),
-                            doc_datasheet: String(row["Link Datasheet"] || '').trim(),
-                            doc_catalog: String(row["Link Catalog"] || '').trim(),
-                            doc_manual: String(row["Link Manual"] || '').trim(),
-                            stock_qty: rawStock,
-                            stocks: stocksObject,
-                            virtual_stock: parseInt(row["Kho NCC (Ảo)"]) || 0,
-                            import_price: parseFloat(row["Giá Vốn"]) || 0,
-                            retail_price: parseFloat(row["Lẻ Mặc Định (1)"]) || 0,
-                            price_2: parseFloat(row["Chốt Sale (2)"]) || 0,
-                            price_3: parseFloat(row["Giá Thợ (3)"]) || 0,
-                            price_4: parseFloat(row["Sỉ Cấp 1 (4)"]) || 0,
-                            price_5: parseFloat(row["Sỉ VIP (5)"]) || 0,
-                            price_6: parseFloat(row["NPP/Cắt Lô (6)"]) || 0
-                        };
-                        if (payload.sku && payload.product_name) {
-                            await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                            imported++;
-                        }
+        // CHUYỂN ĐỔI CHUỖI TIỀN TỆ / SỐ LƯỢNG VN Đ SHARP (15.000.000 đ, 15,000,000...)
+        parseExcelNumber: (val, defaultVal = 0) => {
+            if (val === undefined || val === null || val === '') return defaultVal;
+            if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
+            if (typeof val === 'string') {
+                let s = val.replace(/[^0-9.,-]/g, '').trim();
+                if (!s) return defaultVal;
+                if (s.includes('.') && s.includes(',')) {
+                    if (s.lastIndexOf('.') > s.lastIndexOf(',')) {
+                        s = s.replace(/,/g, '');
+                    } else {
+                        s = s.replace(/\./g, '').replace(',', '.');
                     }
-                    window.showToast('success', `✅ Đã nhập thành công ${imported} thiết bị từ Excel!`);
-                    await window.modStore.init();
-                } catch (err) { alert("Lỗi đọc file: " + err.message); }
-                input.value = '';
-            };
-            reader.readAsArrayBuffer(file);
+                } else if (s.includes(',')) {
+                    const parts = s.split(',');
+                    if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+                        s = s.replace(/,/g, '');
+                    } else {
+                        s = s.replace(',', '.');
+                    }
+                } else if (s.includes('.')) {
+                    const parts = s.split('.');
+                    if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+                        s = s.replace(/\./g, '');
+                    }
+                }
+                const num = parseFloat(s);
+                return isNaN(num) ? defaultVal : num;
+            }
+            return defaultVal;
+        },
+
+        // TỪ ĐIỂN TÊN CỘT THÔNG MINH (SMART AUTO-MAPPER ALIASES)
+        COLUMN_ALIASES: {
+            sku: ['mã sku', 'sku', 'mã sp', 'mã sản phẩm', 'mã thiết bị', 'code', 'product code', 'model', 'mã hàng'],
+            product_name: ['tên thiết bị', 'tên sp', 'tên sản phẩm', 'tên hàng hóa', 'tên hàng', 'product name', 'name', 'thiết bị', 'sản phẩm', 'diễn giải'],
+            category: ['danh mục', 'danh mục chuẩn', 'nhóm hàng', 'nhóm sản phẩm', 'category', 'cat', 'loại', 'phân loại', 'nhóm'],
+            description: ['mô tả kỹ thuật', 'mô tả', 'quy cách', 'thông số kỹ thuật', 'thông số', 'description', 'ghi chú', 'spec', 'specs', 'quy cách kỹ thuật'],
+            bin_location: ['vị trí kệ', 'vị trí kho', 'vị trí', 'kệ', 'bin', 'rack', 'bin location', 'vị trí lưu kho'],
+            unit: ['đvt', 'đơn vị tính', 'đơn vị', 'unit', 'uom', 'dvt'],
+            stock_qty: ['tồn thực tế', 'tồn kho', 'tồn thực', 'số lượng tồn', 'tồn', 'số lượng', 'stock', 'qty', 'actual stock', 'tồn kho thực'],
+            virtual_stock: ['kho ncc (ảo)', 'kho ncc', 'tồn kho ncc', 'tồn ảo', 'kho ảo', 'virtual stock', 'tồn ncc', 'kho ảo ncc'],
+            import_price: ['giá vốn', 'giá nhập', 'giá vốn nhập', 'cost', 'import price', 'giá mua', 'cost price', 'giá vốn (vnđ)'],
+            retail_price: ['lẻ mặc định (1)', 'lẻ mặc định', 'giá lẻ', 'giá bán lẻ', 'giá 1', 'retail price', 'giá niêm yết', 'giá bán', 'lẻ (1)'],
+            price_2: ['chốt sale (2)', 'chốt sale', 'giá 2', 'giá chốt sale', 'price 2', 'price_2', 'sale (2)'],
+            price_3: ['giá thợ (3)', 'giá thợ', 'thợ (3)', 'thợ', 'giá 3', 'price 3', 'price_3'],
+            price_4: ['sỉ cấp 1 (4)', 'sỉ cấp 1', 'sỉ c1', 'sỉ 1', 'giá sỉ 1', 'giá 4', 'price 4', 'price_4', 'sỉ c1 (4)'],
+            price_5: ['sỉ vip (5)', 'sỉ vip', 'giá sỉ vip', 'giá 5', 'price 5', 'price_5', 'vip (5)'],
+            price_6: ['npp/cắt lô (6)', 'npp / cắt lô (6)', 'npp', 'cắt lô', 'npp/cắt lô', 'giá npp', 'giá 6', 'price 6', 'price_6', 'cắt lô (6)'],
+            accounting_code: ['mã hàng kế toán', 'mã kế toán', 'accounting code', 'mã hđ', 'mã hóa đơn', 'mã vat'],
+            accounting_name: ['tên hàng hóa xuất hóa đơn kế toán', 'tên kế toán', 'tên hóa đơn', 'accounting name', 'tên xuất hđ'],
+            vat_rate: ['thuế suất vat', 'vat', 'thuế vat', 'vat rate', 'thuế suất', 'thuế', 'thuế (%)'],
+            image_url: ['link ảnh', 'hình ảnh', 'link hình ảnh', 'ảnh', 'image', 'image url', 'link hình', 'photo', 'picture', 'url ảnh'],
+            doc_cocq: ['link co/cq', 'link co cq', 'co/cq', 'co cq', 'cocq', 'doc cocq', 'link cocq'],
+            doc_datasheet: ['link datasheet', 'datasheet', 'data sheet', 'doc datasheet', 'link data sheet'],
+            doc_catalog: ['link catalog', 'catalog', 'catalogue', 'doc catalog', 'link catalogue'],
+            doc_manual: ['link manual', 'manual', 'hướng dẫn', 'doc manual', 'link hướng dẫn']
+        },
+
+        resolveRowField: (row, aliases) => {
+            const keys = Object.keys(row);
+            for (const alias of aliases) {
+                const aliasNorm = alias.toLowerCase().replace(/[^a-z0-9à-ỹ]/gi, '');
+                for (const key of keys) {
+                    const keyNorm = key.toLowerCase().replace(/[^a-z0-9à-ỹ]/gi, '');
+                    if (keyNorm === aliasNorm) {
+                        return row[key];
+                    }
+                }
+            }
+            return undefined;
+        },
+
+        // BIẾN LƯU TRỮ TẠM SẢN PHẨM ĐÃ PARSE ĐỂ NẠP BULK
+        stagedExcelItems: [],
+
+        openUploadModal: () => {
+            window.modProducts.stagedExcelItems = [];
+            const modal = document.getElementById('excel-upload-modal');
+            const dropzone = document.getElementById('excel-dropzone');
+            const progressBox = document.getElementById('excel-progress-box');
+            const previewSec = document.getElementById('excel-preview-section');
+            const confirmBtn = document.getElementById('btn-confirm-upload');
+            const filePicker = document.getElementById('excel-file-picker');
+
+            if (filePicker) filePicker.value = '';
+            if (progressBox) progressBox.classList.add('hidden');
+            if (previewSec) previewSec.classList.add('hidden');
+            if (dropzone) {
+                dropzone.classList.remove('hidden', 'border-emerald-500', 'bg-emerald-50');
+            }
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.className = 'opacity-50 cursor-not-allowed px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-black shadow-lg transition text-xs flex items-center gap-2';
+                document.getElementById('btn-confirm-upload-text').innerText = 'Tiến Hành Nạp Dữ Liệu';
+            }
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        },
+
+        closeUploadModal: () => {
+            const modal = document.getElementById('excel-upload-modal');
+            if (modal) {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
+            window.modProducts.stagedExcelItems = [];
+        },
+
+        handleDragOverDropzone: (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropzone = document.getElementById('excel-dropzone');
+            if (dropzone) {
+                dropzone.classList.add('border-emerald-500', 'bg-emerald-50/80');
+            }
+        },
+
+        handleDragLeaveDropzone: (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropzone = document.getElementById('excel-dropzone');
+            if (dropzone) {
+                dropzone.classList.remove('border-emerald-500', 'bg-emerald-50/80');
+            }
+        },
+
+        handleDropFile: (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropzone = document.getElementById('excel-dropzone');
+            if (dropzone) dropzone.classList.remove('border-emerald-500', 'bg-emerald-50/80');
+
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                window.modProducts.processExcelFile(e.dataTransfer.files[0]);
+            }
+        },
+
+        handleFilePicker: (input) => {
+            if (input.files && input.files.length > 0) {
+                window.modProducts.processExcelFile(input.files[0]);
+            }
+        },
+
+        // XỬ LÝ FILE EXCEL VỚI SMART MAPPER VÀ HIỂN THỊ PREVIEW
+        processExcelFile: async (file) => {
+            if (!file) return;
+
+            const progressBox = document.getElementById('excel-progress-box');
+            const progressText = document.getElementById('excel-progress-text');
+            const progressPct = document.getElementById('excel-progress-pct');
+            const progressBar = document.getElementById('excel-progress-bar');
+            const previewSec = document.getElementById('excel-preview-section');
+            const confirmBtn = document.getElementById('btn-confirm-upload');
+            const confirmText = document.getElementById('btn-confirm-upload-text');
+
+            if (progressBox) progressBox.classList.remove('hidden');
+            if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Đang tải thư viện Excel & đọc tệp...';
+            if (progressBar) progressBar.style.width = '30%';
+            if (progressPct) progressPct.innerText = '30%';
+
+            try {
+                await window.modProducts.ensureXLSX();
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        if (progressBar) progressBar.style.width = '60%';
+                        if (progressPct) progressPct.innerText = '60%';
+                        if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Đang phân tích các dòng dữ liệu...';
+
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { defval: '' });
+
+                        if (!rows || rows.length === 0) {
+                            alert('⚠️ File Excel không có dữ liệu ở Sheet đầu tiên!');
+                            if (progressBox) progressBox.classList.add('hidden');
+                            return;
+                        }
+
+                        const defaultWarehouseId = window.modProducts.systemWarehouses.length > 0 
+                            ? window.modProducts.systemWarehouses[0].id 
+                            : null;
+
+                        const parsedItems = [];
+                        let invalidCount = 0;
+
+                        rows.forEach((row, idx) => {
+                            const rawSku = window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.sku);
+                            const rawName = window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.product_name);
+                            
+                            const sku = String(rawSku || '').trim().toUpperCase();
+                            const productName = String(rawName || '').trim();
+
+                            // Nếu thiếu cả SKU và tên thì bỏ qua
+                            if (!sku && !productName) {
+                                invalidCount++;
+                                return;
+                            }
+
+                            // Nếu có tên mà thiếu SKU, tự sinh SKU
+                            const finalSku = sku || ('SP-' + Date.now().toString(36).toUpperCase() + '-' + (idx + 1));
+                            const finalName = productName || 'Thiết bị ' + finalSku;
+
+                            const catName = String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.category) || 'Khác').trim();
+                            const matchedCat = window.modCats.data.find(c => c.name.toLowerCase() === catName.toLowerCase());
+
+                            const rawStock = Math.max(0, Math.floor(window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.stock_qty), 0)));
+                            
+                            let stocksObject = {};
+                            if (defaultWarehouseId && rawStock > 0) {
+                                stocksObject[defaultWarehouseId] = rawStock;
+                            }
+
+                            const importPrice = window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.import_price), 0);
+                            const retailPrice = window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.retail_price), 0);
+                            const price2 = window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.price_2), 0);
+                            const price3 = window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.price_3), 0);
+                            const price4 = window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.price_4), 0);
+                            const price5 = window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.price_5), 0);
+                            const price6 = window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.price_6), 0);
+                            const virtualStock = Math.max(0, Math.floor(window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.virtual_stock), 0)));
+                            const vatRate = window.modProducts.parseExcelNumber(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.vat_rate), 8);
+
+                            const unit = String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.unit) || 'Bộ').trim();
+                            const accCode = String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.accounting_code) || finalSku).trim().toUpperCase();
+                            const accName = String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.accounting_name) || finalName).trim();
+
+                            const item = {
+                                sku: finalSku,
+                                product_name: finalName,
+                                category: catName,
+                                category_id: matchedCat ? matchedCat.id : null,
+                                description: String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.description) || '').trim(),
+                                bin_location: String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.bin_location) || '').trim(),
+                                unit: unit || 'Bộ',
+                                accounting_code: accCode || finalSku,
+                                accounting_name: accName || finalName,
+                                vat_rate: vatRate,
+                                stock_qty: rawStock,
+                                stocks: stocksObject,
+                                virtual_stock: virtualStock,
+                                import_price: importPrice,
+                                retail_price: retailPrice,
+                                price_2: price2,
+                                price_3: price3,
+                                price_4: price4,
+                                price_5: price5,
+                                price_6: price6,
+                                image_url: String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.image_url) || '').trim(),
+                                doc_cocq: String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.doc_cocq) || '').trim(),
+                                doc_datasheet: String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.doc_datasheet) || '').trim(),
+                                doc_catalog: String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.doc_catalog) || '').trim(),
+                                doc_manual: String(window.modProducts.resolveRowField(row, window.modProducts.COLUMN_ALIASES.doc_manual) || '').trim()
+                            };
+
+                            parsedItems.push(item);
+                        });
+
+                        window.modProducts.stagedExcelItems = parsedItems;
+
+                        if (progressBar) progressBar.style.width = '100%';
+                        if (progressPct) progressPct.innerText = '100%';
+                        if (progressText) progressText.innerHTML = `✅ Đã phân tích xong: <b>${parsedItems.length}</b> sản phẩm sẵn sàng!`;
+
+                        // Render Thống kê Preview
+                        const totalCountEl = document.getElementById('preview-total-count');
+                        const validCountEl = document.getElementById('preview-valid-count');
+                        const invalidCountEl = document.getElementById('preview-invalid-count');
+                        const warnBadge = document.getElementById('preview-warn-badge');
+                        const fileNameEl = document.getElementById('preview-file-name');
+
+                        if (totalCountEl) totalCountEl.innerText = rows.length;
+                        if (validCountEl) validCountEl.innerText = parsedItems.length;
+                        if (fileNameEl) fileNameEl.innerText = file.name;
+
+                        if (invalidCount > 0 && warnBadge && invalidCountEl) {
+                            invalidCountEl.innerText = invalidCount;
+                            warnBadge.classList.remove('hidden');
+                        } else if (warnBadge) {
+                            warnBadge.classList.add('hidden');
+                        }
+
+                        // Render 20 dòng đầu vào bảng Preview
+                        const previewTbody = document.getElementById('preview-tbody');
+                        if (previewTbody) {
+                            const previewSlice = parsedItems.slice(0, 20);
+                            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+                            previewTbody.innerHTML = previewSlice.map((it, idx) => `
+                                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                                    <td class="p-2 text-center text-slate-400 font-bold">${idx + 1}</td>
+                                    <td class="p-2 font-mono font-bold text-blue-700">${it.sku}</td>
+                                    <td class="p-2 font-bold text-slate-800 truncate max-w-xs" title="${it.product_name}">${it.product_name}</td>
+                                    <td class="p-2"><span class="bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold border border-amber-200">${it.category}</span></td>
+                                    <td class="p-2 text-center font-bold ${it.stock_qty > 0 ? 'text-emerald-700' : 'text-slate-400'}">${it.stock_qty}</td>
+                                    <td class="p-2 text-right font-black text-emerald-600">${fmt(it.retail_price)} đ</td>
+                                    <td class="p-2 text-right font-bold text-red-600">${fmt(it.import_price)} đ</td>
+                                </tr>
+                            `).join('');
+                        }
+
+                        if (previewSec) previewSec.classList.remove('hidden');
+
+                        // Kích hoạt nút xác nhận
+                        if (confirmBtn && parsedItems.length > 0) {
+                            confirmBtn.disabled = false;
+                            confirmBtn.className = 'cursor-pointer px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl font-black shadow-lg shadow-emerald-600/25 transition text-xs flex items-center gap-2';
+                            if (confirmText) confirmText.innerText = `Nạp Ngay ${parsedItems.length} Sản Phẩm Vào Hệ Thống`;
+                        }
+
+                    } catch (parseErr) {
+                        alert('Lỗi đọc nội dung file Excel: ' + parseErr.message);
+                        if (progressBox) progressBox.classList.add('hidden');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+
+            } catch (err) {
+                alert('Lỗi khởi tạo trình đọc Excel: ' + err.message);
+                if (progressBox) progressBox.classList.add('hidden');
+            }
+        },
+
+        // GỬI 1 REQUEST BULK UPSERT DUY NHẤT LÊN SERVER
+        confirmBulkUpload: async () => {
+            const items = window.modProducts.stagedExcelItems;
+            if (!items || items.length === 0) return alert('Không có sản phẩm nào để nạp!');
+
+            const confirmBtn = document.getElementById('btn-confirm-upload');
+            const confirmText = document.getElementById('btn-confirm-upload-text');
+            const progressBox = document.getElementById('excel-progress-box');
+            const progressText = document.getElementById('excel-progress-text');
+            const progressBar = document.getElementById('excel-progress-bar');
+            const progressPct = document.getElementById('excel-progress-pct');
+
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.classList.add('opacity-60', 'pointer-events-none');
+            }
+            if (confirmText) confirmText.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang nạp vào CSDL...';
+            if (progressBox) progressBox.classList.remove('hidden');
+            if (progressText) progressText.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i> Đang lưu đồng thời <b>${items.length}</b> sản phẩm vào hệ thống...`;
+            if (progressBar) progressBar.style.width = '75%';
+            if (progressPct) progressPct.innerText = '75%';
+
+            try {
+                const startTime = Date.now();
+                const res = await fetch('/api/products/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items })
+                });
+                const data = await res.json();
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                if (data.success) {
+                    if (progressBar) progressBar.style.width = '100%';
+                    if (progressPct) progressPct.innerText = '100%';
+                    
+                    window.showToast('success', `⚡ ${data.message} (Xử lý trong ${duration}s)`, 5000);
+                    
+                    setTimeout(async () => {
+                        window.modProducts.closeUploadModal();
+                        await window.modStore.init();
+                    }, 600);
+
+                } else {
+                    alert('Lỗi nạp dữ liệu từ Server: ' + (data.error || 'Không xác định'));
+                    if (confirmBtn) {
+                        confirmBtn.disabled = false;
+                        confirmBtn.classList.remove('opacity-60', 'pointer-events-none');
+                        if (confirmText) confirmText.innerText = 'Thử Lại';
+                    }
+                }
+            } catch (err) {
+                alert('Lỗi kết nối mạng khi nạp sản phẩm: ' + err.message);
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.classList.remove('opacity-60', 'pointer-events-none');
+                    if (confirmText) confirmText.innerText = 'Thử Lại';
+                }
+            }
+        },
+
+        // HÀM TẢI FILE MẪU EXCEL CHUẨN SUNGO
+        downloadExcelTemplate: async () => {
+            try {
+                await window.modProducts.ensureXLSX();
+                const templateData = [
+                    { 
+                        "Mã SKU": "INV-DEYE-6KW-1P", 
+                        "Tên Thiết Bị": "Biến Tần Deye Hybrid 6kW 1 Pha (SUN-6K-SG03LP1)", 
+                        "Danh Mục": "Inverter Hybrid", 
+                        "Mô Tả Kỹ Thuật": "1 Pha 220V, 2 MPPT, Bảo hành 5 năm chính hãng, Wifi Dongle", 
+                        "Vị Trí Kệ": "A1-01", 
+                        "ĐVT": "Bộ",
+                        "Tồn Thực Tế": 15, 
+                        "Kho NCC (Ảo)": 50, 
+                        "Giá Vốn": 15500000, 
+                        "Lẻ Mặc Định (1)": 22500000, 
+                        "Chốt Sale (2)": 21500000, 
+                        "Giá Thợ (3)": 20000000, 
+                        "Sỉ Cấp 1 (4)": 19500000, 
+                        "Sỉ VIP (5)": 19000000, 
+                        "NPP/Cắt Lô (6)": 18200000,
+                        "Mã Hàng Kế Toán": "INV-DEYE-6KW-1P",
+                        "Tên Hàng Hóa Xuất Hóa Đơn Kế Toán": "Biến tần quang điện hòa lưới lưu trữ Deye công suất 6kW 1 pha",
+                        "Thuế Suất VAT": 8,
+                        "Link Ảnh": "https://images.unsplash.com/photo-1509391365360-2e959784a276?w=500", 
+                        "Link CO/CQ": "", 
+                        "Link Datasheet": "", 
+                        "Link Catalog": "", 
+                        "Link Manual": "" 
+                    },
+                    { 
+                        "Mã SKU": "PANEL-JA-580W", 
+                        "Tên Thiết Bị": "Tấm Pin Năng Lượng Mặt Trời JA Solar 580W N-Type Bifacial", 
+                        "Danh Mục": "Tấm Pin N-Type / Mono", 
+                        "Mô Tả Kỹ Thuật": "Hiệu suất 22.5%, Kính kép 2 mặt phát điện, BH 12 năm vật lý", 
+                        "Vị Trí Kệ": "KHO-PIN-01", 
+                        "ĐVT": "Tấm",
+                        "Tồn Thực Tế": 360, 
+                        "Kho NCC (Ảo)": 1000, 
+                        "Giá Vốn": 1550000, 
+                        "Lẻ Mặc Định (1)": 1950000, 
+                        "Chốt Sale (2)": 1880000, 
+                        "Giá Thợ (3)": 1820000, 
+                        "Sỉ Cấp 1 (4)": 1780000, 
+                        "Sỉ VIP (5)": 1740000, 
+                        "NPP/Cắt Lô (6)": 1680000,
+                        "Mã Hàng Kế Toán": "PANEL-JA-580W",
+                        "Tên Hàng Hóa Xuất Hóa Đơn Kế Toán": "Tấm pin quang điện JA Solar công suất 580W chuẩn N-Type",
+                        "Thuế Suất VAT": 8,
+                        "Link Ảnh": "", 
+                        "Link CO/CQ": "", 
+                        "Link Datasheet": "", 
+                        "Link Catalog": "", 
+                        "Link Manual": "" 
+                    },
+                    { 
+                        "Mã SKU": "BAT-SUNGO-5.12KWH", 
+                        "Tên Thiết Bị": "Pin Lưu Trữ Lithium LiFePO4 SUNGO 51.2V 100Ah (5.12kWh)", 
+                        "Danh Mục": "Pin Lưu Trữ Lithium (LiFePO4)", 
+                        "Mô Tả Kỹ Thuật": "Cell Grade A+, 6000 chu kỳ nạp xả, Giao tiếp CAN/RS485 Deye/Luxpower/Growatt", 
+                        "Vị Trí Kệ": "B2-04", 
+                        "ĐVT": "Bộ",
+                        "Tồn Thực Tế": 20, 
+                        "Kho NCC (Ảo)": 100, 
+                        "Giá Vốn": 19500000, 
+                        "Lẻ Mặc Định (1)": 26500000, 
+                        "Chốt Sale (2)": 25000000, 
+                        "Giá Thợ (3)": 24000000, 
+                        "Sỉ Cấp 1 (4)": 23500000, 
+                        "Sỉ VIP (5)": 23000000, 
+                        "NPP/Cắt Lô (6)": 22000000,
+                        "Mã Hàng Kế Toán": "BAT-SUNGO-5.12KWH",
+                        "Tên Hàng Hóa Xuất Hóa Đơn Kế Toán": "Bộ pin lưu trữ năng lượng Lithium LiFePO4 dung lượng 5.12kWh",
+                        "Thuế Suất VAT": 8,
+                        "Link Ảnh": "", 
+                        "Link CO/CQ": "", 
+                        "Link Datasheet": "", 
+                        "Link Catalog": "", 
+                        "Link Manual": "" 
+                    }
+                ];
+                const ws = XLSX.utils.json_to_sheet(templateData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "SUNGO_Template");
+                XLSX.writeFile(wb, "SUNGO_Bieu_Mau_San_Pham_Chuan.xlsx");
+                window.showToast('success', 'Đã tải file mẫu SUNGO_Bieu_Mau_San_Pham_Chuan.xlsx thành công!');
+            } catch (e) {
+                alert('Lỗi tải file mẫu: ' + e.message);
+            }
+        },
+
+        // XUẤT TOÀN BỘ DANH SÁCH SẢN PHẨM RA FILE EXCEL
+        exportToExcel: async () => {
+            try {
+                await window.modProducts.ensureXLSX();
+                const list = window.modProducts.list || [];
+                if (list.length === 0) return alert('Chưa có sản phẩm nào trong hệ thống để xuất!');
+
+                const exportRows = list.map(p => ({
+                    "Mã SKU": p.sku || '',
+                    "Tên Thiết Bị": p.product_name || '',
+                    "Danh Mục": p.category || 'Khác',
+                    "Mô Tả Kỹ Thuật": p.description || '',
+                    "Vị Trí Kệ": p.bin_location || '',
+                    "ĐVT": p.unit || 'Bộ',
+                    "Tồn Thực Tế": p.stock_qty || 0,
+                    "Kho NCC (Ảo)": p.virtual_stock || 0,
+                    "Giá Vốn": parseFloat(p.import_price) || 0,
+                    "Lẻ Mặc Định (1)": parseFloat(p.retail_price) || 0,
+                    "Chốt Sale (2)": parseFloat(p.price_2) || 0,
+                    "Giá Thợ (3)": parseFloat(p.price_3) || 0,
+                    "Sỉ Cấp 1 (4)": parseFloat(p.price_4) || 0,
+                    "Sỉ VIP (5)": parseFloat(p.price_5) || 0,
+                    "NPP/Cắt Lô (6)": parseFloat(p.price_6) || 0,
+                    "Mã Hàng Kế Toán": p.accounting_code || p.sku || '',
+                    "Tên Hàng Hóa Xuất Hóa Đơn Kế Toán": p.accounting_name || p.product_name || '',
+                    "Thuế Suất VAT": p.vat_rate !== undefined ? p.vat_rate : 8,
+                    "Link Ảnh": p.image_url || '',
+                    "Link CO/CQ": p.doc_cocq || '',
+                    "Link Datasheet": p.doc_datasheet || '',
+                    "Link Catalog": p.doc_catalog || '',
+                    "Link Manual": p.doc_manual || ''
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(exportRows);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "SUNGO_Products");
+                const today = new Date().toISOString().slice(0, 10);
+                XLSX.writeFile(wb, `SUNGO_Danh_Sach_San_Pham_${today}.xlsx`);
+                window.showToast('success', `Đã xuất ${list.length} sản phẩm ra file Excel!`);
+            } catch (e) {
+                alert('Lỗi xuất file Excel: ' + e.message);
+            }
+        },
+
+        // BẢO LƯU HÀM TƯƠNG THÍCH CŨ
+        handleExcelUpload: (input) => {
+            if (!input.files || input.files.length === 0) return;
+            window.modProducts.openUploadModal();
+            window.modProducts.processExcelFile(input.files[0]);
+            input.value = '';
         }
     };
 

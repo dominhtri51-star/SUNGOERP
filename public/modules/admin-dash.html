@@ -1,88 +1,183 @@
-
-<div class="h-full flex flex-col space-y-6 relative">
+<div class="h-full flex flex-col space-y-4 sm:space-y-6 relative overflow-y-auto pb-8">
     <!-- HEADER & BỘ LỌC -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 shrink-0 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4">
         <div>
-            <h3 class="font-black text-slate-900 text-2xl"><i class="fas fa-chart-line text-blue-600 mr-2"></i> Báo Cáo Nhanh (Executive Dashboard)</h3>
-            <p class="text-sm text-slate-500 mt-1 font-medium">Toàn cảnh sức khỏe tài chính, dòng tiền và giá trị tồn kho hệ thống.</p>
+            <h3 class="font-black text-slate-900 text-lg sm:text-2xl flex items-center gap-2">
+                <i class="fas fa-chart-line text-blue-600"></i> Báo Cáo Doanh Thu & Lợi Nhuận
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5 sm:mt-1 font-medium">Toàn cảnh sức khỏe tài chính, dòng tiền và hiệu quả kinh doanh hệ thống.</p>
         </div>
         
-        <div class="flex items-center gap-3 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
-            <button onclick="window.modDash.load('day')" id="btn-filter-day" class="dash-filter px-4 py-2 rounded-md font-bold text-sm text-slate-500 hover:text-slate-800 transition">Hôm nay</button>
-            <button onclick="window.modDash.load('week')" id="btn-filter-week" class="dash-filter px-4 py-2 rounded-md font-bold text-sm text-slate-500 hover:text-slate-800 transition">Tuần này</button>
-            <button onclick="window.modDash.load('month')" id="btn-filter-month" class="dash-filter px-4 py-2 rounded-md font-bold text-sm bg-white shadow text-blue-600 border border-blue-100 transition">Tháng này</button>
-            <button onclick="window.modDash.load('year')" id="btn-filter-year" class="dash-filter px-4 py-2 rounded-md font-bold text-sm text-slate-500 hover:text-slate-800 transition">Năm nay</button>
+        <div class="w-full md:w-auto flex items-center gap-1 sm:gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto">
+            <button onclick="window.modDash.load('day')" id="btn-filter-day" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap">Hôm nay</button>
+            <button onclick="window.modDash.load('week')" id="btn-filter-week" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap">Tuần này</button>
+            <button onclick="window.modDash.load('month')" id="btn-filter-month" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-white shadow-xs text-blue-600 border border-blue-100 transition text-center whitespace-nowrap">Tháng này</button>
+            <button onclick="window.modDash.load('year')" id="btn-filter-year" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap">Năm nay</button>
         </div>
     </div>
 
     <!-- 4 THẺ CHỈ SỐ QUAN TRỌNG -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 shrink-0">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 shrink-0">
         <!-- Doanh Thu -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
-            <i class="fas fa-wallet absolute -right-4 -bottom-4 text-8xl opacity-20"></i>
-            <p class="text-blue-100 font-bold text-sm uppercase tracking-wider mb-2">Tổng Doanh Thu</p>
-            <h2 id="d-revenue" class="text-3xl font-black mb-1">0 đ</h2>
-            <p class="text-xs text-blue-200"><i class="fas fa-check-circle mr-1"></i> Đã thanh toán & hoàn tất</p>
+        <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl shadow-md p-4 sm:p-6 text-white relative overflow-hidden">
+            <i class="fas fa-wallet absolute -right-3 -bottom-3 text-7xl sm:text-8xl opacity-20"></i>
+            <p class="text-blue-100 font-bold text-xs sm:text-sm uppercase tracking-wider mb-1 sm:mb-2">Tổng Doanh Thu</p>
+            <h2 id="d-revenue" class="text-2xl sm:text-3xl font-black mb-1">0 đ</h2>
+            <p class="text-[11px] sm:text-xs text-blue-200 flex items-center gap-1">
+                <i class="fas fa-check-circle"></i> <span id="d-orders-count">0</span> đơn hoàn tất
+            </p>
         </div>
 
         <!-- Lãi Lỗ -->
-        <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
-            <i class="fas fa-chart-pie absolute -right-4 -bottom-4 text-8xl opacity-20"></i>
-            <p class="text-emerald-100 font-bold text-sm uppercase tracking-wider mb-2">Lợi Nhuận Gộp (Lãi/Lỗ)</p>
-            <h2 id="d-profit" class="text-3xl font-black mb-1">0 đ</h2>
-            <p class="text-xs text-emerald-200"><i class="fas fa-info-circle mr-1"></i> Doanh thu trừ Giá vốn</p>
+        <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl shadow-md p-4 sm:p-6 text-white relative overflow-hidden">
+            <i class="fas fa-chart-pie absolute -right-3 -bottom-3 text-7xl sm:text-8xl opacity-20"></i>
+            <p class="text-emerald-100 font-bold text-xs sm:text-sm uppercase tracking-wider mb-1 sm:mb-2">Lợi Nhuận Gộp</p>
+            <h2 id="d-profit" class="text-2xl sm:text-3xl font-black mb-1">0 đ</h2>
+            <p class="text-[11px] sm:text-xs text-emerald-200 flex items-center gap-1">
+                <i class="fas fa-percentage"></i> Tỷ suất: <span id="d-margin" class="font-bold">0%</span>
+            </p>
         </div>
 
         <!-- Thu Chi -->
-        <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
-            <i class="fas fa-exchange-alt absolute -right-4 -bottom-4 text-8xl opacity-20"></i>
-            <p class="text-amber-100 font-bold text-sm uppercase tracking-wider mb-2">Cán Cân Thu / Chi</p>
+        <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-md p-4 sm:p-6 text-white relative overflow-hidden">
+            <i class="fas fa-exchange-alt absolute -right-3 -bottom-3 text-7xl sm:text-8xl opacity-20"></i>
+            <p class="text-amber-100 font-bold text-xs sm:text-sm uppercase tracking-wider mb-1 sm:mb-2">Cán Cân Thu / Chi</p>
             <div class="flex justify-between items-end">
                 <div>
                     <p class="text-[10px] text-amber-200 uppercase font-bold">Tổng Thu</p>
-                    <h3 id="d-thu" class="text-xl font-black text-white">0 đ</h3>
+                    <h3 id="d-thu" class="text-lg sm:text-xl font-black text-white">0 đ</h3>
                 </div>
                 <div class="text-right">
-                    <p class="text-[10px] text-amber-200 uppercase font-bold">Tổng Chi (Gốc)</p>
-                    <h3 id="d-chi" class="text-xl font-black text-red-200">0 đ</h3>
+                    <p class="text-[10px] text-amber-200 uppercase font-bold">Tổng Giá Vốn</p>
+                    <h3 id="d-chi" class="text-lg sm:text-xl font-black text-red-200">0 đ</h3>
                 </div>
             </div>
         </div>
 
         <!-- Tồn Kho -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
-            <div class="flex justify-between items-start mb-2">
-                <p class="text-slate-500 font-bold text-sm uppercase tracking-wider">Giá Trị Tồn Kho</p>
-                <span class="bg-slate-100 text-slate-500 text-[9px] font-black px-2 py-1 rounded uppercase">Real-time</span>
+        <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 relative overflow-hidden">
+            <div class="flex justify-between items-start mb-1 sm:mb-2">
+                <p class="text-slate-500 font-bold text-xs sm:text-sm uppercase tracking-wider">Giá Trị Tồn Kho</p>
+                <span class="bg-slate-100 text-slate-500 text-[9px] font-black px-2 py-0.5 rounded uppercase">Real-time</span>
             </div>
-            <h2 id="d-inventory" class="text-3xl font-black text-slate-800 mb-1">0 đ</h2>
-            <p id="d-inv-qty" class="text-sm font-black text-emerald-600 mb-1 bg-emerald-50 inline-block px-2 py-0.5 rounded border border-emerald-200">0 thiết bị có sẵn</p>
-            <p class="text-xs text-slate-400 font-medium">Tài sản chôn trong kho thực tế</p>
-            <div class="w-full bg-slate-100 h-1.5 mt-4 rounded-full overflow-hidden"><div class="bg-slate-700 w-2/3 h-full"></div></div>
+            <h2 id="d-inventory" class="text-2xl sm:text-3xl font-black text-slate-800 mb-1">0 đ</h2>
+            <p id="d-inv-qty" class="text-xs sm:text-sm font-black text-emerald-600 mb-1 bg-emerald-50 inline-block px-2 py-0.5 rounded border border-emerald-200">0 thiết bị có sẵn</p>
+            <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Tài sản chôn trong kho thực tế</p>
+            <div class="w-full bg-slate-100 h-1.5 mt-3 sm:mt-4 rounded-full overflow-hidden"><div class="bg-slate-700 w-2/3 h-full"></div></div>
         </div>
     </div>
 
-    <!-- KHU VỰC BÁO CÁO PHỤ CHỮA CHÁY (CHART MÔ PHỎNG) -->
-    <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-center text-slate-400">
-        <i class="fas fa-chart-area text-6xl mb-4 opacity-20"></i>
-        <h4 class="font-bold text-lg text-slate-600">Khu Vực Biểu Đồ Chi Tiết</h4>
-        <p class="text-sm">Hệ thống đang thu thập thêm dữ liệu giao dịch để vẽ biểu đồ trực quan.</p>
+    <!-- KHU VỰC 2 BIỂU ĐỒ CHÍNH (CHART.JS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 shrink-0">
+        <!-- BIỂU ĐỒ 1: DOANH THU & LỢI NHUẬN THEO THỜI GIAN (Combo Bar + Line) -->
+        <div class="lg:col-span-8 bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 flex flex-col justify-between">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                <div>
+                    <h4 class="font-black text-slate-800 text-base sm:text-lg flex items-center gap-2">
+                        <i class="fas fa-chart-area text-blue-600"></i> Biến Động Doanh Thu & Lợi Nhuận
+                    </h4>
+                    <p class="text-xs text-slate-400 font-medium">So sánh tương quan giữa Doanh số bán ra và Lợi nhuận gộp</p>
+                </div>
+                <span id="chart-period-badge" class="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg border border-blue-100">Tháng này</span>
+            </div>
+            
+            <div class="relative h-64 sm:h-80 w-full">
+                <canvas id="chart-rev-profit"></canvas>
+            </div>
+        </div>
+
+        <!-- BIỂU ĐỒ 2: TOP SẢN PHẨM BÁN CHẠY (Doughnut Chart) -->
+        <div class="lg:col-span-4 bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 flex flex-col justify-between">
+            <div class="mb-3">
+                <h4 class="font-black text-slate-800 text-base sm:text-lg flex items-center gap-2">
+                    <i class="fas fa-pie-chart text-emerald-600"></i> Top Sản Phẩm Doanh Thu
+                </h4>
+                <p class="text-xs text-slate-400 font-medium">Tỷ trọng doanh thu theo từng thiết bị</p>
+            </div>
+
+            <div class="relative h-56 sm:h-64 w-full flex items-center justify-center">
+                <canvas id="chart-top-products"></canvas>
+                <div id="chart-top-empty" class="hidden absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                    <i class="fas fa-box-open text-4xl mb-2 opacity-30"></i>
+                    <p class="text-xs font-bold">Chưa có dữ liệu bán trong kỳ</p>
+                </div>
+            </div>
+
+            <div id="top-products-quick-legend" class="mt-3 space-y-1.5 max-h-36 overflow-y-auto pr-1"></div>
+        </div>
+    </div>
+
+    <!-- BẢNG TÓM TẮT TOP SẢN PHẨM & TÌNH TRẠNG ĐƠN HÀNG -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+        <!-- Danh sách Top 5 sản phẩm -->
+        <div class="lg:col-span-7 bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6">
+            <h4 class="font-black text-slate-800 text-sm sm:text-base mb-3 flex items-center gap-2">
+                <i class="fas fa-trophy text-amber-500"></i> Danh Sách Thiết Bị Bán Chạy Nhất Trong Kỳ
+            </h4>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-100 text-slate-400 uppercase text-[10px] font-bold">
+                            <th class="py-2.5 px-2">Sản phẩm</th>
+                            <th class="py-2.5 px-2 text-center">SL bán</th>
+                            <th class="py-2.5 px-2 text-right">Doanh thu</th>
+                            <th class="py-2.5 px-2 text-right">% Đóng góp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-top-products" class="divide-y divide-slate-100 font-medium text-slate-700">
+                        <tr><td colspan="4" class="text-center py-6 text-slate-400">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Phân bổ trạng thái đơn hàng -->
+        <div class="lg:col-span-5 bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 flex flex-col justify-between">
+            <div>
+                <h4 class="font-black text-slate-800 text-sm sm:text-base mb-3 flex items-center gap-2">
+                    <i class="fas fa-clipboard-list text-indigo-600"></i> Tình Trạng Đơn Hàng Trong Kỳ
+                </h4>
+                <div id="order-status-list" class="space-y-2.5">
+                    <div class="text-center py-6 text-slate-400 text-xs">Đang tải trạng thái...</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     window.modDash = {
         currentPeriod: 'month',
+        chartRev: null,
+        chartTop: null,
+
+        destroyCharts: () => {
+            if (window.modDash.chartRev) {
+                window.modDash.chartRev.destroy();
+                window.modDash.chartRev = null;
+            }
+            if (window.modDash.chartTop) {
+                window.modDash.chartTop.destroy();
+                window.modDash.chartTop = null;
+            }
+        },
         
         load: async (period = 'month') => {
             window.modDash.currentPeriod = period;
             
             // UI Button Active State Update
             document.querySelectorAll('.dash-filter').forEach(btn => {
-                btn.className = 'dash-filter px-4 py-2 rounded-md font-bold text-sm text-slate-500 hover:text-slate-800 transition';
+                btn.className = 'dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap';
             });
             const activeBtn = document.getElementById('btn-filter-' + period);
-            if(activeBtn) activeBtn.className = 'dash-filter px-4 py-2 rounded-md font-bold text-sm bg-white shadow text-blue-600 border border-blue-100 transition';
+            if(activeBtn) activeBtn.className = 'dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-white shadow-xs text-blue-600 border border-blue-100 transition text-center whitespace-nowrap';
+
+            // Cập nhật Badge chu kỳ
+            const badgeEl = document.getElementById('chart-period-badge');
+            if (badgeEl) {
+                const periodNames = { day: 'Hôm nay', week: 'Tuần này', month: 'Tháng này', year: 'Năm nay' };
+                badgeEl.innerText = periodNames[period] || 'Tháng này';
+            }
 
             // Fetch Data
             try {
@@ -91,23 +186,296 @@
                 
                 if (data.success) {
                     const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+                    const rev = data.data.revenue || 0;
+                    const prof = data.data.profit || 0;
                     
-                    document.getElementById('d-revenue').innerText = fmt(data.data.revenue) + ' đ';
+                    document.getElementById('d-revenue').innerText = fmt(rev) + ' đ';
+                    if (document.getElementById('d-orders-count')) {
+                        document.getElementById('d-orders-count').innerText = data.data.completedOrdersCount || 0;
+                    }
                     
                     const profitEl = document.getElementById('d-profit');
-                    profitEl.innerText = fmt(data.data.profit) + ' đ';
+                    profitEl.innerText = fmt(prof) + ' đ';
                     // Đổi màu nếu lỗ
-                    if(data.data.profit < 0) profitEl.classList.replace('text-white', 'text-red-300');
+                    if(prof < 0) profitEl.classList.replace('text-white', 'text-red-300');
                     else profitEl.classList.replace('text-red-300', 'text-white');
+
+                    // Tỷ suất lợi nhuận
+                    const marginEl = document.getElementById('d-margin');
+                    if (marginEl) {
+                        const margin = rev > 0 ? ((prof / rev) * 100).toFixed(1) : 0;
+                        marginEl.innerText = margin + '%';
+                    }
 
                     document.getElementById('d-inventory').innerText = fmt(data.data.inventoryValue) + ' đ';
                     if(document.getElementById('d-inv-qty')) document.getElementById('d-inv-qty').innerText = fmt(data.data.inventoryQty) + ' thiết bị có sẵn';
                     document.getElementById('d-thu').innerText = fmt(data.data.thu) + ' đ';
                     document.getElementById('d-chi').innerText = fmt(data.data.chi) + ' đ';
+
+                    // VẼ 2 BIỂU ĐỒ
+                    window.modDash.renderRevenueProfitChart(data.data.timeline);
+                    window.modDash.renderTopProductsChart(data.data.topProducts, rev);
+                    window.modDash.renderTopProductsTable(data.data.topProducts, rev);
+                    window.modDash.renderOrderStatusList(data.data.orderStatuses);
                 }
             } catch (e) {
                 console.error("Lỗi lấy báo cáo:", e);
             }
+        },
+
+        renderRevenueProfitChart: (timeline) => {
+            const ctx = document.getElementById('chart-rev-profit');
+            if (!ctx) return;
+
+            if (window.modDash.chartRev) {
+                window.modDash.chartRev.destroy();
+                window.modDash.chartRev = null;
+            }
+
+            const labels = timeline?.labels || [];
+            const revenueData = timeline?.revenue || [];
+            const profitData = timeline?.profit || [];
+
+            const fmtVND = (v) => {
+                if (v >= 1e9) return (v / 1e9).toFixed(1) + ' Tỷ';
+                if (v >= 1e6) return (v / 1e6).toFixed(0) + ' Tr';
+                if (v >= 1e3) return (v / 1e3).toFixed(0) + ' k';
+                return v + ' đ';
+            };
+
+            window.modDash.chartRev = new Chart(ctx, {
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'Doanh Thu',
+                            data: revenueData,
+                            backgroundColor: 'rgba(37, 99, 235, 0.85)',
+                            hoverBackgroundColor: '#1d4ed8',
+                            borderRadius: 6,
+                            barPercentage: labels.length > 15 ? 0.8 : 0.5,
+                            order: 2
+                        },
+                        {
+                            type: 'line',
+                            label: 'Lợi Nhuận Gộp',
+                            data: profitData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: labels.length > 20 ? 2 : 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#10b981',
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                boxWidth: 12,
+                                usePointStyle: true,
+                                font: { size: 12, weight: 'bold' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { size: 12, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    return ` ${context.dataset.label}: ${new Intl.NumberFormat('vi-VN').format(val)} đ`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 11, weight: '600' },
+                                color: '#64748b',
+                                maxRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                font: { size: 11 },
+                                color: '#94a3b8',
+                                callback: (v) => fmtVND(v)
+                            }
+                        }
+                    }
+                }
+            });
+        },
+
+        renderTopProductsChart: (topProducts, totalRevenue) => {
+            const ctx = document.getElementById('chart-top-products');
+            const emptyEl = document.getElementById('chart-top-empty');
+            const legendEl = document.getElementById('top-products-quick-legend');
+            if (!ctx) return;
+
+            if (window.modDash.chartTop) {
+                window.modDash.chartTop.destroy();
+                window.modDash.chartTop = null;
+            }
+
+            if (!topProducts || topProducts.length === 0 || totalRevenue === 0) {
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                if (legendEl) legendEl.innerHTML = '';
+                return;
+            }
+
+            if (emptyEl) emptyEl.classList.add('hidden');
+
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+            const labels = topProducts.map(p => p.product_name);
+            const dataValues = topProducts.map(p => p.total_revenue);
+
+            window.modDash.chartTop = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    const pct = totalRevenue > 0 ? ((val / totalRevenue) * 100).toFixed(1) : 0;
+                                    return ` ${new Intl.NumberFormat('vi-VN').format(val)} đ (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '68%'
+                }
+            });
+
+            // Render mini legend bên dưới Doughnut
+            if (legendEl) {
+                const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+                legendEl.innerHTML = topProducts.map((p, idx) => {
+                    const color = colors[idx % colors.length];
+                    const pct = totalRevenue > 0 ? ((p.total_revenue / totalRevenue) * 100).toFixed(1) : 0;
+                    return `
+                        <div class="flex items-center justify-between text-[11px]">
+                            <div class="flex items-center gap-1.5 truncate max-w-[70%]">
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${color}"></span>
+                                <span class="truncate font-medium text-slate-700" title="${p.product_name}">${p.product_name}</span>
+                            </div>
+                            <span class="font-bold text-slate-900 shrink-0">${pct}%</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        },
+
+        renderTopProductsTable: (topProducts, totalRevenue) => {
+            const tbody = document.getElementById('table-top-products');
+            if (!tbody) return;
+
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+            if (!topProducts || topProducts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 font-medium">Chưa có giao dịch bán hàng hoàn tất trong khoảng thời gian này.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = topProducts.map((p, idx) => {
+                const pct = totalRevenue > 0 ? ((p.total_revenue / totalRevenue) * 100).toFixed(1) : 0;
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-2.5 px-2 flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full ${idx === 0 ? 'bg-amber-100 text-amber-600 font-black' : 'bg-slate-100 text-slate-500 font-bold'} flex items-center justify-center text-[10px] shrink-0">${idx + 1}</span>
+                            <span class="font-bold text-slate-800 truncate max-w-[220px] sm:max-w-xs" title="${p.product_name}">${p.product_name}</span>
+                        </td>
+                        <td class="py-2.5 px-2 text-center font-bold text-slate-600">${fmt(p.total_qty)}</td>
+                        <td class="py-2.5 px-2 text-right font-black text-blue-600">${fmt(p.total_revenue)} đ</td>
+                        <td class="py-2.5 px-2 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <div class="w-12 bg-slate-100 h-1.5 rounded-full overflow-hidden hidden sm:block">
+                                    <div class="bg-blue-600 h-full rounded-full" style="width: ${Math.min(100, pct)}%"></div>
+                                </div>
+                                <span class="font-bold text-slate-700">${pct}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        renderOrderStatusList: (statuses) => {
+            const listEl = document.getElementById('order-status-list');
+            if (!listEl) return;
+
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+            const statusConfig = {
+                'COMPLETED': { label: 'Đã hoàn tất & Giao thành công', color: 'emerald', icon: 'fa-check-circle' },
+                'SHIPPED': { label: 'Đang vận chuyển / Giao hàng', color: 'blue', icon: 'fa-truck' },
+                'SHIPPING_CMD': { label: 'Lệnh xuất kho & Đóng gói', color: 'indigo', icon: 'fa-box' },
+                'PACKED': { label: 'Đã đóng gói chờ xuất', color: 'cyan', icon: 'fa-boxes' },
+                'APPROVED': { label: 'Đã duyệt chờ xử lý', color: 'teal', icon: 'fa-clipboard-check' },
+                'PENDING': { label: 'Chờ xử lý / Đơn mới tạo', color: 'amber', icon: 'fa-clock' },
+                'RETURNED': { label: 'Đơn hàng trả về / Hoàn', color: 'rose', icon: 'fa-undo' },
+                'CANCELLED': { label: 'Đã hủy đơn', color: 'red', icon: 'fa-times-circle' }
+            };
+
+            if (!statuses || statuses.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs font-medium">Không có đơn hàng nào trong khoảng thời gian này.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = statuses.map(s => {
+                const conf = statusConfig[s.status] || { label: s.status, color: 'slate', icon: 'fa-circle' };
+                return `
+                    <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-8 h-8 rounded-lg bg-${conf.color}-50 text-${conf.color}-600 flex items-center justify-center text-xs shrink-0 border border-${conf.color}-100">
+                                <i class="fas ${conf.icon}"></i>
+                            </span>
+                            <div>
+                                <p class="font-bold text-xs text-slate-800">${conf.label}</p>
+                                <p class="text-[10px] text-slate-400">${s.count} đơn hàng</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-black text-xs text-slate-900">${fmt(s.total_amount)} đ</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
     };
     

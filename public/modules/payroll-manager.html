@@ -1,0 +1,489 @@
+<div class="h-full flex flex-col space-y-4 sm:space-y-6 font-sans relative pb-10">
+    <!-- HEADER & THANH CÔNG CỤ -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shrink-0">
+                    <i class="fas fa-file-invoice-dollar text-xl"></i>
+                </span>
+                <div>
+                    <h2 class="text-lg sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+                        BẢNG LƯƠNG & CHẤM CÔNG THÁNG
+                        <span class="text-[10px] bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wide">Payroll Hub</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Tự động tổng hợp ngày công, lương cơ bản, hoa hồng bán hàng, trích đóng bảo hiểm (23.5% DN / 10.5% NLĐ) và hạch toán Sổ Quỹ.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-auto flex flex-wrap items-center justify-between lg:justify-end gap-2">
+            <!-- Chọn kỳ lương -->
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                <span class="text-[11px] font-bold text-slate-500 px-2"><i class="fas fa-calendar-alt text-emerald-600 mr-1"></i> Kỳ Lương:</span>
+                <input type="month" id="payroll-period-picker" onchange="window.modPayroll.changePeriod()" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-black text-slate-800 outline-none focus:border-emerald-500">
+            </div>
+
+            <button onclick="window.modPayroll.generatePayroll()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-xs flex items-center gap-1.5">
+                <i class="fas fa-magic"></i> <span>Tính Lại Lương</span>
+            </button>
+
+            <button onclick="window.modPayroll.approvePayroll()" id="btn-approve-payroll" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-2 px-3.5 rounded-xl text-xs transition shadow-md flex items-center gap-1.5 uppercase tracking-wide">
+                <i class="fas fa-check-double"></i> <span>Duyệt Chi Sổ Quỹ</span>
+            </button>
+
+            <button onclick="window.modPayroll.exportExcel()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-xs flex items-center gap-1.5" title="Xuất file Excel">
+                <i class="fas fa-file-excel text-emerald-400"></i> <span>Xuất Excel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- THẺ TỔNG HỢP QUỸ LƯƠNG & BẢO HIỂM -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng Thu Nhập (Gross)</p>
+                <h3 class="text-lg sm:text-xl font-black text-slate-800 truncate" id="pay-stat-gross">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hoa Hồng Đã Kéo</p>
+                <h3 class="text-lg sm:text-xl font-black text-amber-600 truncate" id="pay-stat-comm">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Chi Phí BHXH (DN 23.5%)</p>
+                <h3 class="text-lg sm:text-xl font-black text-purple-600 truncate" id="pay-stat-ins-comp">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-emerald-200 bg-emerald-50/40 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-lg font-black shrink-0 shadow-sm">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Thực Lĩnh Chi Trả (Net)</p>
+                <h3 class="text-lg sm:text-xl font-black text-emerald-700 truncate" id="pay-stat-net">0 đ</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG CHI TIẾT BẢNG LƯƠNG TỪNG NHÂN VIÊN -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col overflow-hidden">
+        <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-black uppercase tracking-wider text-slate-700">Chi Tiết Phiếu Lương Nhân Viên</span>
+                <span id="pay-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase">DRAFT</span>
+            </div>
+            <p class="text-xs text-slate-400 font-medium hidden sm:block">Chuẩn công: <b>26 ngày</b> | Giờ làm việc: 8h/ngày</p>
+        </div>
+
+        <div class="flex-1 overflow-x-auto overflow-y-auto">
+            <table class="w-full text-left whitespace-nowrap" id="payroll-table">
+                <thead class="bg-slate-100/80 text-slate-600 text-[10px] uppercase font-black tracking-wider border-b border-slate-200 sticky top-0 z-10">
+                    <tr>
+                        <th class="p-3 pl-4">Mã NV</th>
+                        <th class="p-3">Họ Tên & Chức Vụ</th>
+                        <th class="p-3 text-center">Ngày Công</th>
+                        <th class="p-3 text-right">Lương Cơ Bản</th>
+                        <th class="p-3 text-right">Lương Theo Công</th>
+                        <th class="p-3 text-right">Phụ Cấp</th>
+                        <th class="p-3 text-right">Hoa Hồng</th>
+                        <th class="p-3 text-right">Thưởng / Phạt</th>
+                        <th class="p-3 text-right text-blue-700">Tổng Gross</th>
+                        <th class="p-3 text-right text-purple-700">Trừ BH (10.5%)</th>
+                        <th class="p-3 text-right text-amber-700">Tạm Ứng</th>
+                        <th class="p-3 text-right text-emerald-700 font-black">Thực Lĩnh (Net)</th>
+                        <th class="p-3 text-right text-slate-400">BH Công Ty (23.5%)</th>
+                        <th class="p-3 text-center pr-4">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="payroll-tbody" class="divide-y divide-slate-100 text-xs">
+                    <tr>
+                        <td colspan="14" class="p-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Đang nạp dữ liệu bảng lương...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL SỬA PHIẾU LƯƠNG NHÂN VIÊN -->
+    <div id="payslip-edit-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all border border-slate-200">
+            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-edit text-emerald-400"></i>
+                    <h3 class="font-black text-sm uppercase tracking-wide" id="payslip-modal-title">Chỉnh Sửa Phiếu Lương</h3>
+                </div>
+                <button onclick="window.modPayroll.closeEditModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5 space-y-3 max-h-[70vh] overflow-y-auto">
+                <input type="hidden" id="edit-item-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày công thực tế</label>
+                        <input type="number" step="0.5" id="edit-actual-days" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-black text-blue-600 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Nghỉ phép có lương</label>
+                        <input type="number" step="0.5" id="edit-paid-leave" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-medium focus:border-blue-500 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">PC Ăn Trưa</label>
+                        <input type="number" id="edit-meal" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">PC Xăng/ĐT</label>
+                        <input type="number" id="edit-phone" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">PC Trách Nhiệm</label>
+                        <input type="number" id="edit-resp" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Thưởng KPI / Hiệu quả (VNĐ)</label>
+                        <input type="number" id="edit-bonus" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-emerald-600 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tạm ứng trong tháng (VNĐ)</label>
+                        <input type="number" id="edit-advance" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-amber-600 focus:border-amber-500 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Khấu trừ phạt (VNĐ)</label>
+                        <input type="number" id="edit-penalty" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-rose-600 focus:border-rose-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Thuế TNCN tạm tính (VNĐ)</label>
+                        <input type="number" id="edit-tax" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-medium focus:border-blue-500 outline-none">
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end items-center gap-2">
+                <button onclick="window.modPayroll.closeEditModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Hủy</button>
+                <button onclick="window.modPayroll.saveItem()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase">Lưu Cập Nhật</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IN PHIẾU LƯƠNG CÁ NHÂN (PAYSLIP) -->
+    <div id="payslip-view-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200" id="payslip-print-content">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-5 text-white flex justify-between items-start">
+                <div>
+                    <h3 class="font-black text-base uppercase tracking-wider">PHIẾU LƯƠNG NHÂN VIÊN</h3>
+                    <p class="text-xs text-emerald-100 mt-0.5" id="ps-period">Kỳ lương: ...</p>
+                </div>
+                <button onclick="window.modPayroll.closeViewModal()" class="text-emerald-100 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4 text-xs" id="ps-body">
+                <!-- Dynamic Payslip details -->
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-between items-center">
+                <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs"><i class="fas fa-print mr-1.5"></i> In Phiếu Lương</button>
+                <button onclick="window.modPayroll.closeViewModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modPayroll = {
+    currentPeriod: new Date().toISOString().slice(0, 7), // 'YYYY-MM'
+    payrollData: null,
+    items: [],
+
+    init: () => {
+        document.getElementById('payroll-period-picker').value = window.modPayroll.currentPeriod;
+        window.modPayroll.load();
+    },
+
+    changePeriod: () => {
+        window.modPayroll.currentPeriod = document.getElementById('payroll-period-picker').value;
+        window.modPayroll.load();
+    },
+
+    load: async () => {
+        const period = window.modPayroll.currentPeriod;
+        const tbody = document.getElementById('payroll-tbody');
+        tbody.innerHTML = '<tr><td colspan="14" class="p-8 text-center"><i class="fas fa-spinner fa-spin text-2xl text-slate-400"></i></td></tr>';
+
+        try {
+            const res = await fetch(`/api/payroll/${period}`);
+            const data = await res.json();
+
+            if (data.success && data.exists && data.data) {
+                window.modPayroll.payrollData = data.data;
+                window.modPayroll.items = data.items;
+
+                const p = data.data;
+                document.getElementById('pay-stat-gross').innerText = (parseFloat(p.total_gross_salary) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('pay-stat-comm').innerText = (parseFloat(p.total_commission) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('pay-stat-ins-comp').innerText = (parseFloat(p.total_insurance_comp) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('pay-stat-net').innerText = (parseFloat(p.total_net_salary) || 0).toLocaleString('vi-VN') + ' đ';
+
+                const badge = document.getElementById('pay-status-badge');
+                if (p.status === 'PAID') {
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase';
+                    badge.innerText = 'ĐÃ DUYỆT CHI & HẠCH TOÁN';
+                    document.getElementById('btn-approve-payroll').classList.add('opacity-50', 'pointer-events-none');
+                } else {
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 uppercase';
+                    badge.innerText = 'DỰ THẢO (DRAFT)';
+                    document.getElementById('btn-approve-payroll').classList.remove('opacity-50', 'pointer-events-none');
+                }
+
+                window.modPayroll.renderItems();
+            } else {
+                // Chưa có bảng lương cho tháng này -> hiển thị nút tạo
+                document.getElementById('pay-stat-gross').innerText = '0 đ';
+                document.getElementById('pay-stat-comm').innerText = '0 đ';
+                document.getElementById('pay-stat-ins-comp').innerText = '0 đ';
+                document.getElementById('pay-stat-net').innerText = '0 đ';
+                document.getElementById('pay-status-badge').innerText = 'CHƯA KHỞI TẠO';
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="14" class="p-12 text-center">
+                            <div class="max-w-sm mx-auto space-y-3">
+                                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 mx-auto flex items-center justify-center text-xl"><i class="fas fa-calendar-plus"></i></div>
+                                <h4 class="font-black text-slate-800">Chưa Khởi Tạo Bảng Lương Tháng ${period}</h4>
+                                <p class="text-xs text-slate-500">Bấm nút bên dưới để hệ thống tự động tính ngày công, lương cơ bản và kéo hoa hồng bán hàng của tháng.</p>
+                                <button onclick="window.modPayroll.generatePayroll()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-2.5 px-5 rounded-xl text-xs transition shadow-md uppercase">
+                                    <i class="fas fa-magic mr-1.5"></i> Khởi Tạo Bảng Lương Tháng ${period}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        } catch (err) {
+            console.error('Lỗi tải bảng lương:', err);
+        }
+    },
+
+    renderItems: () => {
+        const tbody = document.getElementById('payroll-tbody');
+        if (window.modPayroll.items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="14" class="p-8 text-center text-slate-400">Chưa có nhân viên nào trong bảng lương</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = window.modPayroll.items.map(item => {
+            const allowances = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
+            const bonusPenalty = (parseFloat(item.bonus_amount) || 0) - (parseFloat(item.deduction_penalty) || 0);
+
+            return `
+                <tr class="hover:bg-emerald-50/30 transition border-b border-slate-100">
+                    <td class="p-3 pl-4 font-black text-amber-600 font-mono">${item.emp_code}</td>
+                    <td class="p-3">
+                        <div class="font-bold text-slate-800">${item.full_name}</div>
+                        <div class="text-[10px] text-slate-400">${item.position || 'Nhân viên'}</div>
+                    </td>
+                    <td class="p-3 text-center font-bold text-blue-600">${item.actual_working_days}/26</td>
+                    <td class="p-3 text-right font-medium text-slate-600">${(parseFloat(item.base_salary) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right font-bold text-slate-800">${(parseFloat(item.salary_by_days) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right text-slate-600">${allowances.toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right font-black text-amber-600">${(parseFloat(item.total_commission) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right font-medium ${bonusPenalty >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${bonusPenalty >= 0 ? '+' : ''}${bonusPenalty.toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right font-black text-blue-700">${(parseFloat(item.gross_income) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right font-bold text-purple-600">-${(parseFloat(item.total_ins_emp) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right font-medium text-amber-600">-${(parseFloat(item.advance_amount) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right font-black text-emerald-700 text-sm bg-emerald-50/40">${(parseFloat(item.net_salary) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right font-medium text-slate-400">${(parseFloat(item.total_ins_comp) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-center pr-4">
+                        <button onclick="window.modPayroll.openEditModal(${item.id})" class="text-blue-600 hover:text-blue-800 font-bold text-xs p-1 rounded hover:bg-blue-50 mr-1" title="Sửa công / thưởng">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="window.modPayroll.viewPayslip(${item.id})" class="text-emerald-600 hover:text-emerald-800 font-bold text-xs p-1 rounded hover:bg-emerald-50" title="Xem phiếu lương">
+                            <i class="fas fa-receipt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    generatePayroll: async () => {
+        const period = window.modPayroll.currentPeriod;
+        try {
+            const res = await fetch('/api/payroll/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ period_key: period, standard_working_days: 26 })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.modPayroll.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    openEditModal: (id) => {
+        const item = window.modPayroll.items.find(i => i.id === id);
+        if (!item) return;
+
+        document.getElementById('edit-item-id').value = item.id;
+        document.getElementById('payslip-modal-title').innerText = `Chỉnh sửa lương: ${item.full_name} (${item.emp_code})`;
+        document.getElementById('edit-actual-days').value = item.actual_working_days || 26;
+        document.getElementById('edit-paid-leave').value = item.paid_leave_days || 0;
+        document.getElementById('edit-meal').value = item.allowance_meal || 0;
+        document.getElementById('edit-phone').value = item.allowance_phone_gas || 0;
+        document.getElementById('edit-resp').value = item.allowance_responsibility || 0;
+        document.getElementById('edit-bonus').value = item.bonus_amount || 0;
+        document.getElementById('edit-advance').value = item.advance_amount || 0;
+        document.getElementById('edit-penalty').value = item.deduction_penalty || 0;
+        document.getElementById('edit-tax').value = item.personal_tax || 0;
+
+        const m = document.getElementById('payslip-edit-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    closeEditModal: () => {
+        const m = document.getElementById('payslip-edit-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    },
+
+    saveItem: async () => {
+        const id = document.getElementById('edit-item-id').value;
+        const payload = {
+            actual_working_days: parseFloat(document.getElementById('edit-actual-days').value) || 0,
+            paid_leave_days: parseFloat(document.getElementById('edit-paid-leave').value) || 0,
+            allowance_meal: parseFloat(document.getElementById('edit-meal').value) || 0,
+            allowance_phone_gas: parseFloat(document.getElementById('edit-phone').value) || 0,
+            allowance_responsibility: parseFloat(document.getElementById('edit-resp').value) || 0,
+            bonus_amount: parseFloat(document.getElementById('edit-bonus').value) || 0,
+            advance_amount: parseFloat(document.getElementById('edit-advance').value) || 0,
+            deduction_penalty: parseFloat(document.getElementById('edit-penalty').value) || 0,
+            personal_tax: parseFloat(document.getElementById('edit-tax').value) || 0
+        };
+
+        try {
+            const res = await fetch(`/api/payroll/item/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.modPayroll.closeEditModal();
+                window.modPayroll.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    approvePayroll: async () => {
+        const period = window.modPayroll.currentPeriod;
+        if (!confirm(`XÁC NHẬN DUYỆT CHI BẢNG LƯƠNG THÁNG ${period}?\n\nHệ thống sẽ tự động hạch toán Phiếu Chi vào Sổ Quỹ và Báo cáo Chi phí Doanh nghiệp!`)) return;
+
+        try {
+            const res = await fetch(`/api/payroll/${period}/approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ approved_by: 'BAN_GIAM_DOC' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.modPayroll.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    viewPayslip: (id) => {
+        const item = window.modPayroll.items.find(i => i.id === id);
+        if (!item) return;
+
+        document.getElementById('ps-period').innerText = `Kỳ Lương Tháng ${window.modPayroll.currentPeriod}`;
+        const totalAllowance = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
+
+        document.getElementById('ps-body').innerHTML = `
+            <div class="border-b border-slate-100 pb-3">
+                <p class="text-sm font-black text-slate-800">${item.full_name} <span class="text-amber-600 font-mono text-xs">(${item.emp_code})</span></p>
+                <p class="text-slate-500 font-medium">${item.position || 'Nhân viên'} | ${item.dept_name || 'Phòng ban'}</p>
+                <p class="text-[11px] text-slate-400 mt-1">TK Ngân hàng: <b>${item.bank_account_no || 'Chưa có'}</b> - ${item.bank_name || ''}</p>
+            </div>
+
+            <div class="space-y-1.5">
+                <div class="flex justify-between font-bold text-slate-600"><span>1. Lương cơ bản:</span><span>${(parseFloat(item.base_salary) || 0).toLocaleString('vi-VN')} đ</span></div>
+                <div class="flex justify-between text-slate-600"><span>2. Ngày công làm việc:</span><span>${item.actual_working_days} / 26 ngày</span></div>
+                <div class="flex justify-between font-bold text-slate-700"><span>3. Lương theo ngày công:</span><span>${(parseFloat(item.salary_by_days) || 0).toLocaleString('vi-VN')} đ</span></div>
+                <div class="flex justify-between text-slate-600"><span>4. Phụ cấp (Ăn trưa, Xăng xe, Trách nhiệm):</span><span>${totalAllowance.toLocaleString('vi-VN')} đ</span></div>
+                <div class="flex justify-between font-black text-amber-600"><span>5. Hoa hồng bán hàng & dự án (Đạt ngưỡng):</span><span>+${(parseFloat(item.total_commission) || 0).toLocaleString('vi-VN')} đ</span></div>
+                <div class="flex justify-between text-emerald-600 font-bold"><span>6. Thưởng KPI Thu Nợ & Hiệu Quả:</span><span>+${(parseFloat(item.bonus_amount) || 0).toLocaleString('vi-VN')} đ</span></div>
+                <div class="flex justify-between font-black text-blue-700 pt-1.5 border-t border-slate-100 text-sm"><span>TỔNG THU NHẬP (GROSS):</span><span>${(parseFloat(item.gross_income) || 0).toLocaleString('vi-VN')} đ</span></div>
+            </div>
+
+            <div class="space-y-1.5 pt-2 border-t border-slate-100 text-rose-600">
+                <div class="flex justify-between"><span>Trừ BHXH (8%):</span><span>-${(parseFloat(item.ins_bhxh_emp) || 0).toLocaleString('vi-VN')} đ</span></div>
+                <div class="flex justify-between"><span>Trừ BHYT (1.5%):</span><span>-${(parseFloat(item.ins_bhyt_emp) || 0).toLocaleString('vi-VN')} đ</span></div>
+                <div class="flex justify-between"><span>Trừ BHTN (1%):</span><span>-${(parseFloat(item.ins_bhtn_emp) || 0).toLocaleString('vi-VN')} đ</span></div>
+                ${parseFloat(item.deduction_penalty) > 0 ? `<div class="flex justify-between font-bold"><span>Phạt KPI Thu nợ / Vi phạm:</span><span>-${(parseFloat(item.deduction_penalty) || 0).toLocaleString('vi-VN')} đ</span></div>` : ''}
+                <div class="flex justify-between"><span>Tạm ứng lương:</span><span>-${(parseFloat(item.advance_amount) || 0).toLocaleString('vi-VN')} đ</span></div>
+            </div>
+
+            <div class="pt-3 border-t-2 border-emerald-500 flex justify-between items-center text-emerald-800 font-black text-base bg-emerald-50/60 p-3 rounded-xl">
+                <span>THỰC LĨNH CHUYỂN KHOẢN (NET):</span>
+                <span class="text-lg">${(parseFloat(item.net_salary) || 0).toLocaleString('vi-VN')} đ</span>
+            </div>
+        `;
+
+        const m = document.getElementById('payslip-view-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    closeViewModal: () => {
+        const m = document.getElementById('payslip-view-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    },
+
+    exportExcel: () => {
+        if (typeof XLSX === 'undefined') {
+            alert('Thư viện Excel đang được tải, vui lòng thử lại!');
+            return;
+        }
+        const table = document.getElementById('payroll-table');
+        const wb = XLSX.utils.table_to_book(table, { sheet: "BangLuong" });
+        XLSX.writeFile(wb, `BangLuong_SUNGO_${window.modPayroll.currentPeriod}.xlsx`);
+    }
+};
+
+window.modPayroll.init();
+</script>

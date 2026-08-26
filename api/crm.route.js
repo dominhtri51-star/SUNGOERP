@@ -13,7 +13,10 @@ router.get('/search', async (req, res) => {
                    COALESCE(NULLIF(full_name, ''), name, 'Khách Lẻ') as full_name, 
                    phone, address, customer_code, nickname, 
                    vat_company, vat_taxcode, vat_address, vat_email, 
-                   reward_points, COALESCE(current_debt, 0) as current_debt, total_sales, 
+                   reward_points, 
+                   COALESCE((SELECT SUM(total_amount - paid_amount) FROM orders WHERE customer_id = customers.id AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as current_debt,
+                   COALESCE((SELECT SUM(total_amount) FROM orders WHERE customer_id = customers.id AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as total_sales,
+                   COALESCE(debt_limit, 0) as debt_limit,
                    COALESCE(tier, vip_level, 1) as customer_tier,
                    COALESCE(tier, vip_level, 1) as vip_level,
                    COALESCE(tier, vip_level, 1) as tier
@@ -28,21 +31,39 @@ router.get('/search', async (req, res) => {
     }
 });
 
-// LẤY TẤT CẢ KHÁCH HÀNG
+// LẤY TẤT CẢ KHÁCH HÀNG (KÈM CHỈ SỐ QUÀ TẶNG & TRI ÂN & HẠN MỨC NỢ)
 router.get('/', async (req, res) => {
     try {
         const { rows } = await pool.query(`
-            SELECT id, 
-                   COALESCE(NULLIF(name, ''), full_name, 'Khách Lẻ') as name, 
-                   COALESCE(NULLIF(full_name, ''), name, 'Khách Lẻ') as full_name, 
-                   phone, address, customer_code, nickname, 
-                   vat_company, vat_taxcode, vat_address, vat_email, 
-                   reward_points, COALESCE(current_debt, 0) as current_debt, total_sales, 
-                   COALESCE(tier, vip_level, 1) as customer_tier,
-                   COALESCE(tier, vip_level, 1) as vip_level,
-                   COALESCE(tier, vip_level, 1) as tier
-            FROM customers 
-            ORDER BY id DESC
+            SELECT c.id, 
+                   COALESCE(NULLIF(c.name, ''), c.full_name, 'Khách Lẻ') as name, 
+                   COALESCE(NULLIF(c.full_name, ''), c.name, 'Khách Lẻ') as full_name, 
+                   c.phone, c.address, c.customer_code, c.nickname, 
+                   c.vat_company, c.vat_taxcode, c.vat_address, c.vat_email, 
+                   c.reward_points, 
+                   COALESCE((SELECT SUM(total_amount - paid_amount) FROM orders WHERE customer_id = c.id AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as current_debt,
+                   COALESCE((SELECT SUM(total_amount) FROM orders WHERE customer_id = c.id AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as total_sales,
+                   COALESCE(c.debt_limit, 0) as debt_limit,
+                   COALESCE(c.tier, c.vip_level, 1) as customer_tier,
+                   COALESCE(c.tier, c.vip_level, 1) as vip_level,
+                   COALESCE(c.tier, c.vip_level, 1) as tier,
+                   COALESCE(g.total_gifts_count, 0)::int as total_gifts_count,
+                   COALESCE(g.total_gifts_value, 0)::numeric as total_gifts_value,
+                   g.last_gift_date,
+                   g.last_gift_name,
+                   g.last_gift_occasion
+            FROM customers c
+            LEFT JOIN (
+                SELECT customer_id,
+                       COUNT(id) as total_gifts_count,
+                       SUM(COALESCE(gift_value, 0)) as total_gifts_value,
+                       MAX(gift_date) as last_gift_date,
+                       (ARRAY_AGG(gift_name ORDER BY gift_date DESC, id DESC))[1] as last_gift_name,
+                       (ARRAY_AGG(COALESCE(occasion, 'Tri ân') ORDER BY gift_date DESC, id DESC))[1] as last_gift_occasion
+                FROM customer_gifts
+                GROUP BY customer_id
+            ) g ON c.id = g.customer_id
+            ORDER BY c.id DESC
         `);
         res.json({ success: true, data: rows });
     } catch (e) {

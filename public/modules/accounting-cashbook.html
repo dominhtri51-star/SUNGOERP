@@ -1,0 +1,614 @@
+<div class="h-full flex flex-col space-y-4 font-sans">
+    
+    <!-- HEADER & ACTION BAR -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-yellow-500 flex items-center justify-center text-slate-950 shadow-md shadow-amber-500/20 shrink-0 font-black">
+                <i class="fas fa-book-journal-whills text-xl"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2">
+                        SỔ QUỸ TIỀN MẶT & QUẢN TRỊ CHI PHÍ (CASHBOOK)
+                    </h2>
+                    <span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full border border-amber-200 uppercase">Dòng Tiền & Chi Phí Quản Trị</span>
+                </div>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Theo dõi dòng tiền thu - chi thực tế • Phân loại 4 trạng thái thuế • Kiểm soát chi phí trôi nổi không hóa đơn (Chỉ tiêu B4).</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="window.modCashbook.openModal('THU')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-arrow-down"></i> <span>Lập Phiếu Thu</span>
+            </button>
+            <button onclick="window.modCashbook.openModal('CHI')" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-arrow-up"></i> <span>Lập Phiếu Chi Nâng Cao</span>
+            </button>
+            <button onclick="window.modCashbook.exportExcel()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-file-excel"></i> <span>Xuất Sổ Quỹ Excel</span>
+            </button>
+            <button onclick="window.modCashbook.loadData()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-sync-alt"></i> <span>Làm Mới</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- RADAR KPI CARDS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
+        <!-- 1. TỔNG TỒN QUỸ -->
+        <div class="bg-white p-3.5 rounded-xl border border-amber-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 font-black shrink-0">
+                <i class="fas fa-vault text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-amber-800 tracking-wider">Tổng Tồn Quỹ Hiện Tại</p>
+                <h4 class="text-lg md:text-xl font-black text-amber-700 truncate" id="cb-total-cash">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold" id="cb-cash-breakdown">TM: 0 đ | NH: 0 đ</p>
+            </div>
+        </div>
+
+        <!-- 2. TỔNG ĐÃ THU VÀO -->
+        <div class="bg-white p-3.5 rounded-xl border border-emerald-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-black shrink-0">
+                <i class="fas fa-hand-holding-dollar text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-emerald-700 tracking-wider">Tổng Đã Thu Vào</p>
+                <h4 class="text-lg md:text-xl font-black text-emerald-700 truncate" id="cb-total-thu">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold">Bán hàng & Thu khác</p>
+            </div>
+        </div>
+
+        <!-- 3. TỔNG ĐÃ CHI RA (PHÂN TÁCH THUẾ) -->
+        <div class="bg-white p-3.5 rounded-xl border border-rose-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 font-black shrink-0">
+                <i class="fas fa-receipt text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-rose-700 tracking-wider">Tổng Đã Chi Ra</p>
+                <h4 class="text-lg md:text-xl font-black text-rose-600 truncate" id="cb-total-chi">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate" id="cb-tax-breakdown">Có HĐ: 0 đ | K.HĐ: 0 đ</p>
+            </div>
+        </div>
+
+        <!-- 4. CHI PHÍ TRỌNG YẾU KHÔNG HÓA ĐƠN -->
+        <div class="bg-white p-3.5 rounded-xl border border-purple-200 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 font-black shrink-0">
+                <i class="fas fa-triangle-exclamation text-lg"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[10px] font-black uppercase text-purple-700 tracking-wider">Chi Phí Nội Bộ (Chỉ Tiêu B4)</p>
+                <h4 class="text-lg md:text-xl font-black text-purple-700 truncate" id="cb-total-b4">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate">Giao hàng, kho, thời vụ, vay vốn</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER TABS -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+        
+        <!-- TABS HEADER -->
+        <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-3 pt-2 gap-1.5">
+            <button onclick="window.modCashbook.switchTab('ALL_TX')" id="cb-tab-btn-ALL_TX" class="px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-amber-600 text-amber-800 rounded-t-lg shadow-sm transition flex items-center gap-1.5">
+                <i class="fas fa-list text-amber-600"></i> 1. Nhật Ký Sổ Quỹ Thu / Chi (Cashbook)
+            </button>
+            <button onclick="window.modCashbook.switchTab('NON_INVOICE')" id="cb-tab-btn-NON_INVOICE" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-triangle-exclamation text-rose-600"></i> 2. Bảng Kê Chi Phí Không Hóa Đơn (Kiểm Soát Lãi/Lỗ Thực & B4)
+            </button>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 1: SỔ QUỸ TẤT CẢ GIAO DỊCH THU / CHI -->
+        <!-- ========================================================= -->
+        <div id="cb-tab-content-ALL_TX" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3 overflow-hidden">
+            <!-- Filter Bar đa chiều -->
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2.5 shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="window.modCashbook.filterType('ALL')" id="cb-btn-filter-ALL" class="px-3 py-1.5 rounded-lg font-bold bg-slate-800 text-white shadow-sm transition">Tất Cả</button>
+                    <button onclick="window.modCashbook.filterType('THU')" id="cb-btn-filter-THU" class="px-3 py-1.5 rounded-lg font-bold bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 transition"><i class="fas fa-arrow-down mr-1"></i> Thu</button>
+                    <button onclick="window.modCashbook.filterType('CHI')" id="cb-btn-filter-CHI" class="px-3 py-1.5 rounded-lg font-bold bg-white text-rose-700 border border-rose-300 hover:bg-rose-50 transition"><i class="fas fa-arrow-up mr-1"></i> Chi</button>
+
+                    <!-- Lọc Danh mục chi phí -->
+                    <select id="cb-filter-cat" onchange="window.modCashbook.applyFilters()" class="border border-slate-300 bg-white px-2.5 py-1.5 rounded-lg font-bold text-slate-700 outline-none focus:border-amber-500">
+                        <option value="ALL">-- Tất Cả Danh Mục --</option>
+                        <option value="Chi phí Giao hàng & Vận chuyển">📦 Giao hàng & Logistics</option>
+                        <option value="Chi phí Thuê Mặt bằng, Kho, Văn phòng">🏢 Thuê Mặt Bằng / Kho / VP</option>
+                        <option value="Chi phí Nhân công Thời vụ / Bốc xếp">👷 Nhân Công Thời Vụ / Bốc Xếp</option>
+                        <option value="Chi phí Vay mượn Vốn Chủ sở hữu">💰 Vay Vốn Chủ Sở Hữu</option>
+                        <option value="Chi phí Tiếp khách & Đối ngoại">☕ Tiếp Khách & Đối Ngoại</option>
+                        <option value="Chi phí Marketing & Bán hàng">📢 Marketing & Bán Hàng</option>
+                        <option value="Vận hành chung">⚙️ Vận Hành Chung</option>
+                        <option value="Thu tiền hàng">💵 Thu Tiền Hàng</option>
+                    </select>
+
+                    <!-- Lọc Trạng thái Thuế -->
+                    <select id="cb-filter-tax" onchange="window.modCashbook.applyFilters()" class="border border-slate-300 bg-white px-2.5 py-1.5 rounded-lg font-bold text-slate-700 outline-none focus:border-amber-500">
+                        <option value="ALL">-- Tất Cả Trạng Thái Thuế --</option>
+                        <option value="CO_HOA_DON">🟢 Có Hóa Đơn VAT (Khấu trừ)</option>
+                        <option value="BANG_KE_01">🟣 Bảng Kê 01/TNDN (Được trừ)</option>
+                        <option value="KHOAN_VIEC_08">🟡 Khoán Việc / Cam Kết 08</option>
+                        <option value="KHONG_HOA_DON">🔴 Không HĐ (Nội Bộ / Chỉ tiêu B4)</option>
+                    </select>
+
+                    <!-- Lọc Nguồn Tiền -->
+                    <select id="cb-filter-fund" onchange="window.modCashbook.applyFilters()" class="border border-slate-300 bg-white px-2.5 py-1.5 rounded-lg font-bold text-slate-700 outline-none focus:border-amber-500">
+                        <option value="ALL">-- Tất Cả Nguồn Tiền --</option>
+                        <option value="TK_CONG_TY">🏦 Tài Khoản Công Ty</option>
+                        <option value="TIEN_MAT_QUY">💵 Quỹ Tiền Mặt</option>
+                        <option value="TAM_UNG_NV">👤 Tạm Ứng Nhân Viên</option>
+                        <option value="CHU_SO_HUU_CHI">👑 Chủ Sở Hữu Chi Hộ</option>
+                    </select>
+                </div>
+
+                <div class="w-full lg:w-auto">
+                    <input type="text" id="cb-search-input" oninput="window.modCashbook.applyFilters()" placeholder="Tìm mã phiếu, đối tượng, diễn giải..." class="border border-slate-300 bg-white p-1.5 rounded-lg text-xs font-medium outline-none focus:border-amber-500 w-full lg:w-64">
+                </div>
+            </div>
+
+            <div class="overflow-y-auto border border-slate-200 rounded-xl flex-1">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase font-bold text-[10px] shadow-sm z-10">
+                        <tr>
+                            <th class="p-3 border-b">Mã Phiếu & Ngày</th>
+                            <th class="p-3 border-b text-center">Loại & Nguồn Tiền</th>
+                            <th class="p-3 border-b">Danh Mục Khoản Chi</th>
+                            <th class="p-3 border-b text-center">Chứng Từ Thuế</th>
+                            <th class="p-3 border-b">Đối Tượng Nhận / Nộp</th>
+                            <th class="p-3 border-b text-right">Số Tiền (VNĐ)</th>
+                            <th class="p-3 border-b">Diễn Giải & Đính Kèm</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cb-table-body" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                        <tr><td colspan="7" class="p-8 text-center text-slate-400">Đang tải dữ liệu sổ quỹ...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 2: BẢNG KÊ CHI PHÍ KHÔNG HÓA ĐƠN (CHỈ TIÊU B4) -->
+        <!-- ========================================================= -->
+        <div id="cb-tab-content-NON_INVOICE" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3 overflow-hidden hidden">
+            <div class="bg-gradient-to-r from-rose-50 to-amber-50 p-3.5 rounded-xl border border-rose-200 text-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-2 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="p-2 bg-rose-600 text-white rounded-lg font-black"><i class="fas fa-shield-halved"></i></span>
+                    <div>
+                        <h4 class="font-black text-rose-950 text-xs uppercase">Bảng Kê Chi Phí Không Hóa Đơn Trôi Nổi (Quản Trị Thực Tế & Chỉ Tiêu B4)</h4>
+                        <p class="text-[11px] text-slate-600">Toàn bộ các khoản chi tiền mặt / chuyển khoản chưa có hóa đơn đỏ được gom tại đây để kiểm soát Lãi/Lỗ thực sự và phục vụ quyết toán thuế cuối năm.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-y-auto border border-slate-200 rounded-xl flex-1">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-rose-50 text-rose-900 sticky top-0 uppercase font-bold text-[10px] shadow-sm z-10 border-b border-rose-200">
+                        <tr>
+                            <th class="p-3">Mã Phiếu & Thời Gian</th>
+                            <th class="p-3">Nhóm Chi Phí</th>
+                            <th class="p-3">Người Nhận Tiền</th>
+                            <th class="p-3">Nguồn Chi</th>
+                            <th class="p-3 text-right">Số Tiền (VNĐ)</th>
+                            <th class="p-3">Bằng Chứng / Bill Lẻ Đính Kèm</th>
+                            <th class="p-3">Hướng Xử Lý Hợp Thức Hóa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cb-non-invoice-tbody" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                        <tr><td colspan="7" class="p-8 text-center text-slate-400">Đang tải danh sách chi phí không hóa đơn...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL LẬP PHIẾU THU / CHI NÂNG CAO -->
+<!-- ========================================================= -->
+<div id="cb-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200">
+        <!-- Header Modal -->
+        <div id="cb-modal-header" class="p-4 flex items-center justify-between bg-amber-600 text-slate-950 font-black">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-file-invoice-dollar text-lg"></i>
+                <h3 class="text-sm uppercase tracking-wider text-white" id="cb-modal-title">LẬP PHIẾU CHI TIỀN NÂNG CAO</h3>
+            </div>
+            <button onclick="window.modCashbook.closeModal()" class="text-white/80 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
+        </div>
+
+        <div class="p-5 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
+            <input type="hidden" id="cb-form-type" value="CHI">
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Đối Tượng Nộp / Nhận Tiền <span class="text-red-500">*</span></label>
+                <input type="text" id="cb-form-target" placeholder="Nhập tên người nhận tiền, nhà xe, chủ nhà, nhân viên..." class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-amber-500 font-bold text-slate-800 bg-white">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Danh Mục Chi Phí -->
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Danh Mục Khoản Thu/Chi <span class="text-red-500">*</span></label>
+                    <select id="cb-form-category" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none font-bold text-slate-800 bg-white">
+                        <option value="Chi phí Giao hàng & Vận chuyển">📦 Giao hàng & Logistics</option>
+                        <option value="Chi phí Thuê Mặt bằng, Kho, Văn phòng">🏢 Thuê Mặt Bằng / Kho / VP</option>
+                        <option value="Chi phí Nhân công Thời vụ / Bốc xếp">👷 Nhân công Thời vụ / Bốc xếp</option>
+                        <option value="Chi phí Vay mượn Vốn Chủ sở hữu">💰 Vay mượn Vốn Chủ sở hữu</option>
+                        <option value="Chi phí Tiếp khách & Đối ngoại">☕ Tiếp khách & Đối ngoại</option>
+                        <option value="Chi phí Marketing & Bán hàng">📢 Marketing & Bán hàng</option>
+                        <option value="Vận hành chung" selected>⚙️ Vận hành chung</option>
+                        <option value="Thu tiền hàng">💵 Thu tiền hàng</option>
+                        <option value="Thu khác">➕ Thu khác</option>
+                    </select>
+                </div>
+
+                <!-- Phân Loại Chứng Từ Thuế -->
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Phân Loại Chứng Từ Thuế <span class="text-red-500">*</span></label>
+                    <select id="cb-form-tax-status" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none font-bold text-slate-800 bg-white">
+                        <option value="CO_HOA_DON">🟢 Có Hóa Đơn VAT (Khấu trừ)</option>
+                        <option value="BANG_KE_01">🟣 Bảng Kê 01/TNDN (Được trừ)</option>
+                        <option value="KHOAN_VIEC_08">🟡 HĐ Khoán việc / Cam kết 08</option>
+                        <option value="KHONG_HOA_DON" selected>🔴 Không HĐ (Nội Bộ / Chỉ tiêu B4)</option>
+                        <option value="KHONG_AP_DUNG">⚪ Không áp dụng (Thu tiền)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Nguồn Tiền -->
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nguồn Tiền Chi Trả</label>
+                    <select id="cb-form-source-fund" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none font-bold text-slate-800 bg-white">
+                        <option value="TK_CONG_TY">🏦 Tài Khoản Công Ty (Bank)</option>
+                        <option value="TIEN_MAT_QUY">💵 Quỹ Tiền Mặt (Thủ quỹ)</option>
+                        <option value="TAM_UNG_NV">👤 Nhân Viên Tạm Ứng (TK 141)</option>
+                        <option value="CHU_SO_HUU_CHI">👑 Chủ Sở Hữu Chi Hộ (Nợ 0%)</option>
+                    </select>
+                </div>
+
+                <!-- Số Tiền -->
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Số Tiền (VNĐ) <span class="text-red-500">*</span></label>
+                    <input type="text" id="cb-form-amount" placeholder="0" oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, ''))" class="w-full border-2 border-rose-300 rounded-lg p-2 text-right font-black text-rose-700 text-lg outline-none bg-rose-50/40">
+                </div>
+            </div>
+
+            <!-- Bằng chứng đính kèm -->
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Link / Ảnh Chứng Từ Đính Kèm (Bill lẻ, UNC, Biên nhận)</label>
+                <input type="text" id="cb-form-attachment" placeholder="VD: https://drive.google.com/... hoặc ghi chú mã biên lai..." class="w-full border border-slate-300 rounded-lg p-2.5 outline-none font-medium text-slate-700 bg-white">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Nội Dung / Diễn Giải Lý Do Chi Tiết</label>
+                <textarea id="cb-form-notes" rows="2" placeholder="VD: Chi trả tiền thuê xe giao hàng đi công trình..." class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-amber-500 font-medium"></textarea>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-2">
+            <button onclick="window.modCashbook.closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition text-xs">Hủy</button>
+            <button onclick="window.modCashbook.submitTransaction()" id="btn-submit-cb" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5">
+                <i class="fas fa-check"></i> Xác Nhận Lưu Phiếu
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modCashbook = {
+    transactions: [],
+    currentFilterType: 'ALL',
+
+    init: async () => {
+        await window.modCashbook.loadData();
+    },
+
+    switchTab: (tab) => {
+        ['ALL_TX', 'NON_INVOICE'].forEach(t => {
+            const content = document.getElementById(`cb-tab-content-${t}`);
+            const btn = document.getElementById(`cb-tab-btn-${t}`);
+            if (content) content.classList.add('hidden');
+            if (btn) {
+                btn.className = 'px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5';
+            }
+        });
+
+        const activeContent = document.getElementById(`cb-tab-content-${tab}`);
+        const activeBtn = document.getElementById(`cb-tab-btn-${tab}`);
+        if (activeContent) activeContent.classList.remove('hidden');
+        if (activeBtn) {
+            activeBtn.className = 'px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-amber-600 text-amber-800 rounded-t-lg shadow-sm transition flex items-center gap-1.5';
+        }
+    },
+
+    loadData: async () => {
+        const tbody = document.getElementById('cb-table-body');
+        try {
+            const res = await fetch('/api/accounting/cash');
+            const data = await res.json();
+            
+            if (data.success) {
+                const s = data.summary;
+                const fmt = (v) => new Intl.NumberFormat('vi-VN').format(v || 0);
+
+                document.getElementById('cb-total-cash').innerText = fmt(s.total_cash) + ' đ';
+                document.getElementById('cb-total-thu').innerText = fmt(s.total_thu) + ' đ';
+                document.getElementById('cb-total-chi').innerText = fmt(s.total_chi) + ' đ';
+                document.getElementById('cb-total-b4').innerText = fmt(s.chi_tax_invalid) + ' đ';
+                document.getElementById('cb-cash-breakdown').innerText = `TM: ${fmt(s.thu_cash - s.chi_cash)} đ | NH: ${fmt(s.thu_bank - s.chi_bank)} đ`;
+                document.getElementById('cb-tax-breakdown').innerText = `Có HĐ: ${fmt(s.chi_tax_valid)} đ | K.HĐ: ${fmt(s.chi_tax_invalid)} đ`;
+
+                window.modCashbook.transactions = data.transactions || [];
+                window.modCashbook.applyFilters();
+                window.modCashbook.renderNonInvoiceTable(window.modCashbook.transactions);
+            }
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Lỗi kết nối API Sổ Quỹ!</td></tr>';
+        }
+    },
+
+    renderTable: (list) => {
+        const tbody = document.getElementById('cb-table-body');
+        if (!list || list.length === 0) {
+            return tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">Chưa có giao dịch thu / chi nào phù hợp với bộ lọc.</td></tr>';
+        }
+
+        tbody.innerHTML = list.map(t => {
+            const isThu = t.type === 'THU';
+            const badge = isThu 
+                ? '<span class="bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full font-black text-[10px] uppercase block mb-1"><i class="fas fa-arrow-down mr-1"></i> THU</span>' 
+                : '<span class="bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 rounded-full font-black text-[10px] uppercase block mb-1"><i class="fas fa-arrow-up mr-1"></i> CHI</span>';
+            const amountColor = isThu ? 'text-emerald-700' : 'text-rose-700';
+            const sign = isThu ? '+' : '-';
+            
+            // Nguồn tiền
+            let fundLabel = 'TK Cty';
+            if (t.source_fund === 'TIEN_MAT_QUY' || t.payment_method === 'Tiền Mặt') fundLabel = 'Quỹ TM';
+            else if (t.source_fund === 'TAM_UNG_NV') fundLabel = 'Tạm Ứng';
+            else if (t.source_fund === 'CHU_SO_HUU_CHI') fundLabel = 'Sếp Chi Hộ';
+            const fundBadge = `<span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold">${fundLabel}</span>`;
+
+            // Huy hiệu Thuế
+            let taxBadge = '<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold">---</span>';
+            if (t.tax_status === 'CO_HOA_DON') {
+                taxBadge = '<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap"><i class="fas fa-check-circle mr-0.5"></i> Có HĐ VAT</span>';
+            } else if (t.tax_status === 'BANG_KE_01') {
+                taxBadge = '<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap"><i class="fas fa-file-lines mr-0.5"></i> Bảng kê 01</span>';
+            } else if (t.tax_status === 'KHOAN_VIEC_08') {
+                taxBadge = '<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap"><i class="fas fa-user-check mr-0.5"></i> Khoán việc</span>';
+            } else if (t.tax_status === 'KHONG_HOA_DON' || (!isThu && !t.tax_status)) {
+                taxBadge = '<span class="bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap" title="Chỉ tiêu B4 khi quyết toán thuế"><i class="fas fa-triangle-exclamation mr-0.5"></i> K.Hóa Đơn (B4)</span>';
+            }
+
+            // Link chứng từ
+            let proofHtml = '';
+            if (t.attachment_url && t.attachment_url.trim()) {
+                const url = t.attachment_url.trim();
+                const isLink = url.startsWith('http');
+                proofHtml = isLink 
+                    ? `<a href="${url}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:underline font-bold mt-1 text-[10px]"><i class="fas fa-paperclip"></i> Xem File</a>`
+                    : `<span class="text-[10px] text-slate-500 block mt-1"><i class="fas fa-paperclip text-slate-400"></i> ${url}</span>`;
+            }
+
+            return `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3">
+                        <p class="font-mono font-black text-slate-800 text-xs">${t.code}</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">${new Date(t.created_at).toLocaleString('vi-VN')}</p>
+                    </td>
+                    <td class="p-3 text-center">
+                        ${badge}
+                        ${fundBadge}
+                    </td>
+                    <td class="p-3 font-bold text-slate-800 text-xs">
+                        <span class="bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg text-slate-700 font-bold block truncate max-w-[160px]">${t.category || 'Vận hành chung'}</span>
+                    </td>
+                    <td class="p-3 text-center">${taxBadge}</td>
+                    <td class="p-3 font-bold text-slate-900 text-xs">${t.target_name}</td>
+                    <td class="p-3 font-black ${amountColor} text-right text-sm">
+                        ${sign}${new Intl.NumberFormat('vi-VN').format(t.amount)} đ
+                    </td>
+                    <td class="p-3 text-xs text-slate-600 max-w-[200px]">
+                        <p class="truncate" title="${t.notes || ''}">${t.notes || '---'}</p>
+                        ${proofHtml}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    renderNonInvoiceTable: (allList) => {
+        const tbody = document.getElementById('cb-non-invoice-tbody');
+        const nonInvoiced = (allList || []).filter(t => t.type === 'CHI' && (t.tax_status === 'KHONG_HOA_DON' || !t.tax_status));
+
+        if (nonInvoiced.length === 0) {
+            return tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-emerald-600 font-bold"><i class="fas fa-check-circle text-xl mr-1.5"></i>Tuyệt vời! 100% các khoản chi đều đã có chứng từ hợp lệ.</td></tr>';
+        }
+
+        tbody.innerHTML = nonInvoiced.map(t => {
+            const cat = (t.category || '').toLowerCase();
+            let advice = 'Lưu trữ bill lẻ / phiếu chi nội bộ';
+            if (cat.includes('giao hàng')) advice = 'Ký HĐ B2B với GHTK/ViettelPost lấy HĐ tổng';
+            else if (cat.includes('thuê') || cat.includes('kho')) advice = 'Lập Bảng kê 01/TNDN (nếu <=100tr) hoặc nộp thuế thay';
+            else if (cat.includes('thời vụ') || cat.includes('nhân công')) advice = 'Lập HĐ khoán việc + Cam kết 08 (TNCN)';
+            else if (cat.includes('vay') || cat.includes('chủ sở hữu')) advice = 'Lập HĐ mượn vốn 0% lãi suất';
+
+            return `
+                <tr class="hover:bg-rose-50/40 transition">
+                    <td class="p-3">
+                        <p class="font-mono font-bold text-rose-900">${t.code}</p>
+                        <p class="text-[10px] text-slate-400">${new Date(t.created_at).toLocaleDateString('vi-VN')}</p>
+                    </td>
+                    <td class="p-3 font-bold text-slate-800">${t.category || 'Chi khác'}</td>
+                    <td class="p-3 font-bold text-slate-900">${t.target_name}</td>
+                    <td class="p-3 text-slate-600 text-xs">${t.source_fund || t.payment_method}</td>
+                    <td class="p-3 text-right font-black text-rose-700 text-sm">
+                        ${new Intl.NumberFormat('vi-VN').format(t.amount)} đ
+                    </td>
+                    <td class="p-3 text-xs text-slate-600">${t.notes || '---'}</td>
+                    <td class="p-3 text-xs font-bold text-amber-800">
+                        <span class="bg-amber-100 px-2 py-1 rounded text-[10px] border border-amber-300 block">${advice}</span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    filterType: (type) => {
+        window.modCashbook.currentFilterType = type;
+        ['ALL', 'THU', 'CHI'].forEach(t => {
+            const btn = document.getElementById(`cb-btn-filter-${t}`);
+            if (btn) {
+                if (t === type) {
+                    btn.className = 'px-3 py-1.5 rounded-lg font-bold bg-slate-800 text-white shadow-sm transition';
+                } else {
+                    btn.className = 'px-3 py-1.5 rounded-lg font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition';
+                }
+            }
+        });
+        window.modCashbook.applyFilters();
+    },
+
+    applyFilters: () => {
+        const catFilter = document.getElementById('cb-filter-cat')?.value || 'ALL';
+        const taxFilter = document.getElementById('cb-filter-tax')?.value || 'ALL';
+        const fundFilter = document.getElementById('cb-filter-fund')?.value || 'ALL';
+        const q = (document.getElementById('cb-search-input')?.value || '').toLowerCase().trim();
+
+        let filtered = window.modCashbook.transactions;
+
+        if (window.modCashbook.currentFilterType !== 'ALL') {
+            filtered = filtered.filter(x => x.type === window.modCashbook.currentFilterType);
+        }
+
+        if (catFilter !== 'ALL') {
+            filtered = filtered.filter(x => (x.category || '') === catFilter);
+        }
+
+        if (taxFilter !== 'ALL') {
+            filtered = filtered.filter(x => (x.tax_status || '') === taxFilter);
+        }
+
+        if (fundFilter !== 'ALL') {
+            filtered = filtered.filter(x => (x.source_fund || '') === fundFilter);
+        }
+
+        if (q) {
+            filtered = filtered.filter(x => 
+                (x.code && x.code.toLowerCase().includes(q)) ||
+                (x.target_name && x.target_name.toLowerCase().includes(q)) ||
+                (x.notes && x.notes.toLowerCase().includes(q)) ||
+                (x.category && x.category.toLowerCase().includes(q))
+            );
+        }
+
+        window.modCashbook.renderTable(filtered);
+    },
+
+    openModal: (type) => {
+        document.getElementById('cb-form-type').value = type;
+        const header = document.getElementById('cb-modal-header');
+        const title = document.getElementById('cb-modal-title');
+        const amountInput = document.getElementById('cb-form-amount');
+        const catSelect = document.getElementById('cb-form-category');
+        const taxSelect = document.getElementById('cb-form-tax-status');
+
+        if (type === 'THU') {
+            header.className = 'p-4 flex items-center justify-between bg-emerald-600 text-white font-black';
+            title.innerText = 'LẬP PHIẾU THU TIỀN MẶT / NGÂN HÀNG';
+            amountInput.className = 'w-full border-2 border-emerald-300 rounded-lg p-2 text-right font-black text-emerald-700 text-lg outline-none bg-emerald-50/40';
+            if (catSelect) catSelect.value = 'Thu tiền hàng';
+            if (taxSelect) taxSelect.value = 'KHONG_AP_DUNG';
+        } else {
+            header.className = 'p-4 flex items-center justify-between bg-rose-600 text-white font-black';
+            title.innerText = 'LẬP PHIẾU CHI TIỀN (QUẢN TRỊ CHI PHÍ)';
+            amountInput.className = 'w-full border-2 border-rose-300 rounded-lg p-2 text-right font-black text-rose-700 text-lg outline-none bg-rose-50/40';
+            if (catSelect) catSelect.value = 'Chi phí Giao hàng & Vận chuyển';
+            if (taxSelect) taxSelect.value = 'KHONG_HOA_DON';
+        }
+
+        document.getElementById('cb-form-target').value = '';
+        document.getElementById('cb-form-amount').value = '';
+        document.getElementById('cb-form-attachment').value = '';
+        document.getElementById('cb-form-notes').value = '';
+
+        const m = document.getElementById('cb-modal');
+        m.classList.remove('hidden'); m.classList.add('flex');
+        setTimeout(() => amountInput.focus(), 100);
+    },
+
+    closeModal: () => {
+        const m = document.getElementById('cb-modal');
+        m.classList.add('hidden'); m.classList.remove('flex');
+    },
+
+    submitTransaction: async () => {
+        const targetName = document.getElementById('cb-form-target').value.trim();
+        const amountStr = document.getElementById('cb-form-amount').value.replace(/[^0-9]/g, '');
+        const amount = parseFloat(amountStr) || 0;
+        const type = document.getElementById('cb-form-type').value;
+
+        if (!targetName || amount <= 0) {
+            return alert("⚠️ Vui lòng điền đủ Tên Đối Tượng và Số Tiền hợp lệ!");
+        }
+
+        const btn = document.getElementById('btn-submit-cb');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        const payload = {
+            type,
+            target_name: targetName,
+            amount,
+            category: document.getElementById('cb-form-category')?.value || 'Vận hành chung',
+            tax_status: document.getElementById('cb-form-tax-status')?.value || 'KHONG_HOA_DON',
+            source_fund: document.getElementById('cb-form-source-fund')?.value || 'TK_CONG_TY',
+            payment_method: document.getElementById('cb-form-source-fund')?.value === 'TIEN_MAT_QUY' ? 'Tiền Mặt' : 'Chuyển Khoản',
+            attachment_url: document.getElementById('cb-form-attachment')?.value.trim() || '',
+            notes: document.getElementById('cb-form-notes').value.trim()
+        };
+
+        try {
+            const res = await fetch('/api/accounting/cash', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message || "✅ Đã ghi nhận giao dịch vào Sổ Quỹ thành công!");
+                window.modCashbook.closeModal();
+                await window.modCashbook.loadData();
+            } else alert("Lỗi: " + data.error);
+        } catch (e) {
+            alert("Lỗi kết nối máy chủ khi lưu phiếu!");
+        } finally {
+            btn.innerHTML = '<i class="fas fa-check"></i> Xác Nhận Lưu Phiếu';
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+
+    exportExcel: () => {
+        if (!window.modCashbook.transactions || window.modCashbook.transactions.length === 0) {
+            return alert("Chưa có dữ liệu giao dịch sổ quỹ để xuất Excel!");
+        }
+
+        let csv = "\uFEFFSTT,Mã Phiếu,Ngày Giao Dịch,Loại,Danh Mục,Trạng Thái Thuế,Nguồn Tiền,Đối Tượng,Số Tiền (VNĐ),Diễn Giải,Chứng Từ Đính Kèm\n";
+        window.modCashbook.transactions.forEach((t, idx) => {
+            const dateStr = new Date(t.created_at).toLocaleDateString('vi-VN');
+            const safeTarget = `"${(t.target_name || '').replace(/"/g, '""')}"`;
+            const safeNotes = `"${(t.notes || '').replace(/"/g, '""')}"`;
+            const sign = t.type === 'THU' ? '' : '-';
+            csv += `${idx + 1},${t.code},${dateStr},${t.type},${t.category},${t.tax_status},${t.source_fund},${safeTarget},${sign}${t.amount},${safeNotes},${t.attachment_url || ''}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `So_Quy_Tien_Mat_Va_Quan_Tri_Chi_Phi_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+    }
+};
+
+window.modCashbook.init();
+</script>

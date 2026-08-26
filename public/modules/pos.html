@@ -4,13 +4,14 @@
 
 <style>
 /* Tùy chỉnh thanh cuộn & hiệu ứng cho POS */
-.pos-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.pos-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
 .pos-scroll::-webkit-scrollbar-track { background: transparent; }
-.pos-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+.pos-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
 .pos-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .cat-pill {
     transition: all 0.18s ease-in-out;
+    -webkit-tap-highlight-color: transparent;
 }
 .cat-pill.active {
     background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
@@ -25,6 +26,7 @@
 
 .subcat-pill {
     transition: all 0.15s ease-in-out;
+    -webkit-tap-highlight-color: transparent;
 }
 .subcat-pill.active {
     background: #1e293b !important;
@@ -53,43 +55,58 @@
 }
 </style>
 
-<div class="h-full flex flex-col gap-3 text-slate-800 select-none pb-1" id="pos-root-container">
+<div class="h-full flex flex-col gap-2.5 text-slate-800 select-none pb-1 relative" id="pos-root-container">
     
-    <!-- THANH HEADER POS & CHỈ BÁO BẢNG GIÁ VIP -->
-    <div class="bg-white rounded-xl px-4 py-2.5 border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-3 shrink-0">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
-                <i class="fas fa-cash-register text-lg"></i>
+    <!-- THANH HEADER POS & CHỈ BÁO BẢNG GIÁ VIP (RESPONSIVE CHO CẢ MOBILE & DESKTOP) -->
+    <div class="bg-white rounded-xl px-3 sm:px-4 py-2.5 border border-slate-200 shadow-xs flex flex-wrap justify-between items-center gap-2.5 shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+                <i class="fas fa-cash-register text-base sm:text-lg"></i>
             </div>
-            <div>
-                <div class="flex items-center gap-2">
-                    <h2 class="text-base font-black text-slate-900 tracking-tight">Tạo Đơn Hàng (POS)</h2>
-                    <span id="pos-active-tier-pill" class="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1 shadow-2xs">
-                        <i class="fas fa-tag text-blue-600"></i> <span id="pos-tier-label">VIP 1 • GIÁ LẺ NIÊM YẾT</span>
+            <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <h2 class="text-sm sm:text-base font-black text-slate-900 tracking-tight">Tạo Đơn Hàng (POS)</h2>
+                    <span id="pos-active-tier-pill" class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1 shadow-2xs">
+                        <i class="fas fa-tag text-blue-600 text-[9px]"></i> <span id="pos-tier-label">VIP 1 • GIÁ LẺ NIÊM YẾT</span>
                     </span>
                 </div>
-                <p class="text-[11px] text-slate-500 font-medium">Bán lẻ & Dự án Solar • Danh mục logic chuẩn Admin • Tự động tính giá VIP theo khách hàng</p>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate hidden sm:block">Danh mục logic chuẩn Admin • Tự động tính giá VIP theo khách hàng</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-2">
-            <button type="button" onclick="window.modPos.openQuickCustomerModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-user-plus"></i> <span>+ Khách Mới</span>
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button type="button" onclick="window.modPos.openQuickCustomerModal()" class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1 cursor-pointer">
+                <i class="fas fa-user-plus text-xs"></i> <span>+ Khách Mới</span>
             </button>
-            <button type="button" onclick="window.modPos.load()" title="Tải lại kho hàng & giá bán" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-sync-alt" id="pos-reload-icon"></i> <span>Làm Mới</span>
+            <button type="button" onclick="window.modPos.load()" title="Tải lại kho hàng & giá bán" class="bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 p-1.5 sm:px-3 sm:py-2 rounded-lg text-xs font-bold shadow-2xs transition flex items-center gap-1 cursor-pointer">
+                <i class="fas fa-sync-alt text-xs" id="pos-reload-icon"></i> <span class="hidden sm:inline">Làm Mới</span>
             </button>
         </div>
     </div>
 
-    <!-- KHU VỰC THAO TÁC CHÍNH (2 CỘT) -->
+    <!-- THANH ĐIỀU HƯỚNG TAB CHUYỂN ĐỔI KHO HÀNG / GIỎ HÀNG TRÊN MOBILE (< LG) -->
+    <div class="lg:hidden flex bg-slate-200/90 p-1 rounded-xl gap-1 shrink-0 font-bold text-xs shadow-inner">
+        <button type="button" onclick="window.modPos.setMobileTab('CATALOG')" id="pos-tab-btn-catalog" 
+                class="flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition bg-white text-blue-700 shadow-xs font-black">
+            <i class="fas fa-boxes-stacked text-xs"></i> <span>Chọn Thiết Bị</span>
+            <span id="pos-tab-badge-catalog" class="px-1.5 py-0.2 text-[10px] rounded-full bg-blue-100 text-blue-700 font-bold">0</span>
+        </button>
+        <button type="button" onclick="window.modPos.setMobileTab('CART')" id="pos-tab-btn-cart" 
+                class="flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900 font-bold">
+            <i class="fas fa-shopping-cart text-xs"></i> <span>Giỏ & Thanh Toán</span>
+            <span id="pos-tab-badge-cart" class="px-1.5 py-0.2 text-[10px] rounded-full bg-amber-500 text-white font-black">0</span>
+            <span id="pos-tab-total-cart" class="text-[11px] font-black text-emerald-600 ml-0.5">0 đ</span>
+        </button>
+    </div>
+
+    <!-- KHU VỰC THAO TÁC CHÍNH (2 CỘT RESPONSIVE) -->
     <div class="flex-1 flex flex-col lg:flex-row gap-3 overflow-hidden min-h-0">
         
-        <!-- CỘT TRÁI: DANH MỤC & LƯỚI SẢN PHẨM (62%) -->
-        <div class="w-full lg:w-[62%] flex flex-col bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <!-- CỘT TRÁI: DANH MỤC & LƯỚI SẢN PHẨM (62% DESKTOP, FULL TRÊN MOBILE KHI TAB CATALOG) -->
+        <div id="pos-left-panel" class="w-full lg:w-[62%] flex flex-col bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden h-full">
             
             <!-- THANH TÌM KIẾM, LỌC TỒN KHO & DANH MỤC LOGIC -->
-            <div class="p-3 border-b border-slate-100 bg-slate-50/70 space-y-2 shrink-0">
+            <div class="p-2.5 sm:p-3 border-b border-slate-100 bg-slate-50/70 space-y-2 shrink-0">
                 <div class="flex gap-2">
                     <div class="relative flex-1">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
@@ -97,62 +114,70 @@
                         </span>
                         <input type="text" id="pos-search" 
                                oninput="window.modPos.renderProducts()" 
-                               placeholder="🔍 Gõ tên thiết bị, mã SKU, thương hiệu để tìm nhanh..." 
+                               placeholder="🔍 Gõ tên thiết bị, SKU, thương hiệu..." 
                                class="w-full pl-9 pr-8 py-2 text-xs font-bold border border-slate-300 rounded-lg outline-none bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-2xs">
                         <button type="button" onclick="document.getElementById('pos-search').value=''; window.modPos.renderProducts();" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-300 hover:text-slate-500 cursor-pointer">
                             <i class="fas fa-times-circle text-xs"></i>
                         </button>
                     </div>
                     
-                    <button type="button" id="pos-stock-filter-btn" onclick="window.modPos.toggleStockFilter()" class="px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 shadow-2xs transition cursor-pointer">
+                    <button type="button" id="pos-stock-filter-btn" onclick="window.modPos.toggleStockFilter()" class="px-2.5 sm:px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 shadow-2xs transition cursor-pointer">
                         <i class="fas fa-boxes text-slate-500"></i>
-                        <span id="pos-stock-filter-text">Tất cả kho</span>
+                        <span id="pos-stock-filter-text" class="hidden sm:inline">Tất cả kho</span>
                     </button>
                 </div>
 
                 <!-- CẤP 1: THANH DANH MỤC CHÍNH (ĐỒNG BỘ CHUẨN CÂY DANH MỤC TỪ ADMIN-PRODUCTS) -->
-                <div class="flex items-center gap-1.5 overflow-x-auto pos-scroll pb-1" id="pos-cat-pill-container">
+                <div class="flex items-center gap-1.5 overflow-x-auto pos-scroll pb-1 -mx-1 px-1" id="pos-cat-pill-container">
                     <button type="button" onclick="window.modPos.selectRootCategory('ALL')" id="cat-pill-ALL" class="cat-pill active px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0">
-                        <i class="fas fa-layer-group text-xs text-amber-500"></i> Tất Cả SP <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-all">0</span>
+                        <i class="fas fa-layer-group text-xs text-amber-500"></i> <span>Tất Cả SP</span> <span class="cat-badge px-1.5 py-0.2 text-[10px] rounded-full bg-slate-100 font-black" id="cat-cnt-all">0</span>
                     </button>
                     <!-- Render động từ categories API -->
                     <div id="pos-dynamic-root-cats" class="flex items-center gap-1.5 shrink-0"></div>
                 </div>
 
                 <!-- CẤP 2: THANH DANH MỤC PHÂN NHÁNH / CON (HIỆN KHI CHỌN NHÓM CÓ CON) -->
-                <div id="pos-subcat-bar" class="hidden flex items-center gap-1.5 overflow-x-auto pos-scroll pt-1 border-t border-slate-200/60">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase mr-1 shrink-0"><i class="fas fa-level-down-alt mr-0.5 text-blue-500"></i>Nhóm con:</span>
+                <div id="pos-subcat-bar" class="hidden flex items-center gap-1.5 overflow-x-auto pos-scroll pt-1 border-t border-slate-200/60 -mx-1 px-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase mr-1 shrink-0"><i class="fas fa-level-down-alt mr-0.5 text-blue-500"></i>Nhánh con:</span>
                     <div id="pos-subcat-pills" class="flex items-center gap-1.5 shrink-0"></div>
                 </div>
             </div>
 
             <!-- LƯỚI DANH SÁCH SẢN PHẨM -->
-            <div class="flex-1 overflow-y-auto pos-scroll p-3 bg-slate-100/50">
-                <div id="pos-product-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-2.5">
+            <div class="flex-1 overflow-y-auto pos-scroll p-2.5 sm:p-3 bg-slate-100/50">
+                <div id="pos-product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-2 sm:gap-2.5">
                     <!-- Cards sản phẩm được render động bằng JS -->
                 </div>
             </div>
 
             <!-- FOOTER CỘT TRÁI: THỐNG KÊ NHANH -->
-            <div class="px-4 py-2 border-t border-slate-200 bg-white text-[11px] font-semibold text-slate-500 flex justify-between items-center shrink-0">
+            <div class="px-3 sm:px-4 py-2 border-t border-slate-200 bg-white text-[10px] sm:text-[11px] font-semibold text-slate-500 flex justify-between items-center shrink-0">
                 <span id="pos-product-stat-text">Đang tải sản phẩm...</span>
-                <span class="text-blue-600 font-bold"><i class="fas fa-info-circle mr-1"></i>Bấm vào thẻ sản phẩm để thêm vào giỏ</span>
+                <span class="text-blue-600 font-bold hidden sm:inline"><i class="fas fa-info-circle mr-1"></i>Bấm vào thẻ sản phẩm để thêm vào giỏ</span>
             </div>
         </div>
 
-        <!-- CỘT PHẢI: KHÁCH HÀNG & GIỎ HÀNG (38%) -->
-        <div class="w-full lg:w-[38%] flex flex-col bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <!-- CỘT PHẢI: KHÁCH HÀNG & GIỎ HÀNG (38% DESKTOP, FULL TRÊN MOBILE KHI TAB CART) -->
+        <div id="pos-right-panel" class="w-full lg:w-[38%] flex flex-col bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden h-full">
             
+            <!-- NÚT QUAY LẠI CHỌN THÊM HÀNG TRÊN MOBILE -->
+            <div class="lg:hidden px-3 py-2 bg-blue-50 border-b border-blue-200 flex justify-between items-center shrink-0">
+                <button type="button" onclick="window.modPos.setMobileTab('CATALOG')" class="text-blue-700 font-bold text-xs flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-arrow-left"></i> <span>Tiếp tục chọn thêm thiết bị</span>
+                </button>
+                <span class="text-[10px] font-bold text-slate-500">Màn hình thanh toán</span>
+            </div>
+
             <!-- KHU VỰC CHỌN KHÁCH HÀNG (TÍCH HỢP VIP AUTO SYNC) -->
-            <div class="p-3 border-b border-slate-200 bg-gradient-to-r from-amber-50/60 to-orange-50/40 shrink-0">
+            <div class="p-2.5 sm:p-3 border-b border-slate-200 bg-gradient-to-r from-amber-50/60 to-orange-50/40 shrink-0">
                 
                 <!-- Khi chưa chọn khách: Hiển thị ô tìm kiếm -->
                 <div id="pos-cust-search-section" class="space-y-1.5">
                     <div class="flex justify-between items-center">
-                        <label class="text-[11px] font-black text-amber-900 uppercase flex items-center gap-1.5">
+                        <label class="text-[10px] sm:text-[11px] font-black text-amber-900 uppercase flex items-center gap-1.5">
                             <i class="fas fa-user-tag text-amber-600"></i> Khách Hàng (Tự Động Áp Giá VIP)
                         </label>
-                        <button type="button" onclick="window.modPos.openQuickCustomerModal()" class="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer">
+                        <button type="button" onclick="window.modPos.openQuickCustomerModal()" class="text-[10px] sm:text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer">
                             <i class="fas fa-plus-circle"></i> Tạo mới
                         </button>
                     </div>
@@ -169,18 +194,18 @@
                 </div>
 
                 <!-- Khi đã chọn khách: Hiển thị thẻ VIP chi tiết -->
-                <div id="pos-cust-selected-card" class="hidden bg-white border-2 border-amber-300 rounded-xl p-3 shadow-sm relative space-y-2">
+                <div id="pos-cust-selected-card" class="hidden bg-white border-2 border-amber-300 rounded-xl p-2.5 sm:p-3 shadow-sm relative space-y-2">
                     <div class="flex justify-between items-start">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0">
                                 <i class="fas fa-crown"></i>
                             </div>
-                            <div>
-                                <h4 class="font-black text-slate-900 text-xs leading-tight" id="pc-name">Khách Hàng</h4>
-                                <p class="text-[10px] text-slate-500 font-semibold" id="pc-phone">📞 0900000000</p>
+                            <div class="min-w-0">
+                                <h4 class="font-black text-slate-900 text-xs leading-tight truncate" id="pc-name">Khách Hàng</h4>
+                                <p class="text-[10px] text-slate-500 font-semibold truncate" id="pc-phone">📞 0900000000</p>
                             </div>
                         </div>
-                        <button type="button" onclick="window.modPos.clearCustomer()" class="text-red-500 hover:text-red-700 text-[11px] font-black uppercase flex items-center gap-1 cursor-pointer bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition">
+                        <button type="button" onclick="window.modPos.clearCustomer()" class="text-red-500 hover:text-red-700 text-[10px] sm:text-[11px] font-black uppercase flex items-center gap-1 cursor-pointer bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition shrink-0">
                             <i class="fas fa-times"></i> Đổi KH
                         </button>
                     </div>
@@ -189,7 +214,7 @@
                         <div>
                             <span class="text-slate-400 block font-medium">Hạng VIP & Bảng giá:</span>
                             <div class="flex items-center gap-1 mt-0.5">
-                                <select id="pc-tier-select" onchange="window.modPos.changeActiveTier(this.value)" class="text-[11px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 outline-none cursor-pointer">
+                                <select id="pc-tier-select" onchange="window.modPos.changeActiveTier(this.value)" class="text-[10px] sm:text-[11px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 outline-none cursor-pointer w-full">
                                     <option value="1">VIP 1: Khách Lẻ</option>
                                     <option value="2">VIP 2: Chốt Sale</option>
                                     <option value="3">VIP 3: Thợ / Đại Lý</option>
@@ -201,11 +226,20 @@
                         </div>
                         <div>
                             <span class="text-slate-400 block font-medium">Quỹ điểm & Công nợ:</span>
-                            <p class="font-bold text-slate-700 mt-0.5">
-                                Điểm: <strong id="pc-points" class="text-amber-600 font-black">0 đ</strong> | 
+                            <p class="font-bold text-slate-700 mt-0.5 truncate">
+                                Điểm: <strong id="pc-points" class="text-amber-600 font-black">0 đ</strong>
+                            </p>
+                            <p class="font-bold text-slate-700 truncate">
                                 Nợ: <strong id="pc-debt" class="text-red-500 font-bold">0 đ</strong>
+                                <span id="pc-debt-limit-wrap" class="text-[9px] text-slate-500 font-medium block">Hạn mức: <strong id="pc-debt-limit" class="text-slate-700">0 đ</strong></span>
                             </p>
                         </div>
+                    </div>
+
+                    <!-- CẢNH BÁO CHẠM HẠN MỨC NỢ -->
+                    <div id="pc-debt-alert-banner" class="hidden bg-red-50 border border-red-200 text-red-700 p-2 rounded-lg text-[10px] font-bold flex items-start gap-1.5">
+                        <i class="fas fa-exclamation-triangle text-red-500 mt-0.5 shrink-0"></i>
+                        <span id="pc-debt-alert-text">Khách hàng đã chạm hạn mức nợ! Không thể ghi nợ thêm cho đơn hàng này.</span>
                     </div>
                     
                     <p class="text-[10px] text-slate-500 line-clamp-1">
@@ -223,12 +257,12 @@
             </div>
 
             <!-- DANH SÁCH MÓN TRONG GIỎ HÀNG -->
-            <div class="flex-1 overflow-y-auto pos-scroll p-2 bg-white space-y-1.5" id="pos-cart-items">
+            <div class="flex-1 overflow-y-auto pos-scroll p-2 bg-white space-y-1.5 min-h-[140px]" id="pos-cart-items">
                 <!-- Nội dung giỏ hàng render động -->
             </div>
 
             <!-- PHẦN TÍNH TIỀN & TẠO ĐƠN MỚI (FOOTER PHẢI) -->
-            <div class="bg-slate-900 text-white p-3.5 shrink-0 border-t border-slate-800 space-y-2.5 shadow-2xl">
+            <div class="bg-slate-900 text-white p-3 sm:p-3.5 shrink-0 border-t border-slate-800 space-y-2 sm:space-y-2.5 shadow-2xl">
                 <div class="space-y-1 text-xs">
                     <div class="flex justify-between items-center text-slate-400">
                         <span>Tiền hàng:</span>
@@ -238,31 +272,31 @@
                     <div class="flex justify-between items-center text-slate-400">
                         <div class="flex items-center gap-1">
                             <span>Chiết khấu:</span>
-                            <input type="text" id="pos-discount-input" placeholder="0" oninput="window.modPos.onDiscountChange(this.value)" class="w-20 bg-slate-800 text-amber-400 text-right px-1.5 py-0.5 rounded text-xs font-bold border border-slate-700 outline-none focus:border-amber-500">
+                            <input type="text" id="pos-discount-input" placeholder="0" inputmode="numeric" oninput="window.modPos.onDiscountChange(this.value)" class="w-20 bg-slate-800 text-amber-400 text-right px-1.5 py-0.5 rounded text-xs font-bold border border-slate-700 outline-none focus:border-amber-500">
                         </div>
                         <span id="pos-discount-amount" class="font-bold text-amber-400">-0 đ</span>
                     </div>
 
-                    <div class="flex justify-between items-center text-slate-400 text-[11px]">
+                    <div class="flex justify-between items-center text-slate-400 text-[10px] sm:text-[11px]">
                         <span><i class="fas fa-gift text-amber-400 mr-1"></i>Tích lũy 1% quỹ điểm:</span>
                         <span id="pos-point" class="font-bold text-amber-400">+0 đ</span>
                     </div>
                 </div>
 
-                <div class="border-t border-slate-800 pt-2 flex justify-between items-center">
+                <div class="border-t border-slate-800 pt-1.5 sm:pt-2 flex justify-between items-center">
                     <span class="text-xs font-black uppercase text-slate-300 tracking-wider">Tổng thanh toán:</span>
-                    <span id="pos-total" class="text-xl font-black text-emerald-400 tracking-tight">0 đ</span>
+                    <span id="pos-total" class="text-lg sm:text-xl font-black text-emerald-400 tracking-tight">0 đ</span>
                 </div>
 
                 <!-- PHƯƠNG THỨC THANH TOÁN & GHI CHÚ -->
                 <div class="grid grid-cols-3 gap-1 text-[10px] font-bold">
-                    <button type="button" onclick="window.modPos.setPaymentMethod('TIEN_MAT')" id="pm-TIEN_MAT" class="py-1.5 rounded bg-blue-600 text-white font-black text-center transition border border-blue-500 cursor-pointer">
+                    <button type="button" onclick="window.modPos.setPaymentMethod('TIEN_MAT')" id="pm-TIEN_MAT" class="py-1.5 sm:py-2 rounded bg-blue-600 text-white font-black text-center transition border border-blue-500 cursor-pointer">
                         <i class="fas fa-money-bill-wave mr-0.5"></i> Tiền Mặt
                     </button>
-                    <button type="button" onclick="window.modPos.setPaymentMethod('CHUYEN_KHOAN')" id="pm-CHUYEN_KHOAN" class="py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center transition border border-slate-700 cursor-pointer">
+                    <button type="button" onclick="window.modPos.setPaymentMethod('CHUYEN_KHOAN')" id="pm-CHUYEN_KHOAN" class="py-1.5 sm:py-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center transition border border-slate-700 cursor-pointer">
                         <i class="fas fa-university mr-0.5"></i> CK / QR
                     </button>
-                    <button type="button" onclick="window.modPos.setPaymentMethod('CONG_NO')" id="pm-CONG_NO" class="py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center transition border border-slate-700 cursor-pointer">
+                    <button type="button" onclick="window.modPos.setPaymentMethod('CONG_NO')" id="pm-CONG_NO" class="py-1.5 sm:py-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center transition border border-slate-700 cursor-pointer">
                         <i class="fas fa-file-invoice mr-0.5"></i> Ghi Nợ
                     </button>
                 </div>
@@ -271,28 +305,44 @@
                     <input type="text" id="pos-order-note" placeholder="Ghi chú đơn hàng (nếu có)..." class="w-full bg-slate-800 border border-slate-700 text-white text-xs px-2.5 py-1.5 rounded-lg outline-none focus:border-blue-500 placeholder-slate-500 font-medium">
                 </div>
 
-                <!-- NÚT TẠO ĐƠN MỚI (ĐÃ ĐỔI TÊN THEO YÊU CẦU) -->
-                <button type="button" onclick="window.modPos.checkout()" id="btn-pos-checkout" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm py-2.5 rounded-lg shadow-lg transition flex justify-center items-center gap-2 uppercase tracking-wider cursor-pointer">
+                <!-- NÚT TẠO ĐƠN MỚI -->
+                <button type="button" onclick="window.modPos.checkout()" id="btn-pos-checkout" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:from-blue-700 active:to-indigo-700 text-white font-black text-sm py-2.5 sm:py-3 rounded-xl shadow-lg transition flex justify-center items-center gap-2 uppercase tracking-wider cursor-pointer">
                     <i class="fas fa-plus-circle text-base"></i> <span>Tạo Đơn Mới</span>
                 </button>
             </div>
         </div>
     </div>
+
+    <!-- FLOATING BOTTOM CART BAR TRÊN MOBILE KHI ĐANG DUYỆT SẢN PHẨM -->
+    <div id="pos-mobile-floating-cart" class="lg:hidden hidden fixed bottom-18 left-3 right-3 z-30 bg-slate-900/95 text-white p-3 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 flex items-center justify-between animate-in slide-in-from-bottom-4 duration-200">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-sm shadow-md shrink-0">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-300 truncate"><span id="m-float-qty">0</span> món trong giỏ</p>
+                <p class="text-sm font-black text-emerald-400 truncate" id="m-float-total">0 đ</p>
+            </div>
+        </div>
+        <button type="button" onclick="window.modPos.setMobileTab('CART')" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 shadow-md shrink-0 cursor-pointer">
+            <span>Xem Giỏ & Tạo Đơn</span> <i class="fas fa-arrow-right text-[10px]"></i>
+        </button>
+    </div>
 </div>
 
 <!-- ==================================================================== -->
-<!-- MODAL: THÊM NHANH KHÁCH HÀNG CRM MỚI NGAY TẠI POS -->
+<!-- MODAL: THÊM NHANH KHÁCH HÀNG CRM MỚI NGAY TẠI POS (TỐI ƯU MOBILE) -->
 <!-- ==================================================================== -->
-<div id="pos-quick-cust-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2.5">
+<div id="pos-quick-cust-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-4 sm:p-5 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto pos-scroll animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex justify-between items-center mb-3 sm:mb-4 border-b border-slate-100 pb-2.5">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
                     <i class="fas fa-user-plus"></i>
                 </div>
                 <h3 class="text-sm font-black text-slate-900">Thêm Nhanh Khách Hàng CRM</h3>
             </div>
-            <button type="button" onclick="window.modPos.closeQuickCustomerModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer">&times;</button>
+            <button type="button" onclick="window.modPos.closeQuickCustomerModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer p-1">&times;</button>
         </div>
 
         <form id="pos-quick-cust-form" onsubmit="window.modPos.saveQuickCustomer(event)" class="space-y-3 text-xs">
@@ -301,10 +351,10 @@
                 <input type="text" id="qc-name" required placeholder="VD: Nguyễn Văn A hoặc Cty Solar Ánh Dương" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-bold text-slate-800 focus:border-blue-600">
             </div>
 
-            <div class="grid grid-cols-2 gap-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
-                    <input type="tel" id="qc-phone" required placeholder="0909xxxxxx" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-bold text-slate-800 focus:border-blue-600">
+                    <input type="tel" id="qc-phone" required placeholder="0909xxxxxx" inputmode="tel" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-bold text-slate-800 focus:border-blue-600">
                 </div>
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Tên gợi nhớ (Nickname)</label>
@@ -312,7 +362,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Phân hạng VIP (Bảng giá)</label>
                     <select id="qc-tier" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-black text-amber-800 bg-amber-50/50 focus:border-amber-600 cursor-pointer">
@@ -348,28 +398,28 @@
 <!-- ==================================================================== -->
 <!-- MODAL: XÁC NHẬN THÀNH CÔNG & IN PHIẾU HÓA ĐƠN BÁN LẺ -->
 <!-- ==================================================================== -->
-<div id="pos-success-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-150">
-        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner text-2xl">
+<div id="pos-success-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 text-center max-h-[90vh] overflow-y-auto pos-scroll animate-in fade-in zoom-in-95 duration-150">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner text-2xl">
             <i class="fas fa-check-circle"></i>
         </div>
-        <h3 class="text-lg font-black text-slate-900">TẠO ĐƠN HÀNG THÀNH CÔNG!</h3>
+        <h3 class="text-base sm:text-lg font-black text-slate-900">TẠO ĐƠN HÀNG THÀNH CÔNG!</h3>
         <p class="text-xs text-slate-500 mt-1">Mã đơn hàng: <strong id="success-order-code" class="text-blue-600 font-mono text-sm font-black">DH-000000</strong></p>
 
-        <div class="my-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-left text-xs space-y-1.5">
-            <div class="flex justify-between"><span class="text-slate-500">Khách hàng:</span> <strong id="success-cust-name" class="text-slate-800">---</strong></div>
+        <div class="my-3 sm:my-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-left text-xs space-y-1.5">
+            <div class="flex justify-between"><span class="text-slate-500">Khách hàng:</span> <strong id="success-cust-name" class="text-slate-800 truncate max-w-[200px]">---</strong></div>
             <div class="flex justify-between"><span class="text-slate-500">Tổng thanh toán:</span> <strong id="success-total-amount" class="text-emerald-600 font-black text-sm">0 đ</strong></div>
             <div class="flex justify-between"><span class="text-slate-500">Phương thức:</span> <span id="success-payment-method" class="font-bold text-slate-700">Tiền mặt</span></div>
         </div>
 
-        <div class="flex justify-center gap-2.5 pt-2">
-            <button type="button" onclick="window.modPos.printReceipt()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer">
-                <i class="fas fa-print"></i> In Hóa Đơn (80mm/A4)
+        <div class="flex flex-wrap justify-center gap-2 pt-2">
+            <button type="button" onclick="window.modPos.printReceipt()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer">
+                <i class="fas fa-print"></i> In Hóa Đơn
             </button>
-            <button type="button" onclick="window.modPos.closeSuccessModal(true)" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-black shadow-md cursor-pointer">
+            <button type="button" onclick="window.modPos.closeSuccessModal(true)" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black shadow-md cursor-pointer">
                 <i class="fas fa-plus mr-1"></i> Tạo Đơn Mới
             </button>
-            <button type="button" onclick="window.modPos.goToOrderHistory()" class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold cursor-pointer">
+            <button type="button" onclick="window.modPos.goToOrderHistory()" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer">
                 Xem Lịch Sử
             </button>
         </div>
@@ -396,6 +446,7 @@ window.modPos = {
     paymentMethod: 'TIEN_MAT',
     discountVal: 0,
     lastCreatedOrder: null,
+    mobileTab: 'CATALOG', // 'CATALOG' | 'CART'
 
     tierNames: {
         1: "VIP 1 • GIÁ LẺ NIÊM YẾT",
@@ -422,7 +473,7 @@ window.modPos = {
         const reloadIcon = document.getElementById('pos-reload-icon');
         if (reloadIcon) reloadIcon.classList.add('fa-spin');
         
-        grid.innerHTML = '<div class="col-span-full text-center p-12 text-slate-400"><i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i><p class="mt-2 text-xs font-bold">Đang đồng bộ danh mục chuẩn & kho hàng...</p></div>';
+        grid.innerHTML = '<div class="col-span-full text-center p-10 text-slate-400"><i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i><p class="mt-2 text-xs font-bold">Đang đồng bộ danh mục chuẩn & kho hàng...</p></div>';
         
         try {
             const [resP, resC, resCats] = await Promise.all([
@@ -443,6 +494,7 @@ window.modPos = {
 
             window.modPos.renderCategoryTabs();
             window.modPos.renderProducts();
+            window.modPos.updateMobileLayout();
         } catch(e) {
             console.error("POS Load Error:", e);
             grid.innerHTML = '<div class="col-span-full text-center text-red-500 font-bold p-8 bg-red-50 rounded-xl">Lỗi kết nối máy chủ khi tải sản phẩm! Vui lòng bấm Làm Mới.</div>';
@@ -451,13 +503,73 @@ window.modPos = {
         }
     },
 
+    // Quản lý tab trên thiết bị di động
+    setMobileTab: (tab) => {
+        window.modPos.mobileTab = tab;
+        window.modPos.updateMobileLayout();
+    },
+
+    updateMobileLayout: () => {
+        const isMobile = window.innerWidth < 1024;
+        const leftPanel = document.getElementById('pos-left-panel');
+        const rightPanel = document.getElementById('pos-right-panel');
+        const btnCat = document.getElementById('pos-tab-btn-catalog');
+        const btnCart = document.getElementById('pos-tab-btn-cart');
+        const floatCart = document.getElementById('pos-mobile-floating-cart');
+
+        if (!leftPanel || !rightPanel) return;
+
+        if (!isMobile) {
+            leftPanel.classList.remove('hidden');
+            rightPanel.classList.remove('hidden');
+            if (floatCart) floatCart.classList.add('hidden');
+            return;
+        }
+
+        if (window.modPos.mobileTab === 'CATALOG') {
+            leftPanel.classList.remove('hidden');
+            rightPanel.classList.add('hidden');
+
+            if (btnCat) {
+                btnCat.className = "flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition bg-white text-blue-700 shadow-xs font-black";
+            }
+            if (btnCart) {
+                btnCart.className = "flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900 font-bold";
+            }
+
+            // Hiện floating cart nếu có món
+            const totalQty = window.modPos.cart.reduce((sum, i) => sum + i.quantity, 0);
+            if (floatCart) {
+                if (totalQty > 0) {
+                    floatCart.classList.remove('hidden');
+                } else {
+                    floatCart.classList.add('hidden');
+                }
+            }
+        } else {
+            leftPanel.classList.add('hidden');
+            rightPanel.classList.remove('hidden');
+
+            if (btnCat) {
+                btnCat.className = "flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900 font-bold";
+            }
+            if (btnCart) {
+                btnCart.className = "flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition bg-white text-blue-700 shadow-xs font-black";
+            }
+
+            if (floatCart) floatCart.classList.add('hidden');
+        }
+    },
+
     // Render danh mục chính và phụ theo đúng logic của #admin-products
     renderCategoryTabs: () => {
         const allCats = window.modPos.categories || [];
         const rootContainer = document.getElementById('pos-dynamic-root-cats');
         const allCountBadge = document.getElementById('cat-cnt-all');
+        const tabBadgeCat = document.getElementById('pos-tab-badge-catalog');
 
         if (allCountBadge) allCountBadge.innerText = window.modPos.products.length;
+        if (tabBadgeCat) tabBadgeCat.innerText = window.modPos.products.length;
 
         // Lấy các danh mục gốc (parent_id is null/undefined)
         const roots = allCats.filter(c => !c.parent_id);
@@ -649,7 +761,7 @@ window.modPos = {
 
         if (list.length === 0) {
             grid.innerHTML = `
-                <div class="col-span-full text-center p-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
+                <div class="col-span-full text-center p-8 sm:p-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
                     <i class="fas fa-search text-3xl mb-2 text-slate-300"></i>
                     <p class="text-xs font-bold text-slate-600">Không tìm thấy sản phẩm phù hợp</p>
                     <p class="text-[11px] text-slate-400 mt-1">Thử đổi từ khóa hoặc chọn "Tất Cả SP"</p>
@@ -670,8 +782,8 @@ window.modPos = {
 
             const hasImg = p.image_url && p.image_url.trim() !== '';
             const imgHtml = hasImg 
-                ? `<img src="${p.image_url.trim()}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-solar-panel text-slate-300 text-xl\'></i>';" class="w-full h-full object-cover">` 
-                : `<i class="fas fa-solar-panel text-slate-300 text-xl"></i>`;
+                ? `<img src="${p.image_url.trim()}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-solar-panel text-slate-300 text-lg\'></i>';" class="w-full h-full object-cover">` 
+                : `<i class="fas fa-solar-panel text-slate-300 text-lg"></i>`;
 
             const stockBadge = totalStock > 0 
                 ? `<span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Còn: ${totalStock}</span>`
@@ -679,8 +791,8 @@ window.modPos = {
 
             return `
             <div onclick="window.modPos.addToCart(${p.id})" 
-                 class="bg-white border border-slate-200 hover:border-blue-500 hover:shadow-md rounded-xl p-2.5 cursor-pointer transition flex items-center gap-3 group relative overflow-hidden">
-                <div class="w-14 h-14 bg-slate-50 border border-slate-100 rounded-lg overflow-hidden shrink-0 flex justify-center items-center group-hover:scale-105 transition-transform duration-200">
+                 class="bg-white border border-slate-200 hover:border-blue-500 active:bg-blue-50/50 hover:shadow-md rounded-xl p-2.5 cursor-pointer transition flex items-center gap-2.5 sm:gap-3 group relative overflow-hidden">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-slate-50 border border-slate-100 rounded-lg overflow-hidden shrink-0 flex justify-center items-center group-hover:scale-105 transition-transform duration-200">
                     ${imgHtml}
                 </div>
                 <div class="flex-1 min-w-0">
@@ -688,15 +800,15 @@ window.modPos = {
                         <span class="text-[9px] font-bold text-slate-400 uppercase truncate">SKU: ${p.sku || 'N/A'}</span>
                     </div>
                     <p class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">${p.product_name}</p>
-                    <div class="flex items-center justify-between mt-1.5">
+                    <div class="flex items-center justify-between mt-1">
                         ${stockBadge}
                         <div class="text-right">
-                            ${isVipApplied ? `<span class="text-[10px] text-slate-400 line-through mr-1">${fmt(retailPrice)} đ</span>` : ''}
+                            ${isVipApplied ? `<span class="text-[9px] sm:text-[10px] text-slate-400 line-through mr-1">${fmt(retailPrice)} đ</span>` : ''}
                             <span class="font-black ${isVipApplied ? 'text-emerald-600' : 'text-blue-600'} text-xs">${fmt(tierPrice)} đ</span>
                         </div>
                     </div>
                 </div>
-                <button type="button" class="w-7 h-7 rounded-lg bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors shadow-2xs">
+                <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors shadow-2xs cursor-pointer">
                     <i class="fas fa-plus text-xs"></i>
                 </button>
             </div>`;
@@ -734,12 +846,12 @@ window.modPos = {
                 const tierVal = parseInt(c.tier || c.vip_level || c.customer_tier || 1) || 1;
                 return `
                 <div onclick="window.modPos.selectCustomer(${c.id})" class="p-2.5 hover:bg-amber-50 cursor-pointer transition border-b border-slate-50 flex justify-between items-center text-left">
-                    <div>
-                        <p class="font-bold text-slate-800 text-xs">
+                    <div class="min-w-0 pr-2">
+                        <p class="font-bold text-slate-800 text-xs truncate">
                             ${c.full_name || c.name || 'Khách Hàng'} 
                             ${c.nickname ? `<span class="text-amber-600 font-semibold text-[10px]">(${c.nickname})</span>` : ''}
                         </p>
-                        <p class="text-[10px] text-slate-500 mt-0.5">
+                        <p class="text-[10px] text-slate-500 mt-0.5 truncate">
                             <i class="fas fa-phone-alt mr-1 text-slate-400"></i> ${c.phone || 'Chưa có SĐT'} 
                             ${c.address ? `• ${c.address}` : ''}
                         </p>
@@ -767,13 +879,30 @@ window.modPos = {
         document.getElementById('pos-cust-search-section').classList.add('hidden');
         document.getElementById('pos-cust-selected-card').classList.remove('hidden');
 
-        // Hiển thị thông tin khách hàng
+        // Hiển thị thông tin khách hàng & hạn mức nợ
         const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
         document.getElementById('pc-name').innerText = `${cust.full_name || cust.name || 'Khách Hàng'} ${cust.nickname ? '(' + cust.nickname + ')' : ''}`;
         document.getElementById('pc-phone').innerText = `📞 ${cust.phone || 'Chưa có SĐT'} ${cust.vat_company ? '• ' + cust.vat_company : ''}`;
         document.getElementById('pc-address').innerText = cust.address || 'Chưa cập nhật địa chỉ';
+        
+        const debt = parseFloat(cust.current_debt || 0);
+        const debtLimit = parseFloat(cust.debt_limit || 0);
         document.getElementById('pc-points').innerText = fmt(cust.reward_points || 0) + ' đ';
-        document.getElementById('pc-debt').innerText = fmt(cust.current_debt || 0) + ' đ';
+        document.getElementById('pc-debt').innerText = fmt(debt) + ' đ';
+        
+        const limEl = document.getElementById('pc-debt-limit');
+        if (limEl) limEl.innerText = debtLimit > 0 ? (fmt(debtLimit) + ' đ') : 'Không giới hạn';
+        
+        const alertBanner = document.getElementById('pc-debt-alert-banner');
+        const alertText = document.getElementById('pc-debt-alert-text');
+        if (alertBanner) {
+            if (debtLimit > 0 && debt >= debtLimit) {
+                alertBanner.classList.remove('hidden');
+                if (alertText) alertText.innerText = `⛔ CẢNH BÁO: Khách hàng đã đạt trần công nợ (${fmt(debt)} đ / ${fmt(debtLimit)} đ). Không thể ghi nợ thêm!`;
+            } else {
+                alertBanner.classList.add('hidden');
+            }
+        }
         
         document.getElementById('pc-tier-select').value = tier;
         window.modPos.updateActiveTierHeader();
@@ -810,9 +939,9 @@ window.modPos = {
 
         if (pill) {
             if (tier > 1) {
-                pill.className = "px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs";
+                pill.className = "px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs";
             } else {
-                pill.className = "px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1 shadow-2xs";
+                pill.className = "px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1 shadow-2xs";
             }
         }
     },
@@ -889,19 +1018,27 @@ window.modPos = {
         const countSpan = document.getElementById('pos-cart-count');
         const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
 
-        if (countSpan) countSpan.innerText = window.modPos.cart.reduce((sum, i) => sum + i.quantity, 0);
+        const totalQty = window.modPos.cart.reduce((sum, i) => sum + i.quantity, 0);
+        if (countSpan) countSpan.innerText = totalQty;
+
+        const badgeCart = document.getElementById('pos-tab-badge-cart');
+        if (badgeCart) badgeCart.innerText = totalQty;
+
+        const floatQty = document.getElementById('m-float-qty');
+        if (floatQty) floatQty.innerText = totalQty;
 
         if (window.modPos.cart.length === 0) {
             if (clearBtn) clearBtn.classList.add('hidden');
             if (cartDiv) {
                 cartDiv.innerHTML = `
-                    <div class="h-full min-h-[160px] flex flex-col items-center justify-center text-slate-300 py-8">
-                        <i class="fas fa-shopping-basket text-4xl mb-2 text-slate-200"></i>
+                    <div class="h-full min-h-[140px] flex flex-col items-center justify-center text-slate-300 py-6">
+                        <i class="fas fa-shopping-basket text-3xl sm:text-4xl mb-2 text-slate-200"></i>
                         <p class="text-xs font-bold text-slate-400">Giỏ hàng đang trống</p>
-                        <p class="text-[10px] text-slate-300 mt-0.5">Chọn thiết bị bên trái để thêm vào giỏ</p>
+                        <p class="text-[10px] text-slate-300 mt-0.5">Chọn thiết bị để thêm vào giỏ</p>
                     </div>`;
             }
             window.modPos.updateTotal();
+            window.modPos.updateMobileLayout();
             return;
         }
 
@@ -914,27 +1051,28 @@ window.modPos = {
                 <div class="p-2 bg-slate-50 hover:bg-amber-50/40 rounded-lg border border-slate-200/80 transition space-y-1.5">
                     <div class="flex justify-between items-start gap-1">
                         <p class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 flex-1">${item.product_name}</p>
-                        <button type="button" onclick="window.modPos.updateQty(${item.product_id}, -999)" class="text-slate-300 hover:text-red-500 px-1 transition cursor-pointer" title="Xóa món này">
+                        <button type="button" onclick="window.modPos.updateQty(${item.product_id}, -999)" class="text-slate-300 hover:text-red-500 px-1 py-0.5 transition cursor-pointer" title="Xóa món này">
                             <i class="fas fa-trash-alt text-[10px]"></i>
                         </button>
                     </div>
                     
                     <div class="flex justify-between items-center gap-2 pt-0.5">
-                        <!-- Bộ tăng giảm số lượng -->
-                        <div class="flex items-center bg-white border border-slate-200 rounded-md shadow-2xs overflow-hidden">
-                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, -1)" class="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-black text-xs cursor-pointer">-</button>
-                            <span class="w-7 text-center text-xs font-black border-x border-slate-200 text-slate-800">${item.quantity}</span>
-                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, 1)" class="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-black text-xs cursor-pointer">+</button>
+                        <!-- Bộ tăng giảm số lượng (Touch Friendly) -->
+                        <div class="flex items-center bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, -1)" class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-black text-xs cursor-pointer">-</button>
+                            <span class="w-7 sm:w-7 text-center text-xs font-black border-x border-slate-200 text-slate-800">${item.quantity}</span>
+                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, 1)" class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-black text-xs cursor-pointer">+</button>
                         </div>
 
                         <!-- Đơn giá & Thành tiền -->
                         <div class="flex items-center gap-1.5 text-right">
                             <input type="text" value="${fmt(item.price)}" 
+                                   inputmode="numeric"
                                    oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, ''))"
                                    onchange="window.modPos.updateItemPrice(${item.product_id}, this.value)" 
                                    title="Click để sửa đơn giá"
-                                   class="w-[82px] text-right font-black text-blue-600 text-xs bg-white border border-slate-200 rounded px-1.5 py-0.5 outline-none focus:border-blue-500">
-                            <span class="font-black text-slate-900 text-xs min-w-[70px]">${fmt(itemTotal)} đ</span>
+                                   class="w-[78px] sm:w-[82px] text-right font-black text-blue-600 text-xs bg-white border border-slate-200 rounded px-1.5 py-0.5 outline-none focus:border-blue-500">
+                            <span class="font-black text-slate-900 text-xs min-w-[65px]">${fmt(itemTotal)} đ</span>
                         </div>
                     </div>
                 </div>`;
@@ -942,6 +1080,7 @@ window.modPos = {
         }
 
         window.modPos.updateTotal();
+        window.modPos.updateMobileLayout();
     },
 
     onDiscountChange: (val) => {
@@ -956,9 +1095,9 @@ window.modPos = {
             const btn = document.getElementById('pm-' + m);
             if (btn) {
                 if (m === method) {
-                    btn.className = "py-1.5 rounded bg-blue-600 text-white font-black text-center transition border border-blue-500 shadow-xs cursor-pointer";
+                    btn.className = "py-1.5 sm:py-2 rounded bg-blue-600 text-white font-black text-center transition border border-blue-500 shadow-xs cursor-pointer";
                 } else {
-                    btn.className = "py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center transition border border-slate-700 cursor-pointer";
+                    btn.className = "py-1.5 sm:py-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-center transition border border-slate-700 cursor-pointer";
                 }
             }
         });
@@ -976,11 +1115,15 @@ window.modPos = {
         const discEl = document.getElementById('pos-discount-amount');
         const totEl = document.getElementById('pos-total');
         const ptEl = document.getElementById('pos-point');
+        const tabTotEl = document.getElementById('pos-tab-total-cart');
+        const floatTotEl = document.getElementById('m-float-total');
 
         if (subEl) subEl.innerText = fmt(subtotal) + ' đ';
         if (discEl) discEl.innerText = '-' + fmt(discount) + ' đ';
         if (totEl) totEl.innerText = fmt(finalTotal) + ' đ';
         if (ptEl) ptEl.innerText = '+' + fmt(finalTotal * 0.01) + ' đ';
+        if (tabTotEl) tabTotEl.innerText = fmt(finalTotal) + ' đ';
+        if (floatTotEl) floatTotEl.innerText = fmt(finalTotal) + ' đ';
     },
 
     // Tạo đơn hàng mới từ POS
@@ -1000,6 +1143,18 @@ window.modPos = {
         if (window.modPos.selectedCustomer) {
             customerId = window.modPos.selectedCustomer.id;
             customerName = window.modPos.selectedCustomer.full_name || window.modPos.selectedCustomer.name || 'Khách Lẻ';
+
+            // Kiểm tra chặn ghi nợ nếu vượt hạn mức công nợ
+            const cust = window.modPos.selectedCustomer;
+            const debtLimit = parseFloat(cust.debt_limit || 0);
+            const currentDebt = parseFloat(cust.current_debt || 0);
+            const newUnpaid = window.modPos.paymentMethod === 'CONG_NO' ? finalTotal : 0;
+
+            if (debtLimit > 0 && (currentDebt + newUnpaid) > debtLimit) {
+                const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+                alert(`⛔ CHẶN LÊN ĐƠN HÀNG:\n\nKhách hàng "${cust.full_name || cust.name}" đã vượt hạn mức công nợ cho phép!\n• Nợ hiện tại: ${fmt(currentDebt)} đ\n• Nợ đơn này: ${fmt(newUnpaid)} đ (Tổng nợ: ${fmt(currentDebt + newUnpaid)} đ)\n• Hạn mức tối đa: ${fmt(debtLimit)} đ\n\n👉 Vui lòng yêu cầu khách thanh toán công nợ cũ hoặc thanh toán 100% bằng Tiền Mặt / Chuyển Khoản!`);
+                return;
+            }
         }
 
         const noteInput = document.getElementById('pos-order-note');
@@ -1216,6 +1371,11 @@ window.modPos = {
         }
     }
 };
+
+// Lắng nghe sự kiện resize màn hình để chuyển đổi mượt mà giữa Mobile & Desktop
+window.addEventListener('resize', () => {
+    if (window.modPos) window.modPos.updateMobileLayout();
+});
 
 // Khởi chạy POS khi load module
 window.modPos.load();

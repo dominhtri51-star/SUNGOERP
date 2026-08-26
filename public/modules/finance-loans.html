@@ -1,0 +1,555 @@
+<div class="h-full flex flex-col space-y-4 sm:space-y-6 font-sans relative pb-10">
+    <!-- HEADER & THANH CÔNG CỤ -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-red-600 text-white flex items-center justify-center shadow-md shrink-0">
+                    <i class="fas fa-university text-xl"></i>
+                </span>
+                <div>
+                    <h2 class="text-lg sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+                        VAY NGÂN HÀNG & CHI PHÍ LÃI VAY
+                        <span class="text-[10px] bg-rose-100 text-rose-800 font-black px-2.5 py-0.5 rounded-full border border-rose-200 uppercase tracking-wide">Debt & Interest Hub</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Quản lý các hợp đồng vay vốn lưu động, vay mua thiết bị/kho bãi, theo dõi lịch trả nợ gốc và chi phí tiền lãi hàng tháng.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-auto flex flex-wrap items-center justify-between lg:justify-end gap-2">
+            <button onclick="window.modLoans.openModal()" class="bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white font-black py-2.5 px-4 rounded-xl text-xs transition shadow-md flex items-center gap-2 uppercase tracking-wide">
+                <i class="fas fa-plus"></i> <span>Tạo Hợp Đồng Vay Mới</span>
+            </button>
+            <button onclick="window.modLoans.load()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition text-xs font-bold" title="Làm mới">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- THẺ THỐNG KÊ KHOẢN VAY -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng Vốn Vay Ban Đầu</p>
+                <h3 class="text-lg sm:text-xl font-black text-slate-800 truncate" id="loan-stat-orig">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-rose-200 bg-rose-50/40 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-rose-500 text-white flex items-center justify-center text-lg font-black shrink-0 shadow-sm">
+                <i class="fas fa-balance-scale-right"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-rose-800 uppercase tracking-wider">Tổng Dư Nợ Hiện Tại</p>
+                <h3 class="text-lg sm:text-xl font-black text-rose-700 truncate" id="loan-stat-current">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Lãi Vay Dự Kiến / Tháng</p>
+                <h3 class="text-lg sm:text-xl font-black text-amber-600 truncate" id="loan-stat-interest">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Khoản Vay Đang Chạy</p>
+                <h3 class="text-lg sm:text-xl font-black text-purple-600 truncate" id="loan-stat-active">0</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH HỢP ĐỒNG VAY -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col overflow-hidden">
+        <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                <i class="fas fa-list-alt text-rose-500"></i> Danh Sách Hợp Đồng Tín Dụng & Khoản Vay
+            </h3>
+        </div>
+
+        <div class="flex-1 overflow-x-auto overflow-y-auto">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-slate-100/80 text-slate-600 text-[11px] uppercase font-black tracking-wider border-b border-slate-200 sticky top-0 z-10">
+                    <tr>
+                        <th class="p-3.5 pl-4">Mã Khoản Vay</th>
+                        <th class="p-3.5">Ngân Hàng & Mục Đích</th>
+                        <th class="p-3.5">Loại Vay</th>
+                        <th class="p-3.5 text-right">Gốc Ban Đầu</th>
+                        <th class="p-3.5 text-right font-black text-rose-700">Dư Nợ Hiện Tại</th>
+                        <th class="p-3.5 text-center">Lãi Suất</th>
+                        <th class="p-3.5 text-center">Thời Hạn</th>
+                        <th class="p-3.5 text-center">Ngày Trả Lãi</th>
+                        <th class="p-3.5 text-center">Trạng Thái</th>
+                        <th class="p-3.5 text-center pr-4">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="loans-tbody" class="divide-y divide-slate-100 text-xs">
+                    <tr>
+                        <td colspan="10" class="p-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Đang nạp dữ liệu khoản vay...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL TẠO / SỬA HỢP ĐỒNG VAY -->
+    <div id="loan-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden transform transition-all border border-slate-200">
+            <div class="bg-gradient-to-r from-slate-900 to-rose-950 p-4 sm:p-5 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-university text-rose-400"></i>
+                    <h3 class="font-black text-sm uppercase tracking-wide" id="loan-modal-title">Thêm Khoản Vay Mới</h3>
+                </div>
+                <button onclick="window.modLoans.closeModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-5 space-y-3 max-h-[70vh] overflow-y-auto">
+                <input type="hidden" id="loan-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mã Khoản Vay</label>
+                        <input type="text" id="loan-code" placeholder="VD: VAY-001" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Loại Khoản Vay</label>
+                        <select id="loan-type" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none">
+                            <option value="SHORT_TERM">Vay Ngắn Hạn (< 12 tháng - Vốn lưu động)</option>
+                            <option value="LONG_TERM">Vay Trung/Dài Hạn (Đầu tư xe, thiết bị, kho)</option>
+                            <option value="OVERDRAFT">Hạn Mức Thấu Chi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tên Ngân Hàng / Tổ Chức Cho Vay <span class="text-red-500">*</span></label>
+                    <input type="text" id="loan-lender" placeholder="Vietcombank, BIDV, Techcombank, Cá nhân..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mục đích vay vốn</label>
+                    <input type="text" id="loan-purpose" placeholder="Tài trợ vốn nhập pin mặt trời, mua xe bán tải..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Số tiền vay gốc ban đầu (VNĐ) <span class="text-red-500">*</span></label>
+                        <input type="number" id="loan-orig-principal" placeholder="500000000" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-black text-rose-600 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Dư nợ hiện tại (VNĐ)</label>
+                        <input type="number" id="loan-cur-principal" placeholder="500000000" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-black text-rose-700 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Lãi suất (%/năm)</label>
+                        <input type="number" step="0.1" id="loan-rate" placeholder="8.5" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-amber-600 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Kỳ hạn (tháng)</label>
+                        <input type="number" id="loan-term" placeholder="12" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày trả lãi</label>
+                        <input type="number" id="loan-payday" placeholder="25" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày giải ngân</label>
+                        <input type="date" id="loan-disbdate" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày đáo hạn</label>
+                        <input type="date" id="loan-matdate" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Phương thức trả nợ</label>
+                    <select id="loan-method" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none">
+                        <option value="EQUAL_PRINCIPAL">Gốc trả đều hàng tháng + Lãi theo dư nợ giảm dần</option>
+                        <option value="BULLET">Gốc trả cuối kỳ + Lãi trả định kỳ hàng tháng</option>
+                        <option value="ANNUITY">Niên kim cố định (Gốc + Lãi cố định mỗi tháng)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tài sản đảm bảo / Thế chấp</label>
+                    <input type="text" id="loan-collateral" placeholder="Hàng tồn kho kho ngoại quan, Sổ đỏ, Xe..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium outline-none">
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end items-center gap-2">
+                <button onclick="window.modLoans.closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs">Hủy</button>
+                <button onclick="window.modLoans.save()" class="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-wider">Lưu Hợp Đồng Vay</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THANH TOÁN TRẢ NỢ GỐC & LÃI VAY -->
+    <div id="loan-repay-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-money-check-alt"></i>
+                    <h3 class="font-black text-sm uppercase">Thanh Toán Khoản Vay</h3>
+                </div>
+                <button onclick="window.modLoans.closeRepayModal()" class="text-slate-200 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5 space-y-3 text-xs">
+                <input type="hidden" id="repay-loan-id">
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                    <p class="font-bold text-slate-800" id="repay-loan-info">...</p>
+                    <p class="text-[11px] text-rose-600 font-black" id="repay-cur-principal-text">Dư nợ hiện tại: 0 đ</p>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày thanh toán</label>
+                    <input type="date" id="repay-date" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tiền Gốc Trả (VNĐ)</label>
+                    <input type="number" id="repay-principal" placeholder="0" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-black text-rose-600 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tiền Lãi Trả (VNĐ)</label>
+                    <input type="number" id="repay-interest" placeholder="0" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-black text-amber-600 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ghi chú thanh toán</label>
+                    <input type="text" id="repay-notes" placeholder="Trả lãi & gốc kỳ tháng..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs outline-none">
+                </div>
+                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 text-[11px]">
+                    <i class="fas fa-info-circle mr-1"></i> Hệ thống sẽ tự động hạch toán Phiếu Chi vào Sổ Quỹ và ghi nhận Tiền Lãi vào Chi Phí Doanh Nghiệp.
+                </div>
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end items-center gap-2">
+                <button onclick="window.modLoans.closeRepayModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Hủy</button>
+                <button onclick="window.modLoans.submitRepayment()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase">Xác Nhận Thanh Toán</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL XEM LỊCH TRẢ NỢ CHI TIẾT (SCHEDULE) -->
+    <div id="loan-schedule-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
+            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 text-white flex justify-between items-center shrink-0">
+                <div>
+                    <h3 class="font-black text-sm uppercase" id="sched-modal-title">Lịch Trả Nợ Gốc & Lãi Dự Kiến</h3>
+                    <p class="text-[11px] text-slate-400" id="sched-modal-sub">...</p>
+                </div>
+                <button onclick="window.modLoans.closeScheduleModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <table class="w-full text-left whitespace-nowrap text-xs">
+                    <thead class="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold sticky top-0">
+                        <tr>
+                            <th class="p-2.5">Kỳ</th>
+                            <th class="p-2.5">Ngày Đến Hạn</th>
+                            <th class="p-2.5 text-right">Tiền Gốc</th>
+                            <th class="p-2.5 text-right">Tiền Lãi</th>
+                            <th class="p-2.5 text-right font-black text-slate-800">Tổng Trả</th>
+                            <th class="p-2.5 text-right font-mono text-rose-600">Dư Nợ Còn Lại</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sched-tbody" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+            <div class="bg-slate-50 p-3 border-t border-slate-200 flex justify-end shrink-0">
+                <button onclick="window.modLoans.closeScheduleModal()" class="px-4 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modLoans = {
+    loans: [],
+
+    load: async () => {
+        try {
+            const res = await fetch('/api/loans');
+            const data = await res.json();
+            if (data.success) {
+                window.modLoans.loans = data.data;
+
+                const s = data.summary;
+                document.getElementById('loan-stat-orig').innerText = (parseFloat(s.total_original_debt) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('loan-stat-current').innerText = (parseFloat(s.total_current_debt) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('loan-stat-interest').innerText = (parseFloat(s.monthly_interest_estimate) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('loan-stat-active').innerText = s.active_loans_count || 0;
+
+                window.modLoans.render();
+            }
+        } catch (err) {
+            console.error('Lỗi tải khoản vay:', err);
+        }
+    },
+
+    render: () => {
+        const tbody = document.getElementById('loans-tbody');
+        if (window.modLoans.loans.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-400 font-bold">Chưa có hợp đồng vay nào</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = window.modLoans.loans.map(l => {
+            let statusBadge = l.status === 'ACTIVE'
+                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">ĐANG VAY</span>'
+                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200">ĐÃ TẤT TOÁN</span>';
+
+            let typeBadge = l.loan_type === 'SHORT_TERM'
+                ? '<span class="text-blue-600 font-bold">Ngắn hạn</span>'
+                : '<span class="text-purple-600 font-bold">Dài hạn</span>';
+
+            return `
+                <tr class="hover:bg-rose-50/30 transition border-b border-slate-100">
+                    <td class="p-3.5 pl-4 font-black text-rose-600 font-mono">${l.loan_code}</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-slate-800">${l.lender_name}</div>
+                        <div class="text-[10px] text-slate-400">${l.purpose || 'Vay kinh doanh'}</div>
+                    </td>
+                    <td class="p-3.5">${typeBadge}</td>
+                    <td class="p-3.5 text-right font-medium text-slate-600">${(parseFloat(l.original_principal) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3.5 text-right font-black text-rose-700 text-sm bg-rose-50/30">${(parseFloat(l.current_principal) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3.5 text-center font-black text-amber-600 font-mono">${l.interest_rate}%</td>
+                    <td class="p-3.5 text-center font-bold text-slate-700">${l.term_months} tháng</td>
+                    <td class="p-3.5 text-center font-bold text-indigo-700">Ngày ${l.payment_day_of_month || 25}</td>
+                    <td class="p-3.5 text-center">${statusBadge}</td>
+                    <td class="p-3.5 text-center pr-4">
+                        <button onclick="window.modLoans.viewSchedule(${l.id})" class="text-indigo-600 hover:text-indigo-800 font-bold text-xs p-1.5 rounded-lg hover:bg-indigo-50 mr-1" title="Xem lịch trả nợ">
+                            <i class="fas fa-calendar-alt"></i> Lịch
+                        </button>
+                        ${l.status === 'ACTIVE' ? `
+                            <button onclick="window.modLoans.openRepayModal(${l.id})" class="text-emerald-600 hover:text-emerald-800 font-bold text-xs p-1.5 rounded-lg hover:bg-emerald-50 mr-1" title="Thanh toán nợ">
+                                <i class="fas fa-money-check"></i> Trả nợ
+                            </button>
+                        ` : ''}
+                        <button onclick="window.modLoans.editModal(${l.id})" class="text-slate-500 hover:text-slate-700 font-bold text-xs p-1.5 rounded-lg hover:bg-slate-100" title="Sửa thông tin">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    openModal: () => {
+        document.getElementById('loan-modal-title').innerText = 'Tạo Hợp Đồng Vay Mới';
+        document.getElementById('loan-id').value = '';
+        document.getElementById('loan-code').value = '';
+        document.getElementById('loan-type').value = 'SHORT_TERM';
+        document.getElementById('loan-lender').value = '';
+        document.getElementById('loan-purpose').value = '';
+        document.getElementById('loan-orig-principal').value = '';
+        document.getElementById('loan-cur-principal').value = '';
+        document.getElementById('loan-rate').value = '8.0';
+        document.getElementById('loan-term').value = '12';
+        document.getElementById('loan-payday').value = '25';
+        document.getElementById('loan-disbdate').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('loan-matdate').value = '';
+        document.getElementById('loan-method').value = 'EQUAL_PRINCIPAL';
+        document.getElementById('loan-collateral').value = '';
+
+        const m = document.getElementById('loan-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    editModal: (id) => {
+        const l = window.modLoans.loans.find(x => x.id === id);
+        if (!l) return;
+
+        document.getElementById('loan-modal-title').innerText = `Sửa Hợp Đồng Vay: ${l.loan_code}`;
+        document.getElementById('loan-id').value = l.id;
+        document.getElementById('loan-code').value = l.loan_code || '';
+        document.getElementById('loan-type').value = l.loan_type || 'SHORT_TERM';
+        document.getElementById('loan-lender').value = l.lender_name || '';
+        document.getElementById('loan-purpose').value = l.purpose || '';
+        document.getElementById('loan-orig-principal').value = l.original_principal || 0;
+        document.getElementById('loan-cur-principal').value = l.current_principal || 0;
+        document.getElementById('loan-rate').value = l.interest_rate || 0;
+        document.getElementById('loan-term').value = l.term_months || 12;
+        document.getElementById('loan-payday').value = l.payment_day_of_month || 25;
+        document.getElementById('loan-disbdate').value = l.disbursement_date ? l.disbursement_date.slice(0, 10) : '';
+        document.getElementById('loan-matdate').value = l.maturity_date ? l.maturity_date.slice(0, 10) : '';
+        document.getElementById('loan-method').value = l.repayment_method || 'EQUAL_PRINCIPAL';
+        document.getElementById('loan-collateral').value = l.collateral || '';
+
+        const m = document.getElementById('loan-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    closeModal: () => {
+        const m = document.getElementById('loan-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    },
+
+    save: async () => {
+        const id = document.getElementById('loan-id').value;
+        const lender = document.getElementById('loan-lender').value.trim();
+        const origP = parseFloat(document.getElementById('loan-orig-principal').value) || 0;
+
+        if (!lender || origP <= 0) {
+            alert('Vui lòng nhập Tên Ngân Hàng và Số tiền gốc vay hợp lệ!');
+            return;
+        }
+
+        const payload = {
+            loan_code: document.getElementById('loan-code').value.trim(),
+            loan_type: document.getElementById('loan-type').value,
+            lender_name: lender,
+            purpose: document.getElementById('loan-purpose').value.trim(),
+            original_principal: origP,
+            current_principal: parseFloat(document.getElementById('loan-cur-principal').value) || origP,
+            interest_rate: parseFloat(document.getElementById('loan-rate').value) || 0,
+            term_months: parseInt(document.getElementById('loan-term').value) || 12,
+            payment_day_of_month: parseInt(document.getElementById('loan-payday').value) || 25,
+            disbursement_date: document.getElementById('loan-disbdate').value || new Date(),
+            maturity_date: document.getElementById('loan-matdate').value || new Date(),
+            repayment_method: document.getElementById('loan-method').value,
+            collateral: document.getElementById('loan-collateral').value.trim(),
+            status: 'ACTIVE'
+        };
+
+        try {
+            const url = id ? `/api/loans/${id}` : '/api/loans';
+            const method = id ? 'PUT' : 'POST';
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.modLoans.closeModal();
+                window.modLoans.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    openRepayModal: (id) => {
+        const l = window.modLoans.loans.find(x => x.id === id);
+        if (!l) return;
+
+        document.getElementById('repay-loan-id').value = l.id;
+        document.getElementById('repay-loan-info').innerText = `${l.loan_code} - ${l.lender_name}`;
+        const curP = parseFloat(l.current_principal) || 0;
+        document.getElementById('repay-cur-principal-text').innerText = `Dư nợ hiện tại: ${curP.toLocaleString('vi-VN')} đ (Lãi suất: ${l.interest_rate}%/năm)`;
+        document.getElementById('repay-date').value = new Date().toISOString().slice(0, 10);
+
+        // Tính thử tiền lãi 1 tháng
+        const monthInterest = Math.round(curP * (parseFloat(l.interest_rate) / 100) / 12);
+        const monthPrincipal = Math.round(curP / Math.max(1, parseInt(l.term_months) || 12));
+
+        document.getElementById('repay-principal').value = monthPrincipal;
+        document.getElementById('repay-interest').value = monthInterest;
+        document.getElementById('repay-notes').value = `Thanh toán gốc & lãi định kỳ`;
+
+        const m = document.getElementById('loan-repay-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    closeRepayModal: () => {
+        const m = document.getElementById('loan-repay-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    },
+
+    submitRepayment: async () => {
+        const id = document.getElementById('repay-loan-id').value;
+        const pPaid = parseFloat(document.getElementById('repay-principal').value) || 0;
+        const iPaid = parseFloat(document.getElementById('repay-interest').value) || 0;
+
+        if (pPaid <= 0 && iPaid <= 0) {
+            alert('Vui lòng nhập số tiền gốc hoặc lãi cần trả!');
+            return;
+        }
+
+        const payload = {
+            repayment_date: document.getElementById('repay-date').value,
+            principal_paid: pPaid,
+            interest_paid: iPaid,
+            notes: document.getElementById('repay-notes').value.trim()
+        };
+
+        try {
+            const res = await fetch(`/api/loans/${id}/repay`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.modLoans.closeRepayModal();
+                window.modLoans.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    viewSchedule: async (id) => {
+        try {
+            const res = await fetch(`/api/loans/${id}/schedule`);
+            const data = await res.json();
+            if (data.success && data.schedule) {
+                const l = data.loan;
+                document.getElementById('sched-modal-title').innerText = `Lịch Trả Nợ: ${l.loan_code} - ${l.lender_name}`;
+                document.getElementById('sched-modal-sub').innerText = `Gốc: ${(parseFloat(l.original_principal)||0).toLocaleString('vi-VN')} đ | Lãi: ${l.interest_rate}%/năm | Kỳ hạn: ${l.term_months} tháng`;
+
+                const tbody = document.getElementById('sched-tbody');
+                tbody.innerHTML = data.schedule.map(s => `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-2.5 font-bold font-mono">Kỳ ${s.period}</td>
+                        <td class="p-2.5 text-slate-600">${s.due_date}</td>
+                        <td class="p-2.5 text-right font-medium text-slate-700">${s.principal_repayment.toLocaleString('vi-VN')} đ</td>
+                        <td class="p-2.5 text-right font-medium text-amber-600">${s.interest_payment.toLocaleString('vi-VN')} đ</td>
+                        <td class="p-2.5 text-right font-black text-slate-800">${s.total_payment.toLocaleString('vi-VN')} đ</td>
+                        <td class="p-2.5 text-right font-bold text-rose-600 font-mono">${s.remaining_principal.toLocaleString('vi-VN')} đ</td>
+                    </tr>
+                `).join('');
+
+                const m = document.getElementById('loan-schedule-modal');
+                m.classList.remove('hidden');
+                m.classList.add('flex');
+            }
+        } catch (err) {
+            alert('Lỗi tải lịch trả nợ: ' + err.message);
+        }
+    },
+
+    closeScheduleModal: () => {
+        const m = document.getElementById('loan-schedule-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    }
+};
+
+window.modLoans.load();
+</script>

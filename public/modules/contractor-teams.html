@@ -1,26 +1,247 @@
-<div id="bidding-submodule-container" class="h-full"></div>
+<div class="h-full flex flex-col space-y-4 overflow-hidden">
+  
+  <!-- Header Banner -->
+  <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-5 text-white shadow-lg shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-0.5 bg-blue-500/20 text-blue-300 font-bold rounded text-xs border border-blue-400/30">QUẢN TRỊ CÔNG TY</span>
+        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs font-bold rounded">Đối Tác & Freelancers</span>
+      </div>
+      <h1 class="text-xl font-black text-white mt-1 flex items-center gap-2">
+        <i class="fas fa-user-shield text-amber-400"></i> Hồ Sơ Danh Bạ Nhà Thầu & Đơn Vị Giám Sát
+      </h1>
+      <p class="text-xs text-slate-300 mt-0.5">Quản lý hồ sơ năng lực, đội trưởng, số lượng thợ, khu vực nhận công trình, tài khoản thanh toán và điểm đánh giá sao ★.</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2">
+      <button onclick="window.modContractorTeams.openCreateModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
+        <i class="fas fa-plus"></i> Thêm Nhà Thầu Mới
+      </button>
+      <button onclick="loadModule('project-contractors', 'Dự Án & Chỉ Định Thầu')" class="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs backdrop-blur-sm transition flex items-center gap-1.5 border border-white/10 whitespace-nowrap">
+        <i class="fas fa-project-diagram"></i> Dự Án Chỉ Định
+      </button>
+    </div>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-3 shrink-0">
+    <div class="flex items-center gap-2 w-full md:w-auto">
+      <div class="relative flex-1 md:w-72">
+        <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+        <input type="text" id="ct-search-input" oninput="window.modContractorTeams.filter()" placeholder="Tìm tên đội, đội trưởng, SĐT, khu vực..." class="w-full pl-9 pr-3.5 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-blue-500 font-medium">
+      </div>
+      <select id="ct-filter-type" onchange="window.modContractorTeams.filter()" class="text-xs border border-slate-200 rounded-xl px-3 py-2 outline-none font-bold bg-slate-50 text-slate-700">
+        <option value="">Tất cả loại hình</option>
+        <option value="CONSTRUCTION">Đội Thi Công</option>
+        <option value="SUPERVISOR">Đơn Vị Giám Sát</option>
+        <option value="SUPPLIER">Nhà Cung Cấp</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Teams Grid Container -->
+  <div class="flex-1 overflow-y-auto pr-1">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="ct-teams-grid">
+      <!-- Dynamic Team Cards -->
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Thêm Nhà Thầu Mới -->
+<div id="modal-ct-create" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+      <h3 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+        <i class="fas fa-user-plus text-blue-600"></i> Thêm Hồ Sơ Nhà Thầu / Đơn Vị Mới
+      </h3>
+      <button onclick="window.modContractorTeams.closeCreateModal()" class="w-7 h-7 rounded-full bg-slate-100 font-bold flex items-center justify-center text-sm">&times;</button>
+    </div>
+    <form onsubmit="window.modContractorTeams.submitCreate(event)" class="space-y-3 text-xs">
+      <div>
+        <label class="block font-bold text-slate-700 mb-1">Tên Đội / Đơn Vị *</label>
+        <input type="text" id="nt-name" required placeholder="VD: Đội Kỹ Thuật Solar Fast" class="w-full px-3 py-2 border rounded-xl outline-none font-bold">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Loại Hình Đối Tác</label>
+          <select id="nt-type" class="w-full px-3 py-2 border rounded-xl font-bold bg-white outline-none">
+            <option value="CONSTRUCTION">Đội Thi Công</option>
+            <option value="SUPERVISOR">Đơn Vị Giám Sát</option>
+            <option value="SUPPLIER">Nhà Cung Cấp</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Số Lượng Nhân Lực (Thợ)</label>
+          <input type="number" id="nt-members" value="5" class="w-full px-3 py-2 border rounded-xl outline-none font-bold">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Trưởng Nhóm / Người Đại Diện *</label>
+          <input type="text" id="nt-leader" required placeholder="Nguyễn Văn Hùng" class="w-full px-3 py-2 border rounded-xl outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Số Điện Thoại Liên Hệ *</label>
+          <input type="text" id="nt-phone" required placeholder="0912.345.678" class="w-full px-3 py-2 border rounded-xl outline-none font-mono">
+        </div>
+      </div>
+      <div>
+        <label class="block font-bold text-slate-700 mb-1">Khu Vực Phủ Sóng Nhận Thi Công</label>
+        <input type="text" id="nt-areas" placeholder="TP.HCM, Bình Dương, Đồng Nai, Long An" class="w-full px-3 py-2 border rounded-xl outline-none">
+      </div>
+      <div>
+        <label class="block font-bold text-slate-700 mb-1">Thế Mạnh Kỹ Thuật & Kỹ Năng</label>
+        <input type="text" id="nt-skills" placeholder="Hybrid 1P/3P, Mái ngói biệt thự, Lắp đặt tủ ATS, Tiếp địa < 4 Ohm" class="w-full px-3 py-2 border rounded-xl outline-none">
+      </div>
+      <div>
+        <label class="block font-bold text-slate-700 mb-1">Tài Khoản Ngân Hàng (Quyết Toán Tiền Công)</label>
+        <input type="text" id="nt-bank" placeholder="1903456789011 - Techcombank (Nguyen Van Hung)" class="w-full px-3 py-2 border rounded-xl outline-none font-mono text-emerald-700 font-bold">
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button type="button" onclick="window.modContractorTeams.closeCreateModal()" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl">Hủy</button>
+        <button type="submit" class="px-5 py-2 bg-blue-600 text-white font-bold rounded-xl shadow">Lưu Hồ Sơ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-(async () => {
+window.modContractorTeams = {
+  teams: [],
+
+  init: async () => {
+    await window.modContractorTeams.load();
+  },
+
+  load: async () => {
     try {
-        const res = await fetch("/modules/bidding-marketplace.html?t=" + Date.now());
-        const html = await res.text();
-        const container = document.getElementById("bidding-submodule-container");
-        if (container) {
-            container.innerHTML = html;
-            const scripts = container.querySelectorAll("script");
-            scripts.forEach(s => {
-                const newScript = document.createElement("script");
-                newScript.textContent = s.textContent;
-                document.body.appendChild(newScript);
-            });
-            setTimeout(() => {
-                if (window.modBidding && window.modBidding.switchTab) {
-                    window.modBidding.switchTab("tab-teams");
-                }
-            }, 100);
-        }
-    } catch(e) {
-        console.error("Lỗi nạp sub-module:", e);
+      const res = await fetch("/api/bidding/teams?t=" + Date.now());
+      const json = await res.json();
+      if (json.success) {
+        window.modContractorTeams.teams = json.data || [];
+        window.modContractorTeams.renderGrid();
+      }
+    } catch(e) { console.error(e); }
+  },
+
+  renderGrid: (customList) => {
+    const list = customList || window.modContractorTeams.teams;
+    const grid = document.getElementById("ct-teams-grid");
+    if (!grid) return;
+
+    if (list.length === 0) {
+      grid.innerHTML = `<div class="col-span-3 p-12 text-center text-slate-400 font-bold bg-white rounded-2xl border border-slate-200">Không tìm thấy nhà thầu nào. Hãy bấm nút "Thêm Nhà Thầu Mới".</div>`;
+      return;
     }
-})();
+
+    grid.innerHTML = list.map(t => {
+      const isSupervisor = t.type === "SUPERVISOR";
+      const isSupplier = t.type === "SUPPLIER";
+      const typeBadge = isSupervisor 
+        ? `<span class="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-bold text-[10px]">GIÁM SÁT</span>`
+        : (isSupplier 
+          ? `<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">NHÀ CUNG CẤP</span>`
+          : `<span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold text-[10px]">ĐỘI THI CÔNG</span>`);
+
+      return `
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 hover:shadow-md transition">
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="px-2 py-0.5 bg-slate-100 font-mono font-bold text-slate-600 rounded text-[10px]">${t.code}</span>
+                ${typeBadge}
+              </div>
+              <h3 class="font-black text-slate-900 text-sm">${t.name}</h3>
+            </div>
+            <div class="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 text-amber-600 font-black text-xs">
+              <i class="fas fa-star text-amber-400"></i> ${t.rating_avg} ★
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div>
+              <span class="text-slate-400 text-[10px] block">Đại diện / Đội trưởng</span>
+              <strong class="text-slate-800 font-bold">${t.leader}</strong>
+            </div>
+            <div>
+              <span class="text-slate-400 text-[10px] block">Điện thoại hotline</span>
+              <a href="tel:${t.phone}" class="text-blue-600 font-mono font-bold hover:underline">${t.phone}</a>
+            </div>
+            <div>
+              <span class="text-slate-400 text-[10px] block">Quy mô thợ</span>
+              <strong class="text-slate-700">${t.member_count || 4} thợ lành nghề</strong>
+            </div>
+            <div>
+              <span class="text-slate-400 text-[10px] block">Dự án hoàn tất</span>
+              <strong class="text-emerald-700 font-bold">${t.total_projects_done || 0} công trình</strong>
+            </div>
+          </div>
+
+          <div class="text-xs space-y-1">
+            <p class="text-slate-500">📍 Khu vực: <strong class="text-slate-700">${t.coverage_areas || "Toàn khu vực"}</strong></p>
+            <p class="text-slate-500">⚡ Thế mạnh: <span class="text-slate-700">${t.skills || "Thi công Solar tiêu chuẩn"}</span></p>
+            ${t.bank_info ? `<p class="text-slate-500 font-mono text-[11px] bg-emerald-50/50 p-1.5 rounded border border-emerald-100 text-emerald-800">💳 ${t.bank_info}</p>` : ""}
+          </div>
+        </div>
+      `;
+    }).join("");
+  },
+
+  filter: () => {
+    const term = (document.getElementById("ct-search-input").value || "").toLowerCase().trim();
+    const type = document.getElementById("ct-filter-type").value;
+
+    const filtered = window.modContractorTeams.teams.filter(t => {
+      const matchTerm = (t.name || "").toLowerCase().includes(term) ||
+                        (t.leader || "").toLowerCase().includes(term) ||
+                        (t.phone || "").toLowerCase().includes(term) ||
+                        (t.coverage_areas || "").toLowerCase().includes(term);
+      const matchType = !type || t.type === type;
+      return matchTerm && matchType;
+    });
+
+    window.modContractorTeams.renderGrid(filtered);
+  },
+
+  openCreateModal: () => {
+    document.getElementById("modal-ct-create").classList.remove("hidden");
+  },
+  closeCreateModal: () => {
+    document.getElementById("modal-ct-create").classList.add("hidden");
+  },
+
+  submitCreate: async (e) => {
+    e.preventDefault();
+    const payload = {
+      name: document.getElementById("nt-name").value.trim(),
+      type: document.getElementById("nt-type").value,
+      member_count: document.getElementById("nt-members").value,
+      leader: document.getElementById("nt-leader").value.trim(),
+      phone: document.getElementById("nt-phone").value.trim(),
+      coverage_areas: document.getElementById("nt-areas").value.trim(),
+      skills: document.getElementById("nt-skills").value.trim(),
+      bank_info: document.getElementById("nt-bank").value.trim()
+    };
+
+    try {
+      const res = await fetch("/api/bidding/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert("🎉 Đã thêm hồ sơ nhà thầu mới thành công!");
+        window.modContractorTeams.closeCreateModal();
+        await window.modContractorTeams.load();
+      } else {
+        alert("Lỗi: " + json.error);
+      }
+    } catch(err) { alert("Lỗi: " + err.message); }
+  }
+};
+
+setTimeout(() => { window.modContractorTeams.init(); }, 50);
 </script>

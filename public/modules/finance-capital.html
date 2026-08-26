@@ -1,0 +1,472 @@
+<div class="h-full flex flex-col space-y-4 sm:space-y-6 font-sans relative pb-10">
+    <!-- HEADER & THANH CÔNG CỤ -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shrink-0">
+                    <i class="fas fa-chart-pie text-xl"></i>
+                </span>
+                <div>
+                    <h2 class="text-lg sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+                        CƠ CẤU NGUỒN VỐN & CỔ ĐÔNG
+                        <span class="text-[10px] bg-indigo-100 text-indigo-800 font-black px-2.5 py-0.5 rounded-full border border-indigo-200 uppercase tracking-wide">Capital & Equity Radar</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Quản lý Vốn điều lệ, danh sách Cổ đông góp vốn, tỷ lệ sở hữu, lịch sử rót vốn/chia cổ tức và tỷ lệ đòn bẩy tài chính.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-auto flex flex-wrap items-center justify-between lg:justify-end gap-2">
+            <button onclick="window.modCap.openTxModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-2.5 px-3.5 rounded-xl text-xs transition shadow-md flex items-center gap-1.5 uppercase">
+                <i class="fas fa-hand-holding-usd"></i> <span>Góp Vốn / Chia Cổ Tức</span>
+            </button>
+            <button onclick="window.modCap.openShModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black py-2.5 px-3.5 rounded-xl text-xs transition shadow-md flex items-center gap-1.5 uppercase">
+                <i class="fas fa-user-plus"></i> <span>Thêm Cổ Đông</span>
+            </button>
+            <button onclick="window.modCap.load()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition text-xs font-bold" title="Làm mới">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- THẺ TỔNG HỢP NGUỒN VỐN DOANH NGHIỆP -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-landmark"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Vốn Điều Lệ Cam Kết</p>
+                <h3 class="text-lg sm:text-xl font-black text-slate-800 truncate" id="cap-stat-committed">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-indigo-200 bg-indigo-50/40 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shrink-0 shadow-sm">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-indigo-900 uppercase tracking-wider">Vốn Thực Góp (Equity)</p>
+                <h3 class="text-lg sm:text-xl font-black text-indigo-700 truncate" id="cap-stat-contributed">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-balance-scale"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nợ Vay Tài Chính</p>
+                <h3 class="text-lg sm:text-xl font-black text-rose-600 truncate" id="cap-stat-debt">0 đ</h3>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-black shrink-0">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Số Cổ Đông Sáng Lập</p>
+                <h3 class="text-lg sm:text-xl font-black text-emerald-600 truncate" id="cap-stat-shcount">0</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHU VỰC CHÍNH: DANH SÁCH CỔ ĐÔNG & LỊCH SỬ GIAO DỊCH VỐN -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 overflow-hidden">
+        <!-- Cột trái: Danh sách Cổ đông (7 cols) -->
+        <div class="lg:col-span-7 bg-white rounded-2xl shadow-xs border border-slate-200 flex flex-col overflow-hidden">
+            <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="fas fa-users text-indigo-600"></i> Danh Sách Cổ Đông & Tỷ Lệ Sở Hữu (Cap Table)
+                </h3>
+            </div>
+            <div class="flex-1 overflow-x-auto overflow-y-auto">
+                <table class="w-full text-left whitespace-nowrap text-xs">
+                    <thead class="bg-slate-100/80 text-slate-600 text-[10px] uppercase font-bold sticky top-0">
+                        <tr>
+                            <th class="p-3 pl-4">Mã CĐ</th>
+                            <th class="p-3">Họ Tên Cổ Đông</th>
+                            <th class="p-3 text-center">Tỷ Lệ %</th>
+                            <th class="p-3 text-right">Vốn Cam Kết</th>
+                            <th class="p-3 text-right font-black text-indigo-700">Vốn Thực Góp</th>
+                            <th class="p-3 text-center pr-4">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sh-tbody" class="divide-y divide-slate-100">
+                        <tr><td colspan="6" class="p-6 text-center text-slate-400">Đang nạp danh sách cổ đông...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Cột phải: Lịch sử Góp vốn & Cổ tức (5 cols) -->
+        <div class="lg:col-span-5 bg-white rounded-2xl shadow-xs border border-slate-200 flex flex-col overflow-hidden">
+            <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="fas fa-history text-emerald-600"></i> Lịch Sử Góp Vốn & Chia Cổ Tức
+                </h3>
+            </div>
+            <div class="flex-1 overflow-y-auto p-3 space-y-2.5 text-xs" id="tx-list">
+                <p class="text-center text-slate-400 py-6">Đang nạp lịch sử giao dịch...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / SỬA CỔ ĐÔNG -->
+    <div id="sh-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-user-shield text-indigo-400"></i>
+                    <h3 class="font-black text-sm uppercase" id="sh-modal-title">Thêm Cổ Đông / Thành Viên</h3>
+                </div>
+                <button onclick="window.modCap.closeShModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5 space-y-3 text-xs">
+                <input type="hidden" id="sh-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mã Cổ Đông</label>
+                        <input type="text" id="sh-code" placeholder="VD: CD001" class="w-full border border-slate-200 rounded-xl p-2.5 font-bold outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tỷ lệ sở hữu (%)</label>
+                        <input type="number" step="0.1" id="sh-percent" placeholder="50" class="w-full border border-slate-200 rounded-xl p-2.5 font-black text-indigo-600 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Họ và Tên Cổ Đông <span class="text-red-500">*</span></label>
+                    <input type="text" id="sh-fullname" placeholder="Nguyễn Văn A" class="w-full border border-slate-200 rounded-xl p-2.5 font-bold outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Số điện thoại</label>
+                        <input type="text" id="sh-phone" placeholder="090..." class="w-full border border-slate-200 rounded-xl p-2.5 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Số CCCD / MST</label>
+                        <input type="text" id="sh-idcard" placeholder="079..." class="w-full border border-slate-200 rounded-xl p-2.5 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Vốn cam kết (VNĐ)</label>
+                        <input type="number" id="sh-committed" placeholder="1000000000" class="w-full border border-slate-200 rounded-xl p-2.5 font-medium outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Vốn thực góp (VNĐ)</label>
+                        <input type="number" id="sh-contributed" placeholder="1000000000" class="w-full border border-slate-200 rounded-xl p-2.5 font-black text-indigo-700 outline-none">
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end items-center gap-2">
+                <button onclick="window.modCap.closeShModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold">Hủy</button>
+                <button onclick="window.modCap.saveShareholder()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase">Lưu Cổ Đông</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GHI NHẬN GIAO DỊCH VỐN (GÓP VỐN / RÚT VỐN / CHIA CỔ TỨC) -->
+    <div id="tx-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-exchange-alt"></i>
+                    <h3 class="font-black text-sm uppercase">Ghi Nhận Giao Dịch Vốn</h3>
+                </div>
+                <button onclick="window.modCap.closeTxModal()" class="text-slate-200 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5 space-y-3 text-xs">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Cổ Đông Thực Hiện <span class="text-red-500">*</span></label>
+                    <select id="tx-sh-select" class="w-full border border-slate-200 rounded-xl p-2.5 font-bold outline-none"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Loại Giao Dịch</label>
+                    <select id="tx-type" class="w-full border border-slate-200 rounded-xl p-2.5 font-black text-slate-800 outline-none">
+                        <option value="CONTRIBUTE">GÓP VỐN (Tăng vốn CSH -> Tự động tạo Phiếu Thu Sổ Quỹ)</option>
+                        <option value="WITHDRAW">RÚT VỐN (Giảm vốn CSH -> Tự động tạo Phiếu Chi Sổ Quỹ)</option>
+                        <option value="DIVIDEND">CHIA CỔ TỨC (Lợi nhuận -> Tự động tạo Phiếu Chi Sổ Quỹ)</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Số tiền (VNĐ) <span class="text-red-500">*</span></label>
+                        <input type="number" id="tx-amount" placeholder="100000000" class="w-full border border-slate-200 rounded-xl p-2.5 font-black text-emerald-700 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày thực hiện</label>
+                        <input type="date" id="tx-date" class="w-full border border-slate-200 rounded-xl p-2.5 font-bold outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ghi chú giao dịch</label>
+                    <input type="text" id="tx-notes" placeholder="Góp vốn bổ sung đợt 2, nhận cổ tức năm..." class="w-full border border-slate-200 rounded-xl p-2.5 outline-none">
+                </div>
+                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 text-[11px]">
+                    <i class="fas fa-info-circle mr-1"></i> Giao dịch góp vốn hoặc rút vốn sẽ được tự động hạch toán tương ứng vào Sổ Quỹ Tiền Mặt của doanh nghiệp.
+                </div>
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end items-center gap-2">
+                <button onclick="window.modCap.closeTxModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold">Hủy</button>
+                <button onclick="window.modCap.submitTransaction()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase">Xác Nhận Hạch Toán</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modCap = {
+    shareholders: [],
+    transactions: [],
+
+    load: async () => {
+        try {
+            // 1. Tải danh sách cổ đông
+            const shRes = await fetch('/api/equity/shareholders');
+            const shData = await shRes.json();
+            if (shData.success) {
+                window.modCap.shareholders = shData.data;
+
+                // Cập nhật select box
+                const select = document.getElementById('tx-sh-select');
+                select.innerHTML = shData.data.map(s => `<option value="${s.id}">${s.full_name} (${s.ownership_percentage}%)</option>`).join('');
+
+                window.modCap.renderShareholders();
+            }
+
+            // 2. Tải tổng hợp nguồn vốn
+            const sumRes = await fetch('/api/equity/structure-summary');
+            const sumData = await sumRes.json();
+            if (sumData.success && sumData.data) {
+                const d = sumData.data;
+                document.getElementById('cap-stat-committed').innerText = (parseFloat(d.equity.committed_capital) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('cap-stat-contributed').innerText = (parseFloat(d.equity.contributed_capital) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('cap-stat-debt').innerText = (parseFloat(d.debt.total_bank_debt) || 0).toLocaleString('vi-VN') + ' đ';
+                document.getElementById('cap-stat-shcount').innerText = d.equity.shareholders_count || 0;
+            }
+
+            // 3. Tải lịch sử biến động vốn
+            const txRes = await fetch('/api/equity/transactions');
+            const txData = await txRes.json();
+            if (txData.success) {
+                window.modCap.transactions = txData.data;
+                window.modCap.renderTransactions();
+            }
+        } catch (err) {
+            console.error('Lỗi tải nguồn vốn:', err);
+        }
+    },
+
+    renderShareholders: () => {
+        const tbody = document.getElementById('sh-tbody');
+        if (window.modCap.shareholders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">Chưa có cổ đông nào</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = window.modCap.shareholders.map(s => {
+            const progress = (parseFloat(s.committed_capital) || 0) > 0
+                ? Math.min(100, Math.round(((parseFloat(s.contributed_capital) || 0) / parseFloat(s.committed_capital)) * 100))
+                : 100;
+
+            return `
+                <tr class="hover:bg-indigo-50/30 transition border-b border-slate-100">
+                    <td class="p-3 pl-4 font-black text-indigo-600 font-mono">${s.shareholder_code}</td>
+                    <td class="p-3">
+                        <div class="font-bold text-slate-800">${s.full_name}</div>
+                        <div class="text-[10px] text-slate-400">${s.phone || ''}</div>
+                    </td>
+                    <td class="p-3 text-center font-black text-indigo-600 font-mono text-sm">${s.ownership_percentage}%</td>
+                    <td class="p-3 text-right font-medium text-slate-600">${(parseFloat(s.committed_capital) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3 text-right font-black text-indigo-700">
+                        <div>${(parseFloat(s.contributed_capital) || 0).toLocaleString('vi-VN')} đ</div>
+                        <div class="w-full bg-slate-200 rounded-full h-1 mt-1 overflow-hidden">
+                            <div class="bg-indigo-600 h-full rounded-full" style="width: ${progress}%"></div>
+                        </div>
+                    </td>
+                    <td class="p-3 text-center pr-4">
+                        <button onclick="window.modCap.editShModal(${s.id})" class="text-blue-600 hover:text-blue-800 font-bold text-xs p-1" title="Sửa thông tin"><i class="fas fa-edit"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    renderTransactions: () => {
+        const list = document.getElementById('tx-list');
+        if (window.modCap.transactions.length === 0) {
+            list.innerHTML = '<p class="text-center text-slate-400 py-6">Chưa có giao dịch biến động vốn nào</p>';
+            return;
+        }
+
+        list.innerHTML = window.modCap.transactions.map(t => {
+            let badge = '';
+            let sign = '';
+            let color = '';
+            if (t.tx_type === 'CONTRIBUTE') {
+                badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">GÓP VỐN</span>';
+                sign = '+';
+                color = 'text-emerald-600';
+            } else if (t.tx_type === 'WITHDRAW') {
+                badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700">RÚT VỐN</span>';
+                sign = '-';
+                color = 'text-rose-600';
+            } else {
+                badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700">CHIA CỔ TỨC</span>';
+                sign = '-';
+                color = 'text-purple-600';
+            }
+
+            return `
+                <div class="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-100 transition flex items-center justify-between gap-2">
+                    <div>
+                        <div class="flex items-center gap-1.5 mb-1">
+                            ${badge}
+                            <span class="font-bold text-slate-800">${t.shareholder_name}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">${t.notes || 'Giao dịch vốn'}</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">${t.tx_date ? t.tx_date.slice(0, 10) : ''}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-black text-sm font-mono ${color}">${sign}${(parseFloat(t.amount) || 0).toLocaleString('vi-VN')} đ</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    openShModal: () => {
+        document.getElementById('sh-modal-title').innerText = 'Thêm Cổ Đông Mới';
+        document.getElementById('sh-id').value = '';
+        document.getElementById('sh-code').value = '';
+        document.getElementById('sh-fullname').value = '';
+        document.getElementById('sh-phone').value = '';
+        document.getElementById('sh-idcard').value = '';
+        document.getElementById('sh-percent').value = '';
+        document.getElementById('sh-committed').value = '';
+        document.getElementById('sh-contributed').value = '';
+
+        const m = document.getElementById('sh-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    editShModal: (id) => {
+        const s = window.modCap.shareholders.find(x => x.id === id);
+        if (!s) return;
+
+        document.getElementById('sh-modal-title').innerText = `Sửa Cổ Đông: ${s.full_name}`;
+        document.getElementById('sh-id').value = s.id;
+        document.getElementById('sh-code').value = s.shareholder_code || '';
+        document.getElementById('sh-fullname').value = s.full_name || '';
+        document.getElementById('sh-phone').value = s.phone || '';
+        document.getElementById('sh-idcard').value = s.id_card_number || '';
+        document.getElementById('sh-percent').value = s.ownership_percentage || 0;
+        document.getElementById('sh-committed').value = s.committed_capital || 0;
+        document.getElementById('sh-contributed').value = s.contributed_capital || 0;
+
+        const m = document.getElementById('sh-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    closeShModal: () => {
+        const m = document.getElementById('sh-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    },
+
+    saveShareholder: async () => {
+        const id = document.getElementById('sh-id').value;
+        const name = document.getElementById('sh-fullname').value.trim();
+        if (!name) {
+            alert('Vui lòng nhập họ tên cổ đông!');
+            return;
+        }
+
+        const payload = {
+            shareholder_code: document.getElementById('sh-code').value.trim(),
+            full_name: name,
+            phone: document.getElementById('sh-phone').value.trim(),
+            id_card_number: document.getElementById('sh-idcard').value.trim(),
+            ownership_percentage: parseFloat(document.getElementById('sh-percent').value) || 0,
+            committed_capital: parseFloat(document.getElementById('sh-committed').value) || 0,
+            contributed_capital: parseFloat(document.getElementById('sh-contributed').value) || 0,
+            status: 'ACTIVE'
+        };
+
+        try {
+            const url = id ? `/api/equity/shareholders/${id}` : '/api/equity/shareholders';
+            const method = id ? 'PUT' : 'POST';
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.modCap.closeShModal();
+                window.modCap.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    openTxModal: () => {
+        document.getElementById('tx-amount').value = '';
+        document.getElementById('tx-date').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('tx-notes').value = '';
+        const m = document.getElementById('tx-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    closeTxModal: () => {
+        const m = document.getElementById('tx-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    },
+
+    submitTransaction: async () => {
+        const shId = document.getElementById('tx-sh-select').value;
+        const amount = parseFloat(document.getElementById('tx-amount').value) || 0;
+        if (!shId || amount <= 0) {
+            alert('Vui lòng chọn cổ đông và nhập số tiền hợp lệ!');
+            return;
+        }
+
+        const payload = {
+            shareholder_id: shId,
+            tx_type: document.getElementById('tx-type').value,
+            amount,
+            tx_date: document.getElementById('tx-date').value,
+            notes: document.getElementById('tx-notes').value.trim()
+        };
+
+        try {
+            const res = await fetch('/api/equity/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.modCap.closeTxModal();
+                window.modCap.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    }
+};
+
+window.modCap.load();
+</script>

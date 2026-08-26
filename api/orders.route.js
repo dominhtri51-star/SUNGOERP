@@ -2,20 +2,30 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 
-// GET: LẤY DANH SÁCH ĐƠN HÀNG (Sạch biến rác, Kèm Customer Tier)
+// GET: LẤY DANH SÁCH ĐƠN HÀNG (Sạch biến rác, Kèm Customer Tier & Nhân viên bán hàng)
 router.get('/', async (req, res) => {
     try {
         const result = await pool.query(`
-            SELECT o.*, c.full_name as customer_name_joined, c.phone as customer_phone, c.tier as customer_tier
+            SELECT o.*, 
+                   COALESCE(NULLIF(o.customer_name, ''), c.full_name, 'Khách Lẻ') as customer_name,
+                   COALESCE(NULLIF(o.customer_phone, ''), c.phone, '') as customer_phone,
+                   c.tier as customer_tier,
+                   e.full_name as salesperson_name,
+                   e.emp_code as salesperson_code
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.id 
-            ORDER BY o.id DESC LIMIT 150
+            LEFT JOIN employees e ON o.employee_id = e.id
+            ORDER BY o.id DESC LIMIT 500
         `);
         const orders = result.rows;
         if (orders.length > 0) {
             const orderIds = orders.map(o => o.id);
-            // KHÔNG CÒN GỌI oi.qty NỮA, CHỈ DÙNG oi.quantity
-            const itemsRes = await pool.query("SELECT oi.order_id, p.product_name, oi.price, oi.quantity, oi.product_id FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ANY($1)", [orderIds]);
+            const itemsRes = await pool.query(`
+                SELECT oi.order_id, p.product_name, p.sku, oi.price, oi.quantity, oi.product_id, p.import_price 
+                FROM order_items oi 
+                JOIN products p ON oi.product_id = p.id 
+                WHERE oi.order_id = ANY($1)
+            `, [orderIds]);
             orders.forEach(o => { o.items = itemsRes.rows.filter(i => i.order_id === o.id); });
         }
         res.json({ success: true, data: orders });
@@ -27,39 +37,168 @@ router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const orderRes = await pool.query(`
-            SELECT o.*, c.full_name as customer_name_joined, c.phone as customer_phone, c.address as customer_address, c.tier as customer_tier
+            SELECT o.*, 
+                   c.full_name as customer_name_joined, 
+                   c.phone as customer_phone, 
+                   c.address as customer_address, 
+                   c.tier as customer_tier,
+                   e.full_name as salesperson_name,
+                   e.emp_code as salesperson_code
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.id 
+            LEFT JOIN employees e ON o.employee_id = e.id
             WHERE o.id = $1
         `, [id]);
         if(orderRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
         
-        // SELECT oi.* ĐÃ TỰ ĐỘNG CHUẨN VÌ DB CHỈ CÒN CỘT QUANTITY
-        const itemsRes = await pool.query('SELECT oi.*, p.product_name, p.sku FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = $1', [id]);
+        const itemsRes = await pool.query(`
+            SELECT oi.*, p.product_name, p.sku, COALESCE(p.import_price, 0) as import_price 
+            FROM order_items oi 
+            LEFT JOIN products p ON oi.product_id = p.id 
+            WHERE oi.order_id = $1
+        `, [id]);
         const docsRes = await pool.query('SELECT * FROM order_docs WHERE order_id = $1 ORDER BY id DESC', [id]);
-        res.json({ success: true, data: { ...orderRes.rows[0], items: itemsRes.rows, docs: docsRes.rows } });
+        const expensesRes = await pool.query('SELECT * FROM cash_transactions WHERE order_id = $1 ORDER BY id ASC', [id]);
+
+        res.json({ 
+            success: true, 
+            data: { 
+                ...orderRes.rows[0], 
+                items: itemsRes.rows, 
+                docs: docsRes.rows,
+                accounting_expenses: expensesRes.rows 
+            } 
+        });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// POST: TẠO ĐƠN HÀNG MỚI (Từ POS)
+// POST: TẠO ĐƠN HÀNG MỚI (Từ POS / Kinh Doanh)
 router.post('/', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const { customer_id, customer_name, total_amount, paid_amount, payment_method, notes, items } = req.body;
-        const order_code = 'DH-' + Math.floor(Date.now() / 1000).toString();
-        const finalTotal = parseFloat(total_amount) || 0;
-        const finalPaid = paid_amount !== undefined ? parseFloat(paid_amount) : finalTotal;
+        const { 
+            customer_id, customer_name, total_amount, paid_amount, payment_method, notes, items, 
+            employee_id, emp_id, employee_code,
+            shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note,
+            discount_amount, points_discount, cost_fund_source, sync_accounting
+        } = req.body;
+
+        const order_code = 'DH-' + Date.now().toString().slice(-6) + Math.floor(1000 + Math.random() * 9000);
         const finalPaymentMethod = payment_method || 'TIEN_MAT';
         const finalNotes = notes || '';
 
-        const orderRes = await client.query(
-            "INSERT INTO orders (order_code, customer_id, customer_name, total_amount, paid_amount, payment_method, notes, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING', NOW()) RETURNING id",
-            [order_code, customer_id || null, customer_name || 'Khách Lẻ', finalTotal, finalPaid, finalPaymentMethod, finalNotes]
-        );
+        const shipFee = parseFloat(shipping_fee) || 0;
+        const stnFee = parseFloat(station_fee) || 0;
+        const packFee = parseFloat(packaging_fee) || 0;
+        const handFee = parseFloat(handling_fee) || 0;
+        const othFee = parseFloat(other_fee) || 0;
+        const othNote = (other_fee_note || '').trim();
+        const discAmount = parseFloat(discount_amount) || 0;
+        const ptsDiscount = parseFloat(points_discount) || 0;
+        const fundSource = cost_fund_source || 'TIEN_MAT_QUY';
+        const shouldSync = sync_accounting !== false;
+
+        // Tự động phân giải Mã Nhân Viên (emp_code / emp_id / user_id) sang employees.id
+        let resolvedEmpId = null;
+        const rawEmp = employee_id || emp_id || employee_code;
+        if (rawEmp) {
+            if (!isNaN(parseInt(rawEmp)) && String(parseInt(rawEmp)) === String(rawEmp).trim()) {
+                const empCheck = await client.query("SELECT id FROM employees WHERE id = $1", [parseInt(rawEmp)]);
+                if (empCheck.rows.length > 0) resolvedEmpId = empCheck.rows[0].id;
+            }
+            if (!resolvedEmpId) {
+                const empCodeCheck = await client.query("SELECT id FROM employees WHERE UPPER(emp_code) = $1", [String(rawEmp).trim().toUpperCase()]);
+                if (empCodeCheck.rows.length > 0) {
+                    resolvedEmpId = empCodeCheck.rows[0].id;
+                } else {
+                    const userMatch = await client.query("SELECT id, user_id FROM users WHERE UPPER(emp_id) = $1 OR UPPER(username) = $1", [String(rawEmp).trim().toUpperCase()]);
+                    if (userMatch.rows.length > 0) {
+                        const uId = userMatch.rows[0].id || userMatch.rows[0].user_id;
+                        const empUserCheck = await client.query("SELECT id FROM employees WHERE user_id = $1", [uId]);
+                        if (empUserCheck.rows.length > 0) resolvedEmpId = empUserCheck.rows[0].id;
+                    }
+                }
+            }
+        }
+
+        // Tính toán doanh số, giá vốn và lợi nhuận
+        let subtotal = 0;
+        let cogs = 0;
+        if (items && Array.isArray(items)) {
+            for (let item of items) {
+                const qty = parseFloat(item.quantity) || 1;
+                const price = parseFloat(item.price) || 0;
+                let impPrice = parseFloat(item.import_price) || 0;
+                if (!impPrice && item.product_id) {
+                    const pRes = await client.query("SELECT import_price FROM products WHERE id = $1", [item.product_id]);
+                    if (pRes.rows.length > 0) impPrice = parseFloat(pRes.rows[0].import_price) || 0;
+                }
+                subtotal += qty * price;
+                cogs += qty * impPrice;
+            }
+        }
+        if (subtotal === 0 && total_amount) subtotal = parseFloat(total_amount) || 0;
+
+        const calculatedTotal = Math.max(0, subtotal - discAmount - ptsDiscount);
+        const finalTotal = total_amount !== undefined ? parseFloat(total_amount) : calculatedTotal;
+        const finalPaid = paid_amount !== undefined ? parseFloat(paid_amount) : finalTotal;
+        const grossProfit = finalTotal - cogs;
+        const totalOrderCosts = shipFee + stnFee + packFee + handFee + othFee;
+        const netProfit = grossProfit - totalOrderCosts;
+
+        // KIỂM TRA HẠN MỨC CÔNG NỢ (DEBT LIMIT CHECK)
+        if (customer_id) {
+            const custCheck = await client.query(`
+                SELECT id, name, full_name, 
+                       COALESCE(debt_limit, 0) as debt_limit,
+                       COALESCE((SELECT SUM(total_amount - paid_amount) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as current_debt
+                FROM customers WHERE id = $1
+            `, [customer_id]);
+            
+            if (custCheck.rows.length > 0) {
+                const c = custCheck.rows[0];
+                const debtLimit = parseFloat(c.debt_limit) || 0;
+                const currentDebt = parseFloat(c.current_debt) || 0;
+                const newUnpaid = Math.max(0, finalTotal - finalPaid);
+                
+                if (debtLimit > 0 && (currentDebt + newUnpaid) > debtLimit) {
+                    await client.query('ROLLBACK');
+                    const custDisplayName = c.full_name || c.name || 'Khách Hàng';
+                    const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+                    return res.status(400).json({
+                        success: false,
+                        code: 'DEBT_LIMIT_EXCEEDED',
+                        error: `⛔ CHẶN LÊN ĐƠN: Khách hàng "${custDisplayName}" đã vượt hạn mức công nợ cho phép!\n• Nợ hiện tại: ${fmt(currentDebt)} đ\n• Nợ đơn này: ${fmt(newUnpaid)} đ (Tổng: ${fmt(currentDebt + newUnpaid)} đ)\n• Hạn mức tối đa: ${fmt(debtLimit)} đ\n👉 Yêu cầu thanh toán công nợ cũ trước khi lên đơn mới!`
+                    });
+                }
+            }
+        }
+
+        const orderRes = await client.query(`
+            INSERT INTO orders (
+                order_code, customer_id, customer_name, subtotal_amount, total_amount, paid_amount, 
+                payment_method, notes, status, employee_id,
+                shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note,
+                discount_amount, points_discount, cost_of_goods, gross_profit, net_profit,
+                cost_fund_source, sync_accounting, created_at
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6, 
+                $7, $8, 'PENDING', $9,
+                $10, $11, $12, $13, $14, $15,
+                $16, $17, $18, $19, $20,
+                $21, $22, NOW()
+            ) RETURNING id
+        `, [
+            order_code, customer_id || null, customer_name || 'Khách Lẻ', subtotal, finalTotal, finalPaid,
+            finalPaymentMethod, finalNotes, resolvedEmpId,
+            shipFee, stnFee, packFee, handFee, othFee, othNote,
+            discAmount, ptsDiscount, cogs, grossProfit, netProfit,
+            fundSource, shouldSync
+        ]);
         const orderId = orderRes.rows[0].id;
         
-        // TRỪ KHO NGAY KHI TẠO ĐƠN & GHI ĐÚNG CỘT QUANTITY
+        // Ghi danh sách sản phẩm & Trừ kho
         if (items && Array.isArray(items)) {
             for (let item of items) {
                 const qty = parseFloat(item.quantity) || 1;
@@ -72,6 +211,55 @@ router.post('/', async (req, res) => {
                 await client.query("UPDATE products SET stock_qty = GREATEST(0, stock_qty - $1) WHERE id = $2", [qty, item.product_id]);
             }
         }
+
+        // TỰ ĐỘNG ĐỒNG BỘ CÔNG NỢ & DOANH SỐ VỀ CRM NGAY KHI TẠO ĐƠN
+        if (customer_id) {
+            await client.query(`
+                UPDATE customers 
+                SET 
+                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
+                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                WHERE id = $1
+            `, [customer_id]);
+        }
+
+        // TỰ ĐỘNG ĐỒNG BỘ CHI PHÍ SANG SỔ QUỸ KẾ TOÁN (cash_transactions)
+        if (shouldSync && totalOrderCosts > 0) {
+            const pMethod = (fundSource === 'TIEN_MAT_QUY' || fundSource === 'Tiền Mặt') ? 'Tiền Mặt' : 'Chuyển Khoản';
+            const custDisplay = customer_name || 'Khách Lẻ';
+
+            if (shipFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', 'Đơn vị vận chuyển', $2, $3, 'Phí vận chuyển giao hàng', 'KHONG_HOA_DON', $4, $5, $6, $7, 'SHIPPING', NOW())
+                `, ['PC-VC-' + order_code, shipFee, pMethod, fundSource, `Cước vận chuyển đơn hàng ${order_code} (${custDisplay})`, orderId, order_code]);
+            }
+            if (stnFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', 'Xe trung chuyển chành', $2, $3, 'Phí gửi hàng ra chành', 'KHONG_HOA_DON', $4, $5, $6, $7, 'STATION', NOW())
+                `, ['PC-CH-' + order_code, stnFee, pMethod, fundSource, `Phí gửi hàng ra chành xe cho đơn ${order_code} (${custDisplay})`, orderId, order_code]);
+            }
+            if (packFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', 'Đóng gói / Pallet', $2, $3, 'Phí đóng gói hàng hóa', 'KHONG_HOA_DON', $4, $5, $6, $7, 'PACKAGING', NOW())
+                `, ['PC-DG-' + order_code, packFee, pMethod, fundSource, `Phí đóng gói pallet, kiện gỗ cho đơn ${order_code} (${custDisplay})`, orderId, order_code]);
+            }
+            if (handFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', 'Đội bốc xếp / Xe cẩu', $2, $3, 'Phí bốc xếp & nâng hạ', 'KHONG_HOA_DON', $4, $5, $6, $7, 'HANDLING', NOW())
+                `, ['PC-BX-' + order_code, handFee, pMethod, fundSource, `Phí bốc vác, nâng hạ thiết bị cho đơn ${order_code} (${custDisplay})`, orderId, order_code]);
+            }
+            if (othFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', 'Chi phí khác', $2, $3, 'Chi phí phụ trợ đơn hàng', 'KHONG_HOA_DON', $4, $5, $6, $7, 'OTHER', NOW())
+                `, ['PC-KP-' + order_code, othFee, pMethod, fundSource, `${othNote || 'Chi phí ngoài'} cho đơn hàng ${order_code} (${custDisplay})`, orderId, order_code]);
+            }
+        }
+
         await client.query('COMMIT');
         res.json({ success: true, orderId, order_code });
     } catch (err) { 
@@ -85,29 +273,64 @@ router.put('/:id', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const { delivery_company, driver_name, license_plate, notes, paid_amount, status, payment_method, items, cancel_reason, refund_amount } = req.body;
+        const { 
+            delivery_company, driver_name, license_plate, notes, paid_amount, status, payment_method, 
+            items, cancel_reason, refund_amount,
+            customer_name, customer_phone, customer_address,
+            shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note,
+            discount_amount, points_discount, cost_fund_source, sync_accounting
+        } = req.body;
         
-        const oldOrder = await client.query('SELECT status, paid_amount, customer_id FROM orders WHERE id=$1', [req.params.id]);
-        if (oldOrder.rows.length === 0) throw new Error('Không tìm thấy đơn hàng');
-        const oldStatus = oldOrder.rows[0].status;
-        const custId = oldOrder.rows[0].customer_id;
+        const oldOrderRes = await client.query('SELECT * FROM orders WHERE id=$1', [req.params.id]);
+        if (oldOrderRes.rows.length === 0) throw new Error('Không tìm thấy đơn hàng');
+        const oldOrder = oldOrderRes.rows[0];
+        const oldStatus = oldOrder.status;
+        const custId = oldOrder.customer_id;
+        const orderCode = oldOrder.order_code;
 
-        let newTotalAmount = 0;
+        const shipFee = parseFloat(shipping_fee) || 0;
+        const stnFee = parseFloat(station_fee) || 0;
+        const packFee = parseFloat(packaging_fee) || 0;
+        const handFee = parseFloat(handling_fee) || 0;
+        const othFee = parseFloat(other_fee) || 0;
+        const othNote = (other_fee_note || '').trim();
+        const discAmount = parseFloat(discount_amount) || 0;
+        const ptsDiscount = parseFloat(points_discount) || 0;
+        const fundSource = cost_fund_source || oldOrder.cost_fund_source || 'TIEN_MAT_QUY';
+        const shouldSync = sync_accounting !== undefined ? Boolean(sync_accounting) : true;
+
+        const finalCustomerName = customer_name ? customer_name.trim() : (oldOrder.customer_name || 'Khách Lẻ');
+        const finalCustomerPhone = customer_phone !== undefined ? customer_phone.trim() : (oldOrder.customer_phone || '');
+        const finalDeliveryCompany = delivery_company !== undefined ? delivery_company : (oldOrder.delivery_company || '');
+        const finalDriverName = driver_name !== undefined ? driver_name : (oldOrder.driver_name || '');
+        const finalLicensePlate = license_plate !== undefined ? license_plate : (oldOrder.license_plate || '');
+        const finalPaidAmount = paid_amount !== undefined ? (parseFloat(paid_amount) || 0) : (parseFloat(oldOrder.paid_amount) || 0);
+        const finalStatus = status || oldStatus || 'PENDING';
+        const finalPaymentMethod = payment_method || oldOrder.payment_method || 'TIỀN MẶT';
+
+        let newSubtotal = 0;
+        let newCogs = 0;
+
         if (items && items.length > 0) {
-            // Lấy tên khách hàng từ đơn hiện tại để gán cho bảo hành
-            const custNameRes = await client.query('SELECT customer_name FROM orders WHERE id=$1', [req.params.id]);
-            const warrantyCustomer = custNameRes.rows[0]?.customer_name || 'Khách Lẻ';
-
             for(let i of items) {
-                const itemTotal = i.quantity * i.price;
-                newTotalAmount += itemTotal;
-                // CẬP NHẬT VÀO CỘT QUANTITY (Loại bỏ qty)
+                const qty = parseFloat(i.quantity) || 0;
+                const price = parseFloat(i.price) || 0;
+                const itemTotal = qty * price;
+                newSubtotal += itemTotal;
+
+                let impPrice = parseFloat(i.import_price) || 0;
+                if (!impPrice && i.product_id) {
+                    const pRes = await client.query("SELECT import_price FROM products WHERE id = $1", [i.product_id]);
+                    if (pRes.rows.length > 0) impPrice = parseFloat(pRes.rows[0].import_price) || 0;
+                }
+                newCogs += qty * impPrice;
+
                 await client.query(
                     "UPDATE order_items SET quantity=$1, price=$2, total=$3, serial_number=$4 WHERE id=$5", 
-                    [i.quantity, i.price, itemTotal, i.serial_number || '', i.id]
+                    [qty, price, itemTotal, i.serial_number || '', i.id]
                 );
 
-                // [THÊM MỚI] Tự động kích hoạt bảo hành
+                // Tự động kích hoạt bảo hành
                 if (i.serial_number && i.serial_number.trim() !== '') {
                     await client.query(`
                         INSERT INTO warranties (serial_number, sku, customer_name, warranty_months, activated_at) 
@@ -119,14 +342,22 @@ router.put('/:id', async (req, res) => {
                             CURRENT_TIMESTAMP
                         )
                         ON CONFLICT (serial_number) DO NOTHING
-                    `, [i.serial_number.trim(), i.product_id, warrantyCustomer]);
+                    `, [i.serial_number.trim(), i.product_id, finalCustomerName]);
                 }
             }
+        } else {
+            newSubtotal = parseFloat(oldOrder.subtotal_amount) || parseFloat(oldOrder.total_amount) || 0;
+            newCogs = parseFloat(oldOrder.cost_of_goods) || 0;
         }
+
+        const newTotalAmount = Math.max(0, newSubtotal - discAmount - ptsDiscount);
+        const grossProfit = newTotalAmount - newCogs;
+        const totalOrderCosts = shipFee + stnFee + packFee + handFee + othFee;
+        const netProfit = grossProfit - totalOrderCosts;
 
         // KỊCH BẢN HỦY ĐƠN: CỘNG LẠI TỒN KHO THỰC TẾ
         let finalNotes = notes || '';
-        if (oldStatus !== 'CANCELLED' && status === 'CANCELLED') {
+        if (oldStatus !== 'CANCELLED' && finalStatus === 'CANCELLED') {
             if (items && items.length > 0) {
                 for(let i of items) {
                     await client.query("UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2", [i.quantity, i.product_id]);
@@ -135,12 +366,112 @@ router.put('/:id', async (req, res) => {
             finalNotes = `[HỆ THỐNG]: Đã hoàn lại tồn kho. Lý do hủy: ${cancel_reason || 'Không có'}. Hoàn tiền khách: ${refund_amount || 0}đ.\n` + finalNotes;
         }
 
-        await client.query(
-            "UPDATE orders SET delivery_company=$1, driver_name=$2, license_plate=$3, notes=$4, paid_amount=$5, status=$6, payment_method=$7, total_amount=$8 WHERE id=$9",
-            [delivery_company, driver_name, license_plate, finalNotes, paid_amount, status, payment_method, newTotalAmount, req.params.id]
-        );
+        await client.query(`
+            UPDATE orders 
+            SET customer_name=$1, customer_phone=$2,
+                delivery_company=$3, driver_name=$4, license_plate=$5, notes=$6, 
+                paid_amount=$7, status=$8, payment_method=$9, 
+                subtotal_amount=$10, total_amount=$11,
+                shipping_fee=$12, station_fee=$13, packaging_fee=$14, handling_fee=$15, other_fee=$16, other_fee_note=$17,
+                discount_amount=$18, points_discount=$19, cost_of_goods=$20, gross_profit=$21, net_profit=$22,
+                cost_fund_source=$23, sync_accounting=$24
+            WHERE id=$25
+        `, [
+            finalCustomerName, finalCustomerPhone,
+            finalDeliveryCompany, finalDriverName, finalLicensePlate, finalNotes, 
+            finalPaidAmount, finalStatus, finalPaymentMethod, 
+            newSubtotal, newTotalAmount,
+            shipFee, stnFee, packFee, handFee, othFee, othNote,
+            discAmount, ptsDiscount, newCogs, grossProfit, netProfit,
+            fundSource, shouldSync,
+            parseInt(req.params.id, 10)
+        ]);
         
-        // --- BẮT ĐẦU: ĐỒNG BỘ CÔNG NỢ & DOANH SỐ VỀ CRM ---
+        // ĐỒNG BỘ SANG SỔ QUỸ KẾ TOÁN (cash_transactions)
+        if (shouldSync) {
+            await client.query("DELETE FROM cash_transactions WHERE order_id = $1 AND cost_type IS NOT NULL", [parseInt(req.params.id, 10)]);
+
+            const pMethod = (fundSource === 'TIEN_MAT_QUY' || fundSource === 'Tiền Mặt') ? 'Tiền Mặt' : 'Chuyển Khoản';
+            const orderIdInt = parseInt(req.params.id, 10);
+
+            if (shipFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', $2, $3, $4, 'Phí vận chuyển giao hàng', 'KHONG_HOA_DON', $5, $6, $7, $8, 'SHIPPING', NOW())
+                `, [
+                    'PC-VC-' + orderCode,
+                    finalDeliveryCompany || 'Đơn vị vận chuyển',
+                    shipFee,
+                    pMethod,
+                    fundSource,
+                    `Cước vận chuyển đơn hàng ${orderCode} (${finalCustomerName})`,
+                    orderIdInt,
+                    orderCode
+                ]);
+            }
+
+            if (stnFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', 'Xe trung chuyển chành', $2, $3, 'Phí gửi hàng ra chành', 'KHONG_HOA_DON', $4, $5, $6, $7, 'STATION', NOW())
+                `, [
+                    'PC-CH-' + orderCode,
+                    stnFee,
+                    pMethod,
+                    fundSource,
+                    `Phí gửi hàng ra chành xe cho đơn ${orderCode} (${finalCustomerName})`,
+                    orderIdInt,
+                    orderCode
+                ]);
+            }
+
+            if (packFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', 'Đóng gói / Pallet', $2, $3, 'Phí đóng gói hàng hóa', 'KHONG_HOA_DON', $4, $5, $6, $7, 'PACKAGING', NOW())
+                `, [
+                    'PC-DG-' + orderCode,
+                    packFee,
+                    pMethod,
+                    fundSource,
+                    `Phí đóng gói pallet, kiện gỗ cho đơn ${orderCode} (${finalCustomerName})`,
+                    orderIdInt,
+                    orderCode
+                ]);
+            }
+
+            if (handFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', 'Đội bốc xếp / Xe cẩu', $2, $3, 'Phí bốc xếp & nâng hạ', 'KHONG_HOA_DON', $4, $5, $6, $7, 'HANDLING', NOW())
+                `, [
+                    'PC-BX-' + orderCode,
+                    handFee,
+                    pMethod,
+                    fundSource,
+                    `Phí bốc vác, nâng hạ thiết bị cho đơn ${orderCode} (${finalCustomerName})`,
+                    orderIdInt,
+                    orderCode
+                ]);
+            }
+
+            if (othFee > 0) {
+                await client.query(`
+                    INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                    VALUES ($1, 'CHI', 'Chi phí khác', $2, $3, 'Chi phí phụ trợ đơn hàng', 'KHONG_HOA_DON', $4, $5, $6, $7, 'OTHER', NOW())
+                `, [
+                    'PC-KP-' + orderCode,
+                    othFee,
+                    pMethod,
+                    fundSource,
+                    `${othNote || 'Chi phí ngoài'} cho đơn hàng ${orderCode} (${finalCustomerName})`,
+                    req.params.id,
+                    orderCode
+                ]);
+            }
+        }
+
+        // ĐỒNG BỘ CÔNG NỢ & DOANH SỐ VỀ CRM
         if (custId) {
             await client.query(`
                 UPDATE customers 
@@ -150,10 +481,19 @@ router.put('/:id', async (req, res) => {
                 WHERE id = $1
             `, [custId]);
         }
-        // --- KẾT THÚC: ĐỒNG BỘ ---
 
         await client.query('COMMIT');
-        res.json({ success: true });
+        res.json({ 
+            success: true, 
+            data: { 
+                subtotal_amount: newSubtotal, 
+                total_amount: newTotalAmount, 
+                cost_of_goods: newCogs, 
+                gross_profit: grossProfit, 
+                net_profit: netProfit,
+                total_order_costs: totalOrderCosts 
+            } 
+        });
     } catch(e) { 
         await client.query('ROLLBACK'); 
         res.status(500).json({ success: false, error: e.message }); 
@@ -206,68 +546,255 @@ router.delete('/:id/docs/:docId', async (req, res) => {
 });
 
 // ===================================
-// API TRẢ HÀNG VÀ KIỂM ĐỊNH KHO QC
+// API TRẢ HÀNG VÀ KIỂM ĐỊNH KHO QC (RMA & RETURNS)
 // ===================================
-router.post('/:id/return', async (req, res) => {
-    const client = await pool.connect();
+
+// Tự động nâng cấp bảng return_orders & return_items nếu thiếu cột
+(async () => {
     try {
-        await client.query('BEGIN');
-        const { reason, deduction_fee, refund_amount, return_items } = req.body;
-        
-        const orderRes = await client.query('SELECT order_code, customer_name FROM orders WHERE id = $1', [req.params.id]);
-        const o = orderRes.rows[0];
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS return_orders (
+                id SERIAL PRIMARY KEY,
+                order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+                order_code VARCHAR(100),
+                customer_name VARCHAR(255),
+                customer_phone VARCHAR(50),
+                reason TEXT,
+                deduction_fee NUMERIC DEFAULT 0,
+                refund_amount NUMERIC DEFAULT 0,
+                status VARCHAR(50) DEFAULT 'PENDING_QC',
+                processed_by VARCHAR(100),
+                processed_at TIMESTAMP,
+                qc_notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS return_items (
+                id SERIAL PRIMARY KEY,
+                return_id INTEGER REFERENCES return_orders(id) ON DELETE CASCADE,
+                product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+                product_name VARCHAR(255),
+                sku VARCHAR(100),
+                return_qty INTEGER DEFAULT 1,
+                price NUMERIC DEFAULT 0,
+                good_qty INTEGER DEFAULT 0,
+                defect_qty INTEGER DEFAULT 0,
+                qc_status VARCHAR(50) DEFAULT 'PENDING',
+                qc_note TEXT
+            );
+            ALTER TABLE return_orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50);
+            ALTER TABLE return_orders ADD COLUMN IF NOT EXISTS processed_by VARCHAR(100);
+            ALTER TABLE return_orders ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP;
+            ALTER TABLE return_orders ADD COLUMN IF NOT EXISTS qc_notes TEXT;
+            ALTER TABLE return_items ADD COLUMN IF NOT EXISTS sku VARCHAR(100);
+            ALTER TABLE return_items ADD COLUMN IF NOT EXISTS good_qty INTEGER DEFAULT 0;
+            ALTER TABLE return_items ADD COLUMN IF NOT EXISTS defect_qty INTEGER DEFAULT 0;
+            ALTER TABLE return_items ADD COLUMN IF NOT EXISTS qc_status VARCHAR(50) DEFAULT 'PENDING';
+            ALTER TABLE return_items ADD COLUMN IF NOT EXISTS qc_note TEXT;
+        `);
+    } catch (e) {
+        console.error("Return orders schema check:", e.message);
+    }
+})();
 
-        const retRes = await client.query(
-            "INSERT INTO return_orders (order_id, order_code, customer_name, reason, deduction_fee, refund_amount, status) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING_QC') RETURNING id",
-            [req.params.id, o.order_code, o.customer_name, reason, deduction_fee, refund_amount]
-        );
-        const returnId = retRes.rows[0].id;
-
-        for (let item of return_items) {
-            if(item.return_qty > 0) {
-                await client.query(
-                    "INSERT INTO return_items (return_id, product_id, product_name, return_qty, price) VALUES ($1, $2, $3, $4, $5)",
-                    [returnId, item.product_id, item.product_name, item.return_qty, item.price]
-                );
-            }
-        }
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch(e) { await client.query('ROLLBACK'); res.status(500).json({ success: false, error: e.message }); } finally { client.release(); }
-});
-
+// Lấy danh sách phiếu trả hàng (Kèm chi tiết món và thông tin đơn gốc)
 router.get('/returns/list', async (req, res) => {
     try {
-        const result = await pool.query("SELECT * FROM return_orders ORDER BY id DESC");
+        const result = await pool.query(`
+            SELECT ro.*, 
+                   COALESCE(ro.customer_phone, o.customer_phone, c.phone, '') as customer_phone_resolved,
+                   COALESCE(c.address, '') as customer_address
+            FROM return_orders ro
+            LEFT JOIN orders o ON ro.order_id = o.id
+            LEFT JOIN customers c ON o.customer_id = c.id
+            ORDER BY ro.id DESC
+        `);
         const returns = result.rows;
         if (returns.length > 0) {
             const retIds = returns.map(r => r.id);
-            const itemsRes = await pool.query("SELECT * FROM return_items WHERE return_id = ANY($1)", [retIds]);
-            returns.forEach(r => { r.items = itemsRes.rows.filter(i => i.return_id === r.id); });
+            const itemsRes = await pool.query(`
+                SELECT ri.*, p.sku as product_sku, p.image_url 
+                FROM return_items ri 
+                LEFT JOIN products p ON ri.product_id = p.id 
+                WHERE ri.return_id = ANY($1)
+            `, [retIds]);
+            returns.forEach(r => { 
+                r.customer_phone = r.customer_phone || r.customer_phone_resolved;
+                r.items = itemsRes.rows.filter(i => i.return_id === r.id); 
+            });
         }
         res.json({ success: true, data: returns });
     } catch(e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
+// Lấy chi tiết 1 phiếu trả hàng
+router.get('/returns/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(`
+            SELECT ro.*, 
+                   COALESCE(ro.customer_phone, o.customer_phone, c.phone, '') as customer_phone,
+                   COALESCE(c.address, '') as customer_address,
+                   o.total_amount as original_order_total
+            FROM return_orders ro
+            LEFT JOIN orders o ON ro.order_id = o.id
+            LEFT JOIN customers c ON o.customer_id = c.id
+            WHERE ro.id = $1
+        `, [id]);
+        if (result.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu trả hàng' });
+        
+        const retOrder = result.rows[0];
+        const itemsRes = await pool.query(`
+            SELECT ri.*, p.sku as product_sku, p.image_url, p.stock_qty as current_stock, p.defective_qty as current_defective
+            FROM return_items ri 
+            LEFT JOIN products p ON ri.product_id = p.id 
+            WHERE ri.return_id = $1
+        `, [id]);
+        retOrder.items = itemsRes.rows;
+        res.json({ success: true, data: retOrder });
+    } catch(e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+// Tạo phiếu trả hàng mới (Gắn liền với đơn hàng)
+router.post('/:id/return', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const { reason, deduction_fee, refund_amount, return_items, customer_phone } = req.body;
+        
+        const orderRes = await client.query('SELECT order_code, customer_name, customer_phone FROM orders WHERE id = $1', [req.params.id]);
+        if (orderRes.rows.length === 0) throw new Error('Không tìm thấy đơn hàng gốc');
+        const o = orderRes.rows[0];
+        const phone = customer_phone || o.customer_phone || '';
+
+        const retRes = await client.query(
+            `INSERT INTO return_orders (order_id, order_code, customer_name, customer_phone, reason, deduction_fee, refund_amount, status, created_at) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING_QC', NOW()) RETURNING id`,
+            [req.params.id, o.order_code, o.customer_name, phone, reason || '', deduction_fee || 0, refund_amount || 0]
+        );
+        const returnId = retRes.rows[0].id;
+
+        if (return_items && Array.isArray(return_items)) {
+            for (let item of return_items) {
+                const qty = parseInt(item.return_qty) || 0;
+                if (qty > 0) {
+                    await client.query(
+                        `INSERT INTO return_items (return_id, product_id, product_name, sku, return_qty, price, qc_status) 
+                         VALUES ($1, $2, $3, $4, $5, $6, 'PENDING')`,
+                        [returnId, item.product_id || null, item.product_name || 'Thiết bị', item.sku || '', qty, item.price || 0]
+                    );
+                }
+            }
+        }
+        await client.query('COMMIT');
+        res.json({ success: true, return_id: returnId });
+    } catch(e) { 
+        await client.query('ROLLBACK'); 
+        res.status(500).json({ success: false, error: e.message }); 
+    } finally { client.release(); }
+});
+
+// Tạo phiếu trả hàng tự do / trực tiếp
+router.post('/returns/create-direct', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const { order_id, order_code, customer_name, customer_phone, reason, deduction_fee, refund_amount, return_items } = req.body;
+        
+        const finalOrderCode = order_code || ('TH-' + Math.floor(Date.now() / 1000));
+        const finalCustName = customer_name || 'Khách Hàng';
+        const finalPhone = customer_phone || '';
+
+        const retRes = await client.query(
+            `INSERT INTO return_orders (order_id, order_code, customer_name, customer_phone, reason, deduction_fee, refund_amount, status, created_at) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING_QC', NOW()) RETURNING id`,
+            [order_id || null, finalOrderCode, finalCustName, finalPhone, reason || '', deduction_fee || 0, refund_amount || 0]
+        );
+        const returnId = retRes.rows[0].id;
+
+        if (return_items && Array.isArray(return_items)) {
+            for (let item of return_items) {
+                const qty = parseInt(item.return_qty) || 0;
+                if (qty > 0) {
+                    await client.query(
+                        `INSERT INTO return_items (return_id, product_id, product_name, sku, return_qty, price, qc_status) 
+                         VALUES ($1, $2, $3, $4, $5, $6, 'PENDING')`,
+                        [returnId, item.product_id || null, item.product_name || 'Thiết bị', item.sku || '', qty, item.price || 0]
+                    );
+                }
+            }
+        }
+        await client.query('COMMIT');
+        res.json({ success: true, return_id: returnId });
+    } catch(e) { 
+        await client.query('ROLLBACK'); 
+        res.status(500).json({ success: false, error: e.message }); 
+    } finally { client.release(); }
+});
+
+// Xử lý kiểm định QC & Nhập kho sản phẩm trả lại
 router.post('/returns/:id/process', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const { qc_items } = req.body;
+        const { id } = req.params;
+        const { qc_items, qc_notes, processed_by } = req.body;
         
-        for (let item of qc_items) {
-            if (item.good_qty > 0) {
-                await client.query("UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2", [item.good_qty, item.product_id]);
-            }
-            if (item.defect_qty > 0) {
-                await client.query("UPDATE products SET defective_qty = defective_qty + $1 WHERE id = $2", [item.defect_qty, item.product_id]);
+        if (qc_items && Array.isArray(qc_items)) {
+            for (let item of qc_items) {
+                const goodQty = parseInt(item.good_qty) || 0;
+                const defectQty = parseInt(item.defect_qty) || 0;
+                const itemNote = item.qc_note || '';
+
+                if (item.id) {
+                    await client.query(
+                        `UPDATE return_items 
+                         SET good_qty = $1, defect_qty = $2, qc_note = $3, qc_status = 'QC_CHECKED' 
+                         WHERE id = $4`,
+                        [goodQty, defectQty, itemNote, item.id]
+                    );
+                }
+
+                if (item.product_id) {
+                    // Hàng tốt đạt chuẩn -> Cộng vào tồn kho bán hàng (stock_qty)
+                    if (goodQty > 0) {
+                        await client.query("UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2", [goodQty, item.product_id]);
+                    }
+                    // Hàng lỗi / hỏng / chờ bảo hành -> Cộng vào kho hàng lỗi (defective_qty)
+                    if (defectQty > 0) {
+                        await client.query("UPDATE products SET defective_qty = defective_qty + $1 WHERE id = $2", [defectQty, item.product_id]);
+                    }
+                }
             }
         }
         
-        await client.query("UPDATE return_orders SET status = 'COMPLETED' WHERE id = $1", [req.params.id]);
+        await client.query(
+            `UPDATE return_orders 
+             SET status = 'COMPLETED', processed_at = NOW(), processed_by = $1, qc_notes = $2 
+             WHERE id = $3`, 
+            [processed_by || 'Nhân Viên QC', qc_notes || '', id]
+        );
         await client.query('COMMIT');
         res.json({ success: true });
-    } catch(e) { await client.query('ROLLBACK'); res.status(500).json({ success: false, error: e.message }); } finally { client.release(); }
+    } catch(e) { 
+        await client.query('ROLLBACK'); 
+        res.status(500).json({ success: false, error: e.message }); 
+    } finally { client.release(); }
+});
+
+// Hủy phiếu trả hàng (Chỉ khi đang PENDING_QC)
+router.delete('/returns/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const check = await pool.query('SELECT status FROM return_orders WHERE id = $1', [id]);
+        if (check.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu trả hàng' });
+        
+        if (check.rows[0].status === 'COMPLETED') {
+            return res.status(400).json({ success: false, error: 'Không thể xóa phiếu trả hàng đã được kiểm định & nhập kho!' });
+        }
+
+        await pool.query('DELETE FROM return_orders WHERE id = $1', [id]);
+        res.json({ success: true });
+    } catch(e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
 // API DÀNH RIÊNG CHO KHO: Cập nhật vận chuyển & Serial (Bảo toàn tuyệt đối Giá tiền)

@@ -1,0 +1,1065 @@
+<!-- ==================================================================== -->
+<!-- PHÂN HỆ: KHO QC & ĐƠN HÀNG HOÀN TRẢ (RETURN ORDERS & RMA) - SUNGO ERP -->
+<!-- ==================================================================== -->
+
+<style>
+.return-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+.return-scroll::-webkit-scrollbar-track { background: transparent; }
+.return-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+.return-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.status-chip {
+    transition: all 0.15s ease-in-out;
+}
+.status-chip.active {
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border-color: #0f172a !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2) !important;
+}
+
+@media print {
+    body * { visibility: hidden !important; }
+    #return-print-area, #return-print-area * { visibility: visible !important; }
+    #return-print-area {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 16px !important;
+        background: white !important;
+        color: black !important;
+        display: block !important;
+    }
+}
+</style>
+
+<div class="h-full flex flex-col gap-3 text-slate-800 select-none pb-2" id="return-root-container">
+    
+    <!-- HEADER & THỐNG KÊ NHANH -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col gap-3 shrink-0">
+        <div class="flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shadow-orange-500/20">
+                    <i class="fas fa-boxes text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">Kho QC & Đơn Hàng Hoàn Trả</h2>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-orange-100 text-orange-800 border border-orange-200">RMA & Returns</span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">Kiểm định chất lượng thiết bị trả về • Tự động nhập kho tốt/kho lỗi • Minh bạch tiền hoàn</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="window.modReturn.openCreateReturnModal()" class="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 active:from-orange-700 active:to-amber-700 text-white px-3.5 py-2 rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-plus-circle"></i> <span>+ Tạo Phiếu Trả Hàng</span>
+                </button>
+                <button type="button" onclick="window.modReturn.load()" class="bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer" title="Làm mới">
+                    <i class="fas fa-sync-alt" id="return-reload-icon"></i> <span class="hidden sm:inline">Làm Mới</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 4 THẺ THỐNG KÊ NHANH -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 sm:p-3 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-sm shrink-0">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase truncate">Tổng phiếu trả</p>
+                    <p class="text-base sm:text-lg font-black text-slate-900 leading-tight" id="stat-total-returns">0</p>
+                </div>
+            </div>
+
+            <div class="bg-amber-50/70 border border-amber-200/80 rounded-xl p-2.5 sm:p-3 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-[11px] font-bold text-amber-800 uppercase truncate">Chờ kiểm định QC</p>
+                    <p class="text-base sm:text-lg font-black text-amber-700 leading-tight" id="stat-pending-qc">0</p>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 sm:p-3 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-[11px] font-bold text-emerald-800 uppercase truncate">Đã nhập kho</p>
+                    <p class="text-base sm:text-lg font-black text-emerald-700 leading-tight" id="stat-completed">0</p>
+                </div>
+            </div>
+
+            <div class="bg-rose-50/70 border border-rose-200/80 rounded-xl p-2.5 sm:p-3 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-[11px] font-bold text-rose-800 uppercase truncate">Tiền hoàn khách</p>
+                    <p class="text-sm sm:text-base font-black text-rose-700 leading-tight truncate" id="stat-total-refund">0 đ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHU VỰC BẢNG DỮ LIỆU & BỘ LỌC TÌM KIẾM -->
+    <div class="flex-1 bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col overflow-hidden min-h-0">
+        
+        <!-- THANH BỘ LỌC TÌM KIẾM -->
+        <div class="p-3 border-b border-slate-100 bg-slate-50/60 flex flex-col md:flex-row gap-2.5 justify-between items-stretch md:items-center shrink-0">
+            <div class="flex flex-1 gap-2 items-center">
+                <div class="relative flex-1 max-w-md">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fas fa-search text-xs"></i>
+                    </span>
+                    <input type="text" id="return-search" oninput="window.modReturn.render()" placeholder="🔍 Tìm mã đơn, tên khách hàng, SĐT, mã thiết bị..." class="w-full pl-9 pr-8 py-2 text-xs font-bold border border-slate-300 rounded-xl outline-none bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-100 shadow-2xs">
+                    <button type="button" onclick="document.getElementById('return-search').value=''; window.modReturn.render();" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-300 hover:text-slate-500 cursor-pointer">
+                        <i class="fas fa-times-circle text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CHIPS LỌC TRẠNG THÁI -->
+            <div class="flex items-center gap-1.5 overflow-x-auto return-scroll pb-0.5">
+                <button type="button" onclick="window.modReturn.setStatusFilter('ALL')" id="rf-ALL" class="status-chip active px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs">
+                    Tất Cả (<span id="rf-cnt-all">0</span>)
+                </button>
+                <button type="button" onclick="window.modReturn.setStatusFilter('PENDING_QC')" id="rf-PENDING_QC" class="status-chip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-amber-700 whitespace-nowrap cursor-pointer shadow-2xs">
+                    ⏳ Chờ QC (<span id="rf-cnt-pending">0</span>)
+                </button>
+                <button type="button" onclick="window.modReturn.setStatusFilter('COMPLETED')" id="rf-COMPLETED" class="status-chip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-emerald-700 whitespace-nowrap cursor-pointer shadow-2xs">
+                    ✅ Đã Nhập Kho (<span id="rf-cnt-completed">0</span>)
+                </button>
+            </div>
+        </div>
+
+        <!-- DANH SÁCH BẢNG PHIẾU TRẢ HÀNG (RESPONSIVE TABLE) -->
+        <div class="flex-1 overflow-auto return-scroll p-3">
+            <table class="w-full text-left border-collapse min-w-[760px]" id="tbl-return-orders">
+                <thead>
+                    <tr class="bg-slate-100/80 text-[11px] font-black text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                        <th class="py-2.5 px-3 rounded-l-lg">Mã Phiếu & Thời Gian</th>
+                        <th class="py-2.5 px-3">Đơn Gốc & Khách Hàng</th>
+                        <th class="py-2.5 px-3">Thiết Bị Hoàn Trả</th>
+                        <th class="py-2.5 px-3">Lý Do Trả Hàng</th>
+                        <th class="py-2.5 px-3 text-right">Phí Phạt / Hoàn Tiền</th>
+                        <th class="py-2.5 px-3 text-center">Trạng Thái QC</th>
+                        <th class="py-2.5 px-3 text-center rounded-r-lg">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="return-orders-tbody" class="divide-y divide-slate-100 text-xs">
+                    <!-- Dữ liệu render động bằng JS -->
+                </tbody>
+            </table>
+
+            <!-- BỐ CỤC MOBILE CARDS (HIỆN TRÊN MÀN HÌNH NHỎ) -->
+            <div id="return-orders-mobile-cards" class="space-y-3 md:hidden">
+                <!-- Mobile Cards render động -->
+            </div>
+        </div>
+
+        <!-- FOOTER: TỔNG KẾT BẢNG -->
+        <div class="px-4 py-2.5 border-t border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-500 flex justify-between items-center shrink-0">
+            <span id="return-stat-text">Đang tải danh sách phiếu trả hàng...</span>
+            <span class="text-orange-600 font-bold"><i class="fas fa-info-circle mr-1"></i>Hàng đạt chuẩn sẽ tự động cộng lại vào kho bán hàng</span>
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================================== -->
+<!-- MODAL: KIỂM ĐỊNH QC & PHÂN LOẠI NHẬP KHO (QC PROCESS MODAL) -->
+<!-- ==================================================================== -->
+<div id="modal-process-qc" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto return-scroll animate-in fade-in zoom-in-95 duration-150 space-y-4">
+        
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-base shadow-md">
+                    <i class="fas fa-microscope"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm sm:text-base font-black text-slate-900">Kiểm Định QC & Nhập Kho Trả Hàng</h3>
+                    <p class="text-xs text-slate-500">Mã phiếu: <strong id="qc-modal-code" class="text-orange-600 font-mono font-black">---</strong> • Đơn gốc: <strong id="qc-modal-order" class="text-blue-600 font-mono">---</strong></p>
+                </div>
+            </div>
+            <button type="button" onclick="window.modReturn.closeQcModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 cursor-pointer">&times;</button>
+        </div>
+
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs grid grid-cols-2 gap-2">
+            <div><span class="text-slate-400">Khách hàng:</span> <strong id="qc-modal-cust" class="text-slate-800">---</strong></div>
+            <div><span class="text-slate-400">Số điện thoại:</span> <strong id="qc-modal-phone" class="text-slate-800">---</strong></div>
+            <div class="col-span-2"><span class="text-slate-400">Lý do khách trả:</span> <span id="qc-modal-reason" class="font-medium text-slate-700 italic">---</span></div>
+        </div>
+
+        <!-- BẢNG PHÂN LOẠI QC TỪNG MÓN -->
+        <div class="space-y-2">
+            <div class="flex justify-between items-center">
+                <h4 class="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                    <i class="fas fa-boxes text-orange-500"></i> Phân Loại Thiết Bị Nhập Kho
+                </h4>
+                <span class="text-[11px] text-slate-400 font-medium">Quy tắc: SL Tốt + SL Lỗi = Tổng SL Trả</span>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-slate-100 text-slate-600 font-black border-b border-slate-200">
+                        <tr>
+                            <th class="p-2.5">Sản Phẩm & SKU</th>
+                            <th class="p-2.5 text-center w-20">SL Trả</th>
+                            <th class="p-2.5 text-center w-28 bg-emerald-50 text-emerald-800">Kho Tốt (Bán)</th>
+                            <th class="p-2.5 text-center w-28 bg-rose-50 text-rose-800">Kho Lỗi (BH)</th>
+                            <th class="p-2.5">Ghi Chú QC</th>
+                        </tr>
+                    </thead>
+                    <tbody id="qc-items-tbody" class="divide-y divide-slate-100">
+                        <!-- Danh sách món render động -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Nhân viên kiểm định QC <span class="text-red-500">*</span></label>
+                <input type="text" id="qc-inspector-name" value="Kỹ Thuật / QC Kho" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-bold text-slate-800 focus:border-orange-500">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Kết luận kiểm định</label>
+                <input type="text" id="qc-overall-notes" placeholder="VD: Hàng mới 100% nguyên hộp, đủ phụ kiện..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-medium text-slate-800 focus:border-orange-500">
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+            <button type="button" onclick="window.modReturn.closeQcModal()" class="px-4 py-2.5 text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold cursor-pointer">Đóng</button>
+            <button type="button" onclick="window.modReturn.submitQcProcess()" id="btn-submit-qc" class="px-5 py-2.5 text-xs text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl font-black shadow-md flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-check-double"></i> <span>Xác Nhận Nhập Kho & Hoàn Tất</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================================== -->
+<!-- MODAL: TẠO PHIẾU TRẢ HÀNG MỚI (CREATE RETURN ORDER MODAL) -->
+<!-- ==================================================================== -->
+<div id="modal-create-return" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto return-scroll animate-in fade-in zoom-in-95 duration-150 space-y-4">
+        
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-orange-600 text-white flex items-center justify-center font-bold text-base shadow-md">
+                    <i class="fas fa-cart-arrow-down"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm sm:text-base font-black text-slate-900">Tạo Phiếu Trả Hàng Mới</h3>
+                    <p class="text-xs text-slate-500">Chọn đơn hàng hoặc nhập trực tiếp để tạo lệnh hoàn trả sang Kho QC</p>
+                </div>
+            </div>
+            <button type="button" onclick="window.modReturn.closeCreateModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 cursor-pointer">&times;</button>
+        </div>
+
+        <!-- TÌM KIẾM ĐƠN HÀNG GỐC -->
+        <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700">1. Chọn Đơn Hàng Gốc Cần Trả <span class="text-red-500">*</span></label>
+            <div class="relative">
+                <input type="text" id="cr-order-search" oninput="window.modReturn.searchOrderForReturn(this.value)" placeholder="🔍 Gõ Mã Đơn Hàng (VD: DH-...), Tên Khách hoặc SĐT..." autocomplete="off" class="w-full border border-orange-300 px-3 py-2 rounded-xl outline-none text-xs font-bold bg-white text-slate-800 focus:border-orange-600 focus:ring-2 focus:ring-orange-100 shadow-2xs">
+                <div id="cr-order-dropdown" class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 hidden max-h-52 overflow-y-auto divide-y divide-slate-100 return-scroll"></div>
+            </div>
+        </div>
+
+        <!-- THÔNG TIN ĐƠN HÀNG ĐÃ CHỌN -->
+        <div id="cr-selected-order-box" class="hidden bg-orange-50/70 border border-orange-200 rounded-xl p-3 text-xs space-y-2">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h4 class="font-black text-slate-900" id="cr-ord-code">DH-000000</h4>
+                    <p class="text-slate-600 font-semibold mt-0.5" id="cr-ord-cust">Khách Hàng • 0900000000</p>
+                </div>
+                <button type="button" onclick="window.modReturn.clearSelectedOrder()" class="text-red-500 hover:text-red-700 text-[11px] font-bold cursor-pointer">
+                    <i class="fas fa-times"></i> Chọn đơn khác
+                </button>
+            </div>
+        </div>
+
+        <!-- DANH SÁCH THIẾT BỊ CỦA ĐƠN ĐỂ CHỌN SỐ LƯỢNG TRẢ -->
+        <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700">2. Chọn Thiết Bị & Số Lượng Hoàn Trả <span class="text-red-500">*</span></label>
+            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-slate-100 text-slate-600 font-black border-b border-slate-200">
+                        <tr>
+                            <th class="p-2.5">Sản Phẩm</th>
+                            <th class="p-2.5 text-center w-20">Đã Mua</th>
+                            <th class="p-2.5 text-right w-24">Đơn Giá</th>
+                            <th class="p-2.5 text-center w-28 bg-orange-50 text-orange-900">SL Trả Lại</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cr-items-tbody" class="divide-y divide-slate-100">
+                        <tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Vui lòng chọn đơn hàng ở bước 1 để hiển thị danh sách sản phẩm</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- LÝ DO, PHÍ KHẤU TRỪ & TIỀN HOÀN -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="space-y-1.5">
+                <label class="block font-bold text-slate-700">Lý do hoàn trả <span class="text-red-500">*</span></label>
+                <select id="cr-reason-select" onchange="window.modReturn.onReasonSelect(this.value)" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-bold text-slate-800 focus:border-orange-500 cursor-pointer">
+                    <option value="Hàng lỗi kỹ thuật / Không hoạt động">1. Hàng lỗi kỹ thuật / Không hoạt động</option>
+                    <option value="Khách đổi ý / Đổi sang model khác">2. Khách đổi ý / Đổi sang model khác</option>
+                    <option value="Dự án thừa vật tư cần hoàn lại">3. Dự án thừa vật tư cần hoàn lại</option>
+                    <option value="Giao sai quy cách / Sai chủng loại">4. Giao sai quy cách / Sai chủng loại</option>
+                    <option value="OTHER">5. Lý do khác (Nhập ghi chú bên dưới)</option>
+                </select>
+                <input type="text" id="cr-reason-custom" placeholder="Ghi chú chi tiết lý do trả hàng..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-medium text-slate-800 focus:border-orange-500 hidden">
+            </div>
+
+            <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-bold">Tổng tiền hàng trả:</span>
+                    <strong id="cr-calc-item-total" class="text-slate-900 font-black">0 đ</strong>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-bold">Phí khấu trừ / hao mòn:</span>
+                    <input type="text" id="cr-fee-input" value="0" inputmode="numeric" oninput="window.modReturn.recalcCreateTotals()" class="w-28 text-right font-black text-rose-600 bg-white border border-slate-300 rounded px-2 py-1 outline-none focus:border-orange-500">
+                </div>
+                <div class="flex justify-between items-center border-t border-slate-200 pt-1.5">
+                    <span class="text-slate-800 font-black uppercase text-[11px]">Tiền hoàn trả khách:</span>
+                    <strong id="cr-calc-refund" class="text-emerald-600 font-black text-sm">0 đ</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+            <button type="button" onclick="window.modReturn.closeCreateModal()" class="px-4 py-2.5 text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold cursor-pointer">Hủy</button>
+            <button type="button" onclick="window.modReturn.submitCreateReturn()" id="btn-save-return" class="px-5 py-2.5 text-xs text-white bg-orange-600 hover:bg-orange-700 rounded-xl font-black shadow-md flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-save"></i> <span>Tạo Phiếu & Đẩy Sang QC</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- KHUNG IN BIÊN BẢN TRẢ HÀNG (PRINT AREA) -->
+<div id="return-print-area" class="hidden"></div>
+
+<!-- ==================================================================== -->
+<!-- LOGIC JAVASCRIPT PHÂN HỆ RETURN ORDERS -->
+<!-- ==================================================================== -->
+<script>
+window.modReturn = {
+    returnsList: [],
+    recentOrders: [],
+    currentStatusFilter: 'ALL',
+    selectedOrderForCreate: null,
+    activeQcReturn: null,
+
+    // Khởi tạo và nạp dữ liệu
+    load: async () => {
+        const tbody = document.getElementById('return-orders-tbody');
+        const reloadIcon = document.getElementById('return-reload-icon');
+        if (reloadIcon) reloadIcon.classList.add('fa-spin');
+
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-10 text-slate-400"><i class="fas fa-spinner fa-spin text-2xl text-orange-500"></i><p class="mt-2 text-xs font-bold">Đang tải danh sách phiếu trả hàng & Kho QC...</p></td></tr>';
+        }
+
+        try {
+            const [resReturns, resOrders] = await Promise.all([
+                fetch('/api/orders/returns/list?t=' + Date.now()).then(r => r.json()),
+                fetch('/api/orders?t=' + Date.now()).then(r => r.json()).catch(() => ({ success: false }))
+            ]);
+
+            if (resReturns && resReturns.success) {
+                window.modReturn.returnsList = resReturns.data || [];
+            }
+            if (resOrders && resOrders.success) {
+                window.modReturn.recentOrders = resOrders.data || [];
+            }
+
+            window.modReturn.updateStats();
+            window.modReturn.render();
+        } catch(e) {
+            console.error("Return Orders Load Error:", e);
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500 font-bold p-8">Lỗi kết nối máy chủ khi tải dữ liệu! Vui lòng bấm Làm Mới.</td></tr>';
+            }
+        } finally {
+            if (reloadIcon) reloadIcon.classList.remove('fa-spin');
+        }
+    },
+
+    // Cập nhật các thẻ thống kê đầu trang
+    updateStats: () => {
+        const list = window.modReturn.returnsList;
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+        const total = list.length;
+        const pending = list.filter(r => r.status === 'PENDING_QC').length;
+        const completed = list.filter(r => r.status === 'COMPLETED').length;
+        const totalRefund = list.reduce((sum, r) => sum + (parseFloat(r.refund_amount) || 0), 0);
+
+        document.getElementById('stat-total-returns').innerText = total;
+        document.getElementById('stat-pending-qc').innerText = pending;
+        document.getElementById('stat-completed').innerText = completed;
+        document.getElementById('stat-total-refund').innerText = fmt(totalRefund) + ' đ';
+
+        document.getElementById('rf-cnt-all').innerText = total;
+        document.getElementById('rf-cnt-pending').innerText = pending;
+        document.getElementById('rf-cnt-completed').innerText = completed;
+    },
+
+    setStatusFilter: (status) => {
+        window.modReturn.currentStatusFilter = status;
+        ['ALL', 'PENDING_QC', 'COMPLETED'].forEach(s => {
+            const btn = document.getElementById('rf-' + s);
+            if (btn) {
+                if (s === status) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+        });
+        window.modReturn.render();
+    },
+
+    // Render danh sách phiếu trả
+    render: () => {
+        const term = (document.getElementById('return-search')?.value || '').toLowerCase().trim();
+        const tbody = document.getElementById('return-orders-tbody');
+        const mobileContainer = document.getElementById('return-orders-mobile-cards');
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+        let filtered = [...window.modReturn.returnsList];
+
+        // Lọc theo trạng thái
+        if (window.modReturn.currentStatusFilter !== 'ALL') {
+            filtered = filtered.filter(r => r.status === window.modReturn.currentStatusFilter);
+        }
+
+        // Lọc theo từ khóa tìm kiếm
+        if (term) {
+            filtered = filtered.filter(r => 
+                (r.order_code || '').toLowerCase().includes(term) ||
+                (r.customer_name || '').toLowerCase().includes(term) ||
+                (r.customer_phone || '').includes(term) ||
+                (r.reason || '').toLowerCase().includes(term) ||
+                (r.items || []).some(i => (i.product_name || '').toLowerCase().includes(term) || (i.sku || '').toLowerCase().includes(term))
+            );
+        }
+
+        const statEl = document.getElementById('return-stat-text');
+        if (statEl) statEl.innerText = `Hiển thị ${filtered.length} / ${window.modReturn.returnsList.length} phiếu trả hàng`;
+
+        if (filtered.length === 0) {
+            const emptyHtml = `
+                <tr>
+                    <td colspan="7" class="text-center p-12 text-slate-400">
+                        <i class="fas fa-inbox text-3xl mb-2 text-slate-300"></i>
+                        <p class="text-xs font-bold text-slate-600">Không tìm thấy phiếu trả hàng nào</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Bấm "+ Tạo Phiếu Trả Hàng" để tạo phiếu mới</p>
+                    </td>
+                </tr>`;
+            if (tbody) tbody.innerHTML = emptyHtml;
+            if (mobileContainer) mobileContainer.innerHTML = '<div class="text-center p-8 text-slate-400 text-xs font-bold">Không có phiếu trả hàng nào</div>';
+            return;
+        }
+
+        // Render Desktop Table
+        if (tbody) {
+            tbody.innerHTML = filtered.map(r => {
+                const dateStr = r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '---';
+                const itemsCount = (r.items || []).reduce((sum, i) => sum + (parseInt(i.return_qty) || 0), 0);
+                
+                const isPending = r.status === 'PENDING_QC';
+                const statusBadge = isPending 
+                    ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs flex items-center gap-1 justify-center"><i class="fas fa-hourglass-half"></i> Chờ Kiểm Định QC</span>`
+                    : `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs flex items-center gap-1 justify-center"><i class="fas fa-check-circle"></i> Đã Nhập Kho</span>`;
+
+                const itemsSummary = (r.items || []).map(i => `
+                    <div class="text-[11px] font-semibold text-slate-800 flex justify-between gap-2">
+                        <span class="truncate max-w-[220px]">• ${i.product_name}</span>
+                        <span class="font-black text-orange-600 shrink-0">x${i.return_qty}</span>
+                    </div>
+                `).join('');
+
+                const refundAmt = parseFloat(r.refund_amount) || 0;
+                const feeAmt = parseFloat(r.deduction_fee) || 0;
+
+                return `
+                <tr class="hover:bg-slate-50/80 transition group">
+                    <td class="py-3 px-3">
+                        <span class="font-black text-slate-900 font-mono text-xs">#TH-${r.id}</span>
+                        <p class="text-[10px] text-slate-400 font-medium mt-0.5">${dateStr}</p>
+                    </td>
+
+                    <td class="py-3 px-3">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-bold text-blue-600 font-mono text-xs">${r.order_code || '---'}</span>
+                        </div>
+                        <p class="font-bold text-slate-800 text-xs mt-0.5">${r.customer_name || 'Khách Lẻ'}</p>
+                        ${r.customer_phone ? `<p class="text-[10px] text-slate-500 font-semibold">📞 ${r.customer_phone}</p>` : ''}
+                    </td>
+
+                    <td class="py-3 px-3">
+                        <div class="space-y-1">
+                            ${itemsSummary || '<span class="text-slate-400 italic">Không có thiết bị</span>'}
+                        </div>
+                    </td>
+
+                    <td class="py-3 px-3 max-w-[180px]">
+                        <p class="text-xs text-slate-700 line-clamp-2 italic font-medium">"${r.reason || 'Không có lý do'}"</p>
+                        ${r.qc_notes ? `<p class="text-[10px] text-emerald-600 font-bold mt-1">QC: ${r.qc_notes}</p>` : ''}
+                    </td>
+
+                    <td class="py-3 px-3 text-right">
+                        ${feeAmt > 0 ? `<p class="text-[10px] text-rose-500 font-semibold">Trừ: -${fmt(feeAmt)} đ</p>` : ''}
+                        <strong class="text-xs font-black text-emerald-600">${fmt(refundAmt)} đ</strong>
+                    </td>
+
+                    <td class="py-3 px-3 text-center">
+                        ${statusBadge}
+                        ${r.processed_by ? `<p class="text-[9px] text-slate-400 mt-1 font-semibold">Duyệt: ${r.processed_by}</p>` : ''}
+                    </td>
+
+                    <td class="py-3 px-3 text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            ${isPending ? `
+                            <button type="button" onclick="window.modReturn.openQcModal(${r.id})" class="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-black shadow-xs flex items-center gap-1 cursor-pointer transition" title="Kiểm định QC & Nhập kho">
+                                <i class="fas fa-microscope"></i> <span>QC</span>
+                            </button>
+                            ` : ''}
+                            <button type="button" onclick="window.modReturn.printReturnReceipt(${r.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-1.5 rounded-lg text-xs font-bold transition cursor-pointer" title="In phiếu biên bản">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            ${isPending ? `
+                            <button type="button" onclick="window.modReturn.deleteReturn(${r.id})" class="text-slate-300 hover:text-red-500 p-1.5 transition cursor-pointer" title="Hủy phiếu này">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // Render Mobile Cards
+        if (mobileContainer) {
+            mobileContainer.innerHTML = filtered.map(r => {
+                const dateStr = r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '---';
+                const isPending = r.status === 'PENDING_QC';
+                const refundAmt = parseFloat(r.refund_amount) || 0;
+                
+                return `
+                <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs space-y-2.5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="font-black text-slate-900 font-mono text-xs">#TH-${r.id}</span>
+                            <span class="text-[10px] text-blue-600 font-bold ml-1">(${r.order_code})</span>
+                            <p class="text-xs font-bold text-slate-800 mt-0.5">${r.customer_name} ${r.customer_phone ? '• ' + r.customer_phone : ''}</p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${isPending ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+                            ${isPending ? '⏳ Chờ QC' : '✅ Đã Nhập Kho'}
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-50 p-2 rounded-xl text-xs space-y-1">
+                        ${(r.items || []).map(i => `
+                            <div class="flex justify-between text-slate-700">
+                                <span class="truncate max-w-[200px] font-semibold">${i.product_name}</span>
+                                <span class="font-black text-orange-600">x${i.return_qty}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs pt-1 border-t border-slate-100">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Tiền hoàn trả:</span>
+                            <strong class="text-emerald-600 font-black">${fmt(refundAmt)} đ</strong>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            ${isPending ? `
+                            <button type="button" onclick="window.modReturn.openQcModal(${r.id})" class="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-black shadow-xs">
+                                <i class="fas fa-microscope mr-1"></i> QC Nhập Kho
+                            </button>
+                            ` : ''}
+                            <button type="button" onclick="window.modReturn.printReturnReceipt(${r.id})" class="bg-slate-100 text-slate-700 p-2 rounded-lg text-xs font-bold">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    },
+
+    // Modal Xử lý kiểm định QC
+    openQcModal: async (returnId) => {
+        try {
+            const res = await fetch('/api/orders/returns/' + returnId);
+            const data = await res.json();
+            if (!data.success || !data.data) return alert("❌ Không thể tải thông tin phiếu trả hàng!");
+
+            const ret = data.data;
+            window.modReturn.activeQcReturn = ret;
+
+            document.getElementById('qc-modal-code').innerText = '#TH-' + ret.id;
+            document.getElementById('qc-modal-order').innerText = ret.order_code || '---';
+            document.getElementById('qc-modal-cust').innerText = ret.customer_name || 'Khách Lẻ';
+            document.getElementById('qc-modal-phone').innerText = ret.customer_phone || 'Chưa cập nhật';
+            document.getElementById('qc-modal-reason').innerText = ret.reason || 'Không ghi rõ';
+
+            const tbody = document.getElementById('qc-items-tbody');
+            tbody.innerHTML = (ret.items || []).map((item, idx) => {
+                return `
+                <tr data-item-id="${item.id}" data-product-id="${item.product_id || ''}" data-max-qty="${item.return_qty}">
+                    <td class="p-2.5">
+                        <p class="font-bold text-slate-800 text-xs">${item.product_name}</p>
+                        <p class="text-[10px] text-slate-400 font-mono">SKU: ${item.sku || item.product_sku || 'N/A'}</p>
+                    </td>
+                    <td class="p-2.5 text-center font-black text-orange-600 text-xs">
+                        ${item.return_qty}
+                    </td>
+                    <td class="p-2.5 bg-emerald-50/50">
+                        <input type="number" min="0" max="${item.return_qty}" value="${item.return_qty}" 
+                               class="qc-good-qty w-full text-center font-black text-emerald-700 bg-white border border-emerald-300 rounded px-1.5 py-1 outline-none focus:ring-2 focus:ring-emerald-200">
+                    </td>
+                    <td class="p-2.5 bg-rose-50/50">
+                        <input type="number" min="0" max="${item.return_qty}" value="0" 
+                               class="qc-defect-qty w-full text-center font-black text-rose-700 bg-white border border-rose-300 rounded px-1.5 py-1 outline-none focus:ring-2 focus:ring-rose-200">
+                    </td>
+                    <td class="p-2.5">
+                        <input type="text" placeholder="Ghi chú tình trạng món..." class="qc-item-note w-full px-2 py-1 text-[11px] border border-slate-200 rounded outline-none focus:border-orange-500">
+                    </td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('modal-process-qc').classList.remove('hidden');
+        } catch(err) {
+            alert("❌ Lỗi: " + err.message);
+        }
+    },
+
+    closeQcModal: () => {
+        document.getElementById('modal-process-qc').classList.add('hidden');
+        window.modReturn.activeQcReturn = null;
+    },
+
+    // Submit hoàn tất QC & Nhập kho
+    submitQcProcess: async () => {
+        const ret = window.modReturn.activeQcReturn;
+        if (!ret) return;
+
+        const rows = document.querySelectorAll('#qc-items-tbody tr');
+        const qcItems = [];
+
+        for (let tr of rows) {
+            const itemId = parseInt(tr.dataset.itemId);
+            const productId = parseInt(tr.dataset.productId) || null;
+            const maxQty = parseInt(tr.dataset.maxQty) || 0;
+
+            const goodQty = parseInt(tr.querySelector('.qc-good-qty').value) || 0;
+            const defectQty = parseInt(tr.querySelector('.qc-defect-qty').value) || 0;
+            const note = tr.querySelector('.qc-item-note').value.trim();
+
+            if (goodQty + defectQty !== maxQty) {
+                alert(`⚠️ Lỗi kiểm định món: Tổng SL Tốt (${goodQty}) + SL Lỗi (${defectQty}) phải bằng tổng SL Trả (${maxQty})!`);
+                return;
+            }
+
+            qcItems.push({
+                id: itemId,
+                product_id: productId,
+                good_qty: goodQty,
+                defect_qty: defectQty,
+                qc_note: note
+            });
+        }
+
+        const inspectorName = document.getElementById('qc-inspector-name').value.trim();
+        const overallNotes = document.getElementById('qc-overall-notes').value.trim();
+
+        if (!confirm(`Xác nhận hoàn tất kiểm định và nhập kho cho phiếu #TH-${ret.id}?\n\n• Hàng đạt chuẩn sẽ cộng vào tồn kho bán hàng (stock_qty)\n• Hàng lỗi sẽ cộng vào kho bảo hành (defective_qty)`)) {
+            return;
+        }
+
+        const btn = document.getElementById('btn-submit-qc');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang nhập kho...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const res = await fetch(`/api/orders/returns/${ret.id}/process`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    qc_items: qcItems,
+                    processed_by: inspectorName || 'Nhân Viên QC',
+                    qc_notes: overallNotes
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ Đã kiểm định và nhập kho thành công cho phiếu #TH-${ret.id}!`);
+                window.modReturn.closeQcModal();
+                window.modReturn.load();
+            } else {
+                alert("❌ Lỗi: " + (data.error || "Không thể xử lý kiểm định"));
+            }
+        } catch(e) {
+            alert("❌ Lỗi kết nối máy chủ: " + e.message);
+        } finally {
+            btn.innerHTML = '<i class="fas fa-check-double"></i> <span>Xác Nhận Nhập Kho & Hoàn Tất</span>';
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+
+    // Modal Tạo phiếu trả hàng mới
+    openCreateReturnModal: () => {
+        document.getElementById('cr-order-search').value = '';
+        document.getElementById('cr-selected-order-box').classList.add('hidden');
+        document.getElementById('cr-order-dropdown').classList.add('hidden');
+        document.getElementById('cr-reason-select').value = "Hàng lỗi kỹ thuật / Không hoạt động";
+        document.getElementById('cr-reason-custom').classList.add('hidden');
+        document.getElementById('cr-fee-input').value = '0';
+        document.getElementById('cr-calc-item-total').innerText = '0 đ';
+        document.getElementById('cr-calc-refund').innerText = '0 đ';
+        
+        document.getElementById('cr-items-tbody').innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Vui lòng chọn đơn hàng ở bước 1 để hiển thị danh sách sản phẩm</td></tr>';
+        
+        window.modReturn.selectedOrderForCreate = null;
+        document.getElementById('modal-create-return').classList.remove('hidden');
+        setTimeout(() => document.getElementById('cr-order-search').focus(), 100);
+    },
+
+    closeCreateModal: () => {
+        document.getElementById('modal-create-return').classList.add('hidden');
+    },
+
+    searchOrderForReturn: (term) => {
+        const drop = document.getElementById('cr-order-dropdown');
+        if (!term || term.trim().length < 1) {
+            drop.classList.add('hidden');
+            return;
+        }
+
+        const q = term.toLowerCase().trim();
+        const orders = window.modReturn.recentOrders || [];
+        const matches = orders.filter(o => 
+            (o.order_code || '').toLowerCase().includes(q) ||
+            (o.customer_name || '').toLowerCase().includes(q) ||
+            (o.phone || '').includes(q)
+        ).slice(0, 6);
+
+        if (matches.length === 0) {
+            drop.innerHTML = '<div class="p-3 text-xs text-slate-400 text-center font-bold">Không tìm thấy đơn hàng phù hợp</div>';
+        } else {
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+            drop.innerHTML = matches.map(o => `
+                <div onclick="window.modReturn.selectOrderForCreate(${o.id})" class="p-2.5 hover:bg-orange-50 cursor-pointer transition border-b border-slate-50 flex justify-between items-center text-left">
+                    <div>
+                        <p class="font-black text-blue-700 text-xs">${o.order_code}</p>
+                        <p class="text-[11px] text-slate-700 font-bold mt-0.5">${o.customer_name || 'Khách Lẻ'} ${o.phone ? '• ' + o.phone : ''}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-black text-emerald-600 text-xs">${fmt(o.total_amount)} đ</span>
+                        <span class="block text-[9px] text-slate-400 uppercase font-bold">${o.status || 'NEW'}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        drop.classList.remove('hidden');
+    },
+
+    selectOrderForCreate: async (orderId) => {
+        try {
+            const res = await fetch('/api/orders/' + orderId);
+            const data = await res.json();
+            if (!data.success || !data.data) return alert("❌ Không tải được chi tiết đơn hàng!");
+
+            const o = data.data;
+            window.modReturn.selectedOrderForCreate = o;
+
+            document.getElementById('cr-order-dropdown').classList.add('hidden');
+            document.getElementById('cr-ord-code').innerText = o.order_code;
+            document.getElementById('cr-ord-cust').innerText = `${o.customer_name || 'Khách Hàng'} • ${o.phone || 'Chưa có SĐT'}`;
+            document.getElementById('cr-selected-order-box').classList.remove('hidden');
+
+            const tbody = document.getElementById('cr-items-tbody');
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+            if (!o.items || o.items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Đơn hàng không có danh sách sản phẩm</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = o.items.map((item, idx) => `
+                <tr data-prod-id="${item.product_id || ''}" data-prod-name="${item.product_name}" data-sku="${item.sku || ''}" data-price="${item.price}">
+                    <td class="p-2.5">
+                        <p class="font-bold text-slate-800 text-xs">${item.product_name}</p>
+                        <p class="text-[10px] text-slate-400">SKU: ${item.sku || 'N/A'}</p>
+                    </td>
+                    <td class="p-2.5 text-center font-bold text-slate-600 text-xs">${item.quantity}</td>
+                    <td class="p-2.5 text-right font-black text-slate-700 text-xs">${fmt(item.price)} đ</td>
+                    <td class="p-2.5 bg-orange-50/50">
+                        <div class="flex items-center justify-center gap-1">
+                            <input type="number" min="0" max="${item.quantity}" value="0" 
+                                   onchange="window.modReturn.recalcCreateTotals()" 
+                                   oninput="window.modReturn.recalcCreateTotals()" 
+                                   class="cr-ret-qty w-16 text-center font-black text-orange-600 bg-white border border-orange-300 rounded px-1.5 py-1 text-xs outline-none focus:ring-2 focus:ring-orange-200">
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            window.modReturn.recalcCreateTotals();
+        } catch(e) {
+            alert("❌ Lỗi: " + e.message);
+        }
+    },
+
+    clearSelectedOrder: () => {
+        window.modReturn.selectedOrderForCreate = null;
+        document.getElementById('cr-selected-order-box').classList.add('hidden');
+        document.getElementById('cr-order-search').value = '';
+        document.getElementById('cr-items-tbody').innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Vui lòng chọn đơn hàng ở bước 1 để hiển thị danh sách sản phẩm</td></tr>';
+        window.modReturn.recalcCreateTotals();
+    },
+
+    onReasonSelect: (val) => {
+        const customInput = document.getElementById('cr-reason-custom');
+        if (val === 'OTHER') {
+            customInput.classList.remove('hidden');
+            customInput.focus();
+        } else {
+            customInput.classList.add('hidden');
+        }
+    },
+
+    recalcCreateTotals: () => {
+        const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+        const rows = document.querySelectorAll('#cr-items-tbody tr');
+        let itemTotal = 0;
+
+        rows.forEach(tr => {
+            const price = parseFloat(tr.dataset.price) || 0;
+            const qtyInput = tr.querySelector('.cr-ret-qty');
+            const qty = qtyInput ? (parseInt(qtyInput.value) || 0) : 0;
+            itemTotal += qty * price;
+        });
+
+        const feeInput = document.getElementById('cr-fee-input');
+        const fee = parseFloat((feeInput ? feeInput.value : '0').replace(/[^0-9]/g, '')) || 0;
+        const refundAmt = Math.max(0, itemTotal - fee);
+
+        document.getElementById('cr-calc-item-total').innerText = fmt(itemTotal) + ' đ';
+        document.getElementById('cr-calc-refund').innerText = fmt(refundAmt) + ' đ';
+    },
+
+    submitCreateReturn: async () => {
+        const o = window.modReturn.selectedOrderForCreate;
+        if (!o) return alert("❌ Vui lòng chọn 1 đơn hàng gốc!");
+
+        const rows = document.querySelectorAll('#cr-items-tbody tr');
+        const returnItems = [];
+
+        rows.forEach(tr => {
+            const prodId = parseInt(tr.dataset.prodId) || null;
+            const prodName = tr.dataset.prodName || 'Thiết bị';
+            const sku = tr.dataset.sku || '';
+            const price = parseFloat(tr.dataset.price) || 0;
+            const qtyInput = tr.querySelector('.cr-ret-qty');
+            const qty = qtyInput ? (parseInt(qtyInput.value) || 0) : 0;
+
+            if (qty > 0) {
+                returnItems.push({
+                    product_id: prodId,
+                    product_name: prodName,
+                    sku: sku,
+                    price: price,
+                    return_qty: qty
+                });
+            }
+        });
+
+        if (returnItems.length === 0) {
+            return alert("❌ Vui lòng nhập số lượng trả lớn hơn 0 cho ít nhất 1 sản phẩm!");
+        }
+
+        const reasonSelect = document.getElementById('cr-reason-select').value;
+        const reasonCustom = document.getElementById('cr-reason-custom').value.trim();
+        const reason = reasonSelect === 'OTHER' ? (reasonCustom || 'Lý do khác') : reasonSelect;
+
+        const fee = parseFloat(document.getElementById('cr-fee-input').value.replace(/[^0-9]/g, '')) || 0;
+        
+        let itemTotal = 0;
+        returnItems.forEach(i => itemTotal += i.return_qty * i.price);
+        const refundAmt = Math.max(0, itemTotal - fee);
+
+        const payload = {
+            reason: reason,
+            deduction_fee: fee,
+            refund_amount: refundAmt,
+            customer_phone: o.phone || '',
+            return_items: returnItems
+        };
+
+        const btn = document.getElementById('btn-save-return');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo phiếu...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const res = await fetch(`/api/orders/${o.id}/return`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ Đã tạo phiếu trả hàng thành công! Đã chuyển sang Kho QC chờ kiểm định.`);
+                window.modReturn.closeCreateModal();
+                window.modReturn.load();
+            } else {
+                alert("❌ Lỗi: " + (data.error || "Không thể tạo phiếu trả hàng"));
+            }
+        } catch(e) {
+            alert("❌ Lỗi kết nối máy chủ: " + e.message);
+        } finally {
+            btn.innerHTML = '<i class="fas fa-save"></i> <span>Tạo Phiếu & Đẩy Sang QC</span>';
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+
+    deleteReturn: async (id) => {
+        if (!confirm(`Bạn có chắc chắn muốn hủy và xóa phiếu trả hàng #TH-${id}?`)) return;
+
+        try {
+            const res = await fetch('/api/orders/returns/' + id, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ Đã xóa phiếu trả hàng #TH-${id}`);
+                window.modReturn.load();
+            } else {
+                alert("❌ Lỗi: " + (data.error || "Không thể xóa phiếu"));
+            }
+        } catch(e) {
+            alert("❌ Lỗi kết nối máy chủ: " + e.message);
+        }
+    },
+
+    // In biên bản trả hàng & biên bản kiểm định QC (A4 / 80mm)
+    printReturnReceipt: async (id) => {
+        try {
+            const res = await fetch('/api/orders/returns/' + id);
+            const data = await res.json();
+            if (!data.success || !data.data) return alert("❌ Không thể nạp dữ liệu in!");
+
+            const ret = data.data;
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+            const printArea = document.getElementById('return-print-area');
+            const dateStr = ret.created_at ? new Date(ret.created_at).toLocaleString('vi-VN') : '---';
+
+            printArea.innerHTML = `
+                <div style="font-family: Arial, sans-serif; max-width: 780px; margin: 0 auto; padding: 20px; color: #111;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 16px;">
+                        <div>
+                            <h2 style="margin: 0; font-size: 20px; font-weight: bold; color: #d97706;">SUNGO SOLAR ERP</h2>
+                            <p style="margin: 3px 0; font-size: 12px; color: #555;">Hệ Thống Năng Lượng Mặt Trời Toàn Diện</p>
+                            <p style="margin: 3px 0; font-size: 12px; color: #555;">Hotline: 0900.000.000 • Email: info@sungo.vn</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h3 style="margin: 0; font-size: 18px; font-weight: bold;">BIÊN BẢN TRẢ HÀNG & KIỂM ĐỊNH QC</h3>
+                            <p style="margin: 3px 0; font-size: 13px; font-weight: bold; color: #2563eb;">Số Phiếu: #TH-${ret.id}</p>
+                            <p style="margin: 3px 0; font-size: 11px; color: #666;">Ngày lập: ${dateStr}</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; line-height: 1.6;">
+                        <div style="width: 50%;">
+                            <div>Khách hàng: <strong>${ret.customer_name || 'Khách Hàng'}</strong></div>
+                            <div>Số điện thoại: <strong>${ret.customer_phone || '---'}</strong></div>
+                            <div>Địa chỉ: ${ret.customer_address || '---'}</div>
+                        </div>
+                        <div style="width: 50%;">
+                            <div>Đơn hàng gốc: <strong>${ret.order_code || '---'}</strong></div>
+                            <div>Trạng thái: <strong>${ret.status === 'COMPLETED' ? 'ĐÃ NHẬP KHO' : 'CHỜ QC KIỂM ĐỊNH'}</strong></div>
+                            <div>Lý do trả: <em>${ret.reason || '---'}</em></div>
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px;">
+                        <thead>
+                            <tr style="background: #e2e8f0; text-align: left;">
+                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">STT</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 8px;">Tên Thiết Bị / Vật Tư</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">SL Trả</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Kho Tốt</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Kho Lỗi</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">Đơn Giá</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">Thành Tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(ret.items || []).map((i, idx) => `
+                                <tr>
+                                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${idx + 1}</td>
+                                    <td style="border: 1px solid #cbd5e1; padding: 8px;"><strong>${i.product_name}</strong><br><span style="color:#64748b; font-size:11px;">SKU: ${i.sku || i.product_sku || 'N/A'}</span></td>
+                                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold;">${i.return_qty}</td>
+                                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #16a34a; font-weight: bold;">${i.good_qty || 0}</td>
+                                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #dc2626; font-weight: bold;">${i.defect_qty || 0}</td>
+                                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">${fmt(i.price)}</td>
+                                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold;">${fmt(i.return_qty * i.price)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 24px;">
+                        <div style="width: 280px; font-size: 13px; line-height: 1.8;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Phí khấu trừ / Hao mòn:</span>
+                                <strong style="color: #dc2626;">-${fmt(ret.deduction_fee)} đ</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; border-top: 1px solid #cbd5e1; padding-top: 4px; font-size: 15px;">
+                                <span>TỔNG TIỀN HOÀN:</span>
+                                <strong style="color: #16a34a; font-size: 16px;">${fmt(ret.refund_amount)} đ</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${ret.qc_notes ? `
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 24px;">
+                        <strong>Ghi chú kiểm định QC:</strong> ${ret.qc_notes} (${ret.processed_by || 'QC'})
+                    </div>` : ''}
+
+                    <div style="display: flex; justify-content: space-between; text-align: center; font-size: 12px; margin-top: 30px;">
+                        <div>
+                            <strong>KHÁCH HÀNG / NGƯỜI TRẢ</strong><br>
+                            <span style="font-size: 10px; color: #777;">(Ký & ghi rõ họ tên)</span>
+                            <div style="height: 60px;"></div>
+                        </div>
+                        <div>
+                            <strong>NHÂN VIÊN KIỂM ĐỊNH QC</strong><br>
+                            <span style="font-size: 10px; color: #777;">(Ký & ghi rõ họ tên)</span>
+                            <div style="height: 60px;"></div>
+                            <p style="font-weight: bold; margin: 0;">${ret.processed_by || ''}</p>
+                        </div>
+                        <div>
+                            <strong>THỦ KHO NHẬP</strong><br>
+                            <span style="font-size: 10px; color: #777;">(Ký & ghi rõ họ tên)</span>
+                            <div style="height: 60px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            window.print();
+        } catch(e) {
+            alert("❌ Lỗi in biên bản: " + e.message);
+        }
+    }
+};
+
+// Khởi chạy phân hệ khi load
+window.modReturn.load();
+</script>

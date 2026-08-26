@@ -47,6 +47,10 @@ CREATE TABLE IF NOT EXISTS products (
     price_6 NUMERIC DEFAULT 0,
     stock_qty NUMERIC DEFAULT 0,
     virtual_stock NUMERIC DEFAULT 0,
+    unit VARCHAR(50) DEFAULT 'Bộ',
+    accounting_code VARCHAR(100),
+    accounting_name VARCHAR(255),
+    vat_rate NUMERIC DEFAULT 8,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -65,6 +69,7 @@ CREATE TABLE IF NOT EXISTS customers (
     vat_email VARCHAR(100),
     reward_points NUMERIC DEFAULT 0,
     current_debt NUMERIC DEFAULT 0,
+    debt_limit NUMERIC DEFAULT 0,
     total_sales NUMERIC DEFAULT 0,
     tier INTEGER DEFAULT 1,
     vip_level INTEGER DEFAULT 1,
@@ -172,11 +177,18 @@ CREATE TABLE IF NOT EXISTS invoices (
     company_address TEXT,
     vat_email VARCHAR(100),
     total_amount NUMERIC DEFAULT 0,
-    vat_rate INTEGER DEFAULT 0,
+    amount_before_tax NUMERIC DEFAULT 0,
+    vat_rate INTEGER DEFAULT 8,
     vat_amount NUMERIC DEFAULT 0,
     invoice_no VARCHAR(50),
-    status VARCHAR(50) DEFAULT 'Chờ Phát Hành',
-    provider VARCHAR(100),
+    invoice_symbol VARCHAR(50) DEFAULT '1C26T-AA/26E',
+    draft_code VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'PENDING_DRAFT', -- PENDING_DRAFT (Chờ Lập Nháp), DRAFT_CREATED (Đã Lập Nháp e-Invoice), ISSUED (Đã Phát Hành), CANCELLED (Đã Hủy)
+    provider VARCHAR(100) DEFAULT 'VinInvoice',
+    items_snapshot JSONB DEFAULT '[]'::jsonb,
+    einv_link TEXT,
+    notes TEXT,
+    ktt_notes TEXT,
     issued_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -260,4 +272,274 @@ CREATE TABLE IF NOT EXISTS tax_vault_locks (
     lock_reason TEXT,
     locked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ==========================================
+-- 19. BẢNG PHÒNG BAN (DEPARTMENTS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS departments (
+    id SERIAL PRIMARY KEY,
+    dept_code VARCHAR(50) UNIQUE NOT NULL,
+    dept_name VARCHAR(100) NOT NULL,
+    manager_emp_id INTEGER,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO departments (dept_code, dept_name, description) VALUES
+('BGD', 'Ban Giám Đốc', 'Điều hành & Hoạch định chiến lược công ty'),
+('KD', 'Phòng Kinh Doanh & Bán Hàng', 'Phát triển khách sỉ, đại lý và bán hàng trực tiếp'),
+('EPC', 'Phòng Kỹ Thuật & Thi Công EPC', 'Thiết kế BOQ, lắp đặt, nghiệm thu và bảo trì O&M'),
+('KHO', 'Phòng Kho Vận & Thu Mua', 'Quản trị tồn kho, thu mua vật tư, nhập xuất hàng'),
+('TCKT', 'Phòng Kế Toán & Tài Chính', 'Quản trị dòng tiền, thuế, công nợ, tiền lương'),
+('HCNS', 'Phòng Hành Chính & Nhân Sự', 'Quản trị nhân sự, tuyển dụng, bảo hiểm, nội quy')
+ON CONFLICT (dept_code) DO NOTHING;
+
+-- ==========================================
+-- 20. BẢNG HỒ SƠ NHÂN SỰ (EMPLOYEES)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS employees (
+    id SERIAL PRIMARY KEY,
+    emp_code VARCHAR(50) UNIQUE NOT NULL,
+    user_id INTEGER,
+    department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL,
+    full_name VARCHAR(255) NOT NULL,
+    gender VARCHAR(10) DEFAULT 'Nam',
+    dob DATE,
+    id_card_number VARCHAR(50),
+    phone VARCHAR(50),
+    email VARCHAR(100),
+    address TEXT,
+    position VARCHAR(100),
+    contract_type VARCHAR(50) DEFAULT 'CHINH_THUC',
+    start_date DATE DEFAULT CURRENT_DATE,
+    end_date DATE,
+    status VARCHAR(50) DEFAULT 'ACTIVE',
+    base_salary NUMERIC DEFAULT 0,
+    insurance_salary NUMERIC DEFAULT 0,
+    bank_account_no VARCHAR(50),
+    bank_name VARCHAR(100),
+    bank_branch VARCHAR(100),
+    
+    -- CẤU HÌNH HOA HỒNG & PHÂN CẤP QUẢN LÝ
+    commission_rate_wholesale NUMERIC DEFAULT 5, -- % hoa hồng khách sỉ của nhân viên
+    commission_rate_boq NUMERIC DEFAULT 10, -- % hoa hồng BOQ/EPC của nhân viên
+    min_gross_profit_threshold NUMERIC DEFAULT 0, -- Mức Lợi Nhuận Gộp Tối Thiểu / Tháng để bắt đầu tính hoa hồng (bù lương cứng)
+    department_role VARCHAR(50) DEFAULT 'STAFF', -- 'STAFF' (Nhân viên) hoặc 'MANAGER' (Trưởng phòng kinh doanh)
+    manager_id INTEGER REFERENCES employees(id) ON DELETE SET NULL, -- Trưởng phòng quản lý trực tiếp
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 21. BẢNG BẢO HIỂM NHÂN VIÊN (EMPLOYEE_INSURANCES)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS employee_insurances (
+    id SERIAL PRIMARY KEY,
+    employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE UNIQUE,
+    bhxh_code VARCHAR(50),
+    bhyt_code VARCHAR(50),
+    hospital_name VARCHAR(255),
+    has_bhxh BOOLEAN DEFAULT true,
+    has_bhyt BOOLEAN DEFAULT true,
+    has_bhtn BOOLEAN DEFAULT true,
+    has_kpcd BOOLEAN DEFAULT true,
+    start_month VARCHAR(7),
+    status VARCHAR(50) DEFAULT 'DANG_DONG',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 22. BẢNG HOA HỒNG BÁN HÀNG & DỰ ÁN (SALES_COMMISSIONS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS sales_commissions (
+    id SERIAL PRIMARY KEY,
+    employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+    ref_type VARCHAR(50) NOT NULL, -- 'ORDER' (Đơn hàng sỉ: 5% GP) hoặc 'CONTRACT' / 'BOQ' (Dự án: 10% GP)
+    ref_id VARCHAR(100) NOT NULL,
+    ref_code VARCHAR(100) NOT NULL,
+    customer_name VARCHAR(255),
+    revenue_amount NUMERIC DEFAULT 0,
+    cogs_amount NUMERIC DEFAULT 0,
+    gross_profit NUMERIC DEFAULT 0,
+    commission_rate NUMERIC DEFAULT 5, -- 5% cho sỉ, 10% cho BOQ
+    commission_amount NUMERIC NOT NULL,
+    paid_status VARCHAR(50) DEFAULT 'PENDING', -- PENDING (Chờ khách trả xong), ELIGIBLE (Đủ điều kiện chi), INCLUDED_PAYROLL (Đã vào bảng lương), PAID (Đã chi)
+    payroll_period VARCHAR(7), -- '2026-08'
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 23. BẢNG TỔNG HỢP BẢNG LƯƠNG THÁNG (PAYROLLS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS payrolls (
+    id SERIAL PRIMARY KEY,
+    period_key VARCHAR(7) UNIQUE NOT NULL, -- '2026-08'
+    standard_working_days NUMERIC DEFAULT 26,
+    total_gross_salary NUMERIC DEFAULT 0,
+    total_commission NUMERIC DEFAULT 0,
+    total_allowance NUMERIC DEFAULT 0,
+    total_bonus NUMERIC DEFAULT 0,
+    total_insurance_emp NUMERIC DEFAULT 0,
+    total_insurance_comp NUMERIC DEFAULT 0,
+    total_advance NUMERIC DEFAULT 0,
+    total_net_salary NUMERIC DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'DRAFT', -- DRAFT, APPROVED, PAID
+    approved_by VARCHAR(100),
+    approved_at TIMESTAMP,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 24. BẢNG CHI TIẾT PHIẾU LƯƠNG TỪNG NHÂN VIÊN (PAYROLL_ITEMS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS payroll_items (
+    id SERIAL PRIMARY KEY,
+    payroll_id INTEGER REFERENCES payrolls(id) ON DELETE CASCADE,
+    employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+    actual_working_days NUMERIC DEFAULT 26,
+    paid_leave_days NUMERIC DEFAULT 0,
+    unpaid_leave_days NUMERIC DEFAULT 0,
+    base_salary NUMERIC DEFAULT 0,
+    salary_by_days NUMERIC DEFAULT 0,
+    allowance_meal NUMERIC DEFAULT 0,
+    allowance_phone_gas NUMERIC DEFAULT 0,
+    allowance_responsibility NUMERIC DEFAULT 0,
+    total_commission NUMERIC DEFAULT 0,
+    bonus_amount NUMERIC DEFAULT 0,
+    gross_income NUMERIC DEFAULT 0,
+    
+    -- Bảo hiểm NLĐ chịu (Khấu trừ vào lương 10.5%)
+    ins_bhxh_emp NUMERIC DEFAULT 0,
+    ins_bhyt_emp NUMERIC DEFAULT 0,
+    ins_bhtn_emp NUMERIC DEFAULT 0,
+    total_ins_emp NUMERIC DEFAULT 0,
+    
+    -- Bảo hiểm Công ty chịu (Chi phí DN 23.5%)
+    ins_bhxh_comp NUMERIC DEFAULT 0,
+    ins_bhyt_comp NUMERIC DEFAULT 0,
+    ins_bhtn_comp NUMERIC DEFAULT 0,
+    ins_kpcd_comp NUMERIC DEFAULT 0,
+    total_ins_comp NUMERIC DEFAULT 0,
+    
+    advance_amount NUMERIC DEFAULT 0,
+    deduction_penalty NUMERIC DEFAULT 0,
+    personal_tax NUMERIC DEFAULT 0,
+    net_salary NUMERIC DEFAULT 0,
+    payment_status VARCHAR(50) DEFAULT 'UNPAID',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 25. BẢNG QUẢN LÝ HỢP ĐỒNG VAY NGÂN HÀNG & TÍN DỤNG (BANK_LOANS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS bank_loans (
+    id SERIAL PRIMARY KEY,
+    loan_code VARCHAR(50) UNIQUE NOT NULL,
+    lender_name VARCHAR(255) NOT NULL,
+    loan_type VARCHAR(50) DEFAULT 'SHORT_TERM', -- SHORT_TERM, LONG_TERM, OVERDRAFT
+    purpose TEXT,
+    original_principal NUMERIC NOT NULL,
+    current_principal NUMERIC NOT NULL,
+    interest_rate NUMERIC NOT NULL, -- %/năm
+    disbursement_date DATE NOT NULL,
+    maturity_date DATE NOT NULL,
+    term_months INTEGER NOT NULL,
+    repayment_method VARCHAR(50) DEFAULT 'EQUAL_PRINCIPAL', -- EQUAL_PRINCIPAL, BULLET, ANNUITY
+    payment_day_of_month INTEGER DEFAULT 25,
+    collateral TEXT,
+    status VARCHAR(50) DEFAULT 'ACTIVE', -- ACTIVE, CLOSED
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 26. BẢNG LỊCH SỬ TRẢ NỢ GỐC & LÃI VAY (LOAN_REPAYMENTS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS loan_repayments (
+    id SERIAL PRIMARY KEY,
+    loan_id INTEGER REFERENCES bank_loans(id) ON DELETE CASCADE,
+    repayment_date DATE NOT NULL,
+    principal_paid NUMERIC DEFAULT 0,
+    interest_paid NUMERIC DEFAULT 0,
+    total_paid NUMERIC DEFAULT 0,
+    remaining_principal NUMERIC NOT NULL,
+    payment_proof_url TEXT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 27. BẢNG CỔ ĐÔNG & THÀNH VIÊN GÓP VỐN (SHAREHOLDERS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS shareholders (
+    id SERIAL PRIMARY KEY,
+    shareholder_code VARCHAR(50) UNIQUE NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    id_card_number VARCHAR(50),
+    phone VARCHAR(50),
+    email VARCHAR(100),
+    address TEXT,
+    ownership_percentage NUMERIC DEFAULT 0, -- % sở hữu
+    committed_capital NUMERIC DEFAULT 0, -- Vốn cam kết góp
+    contributed_capital NUMERIC DEFAULT 0, -- Vốn thực tế đã góp
+    status VARCHAR(50) DEFAULT 'ACTIVE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 28. BẢNG BIẾN ĐỘNG NGUỒN VỐN & CỔ TỨC (EQUITY_TRANSACTIONS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS equity_transactions (
+    id SERIAL PRIMARY KEY,
+    shareholder_id INTEGER REFERENCES shareholders(id) ON DELETE CASCADE,
+    tx_type VARCHAR(50) NOT NULL, -- CONTRIBUTE (Góp vốn), WITHDRAW (Rút vốn), DIVIDEND (Chia cổ tức)
+    amount NUMERIC NOT NULL,
+    tx_date DATE NOT NULL,
+    payment_method VARCHAR(50) DEFAULT 'CHUYEN_KHOAN',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 29. BẢNG KIỂM KÊ KHO & NHẬP TỒN ĐẦU KỲ THỰC TẾ (INVENTORY_AUDITS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS inventory_audits (
+    id SERIAL PRIMARY KEY,
+    audit_code VARCHAR(50) UNIQUE NOT NULL,
+    audit_type VARCHAR(50) DEFAULT 'INITIAL_IMPORT', -- INITIAL_IMPORT, PERIODIC_AUDIT, ADJUSTMENT
+    warehouse_name VARCHAR(100) DEFAULT 'Kho Tổng',
+    auditor_name VARCHAR(100) NOT NULL,
+    audit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT,
+    total_items INTEGER DEFAULT 0,
+    total_system_qty NUMERIC DEFAULT 0,
+    total_actual_qty NUMERIC DEFAULT 0,
+    total_variance_qty NUMERIC DEFAULT 0,
+    total_variance_value NUMERIC DEFAULT 0,
+    items_snapshot JSONB DEFAULT '[]'::jsonb,
+    proof_images JSONB DEFAULT '[]'::jsonb,
+    status VARCHAR(50) DEFAULT 'COMPLETED',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 30. BẢNG ĐÁNH GIÁ KPI THU HỒI CÔNG NỢ & THƯỞNG PHẠT (DEBT_KPI_EVALUATIONS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS debt_kpi_evaluations (
+    id SERIAL PRIMARY KEY,
+    period_key VARCHAR(7) NOT NULL, -- '2026-08'
+    employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+    total_due_debt NUMERIC DEFAULT 0,
+    total_collected_debt NUMERIC DEFAULT 0,
+    collection_rate NUMERIC DEFAULT 0, -- % thu hồi
+    kpi_tier VARCHAR(50), -- 'TIER_UNDER_70', 'TIER_70_84', 'TIER_85_94', 'TIER_95_100'
+    reward_penalty_amount NUMERIC DEFAULT 0, -- Số tiền thưởng (+) hoặc phạt (-)
+    notes TEXT,
+    status VARCHAR(50) DEFAULT 'CALCULATED', -- CALCULATED, APPLIED_PAYROLL
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unq_debt_kpi_period_emp UNIQUE (period_key, employee_id)
+);
+
+
 

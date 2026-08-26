@@ -1,318 +1,681 @@
 <style>
+    /* ========================================================== */
+    /* CHUẨN IN ẤN PDF / PRINT A4 SANG TRỌNG & HOÀN HẢO (FULL A4) */
+    /* ========================================================== */
     @media print {
-        @page { size: A4 portrait; margin: 4mm; }
-        body * { visibility: hidden !important; }
-        #printable-quotation, #printable-quotation * { visibility: visible !important; }
-        #printable-quotation {
-            position: absolute !important; left: 0 !important; top: 0 !important;
-            width: 100% !important; max-width: 100% !important; margin: 0 !important;
-            padding: 16px !important; border: 2px solid #f59e0b !important;
-            border-radius: 12px !important; box-shadow: none !important;
-            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        @page { 
+            size: A4 portrait; 
+            margin: 6mm 6mm 6mm 6mm !important; 
         }
-        .no-print { display: none !important; }
-        input[type="number"] { display: none !important; }
-        .price-print-only { display: inline-block !important; }
+        
+        html, body { 
+            width: 100% !important; 
+            height: auto !important; 
+            min-height: 100% !important;
+            margin: 0 !important; 
+            padding: 0 !important; 
+            background: white !important; 
+            overflow: visible !important;
+            font-size: 10.5px !important;
+            color: #0f172a !important;
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important;
+        }
+
+        aside, header, #sidebar-menu, #page-title, .no-print, nav, button, 
+        #sale-control-panel, #history-list, #view-labor, #user-role, #user-name, 
+        .action-column, .btn-action-cell, #modal-device-manager, #modal-labor-manager { 
+            display: none !important; 
+        }
+
+        main, #main-content, .max-w-7xl, .grid, .lg\:col-span-8, #view-boq, #tab-content-container { 
+            display: block !important; 
+            width: 100% !important; 
+            max-width: 100% !important; 
+            min-width: 100% !important;
+            margin: 0 !important; 
+            padding: 0 !important; 
+            overflow: visible !important;
+            border: none !important;
+            box-shadow: none !important;
+            float: none !important;
+        }
+
+        #printable-quotation {
+            display: block !important; 
+            position: static !important;
+            width: 100% !important; 
+            max-width: 100% !important; 
+            box-sizing: border-box !important;
+            margin: 0 auto !important;
+            padding: 6px 10px !important; 
+            border: 1.5px solid #d97706 !important;
+            border-radius: 8px !important; 
+            box-shadow: none !important;
+            background: white !important;
+        }
+
+        /* 4 THẺ THÔNG TIN DÀN ĐỀU 4 CỘT KHI IN */
+        .print-info-grid {
+            display: table !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+            border-collapse: separate !important;
+            border-spacing: 4px 0 !important;
+            background: #fffbeb !important;
+            border: 1px solid #fde68a !important;
+            border-radius: 6px !important;
+            padding: 4px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .print-info-cell {
+            display: table-cell !important;
+            width: 25% !important;
+            vertical-align: top !important;
+            padding: 3px 6px !important;
+            border-right: 1px solid #fef08a !important;
+            box-sizing: border-box !important;
+        }
+
+        .print-info-cell:last-child {
+            border-right: none !important;
+        }
+
+        .price-print-only { 
+            display: inline-block !important; 
+            font-weight: bold !important; 
+            color: #0f172a !important; 
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .price-input-screen {
+            display: none !important;
+        }
+
+        table { 
+            width: 100% !important; 
+            border-collapse: collapse !important; 
+            table-layout: auto !important;
+        }
+
+        th, td { 
+            padding: 3px 4px !important; 
+        }
+
+        .page-break-avoid { 
+            page-break-inside: avoid !important; 
+        }
     }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 
-<div class="max-w-6xl mx-auto space-y-6 pb-20">
-    <!-- HEADER MENU CHUYỂN TRANG -->
-    <div class="bg-slate-900 text-white p-5 rounded-xl flex justify-between items-center shadow-md no-print">
-        <div>
-            <h1 class="font-bold text-amber-400 text-xl tracking-wide">SUNGO ON-GRID SOLAR RMS</h1>
-            <p class="text-xs text-slate-400">Phân Hệ Báo Giá Bám Tải On-Grid (Không Pin Lưu Trữ)</p>
+<div class="max-w-7xl mx-auto space-y-6 pb-24 text-slate-800">
+    
+    <!-- HEADER ĐIỀU HƯỚNG PHÂN HỆ BOQ -->
+    <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl border border-slate-800 no-print">
+        <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-slate-950 text-2xl shadow-lg shadow-amber-500/20 font-black">
+                <i class="fas fa-sun"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-black text-white text-lg tracking-wide">BÁO GIÁ BÁM TẢI ON-GRID</h1>
+                    <span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">Zero Export System</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">Tiết kiệm trực tiếp tiền điện ban ngày, hoàn vốn nhanh, không cần pin lưu trữ</p>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <button onclick="loadModule('sale-boq-hybrid', 'Báo Giá Hybrid')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3 py-2 rounded transition">⚡ Hybrid</button>
-            <button onclick="loadModule('sale-boq-pump', 'Báo Giá Bơm Nước')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3 py-2 rounded transition">💧 Bơm Nước</button>
-            <button class="bg-amber-500 text-slate-900 font-bold text-xs px-3 py-2 rounded border border-amber-400 cursor-default">☀️ Bám Tải</button>
-            <button onclick="loadModule('sale-boq-offgrid', 'Báo Giá Độc Lập')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3 py-2 rounded transition">🔋 Độc Lập</button>
+        
+        <!-- NÚT CHUYỂN HỆ THỐNG -->
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="loadModule('sale-boq-hybrid', 'Báo Giá Hybrid')" class="bg-slate-800/80 hover:bg-slate-800 hover:text-amber-400 text-slate-300 font-bold text-xs px-3.5 py-2 rounded-xl transition border border-slate-700/60 flex items-center gap-1.5">
+                <i class="fas fa-bolt"></i> Hybrid VIP
+            </button>
+            <button class="bg-amber-500 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl shadow-md border border-amber-400 cursor-default flex items-center gap-1.5">
+                <i class="fas fa-sun"></i> Bám Tải
+            </button>
+            <button onclick="loadModule('sale-boq-pump', 'Báo Giá Bơm Nước')" class="bg-slate-800/80 hover:bg-slate-800 hover:text-blue-400 text-slate-300 font-bold text-xs px-3.5 py-2 rounded-xl transition border border-slate-700/60 flex items-center gap-1.5">
+                <i class="fas fa-water"></i> Bơm Nước
+            </button>
+            <button onclick="loadModule('sale-boq-offgrid', 'Báo Giá Độc Lập')" class="bg-slate-800/80 hover:bg-slate-800 hover:text-purple-400 text-slate-300 font-bold text-xs px-3.5 py-2 rounded-xl transition border border-slate-700/60 flex items-center gap-1.5">
+                <i class="fas fa-battery-full"></i> Độc Lập
+            </button>
+            <button onclick="loadModule('boq-list', 'Danh Sách BOQ')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5 ml-2">
+                <i class="fas fa-list"></i> Danh Sách BOQ
+            </button>
         </div>
     </div>
 
-    <!-- TABS CHUYỂN VIEW -->
-    <div class="flex gap-2 border-b border-slate-300 pb-2 no-print">
-        <button id="tab-btn-boq" onclick="window.modSaleOngrid.switchTab('boq')" class="bg-amber-500 text-slate-900 font-bold text-xs px-4 py-2 rounded shadow-sm">
-            📋 Báo Giá Bám Tải & Vật Tư
-        </button>
-        <button id="tab-btn-labor" onclick="window.modSaleOngrid.switchTab('labor')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs px-4 py-2 rounded transition">
-            🛠️ Bóc Tách Chi Phí Thi Công (Liên Kết: <span id="tab-labor-total" class="text-amber-400">0 đ</span>)
-        </button>
-    </div>
-
-    <!-- MAIN CONTAINER -->
-    <div id="tab-content-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- PANEL BÊN TRÁI -->
-        <div id="sale-control-panel" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 no-print">
-            <h2 class="font-bold border-b pb-2 text-slate-900 text-sm flex items-center justify-between">
-                <span>☀️ Thiết Lập Báo Giá Bám Tải</span>
-                <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-black">ON-GRID VIP</span>
-            </h2>
+    <!-- KHU VỰC CHÍNH: 2 CỘT (CẤU HÌNH BÊN TRÁI + TỜ BÁO GIÁ PREVIEW BÊN PHẢI) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- CỘT TRÁI: THIẾT LẬP CẤU HÌNH (4 CỘT) -->
+        <div id="sale-control-panel" class="lg:col-span-4 space-y-4 no-print">
             
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Dòng Sản Phẩm / Thương Hiệu</label>
-                <select id="brand-select" class="w-full border rounded p-2 text-xs font-bold text-amber-600 outline-none">
-                    <option value="SUNGO ZEN">SUNGO - ZEN German On-Grid Technology</option>
-                    <option value="SUNGO E.BOX">SUNGO - E.BOX Standard Grid</option>
-                </select>
+            <!-- THÔNG TIN KHÁCH HÀNG & TIỀN ĐIỆN -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3.5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <h2 class="font-black text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fas fa-sliders-h text-amber-500"></i> Cấu Hình Báo Giá
+                    </h2>
+                    <span class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md font-bold" id="editing-mode-badge">Tạo mới</span>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Khách Hàng / Công Trình</label>
+                    <input type="text" id="cust-name" value="Anh Toàn (Tân Phú, TP.HCM)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-amber-500 transition" oninput="window.modSaleOngrid.calcBOQ()">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Số Điện Thoại Khách Hàng</label>
+                    <input type="text" id="cust-phone" value="0908.776.889" placeholder="Nhập SĐT khách..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500 transition" oninput="window.modSaleOngrid.calcBOQ()">
+                </div>
+
+                <div class="bg-amber-50/60 p-3 rounded-xl border border-amber-200/80 space-y-1">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-[11px] font-bold text-amber-900">💵 Tiền Điện Bình Quân / Tháng</label>
+                        <span class="text-[10px] text-amber-600 font-bold">VNĐ</span>
+                    </div>
+                    <input type="text" id="monthly-bill" value="5.000.000" class="w-full bg-white border border-amber-300 rounded-lg p-2 text-sm font-black text-amber-700 outline-none text-right focus:border-amber-500" oninput="window.modSaleOngrid.formatAndCalcBill(this)">
+                    <p class="text-[10px] text-amber-700 italic">👉 Tự động đề xuất công suất tối ưu bám tải</p>
+                </div>
             </div>
 
-            <div class="bg-amber-500 p-3 rounded-lg text-slate-900 space-y-1 shadow-sm">
-                <label class="block text-xs font-black uppercase tracking-wider">🏗️ Kết Cấu Mái / Khung Giá</label>
-                <select id="roof-type-select" class="w-full bg-slate-900 text-amber-300 border border-slate-700 rounded p-2 text-xs font-bold outline-none" onchange="window.modSaleOngrid.updateOnGridLabor()">
-                    <option value="ROOF_TIN_LOW">1. Áp Mái Tôn Thấp (Mái bằng, chuẩn)</option>
-                    <option value="ROOF_STEEL_LOW">2. Khung Sắt Thấp (Chân nghiêng ≤ 1.5m)</option>
-                    <option value="ROOF_STEEL_HIGH">3. Khung Cao Sân Thượng (> 1.5m)</option>
-                    <option value="ROOF_TILE">4. Mái Ngói / Mái Thái (Móc Inox + Keo)</option>
-                </select>
+            <!-- THIẾT BỊ KỸ THUẬT & KHUNG MÁI -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3.5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <h2 class="font-black text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fas fa-solar-panel text-amber-500"></i> Thiết Bị & Khung Mái
+                    </h2>
+                    <span class="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md font-bold">2. Kỹ Thuật</span>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">🏗️ Kết Cấu Khung Giá Đỡ Mái</label>
+                    <select id="roof-type-select" class="w-full bg-slate-50 text-slate-800 border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-amber-500" onchange="window.modSaleOngrid.updateOnGridLabor()">
+                        <option value="ROOF_TIN_LOW">1. Áp Mái Tôn Thấp (Mái bằng / Tôn chuẩn)</option>
+                        <option value="ROOF_STEEL_LOW">2. Khung Sắt Thấp (Chân nghiêng ≤ 1.5m)</option>
+                        <option value="ROOF_STEEL_HIGH">3. Khung Cao Sân Thượng (> 1.5m)</option>
+                        <option value="ROOF_TILE">4. Mái Ngói / Mái Thái (Móc Inox + Keo)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-[11px] font-bold text-slate-600">Công suất giàn PV</label>
+                        <span class="text-[11px] font-black text-blue-600" id="display-kwp">14.8 kWp</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="kwp" value="14.8" min="1" step="0.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-blue-500" oninput="window.modSaleOngrid.calcBOQ()">
+                        <span class="text-xs font-bold text-slate-500">kWp</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">☀️ Tấm Pin Mặt Trời (PV Panels)</label>
+                    <select id="select-panel" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-amber-500" onchange="window.modSaleOngrid.calcBOQ()"></select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">⚡ Biến Tần Inverter Bám Tải (On-Grid)</label>
+                    <select id="select-inverter" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-amber-500" onchange="window.modSaleOngrid.calcBOQ()"></select>
+                </div>
+
+                <div class="pt-1">
+                    <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-vat" checked onchange="window.modSaleOngrid.recalculateTotals()" class="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-slate-300 cursor-pointer">
+                        <span>Đã bao gồm thuế VAT (8%)</span>
+                    </label>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Khách Hàng / Công Trình</label>
-                <input type="text" id="cust-name" value="Anh Toàn (Tân Phú, TP.HCM)" class="w-full border rounded p-2 text-sm outline-none" oninput="window.modSaleOngrid.calcBOQ()">
-            </div>
-
-            <div class="bg-amber-50/60 p-3 rounded-lg border border-amber-300 space-y-1">
-                <label class="block text-xs font-bold text-amber-900">💵 Tiền Điện Hàng Tháng (VNĐ)</label>
-                <input type="text" id="monthly-bill" value="5.000.000" class="w-full border border-amber-400 rounded p-2 text-base font-extrabold text-amber-700 outline-none" oninput="window.modSaleOngrid.formatAndCalcBill(this)">
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Công suất giàn PV (kWp)</label>
-                <input type="number" id="kwp" value="14.8" min="1" step="0.5" class="w-full border rounded p-2 text-sm font-bold text-slate-800 bg-slate-50" oninput="window.modSaleOngrid.calcBOQ()">
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Tấm Pin Mặt Trời (PV)</label>
-                <select id="select-panel" class="w-full border rounded p-2 text-xs outline-none" onchange="window.modSaleOngrid.calcBOQ()"></select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Biến Tần Inverter Bám Tải (On-Grid)</label>
-                <select id="select-inverter" class="w-full border rounded p-2 text-xs font-bold border-amber-400 text-amber-900 outline-none" onchange="window.modSaleOngrid.calcBOQ()"></select>
-            </div>
-
-            <div class="bg-slate-50 p-3 rounded border space-y-2 text-xs">
-                <label class="flex items-center gap-2 font-semibold text-slate-800">
-                    <input type="checkbox" id="chk-vat" checked onchange="window.modSaleOngrid.recalculateTotals()"> Đã bao gồm thuế VAT (8%)
-                </label>
-            </div>
-
-            <!-- BÁO CÁO LỢI NHUẬN & HOA HỒNG -->
-            <div class="bg-slate-900 text-white p-3 rounded-lg space-y-1">
+            <!-- BÁO CÁO LỢI NHUẬN & HOA HỒNG DÀNH CHO SALE -->
+            <div class="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-4 rounded-2xl border border-slate-800 shadow-md space-y-2">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-1.5">
+                    <span class="text-[10px] font-black uppercase text-amber-400 tracking-wider">Chỉ Số Kinh Doanh (Nội Bộ)</span>
+                    <span class="text-[10px] text-slate-400" id="current-user-tag">Sale: ...</span>
+                </div>
                 <div class="flex justify-between text-xs">
                     <span class="text-slate-400">Tổng Giá Bán:</span>
-                    <strong id="side-total-price" class="text-amber-400 font-bold">0 VNĐ</strong>
+                    <strong id="side-total-price" class="text-white font-black">0 VNĐ</strong>
                 </div>
                 <div class="flex justify-between text-xs">
-                    <span class="text-slate-400">Lợi Nhuận Ròng:</span>
-                    <strong id="side-profit" class="text-emerald-400 font-bold">0 VNĐ</strong>
+                    <span class="text-slate-400">Lợi Nhuận Gộp:</span>
+                    <strong id="side-profit" class="text-emerald-400 font-black">0 VNĐ</strong>
                 </div>
-                <div class="flex justify-between text-xs border-t border-slate-700 pt-1 mt-1">
-                    <span class="text-amber-300 font-bold">🎁 Hoa Hồng Sale (10% Lời):</span>
-                    <strong id="side-commission" class="text-amber-400 font-extrabold">0 VNĐ</strong>
+                <div class="flex justify-between text-xs border-t border-slate-800 pt-1.5">
+                    <span class="text-amber-300 font-bold">🎁 Hoa Hồng Dự Kiến (10% Lời):</span>
+                    <strong id="side-commission" class="text-amber-400 font-black">0 VNĐ</strong>
                 </div>
             </div>
 
-            <div id="price-floor-warning" class="hidden bg-red-50 border-l-4 border-red-500 p-3 text-red-700 text-xs rounded font-medium space-y-1">
-                <p class="font-bold flex items-center gap-1">⛔ Giá Bán Dưới Sàn 5%!</p>
-                <p id="warning-text-detail"></p>
+            <!-- CẢNH BÁO GIÁ SÀN -->
+            <div id="price-floor-warning" class="hidden bg-red-50 border-2 border-red-300 p-3.5 text-red-700 text-xs rounded-2xl font-medium space-y-1">
+                <p class="font-black flex items-center gap-1.5 text-red-800">
+                    <i class="fas fa-exclamation-triangle"></i> Giá Bán Đang Dưới Mức Sàn Quy Định!
+                </p>
+                <p id="warning-text-detail" class="text-[11px]"></p>
+                <p class="text-[10px] text-slate-600 italic mt-1">Hệ thống sẽ gửi yêu cầu duyệt tới Ban Giám Đốc khi lưu.</p>
             </div>
 
-            <div id="save-action-area">
-                <button id="btn-save-quotation" onclick="window.modSaleOngrid.saveQuotation('DRAFT')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2.5 rounded-lg transition shadow-sm">
-                    💾 Lưu & Xuất Báo Giá Bám Tải
+            <!-- NÚT LƯU BÁO GIÁ -->
+            <div id="save-action-area" class="space-y-2">
+                <button id="btn-save-quotation" onclick="window.modSaleOngrid.saveQuotation('QUOTING')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black py-3 rounded-2xl transition shadow-lg shadow-amber-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fas fa-save text-sm"></i> Lưu & Xuất Báo Giá On-Grid
                 </button>
+                <div id="edit-cancel-btn-area" class="hidden">
+                    <button onclick="window.modSaleOngrid.resetFormToNew()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs transition">
+                        <i class="fas fa-times mr-1"></i> Hủy chế độ sửa (Tạo mới)
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- NỘI DUNG CHÍNH -->
-        <div class="md:col-span-2 space-y-4">
-            <div id="view-boq" class="space-y-4">
-                <div id="history-list" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 no-print">
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <h2 class="font-bold text-slate-900">Danh Sách Báo Giá Bám Tải Đã Tạo</h2>
-                        <button onclick="window.modSaleOngrid.loadHistory()" class="text-xs text-amber-600 font-semibold hover:underline">🔄 Tải lại</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead>
-                                <tr class="bg-slate-100 text-xs uppercase text-slate-500">
-                                    <th class="p-2">Thương Hiệu</th>
-                                    <th class="p-2">Mã Đơn</th>
-                                    <th class="p-2">Khách Hàng</th>
-                                    <th class="p-2 text-right">Tổng Tiền</th>
-                                    <th class="p-2 text-center">Trạng Thái</th>
-                                    <th class="p-2 text-center">Thao Tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="history-body" class="divide-y text-xs"></tbody>
-                        </table>
-                    </div>
+        <!-- CỘT PHẢI: TỜ BÁO GIÁ PREVIEW (8 CỘT) -->
+        <div class="lg:col-span-8 space-y-4">
+            
+            <!-- TABS CHUYỂN ĐỔI CHẾ ĐỘ XEM -->
+            <div class="flex items-center justify-between bg-white p-2 rounded-2xl border border-slate-200/80 shadow-sm no-print">
+                <div class="flex items-center gap-2">
+                    <button id="tab-btn-boq" onclick="window.modSaleOngrid.switchTab('boq')" class="bg-amber-500 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
+                        <i class="fas fa-file-invoice-dollar"></i> 1. Tờ Báo Giá Chi Tiết (PDF)
+                    </button>
+                    <button id="tab-btn-labor" onclick="window.modSaleOngrid.switchTab('labor')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5">
+                        <i class="fas fa-tools"></i> 2. Bóc Tách Chi Phí Thi Công (<span id="tab-labor-total" class="text-amber-600 font-bold">0 đ</span>)
+                    </button>
                 </div>
+                <div class="flex items-center gap-2 pr-2">
+                    <button onclick="window.modSaleOngrid.triggerPrint()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow transition flex items-center gap-1.5">
+                        <i class="fas fa-print text-amber-400"></i> In / Xuất PDF
+                    </button>
+                </div>
+            </div>
 
-                <!-- KHỐI TỜ BÁO GIÁ DÙNG ĐỂ IN PDF SANG TRỌNG -->
-                <div id="printable-quotation" class="bg-white p-6 rounded-2xl border-2 border-amber-400 shadow-xl space-y-4">
-                    <div class="flex justify-between items-start border-b-2 border-amber-500 pb-2">
-                        <div>
-                            <h2 id="pdf-brand-logo" class="font-black text-2xl text-amber-600 tracking-wider uppercase">SUNGO ON-GRID SOLAR</h2>
-                            <p class="text-xs text-slate-600 font-bold">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</p>
-                            <p class="text-[11px] text-slate-500 mt-0.5">Trụ sở: 419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
-                            <p class="text-[11px] text-slate-500">Hotline: 0937.039.889 | Email: contact@sungo.vn | Website: www.sungo.vn</p>
+            <!-- VIEW 1: TỜ BÁO GIÁ ON-GRID CHUẨN A4 -->
+            <div id="view-boq" class="space-y-4">
+                
+                <div id="printable-quotation" class="bg-white p-7 rounded-2xl border border-amber-300/80 shadow-xl space-y-5">
+                    
+                    <!-- HEADER LOGO & THÔNG TIN DOANH NGHIỆP -->
+                    <div class="flex justify-between items-start border-b-2 border-amber-500 pb-3 gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl font-black text-amber-600 tracking-wider">SUNGO</span>
+                                <span class="text-2xl font-black text-slate-900 tracking-wider">SOLAR</span>
+                                <span class="text-[9px] bg-slate-900 text-amber-400 font-black px-2 py-0.5 rounded tracking-widest uppercase">ON-GRID</span>
+                            </div>
+                            <p class="text-xs text-slate-700 font-black uppercase">CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO</p>
+                            <p class="text-[11px] text-slate-500"><i class="fas fa-map-marker-alt text-amber-500 mr-1"></i> Trụ sở: 419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
+                            <p class="text-[11px] text-slate-500"><i class="fas fa-phone-alt text-amber-500 mr-1"></i> Hotline: 0937.039.889 | <i class="fas fa-envelope text-amber-500 ml-1 mr-1"></i> contact@sungo.vn | <i class="fas fa-globe text-amber-500 ml-1 mr-1"></i> www.sungo.vn</p>
                         </div>
-                        <div class="text-right space-y-1">
-                            <span id="detail-status-badge" class="text-xs px-3 py-1 rounded-full font-black uppercase bg-amber-500 text-slate-900 inline-block shadow-sm">DRAFT</span>
-                            <p id="pdf-q-code" class="text-sm font-mono font-black text-slate-800">ONG-000000</p>
-                            <p class="text-[10px] text-slate-400 font-medium">Ngày lập: <span id="pdf-date-now">--/--/----</span></p>
+                        
+                        <div class="text-right space-y-1 shrink-0">
+                            <div class="inline-block">
+                                <span id="detail-status-badge" class="text-[10px] px-3 py-1 rounded-full font-black uppercase bg-amber-100 text-amber-800 border border-amber-300">BẢN BÁO GIÁ CHÍNH THỨC</span>
+                            </div>
+                            <p id="pdf-q-code" class="text-base font-mono font-black text-blue-700 mt-1">ONG-000000</p>
+                            <p class="text-[10px] text-slate-400 font-medium">Ngày lập: <span id="pdf-date-now" class="font-bold text-slate-700">--/--/----</span></p>
+                            <p class="text-[10px] text-slate-400">Hiệu lực: <span class="font-bold text-slate-700">15 ngày</span></p>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-r from-amber-50 via-slate-50 to-amber-50 p-3 rounded-xl border border-amber-200 text-xs grid grid-cols-2 md:grid-cols-3 gap-2 shadow-sm">
-                        <div>
-                            <span class="text-slate-400 font-semibold block">Khách hàng:</span>
-                            <strong id="pdf-cust-name" class="text-slate-900 text-xs font-bold block">Anh Toàn</strong>
+                    <!-- THÔNG TIN DỰ ÁN & KHÁCH HÀNG (4 CỘT CHUẨN IN) -->
+                    <div class="print-info-grid">
+                        <div class="print-info-cell">
+                            <span class="text-slate-500 text-[10px] font-bold uppercase block">👤 Khách hàng / Chủ đầu tư:</span>
+                            <strong id="pdf-cust-name" class="text-slate-900 text-xs font-black block mt-0.5">Anh Toàn</strong>
+                            <span id="pdf-cust-phone-disp" class="text-[10px] text-slate-500 block">0908.776.889</span>
                         </div>
-                        <div>
-                            <span class="text-slate-400 font-semibold block">Loại Hệ Thống:</span>
-                            <strong class="text-amber-700 font-black text-xs block">BÁM TẢI KHÔNG LƯU TRỮ (ON-GRID)</strong>
+                        <div class="print-info-cell">
+                            <span class="text-slate-500 text-[10px] font-bold uppercase block">⚡ Giải pháp công nghệ:</span>
+                            <strong class="text-amber-800 font-black text-xs block mt-0.5">BÁM TẢI ZERO-EXPORT</strong>
+                            <span class="text-[10px] text-slate-500 block">Hòa lưới chống phát ngược</span>
                         </div>
-                        <div>
-                            <span class="text-slate-400 font-semibold block">Công suất PV:</span>
-                            <strong id="pdf-kwp" class="text-slate-900 text-xs font-bold block">14.8 kWp</strong>
+                        <div class="print-info-cell">
+                            <span class="text-slate-500 text-[10px] font-bold uppercase block">☀️ Công suất giàn PV:</span>
+                            <strong id="pdf-kwp" class="text-blue-700 text-xs font-black block mt-0.5">14.8 kWp</strong>
+                            <span class="text-[10px] text-slate-500 block">Ước tính: ~1.800 kWh/tháng</span>
+                        </div>
+                        <div class="print-info-cell">
+                            <span class="text-slate-500 text-[10px] font-bold uppercase block">💰 Tiết kiệm tiền điện:</span>
+                            <strong class="text-emerald-700 text-xs font-black block mt-0.5">~85% Ban Ngày</strong>
+                            <span class="text-[10px] text-slate-500 block">Hoàn vốn nhanh 3 - 4 năm</span>
                         </div>
                     </div>
 
-                    <div class="space-y-1">
-                        <h3 class="text-xs font-black text-slate-900 uppercase flex items-center gap-1">📦 I. DANH SÁCH THIẾT BỊ VẬT TƯ</h3>
-                        <div class="overflow-x-auto rounded-lg border border-slate-200">
+                    <!-- BẢNG I: DANH MỤC THIẾT BỊ & VẬT TƯ ON-GRID (SẮP XẾP: PIN -> INVERTER -> PHỤ KIỆN GIẢM DẦN) -->
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black text-slate-900 uppercase flex items-center gap-1.5">
+                                <i class="fas fa-boxes text-amber-500"></i> I. DANH MỤC THIẾT BỊ & VẬT TƯ BÁM TẢI CHÍNH HÃNG
+                            </h3>
+                            <button onclick="window.modSaleOngrid.openAddDeviceModal()" class="no-print bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-lg shadow-sm transition flex items-center gap-1">
+                                <i class="fas fa-plus-circle"></i> Thêm Thiết Bị / Phụ Kiện
+                            </button>
+                        </div>
+                        
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
                             <table id="boq-items-table" class="w-full text-left text-xs">
                                 <thead>
-                                    <tr class="bg-slate-900 text-amber-400 uppercase font-black tracking-wider border-b border-amber-400">
+                                    <tr class="bg-slate-950 text-amber-400 uppercase font-black text-[10px] tracking-wider border-b border-amber-400">
                                         <th class="p-2 text-center w-8">STT</th>
-                                        <th class="p-2">MÃ SKU</th>
-                                        <th class="p-2">TÊN THIẾT BỊ / VẬT TƯ</th>
-                                        <th class="p-2 text-center">ĐVT</th>
-                                        <th class="p-2 text-center">SL</th>
-                                        <th class="p-2 text-right">ĐƠN GIÁ (VNĐ)</th>
-                                        <th class="p-2 text-right">THÀNH TIỀN (VNĐ)</th>
+                                        <th class="p-2 text-center w-12">HÌNH ẢNH</th>
+                                        <th class="p-2">THIẾT BỊ & THÔNG SỐ KỸ THUẬT</th>
+                                        <th class="p-2 text-center w-12">ĐVT</th>
+                                        <th class="p-2 text-center w-12">SL</th>
+                                        <th class="p-2 text-right w-28">ĐƠN GIÁ (VNĐ)</th>
+                                        <th class="p-2 text-right w-28 pr-3">THÀNH TIỀN (VNĐ)</th>
+                                        <th class="p-2 text-center w-16 action-column no-print">THAO TÁC</th>
                                     </tr>
                                 </thead>
-                                <tbody id="detail-items-body" class="divide-y divide-slate-200"></tbody>
+                                <tbody id="detail-items-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
                             </table>
                         </div>
                     </div>
 
-                    <div class="space-y-1 pt-1">
-                        <h3 class="text-xs font-black text-amber-800 uppercase flex items-center gap-1">🛠️ II. BÓC TÁCH CHI PHÍ THI CÔNG LẮP ĐẶT CHI TIẾT</h3>
-                        <div class="overflow-x-auto rounded-lg border border-amber-300">
+                    <!-- BẢNG II: BÓC TÁCH CHI PHÍ THI CÔNG & NHÂN CÔNG -->
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black text-amber-900 uppercase flex items-center gap-1.5">
+                                <i class="fas fa-tools text-amber-600"></i> II. BÓC TÁCH CHI PHÍ THI CÔNG, LẮP ĐẶT & BÀN GIAO TRỌN GÓI
+                            </h3>
+                            <button onclick="window.modSaleOngrid.openAddLaborModal()" class="no-print bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] px-2.5 py-1 rounded-lg shadow-sm transition flex items-center gap-1">
+                                <i class="fas fa-plus-circle"></i> Thêm Hạng Mục Thi Công
+                            </button>
+                        </div>
+                        
+                        <div class="overflow-x-auto rounded-xl border border-amber-200/80 shadow-sm">
                             <table class="w-full text-left text-[11px]">
                                 <thead>
-                                    <tr class="bg-amber-500 text-slate-900 uppercase font-black tracking-wider border-b border-amber-600">
-                                        <th class="p-1.5 text-center w-8">STT</th>
-                                        <th class="p-1.5">HẠNG MỤC THI CÔNG</th>
-                                        <th class="p-1.5 text-center">ĐVT</th>
-                                        <th class="p-1.5 text-center">KHỐI LƯỢNG</th>
-                                        <th class="p-1.5 text-right">ĐƠN GIÁ (VNĐ)</th>
-                                        <th class="p-1.5 text-right">THÀNH TIỀN (VNĐ)</th>
+                                    <tr class="bg-amber-500 text-slate-950 uppercase font-black tracking-wider text-[10px] border-b border-amber-600">
+                                        <th class="p-2 text-center w-8">STT</th>
+                                        <th class="p-2">HẠNG MỤC THI CÔNG HOÀN THIỆN</th>
+                                        <th class="p-2 text-center w-12">ĐVT</th>
+                                        <th class="p-2 text-center w-14">KHỐI LƯỢNG</th>
+                                        <th class="p-2 text-right w-28">ĐƠN GIÁ (VNĐ)</th>
+                                        <th class="p-2 text-right w-28 pr-3">THÀNH TIỀN (VNĐ)</th>
+                                        <th class="p-2 text-center w-14 action-column no-print">XÓA</th>
                                     </tr>
                                 </thead>
-                                <tbody id="pdf-labor-body" class="divide-y divide-amber-200 bg-amber-50/20"></tbody>
+                                <tbody id="pdf-labor-body" class="divide-y divide-amber-100 bg-amber-50/20"></tbody>
                             </table>
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-center py-3 px-5 bg-slate-900 text-white rounded-xl shadow-md border border-amber-400">
+                    <!-- TỔNG CỘNG THANH TOÁN -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3.5 px-5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-xl shadow-md border border-amber-500/80 gap-3">
                         <div class="space-y-0.5">
-                            <p id="pdf-vat-text" class="text-xs text-amber-300 font-bold">* Báo giá đã bao gồm VAT (8%). Có hiệu lực trong 10 ngày.</p>
-                            <p class="text-[10px] text-slate-400">* Bao gồm trọn gói vật tư, nhân công lắp đặt & tủ điện bảo vệ AC/DC.</p>
+                            <p id="pdf-vat-text" class="text-xs text-amber-300 font-bold">* Báo giá đã bao gồm VAT (8%). Đã bao gồm toàn bộ vật tư phụ và nhân công.</p>
+                            <p class="text-[10px] text-slate-400">* Cam kết biến tần chính hãng bảo hành 5 năm, tấm pin bảo hành hiệu suất 25 - 30 năm.</p>
                         </div>
-                        <div class="text-right">
-                            <span class="text-[10px] text-amber-400 uppercase tracking-widest font-black block">TỔNG VỐN ĐẦU TƯ BÁM TẢI:</span>
-                            <p id="pdf-total-amount" class="text-2xl font-black text-amber-400">0 VNĐ</p>
+                        <div class="text-left sm:text-right shrink-0">
+                            <span class="text-[10px] text-amber-400 uppercase tracking-widest font-black block">TỔNG MỨC ĐẦU TƯ TRỌN GÓI:</span>
+                            <p id="pdf-total-amount" class="text-2xl font-black text-amber-400 tracking-tight">0 VNĐ</p>
                         </div>
                     </div>
 
-                    <div class="bg-slate-50 p-3 rounded-xl border border-amber-300 space-y-2 shadow-sm">
-                        <div class="flex justify-between items-center border-b border-slate-300 pb-1">
-                            <h3 class="font-black text-slate-900 text-xs uppercase tracking-wide flex items-center gap-1">💰 SO SÁNH TỔNG LỢI NHUẬN THU VỀ SAU 20 NĂM</h3>
-                            <span class="text-[9px] bg-amber-500 text-slate-900 font-black px-2.5 py-0.5 rounded-full uppercase">HIỆU QUẢ THỰC TẾ</span>
+                    <!-- BẢNG PHÂN TÍCH TÀI CHÍNH 20 NĂM -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 shadow-sm page-break-avoid">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
+                            <h3 class="font-black text-slate-900 text-xs uppercase tracking-wide flex items-center gap-1.5">
+                                <i class="fas fa-chart-line text-emerald-600"></i> HIỆU QUẢ KINH TẾ & DÒNG TIỀN ĐẦU TƯ (20 NĂM)
+                            </h3>
+                            <span class="text-[9px] bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full uppercase">Hiệu Suất Thực Tế</span>
                         </div>
+
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-white p-2.5 rounded-xl border border-slate-200 text-center space-y-0.5 shadow-sm">
-                                <span class="text-[10px] font-bold text-slate-500 uppercase block">🏦 GỬI TIẾT KIỆM NGÂN HÀNG (7.0%/NĂM)</span>
-                                <p id="calc-bank-20y" class="text-base font-black text-slate-700">0 VNĐ</p>
+                            <div class="bg-white p-3 rounded-xl border border-slate-200 text-center space-y-0.5 shadow-sm">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase block">🏦 Gửi Ngân Hàng Lãi Suất 7.0%/Năm (20 Năm)</span>
+                                <p id="calc-bank-20y" class="text-sm font-black text-slate-700 mt-1">0 VNĐ</p>
                             </div>
-                            <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-slate-900 p-2.5 rounded-xl text-center space-y-0.5 shadow-md">
-                                <span class="text-[10px] font-black uppercase text-slate-900 block">☀️ ĐẦU TƯ ĐIỆN MẶT TRỜI SUNGO</span>
-                                <p id="calc-solar-20y" class="text-lg font-black text-slate-900">0 VNĐ</p>
-                                <p id="calc-diff-note" class="text-[9px] font-extrabold text-slate-900 bg-white/60 py-0.5 px-3 rounded-full inline-block shadow-sm">👉 Lời hơn gửi ngân hàng: +0 VNĐ</p>
+
+                            <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 p-3 rounded-xl text-center space-y-0.5 shadow-md">
+                                <span class="text-[10px] font-black uppercase text-slate-950 block">☀️ Đầu Tư Điện Mặt Trời Bám Tải SUNGO</span>
+                                <p id="calc-solar-20y" class="text-base font-black text-slate-950 mt-0.5">0 VNĐ</p>
+                                <p id="calc-diff-note" class="text-[9px] font-black text-slate-950 bg-white/70 py-0.5 px-3 rounded-full inline-block mt-1">
+                                    👉 Lời hơn gửi tiết kiệm: +0 VNĐ
+                                </p>
                             </div>
                         </div>
-                        <div class="pt-1 border-t border-slate-200 flex justify-between items-center text-[10px] text-slate-500">
-                            <span>Thời gian hoàn vốn: <strong id="calc-payback" class="text-slate-800 font-bold">3.0 năm</strong></span>
-                            <span>Tỷ suất dòng tiền (ROE): <strong id="calc-roe" class="text-slate-800 font-bold">32.0%/năm</strong></span>
-                            <span>NPV (Chiết khấu 10%): <strong id="calc-npv" class="text-slate-800 font-bold">0 VNĐ</strong></span>
+
+                        <div class="pt-1.5 border-t border-slate-200 flex flex-wrap justify-between items-center text-[10px] text-slate-600 gap-2">
+                            <span>⏱️ Thời gian hoàn vốn: <strong id="calc-payback" class="text-slate-900 font-black">3.2 năm</strong></span>
+                            <span>📈 Tỷ suất sinh lời (ROE): <strong id="calc-roe" class="text-slate-900 font-black">31.5%/năm</strong></span>
+                            <span>💎 Giá trị hiện tại thuần (NPV 10%): <strong id="calc-npv" class="text-slate-900 font-black">0 Tr VNĐ</strong></span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 text-center pt-3 text-xs text-slate-700 border-t border-slate-200">
+                    <!-- CHỮ KÝ XÁC NHẬN BÁO GIÁ -->
+                    <div class="grid grid-cols-2 text-center pt-4 text-xs text-slate-700 border-t border-slate-200 page-break-avoid gap-4">
                         <div>
-                            <p class="font-bold uppercase text-slate-800">ĐẠI DIỆN KHÁCH HÀNG</p>
-                            <p class="text-[10px] text-slate-400 italic mb-8">(Ký & ghi rõ họ tên)</p>
-                            <p id="pdf-sign-cust-name" class="font-bold text-slate-900">Anh Toàn</p>
+                            <p class="font-black uppercase text-slate-800">ĐẠI DIỆN KHÁCH HÀNG</p>
+                            <p class="text-[10px] text-slate-400 italic mb-10">(Ký & ghi rõ họ tên)</p>
+                            <p id="pdf-sign-cust-name" class="font-black text-slate-900">Anh Toàn</p>
                         </div>
                         <div>
-                            <p class="font-bold uppercase text-amber-700">ĐẠI DIỆN SUNGO SOLAR</p>
-                            <p class="text-[10px] text-slate-400 italic mb-8">(Ký, đóng dấu & ghi rõ họ tên)</p>
-                            <p class="font-bold text-slate-900">Đỗ Minh Trí</p>
+                            <p class="font-black uppercase text-amber-800">ĐẠI DIỆN SUNGO SOLAR</p>
+                            <p class="text-[10px] text-slate-400 italic mb-10">(Ký, đóng dấu & ghi rõ họ tên)</p>
+                            <p id="pdf-sign-sale-name" class="font-black text-slate-900">Đỗ Minh Trí</p>
                         </div>
-                    </div>
-
-                    <div class="flex justify-end pt-2 border-t no-print">
-                        <button onclick="window.modSaleOngrid.triggerPrint()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-2.5 rounded-lg text-xs shadow-md">🖨️ In Báo Giá PDF SUNGO</button>
                     </div>
                 </div>
             </div>
 
             <!-- VIEW 2: BÓC TÁCH THI CÔNG TRÊN APP -->
-            <div id="view-labor" class="hidden space-y-4">
-                <div class="bg-white p-5 rounded-xl border border-amber-300 shadow-md space-y-4">
-                    <div class="flex justify-between items-center border-b pb-3">
+            <div id="view-labor" class="hidden space-y-4 no-print">
+                <div class="bg-white p-5 rounded-2xl border border-amber-300 shadow-md space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-200 pb-3">
                         <div>
-                            <h3 class="font-bold text-slate-900 text-base">🛠️ BÓC TÁCH CHI TIẾT CHI PHÍ THI CÔNG BÁM TẢI</h3>
-                            <p class="text-xs text-slate-500">Gồm: Kéo dàn PV + Tủ điện bảo vệ AC/DC + Cáp tiếp địa Cadivi</p>
+                            <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                                <i class="fas fa-tools text-amber-500"></i> BÓC TÁCH CHI TIẾT CHI PHÍ THI CÔNG BÁM TẢI
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Gồm: Kéo dàn PV + Tủ điện AC/DC + Đấu nối Meter Bám Tải + Tiếp địa Cadivi</p>
                         </div>
-                        <button onclick="window.modSaleOngrid.switchTab('boq')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs px-3 py-1.5 rounded">
-                            ↩️ Quay Lại Báo Giá
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="window.modSaleOngrid.openAddLaborModal()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1">
+                                <i class="fas fa-plus"></i> Thêm Hạng Mục
+                            </button>
+                            <button onclick="window.modSaleOngrid.switchTab('boq')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm">
+                                ↩️ Quay Lại Báo Giá
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
                         <table class="w-full text-left text-xs">
                             <thead>
-                                <tr class="bg-slate-900 text-white uppercase">
-                                    <th class="p-2.5">STT</th>
-                                    <th class="p-2.5">Hạng Mục Thi Công On-Grid</th>
-                                    <th class="p-2.5 text-center">ĐVT</th>
-                                    <th class="p-2.5 text-center">Khối Lượng</th>
-                                    <th class="p-2.5 text-right">Đơn Giá Thi Công (VNĐ)</th>
-                                    <th class="p-2.5 text-right">Thành Tiền (VNĐ)</th>
+                                <tr class="bg-slate-950 text-white uppercase text-[10px]">
+                                    <th class="p-2.5 text-center w-8">STT</th>
+                                    <th class="p-2.5">Hạng Mục Thi Công Bám Tải</th>
+                                    <th class="p-2.5 text-center w-14">ĐVT</th>
+                                    <th class="p-2.5 text-center w-20">Khối Lượng</th>
+                                    <th class="p-2.5 text-right w-36">Đơn Giá (VNĐ)</th>
+                                    <th class="p-2.5 text-right w-36 pr-4">Thành Tiền (VNĐ)</th>
+                                    <th class="p-2.5 text-center w-14">Xóa</th>
                                 </tr>
                             </thead>
-                            <tbody id="labor-items-body" class="divide-y border-b"></tbody>
+                            <tbody id="labor-items-body" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
 
-                    <div class="flex justify-between items-center bg-amber-50 p-4 rounded-lg border border-amber-300">
-                        <span class="font-bold text-amber-900 text-sm">TỔNG CHI PHÍ THI CÔNG BÁM TẢI:</span>
-                        <strong id="labor-grand-total" class="text-xl font-black text-amber-600">0 VNĐ</strong>
+                    <div class="flex justify-between items-center bg-amber-50 p-4 rounded-xl border border-amber-300">
+                        <span class="font-black text-amber-900 text-xs uppercase">TỔNG CHI PHÍ THI CÔNG:</span>
+                        <strong id="labor-grand-total" class="text-lg font-black text-amber-700">0 VNĐ</strong>
                     </div>
                 </div>
             </div>
 
         </div>
     </div>
+
+    <!-- ============================================================== -->
+    <!-- DANH SÁCH BÁO GIÁ ON-GRID ĐÃ TẠO (CHUYỂN XUỐNG DƯỚI & LỌC THEO USER/ROLE) -->
+    <!-- ============================================================== -->
+    <div id="history-list" class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm space-y-4 no-print mt-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+            <div>
+                <h2 class="font-black text-slate-900 text-sm uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-history text-blue-600"></i> Lịch Sử Báo Giá Bám Tải Đã Lập
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5" id="history-user-caption">Danh sách báo giá trong hệ thống.</p>
+            </div>
+            
+            <!-- BỘ LỌC SALE ADMIN & TÌM KIẾM -->
+            <div class="flex flex-wrap items-center gap-2">
+                <div id="sale-admin-filter-wrapper" class="hidden flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">
+                    <span class="text-[11px] font-bold text-amber-900"><i class="fas fa-users-cog mr-1"></i>Sale:</span>
+                    <select id="filter-subordinate-sale" onchange="window.modSaleOngrid.applyHistoryFilters()" class="text-xs font-bold text-amber-900 bg-transparent outline-none cursor-pointer">
+                        <option value="ALL">🌟 Tất Cả Sale Tuyến Dưới</option>
+                        <option value="MY_ONLY">👤 Chỉ Báo Giá Của Tôi</option>
+                    </select>
+                </div>
+
+                <span id="history-filter-badge" class="text-[10px] px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    <i class="fas fa-user-check mr-1"></i> User: Đang nạp
+                </span>
+                <button onclick="window.modSaleOngrid.loadHistory()" class="text-xs text-slate-700 hover:text-blue-600 font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1">
+                    <i class="fas fa-sync-alt"></i> Tải lại
+                </button>
+            </div>
+        </div>
+
+        <!-- LABELS / BADGES LỌC TRẠNG THÁI BÁO GIÁ -->
+        <div class="flex flex-wrap items-center gap-2" id="history-status-filters">
+            <span class="text-slate-400 text-[11px] font-bold uppercase mr-1"><i class="fas fa-filter mr-1"></i>Lọc trạng thái:</span>
+            <button onclick="window.modSaleOngrid.setStatusFilter('ALL')" id="hst-btn-ALL" class="px-3 py-1 rounded-full text-xs font-black uppercase transition border border-blue-500 bg-blue-50 text-blue-700 shadow-sm cursor-pointer">Tất cả (<span id="cnt-h-all">0</span>)</button>
+            <button onclick="window.modSaleOngrid.setStatusFilter('DRAFT')" id="hst-btn-DRAFT" class="px-3 py-1 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm cursor-pointer">Bản Nháp (<span id="cnt-h-draft">0</span>)</button>
+            <button onclick="window.modSaleOngrid.setStatusFilter('PENDING_APPROVAL')" id="hst-btn-PENDING_APPROVAL" class="px-3 py-1 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm cursor-pointer">Chờ Duyệt (<span id="cnt-h-pending">0</span>)</button>
+            <button onclick="window.modSaleOngrid.setStatusFilter('APPROVED')" id="hst-btn-APPROVED" class="px-3 py-1 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm cursor-pointer">Đã Duyệt / Sẵn Sàng (<span id="cnt-h-approved">0</span>)</button>
+            <button onclick="window.modSaleOngrid.setStatusFilter('WON')" id="hst-btn-WON" class="px-3 py-1 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm cursor-pointer">Khách Chốt (<span id="cnt-h-won">0</span>)</button>
+            <button onclick="window.modSaleOngrid.setStatusFilter('REJECTED')" id="hst-btn-REJECTED" class="px-3 py-1 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm cursor-pointer">Từ Chối / Hủy (<span id="cnt-h-rejected">0</span>)</button>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
+                        <th class="p-3 pl-4">Mã Báo Giá / Ngày</th>
+                        <th class="p-3">Khách Hàng & Dự Án</th>
+                        <th class="p-3">Sale Phụ Trách</th>
+                        <th class="p-3 text-center">Công Suất</th>
+                        <th class="p-3 text-right">Tổng Tiền</th>
+                        <th class="p-3 text-center">Biên Lợi Nhuận</th>
+                        <th class="p-3 text-center">Trạng Thái</th>
+                        <th class="p-3 pr-4 text-center">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body" class="divide-y divide-slate-100 text-slate-700">
+                    <tr><td colspan="8" class="p-6 text-center text-slate-400">Đang tải lịch sử báo giá...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / THAY THẾ THIẾT BỊ (BẢNG I) -->
+    <div id="modal-device-manager" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95">
+            <div class="bg-slate-950 p-4 text-white flex items-center justify-between border-b border-amber-500">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-boxes text-amber-400"></i>
+                    <h3 class="font-black text-sm uppercase text-amber-400" id="md-device-title">Thêm Thiết Bị / Vật Tư</h3>
+                </div>
+                <button onclick="window.modSaleOngrid.closeDeviceModal()" class="text-slate-400 hover:text-white p-1"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Chọn từ Danh mục Sản phẩm có sẵn:</label>
+                    <select id="md-device-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold outline-none focus:border-amber-500" onchange="window.modSaleOngrid.onSelectExistingProduct(this.value)">
+                        <option value="">-- Hoặc nhập thiết bị tự do bên dưới --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Tên Thiết Bị / Vật Tư / Thông số:</label>
+                    <input type="text" id="md-device-name" placeholder="VD: Smart Meter bám tải 3 Pha" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Mô tả ngắn kỹ thuật (Tùy chọn):</label>
+                    <input type="text" id="md-device-desc" placeholder="VD: Đo đếm chính xác Class 1.0, chống phát ngược lưới..." class="w-full border border-slate-300 rounded-xl p-2 font-medium outline-none focus:border-amber-500">
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Đơn Vị Tính</label>
+                        <input type="text" id="md-device-unit" value="Bộ" class="w-full border border-slate-300 rounded-xl p-2 font-bold text-center outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Số Lượng</label>
+                        <input type="number" id="md-device-qty" value="1" min="1" class="w-full border border-slate-300 rounded-xl p-2 font-black text-center outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Đơn Giá Bán (VNĐ)</label>
+                        <input type="number" id="md-device-price" value="0" class="w-full border border-slate-300 rounded-xl p-2 font-black text-right outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Giá Vốn Nội Bộ (VNĐ):</label>
+                    <input type="number" id="md-device-ws-price" value="0" class="w-full border border-slate-300 rounded-xl p-2 font-bold text-right outline-none focus:border-amber-500">
+                </div>
+                <div class="pt-2 flex justify-end gap-2 border-t border-slate-100">
+                    <button onclick="window.modSaleOngrid.closeDeviceModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-100">Đóng</button>
+                    <button onclick="window.modSaleOngrid.saveDeviceItem()" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-md">Xác Nhận Lưu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM HẠNG MỤC THI CÔNG (BẢNG II) -->
+    <div id="modal-labor-manager" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95">
+            <div class="bg-amber-600 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-tools"></i>
+                    <h3 class="font-black text-sm uppercase">Thêm Hạng Mục Thi Công Mới</h3>
+                </div>
+                <button onclick="window.modSaleOngrid.closeLaborModal()" class="text-white hover:text-amber-200 p-1"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Tên Hạng Mục Thi Công Hoàn Thiện:</label>
+                    <input type="text" id="md-labor-name" placeholder="VD: Thi công kéo cáp AC hạ thế từ Inverter đến tủ tổng MSB" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold outline-none focus:border-amber-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Đơn Vị Tính (ĐVT)</label>
+                        <select id="md-labor-unit" class="w-full border border-slate-300 rounded-xl p-2 font-bold outline-none focus:border-amber-500">
+                            <option value="Trọn gói">Trọn gói</option>
+                            <option value="Bộ">Bộ</option>
+                            <option value="Wp">Wp</option>
+                            <option value="Mét">Mét</option>
+                            <option value="Chuyến">Chuyến</option>
+                            <option value="Công">Công</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Khối Lượng</label>
+                        <input type="number" id="md-labor-qty" value="1" min="1" class="w-full border border-slate-300 rounded-xl p-2 font-black text-center outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Đơn Giá Bán Thi Công (VNĐ):</label>
+                    <input type="number" id="md-labor-price" value="1500000" class="w-full border border-slate-300 rounded-xl p-2 font-black text-right outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Giá Vốn Thi Công Thực Tế (VNĐ):</label>
+                    <input type="number" id="md-labor-ws-price" value="1000000" class="w-full border border-slate-300 rounded-xl p-2 font-bold text-right outline-none focus:border-amber-500">
+                </div>
+                <div class="pt-2 flex justify-end gap-2 border-t border-slate-100">
+                    <button onclick="window.modSaleOngrid.closeLaborModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-100">Đóng</button>
+                    <button onclick="window.modSaleOngrid.saveLaborItem()" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black shadow-md">Thêm Hạng Mục</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -320,18 +683,46 @@ window.modSaleOngrid = {
     dbProducts: [],
     currentCalculatedItems: [],
     currentQuotationData: null,
+    editingQuotationId: null,
+    deviceModalMode: 'ADD',
+    targetReplaceIndex: null,
     laborItems: [],
+    allRawOngridQuotes: [],
+    currentStatusFilter: 'ALL',
     ACCESSORY_WASTAGE_RATE: 1.10,
     MIN_PROFIT_MARGIN: 1.05,
 
     init: () => {
+        const uStr = localStorage.getItem('sungo_user');
+        if (uStr) {
+            try {
+                const user = JSON.parse(uStr);
+                const uName = user.name || user.empId || 'Sale';
+                const uRole = user.role || 'SALE';
+                
+                document.getElementById('current-user-tag').innerText = `Sale: ${uName} (${uRole})`;
+                document.getElementById('pdf-sign-sale-name').innerText = uName;
+
+                if (uRole === 'SALE_ADMIN' || uRole === 'ADMIN' || uRole === 'SUPER_ADMIN') {
+                    document.getElementById('sale-admin-filter-wrapper').classList.remove('hidden');
+                    document.getElementById('history-user-caption').innerText = `🌟 Chế độ quản trị: ${uName} (Quản lý toàn bộ Sale tuyến dưới & Phê duyệt)`;
+                    document.getElementById('history-filter-badge').innerHTML = `<i class="fas fa-crown text-amber-500 mr-1"></i> ${uRole}: ${uName}`;
+                } else {
+                    document.getElementById('history-user-caption').innerText = `Đang hiển thị danh sách báo giá của: ${uName} (${uRole})`;
+                    document.getElementById('history-filter-badge').innerHTML = `<i class="fas fa-user-check mr-1"></i> ${uName}`;
+                }
+            } catch(e) {}
+        }
+
         window.modSaleOngrid.loadProducts();
         window.modSaleOngrid.loadHistory();
     },
 
     triggerPrint: () => {
         window.modSaleOngrid.switchTab('boq');
-        setTimeout(() => { window.print(); }, 150);
+        const priceSpans = document.querySelectorAll('.price-print-only');
+        priceSpans.forEach(s => s.classList.remove('hidden'));
+        setTimeout(() => { window.print(); }, 200);
     },
 
     parseRawBillValue: () => {
@@ -350,20 +741,20 @@ window.modSaleOngrid = {
     },
 
     formatVND: (amt) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amt);
+        return new Intl.NumberFormat('vi-VN').format(amt || 0) + ' đ';
     },
 
     switchTab: (tab) => {
         if (tab === 'labor') {
             document.getElementById('view-boq').classList.add('hidden');
             document.getElementById('view-labor').classList.remove('hidden');
-            document.getElementById('tab-btn-labor').className = "bg-amber-500 text-slate-900 font-bold text-xs px-4 py-2 rounded shadow-sm";
-            document.getElementById('tab-btn-boq').className = "bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs px-4 py-2 rounded transition";
+            document.getElementById('tab-btn-labor').className = "bg-amber-500 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5";
+            document.getElementById('tab-btn-boq').className = "bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5";
         } else {
             document.getElementById('view-labor').classList.add('hidden');
             document.getElementById('view-boq').classList.remove('hidden');
-            document.getElementById('tab-btn-boq').className = "bg-amber-500 text-slate-900 font-bold text-xs px-4 py-2 rounded shadow-sm";
-            document.getElementById('tab-btn-labor').className = "bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs px-4 py-2 rounded transition";
+            document.getElementById('tab-btn-boq').className = "bg-amber-500 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5";
+            document.getElementById('tab-btn-labor').className = "bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5";
         }
     },
 
@@ -373,65 +764,229 @@ window.modSaleOngrid = {
         const kwhDay = kwhMonth / 30;
         let calculatedKwp = Math.round((kwhDay / 4.1) * 2) / 2;
         if (calculatedKwp < 3) calculatedKwp = 3;
+
         document.getElementById('kwp').value = calculatedKwp;
+        document.getElementById('display-kwp').innerText = `${calculatedKwp} kWp`;
         window.modSaleOngrid.updateOnGridLabor();
     },
 
     loadProducts: async () => {
         try {
             const res = await fetch('/api/products');
-            const text = await res.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch(err) {
-                console.error("Lỗi 500 từ Server:", text);
-                alert("❌ Lỗi Backend (500)! Nhấn F12 mở tab Console để xem lỗi gốc từ server.");
-                if(btn) { btn.innerHTML = oldText; btn.classList.remove('opacity-50', 'pointer-events-none'); }
-                return;
-            }
+            const data = await res.json();
             if(data.success && data.data.length > 0) {
                 window.modSaleOngrid.dbProducts = data.data;
                 window.modSaleOngrid.renderSelects();
+                window.modSaleOngrid.populateProductModalDropdown();
             }
-        } catch(e) {}
+        } catch (e) { console.error('Lỗi tải sản phẩm:', e); }
     },
 
     renderSelects: () => {
         const dbP = window.modSaleOngrid.dbProducts;
-        const panels = dbP.filter(p => p.category === 'Pin mặt trời');
-        const inverters = dbP.filter(p => p.category === 'Biến tần' && !p.product_name.toLowerCase().includes('hybrid'));
-
         const fmt = window.modSaleOngrid.formatVND;
-        document.getElementById('select-panel').innerHTML = panels.map(p => `<option value="${p.sku}">${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
-        document.getElementById('select-inverter').innerHTML = (inverters.length > 0 ? inverters : dbP.filter(p => p.category === 'Biến tần')).map(p => `<option value="${p.sku}">${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
+
+        // 1. TẤM PIN MẶT TRỜI: CHỈ LẤY ĐÚNG TẤM PIN PV
+        const panels = dbP.filter(p => {
+            const cat = (p.category || '').toLowerCase();
+            const name = (p.product_name || '').toLowerCase();
+            const sku = (p.sku || '').toUpperCase();
+            
+            const isPanel = cat.includes('tấm pin') || cat.includes('pin mặt trời') || sku.startsWith('PAN-') || name.startsWith('tấm pin') || (name.includes('jinko') && !name.includes('inverter'));
+            const isNotPanel = cat.includes('phụ kiện') || name.includes('móc') || name.includes('rail') || name.includes('bơm') || name.includes('motor') || name.includes('kẹp') || name.includes('dây') || name.includes('lưu trữ') || name.includes('lithium') || cat.includes('lưu trữ');
+            
+            return isPanel && !isNotPanel;
+        });
+
+        // 2. BIẾN TẦN INVERTER BÁM TẢI (ON-GRID)
+        const inverters = dbP.filter(p => {
+            const cat = (p.category || '').toLowerCase();
+            const name = (p.product_name || '').toLowerCase();
+            return (cat.includes('inverter') || cat.includes('biến tần')) && !cat.includes('bơm') && !name.includes('bơm');
+        });
+        
+        const panelList = panels.length > 0 ? panels : dbP.slice(0, 5);
+        document.getElementById('select-panel').innerHTML = panelList.map(p => `<option value="${p.sku}">${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
+        
+        const invList = inverters.length > 0 ? inverters : dbP.slice(5, 10);
+        document.getElementById('select-inverter').innerHTML = invList.map(p => `<option value="${p.sku}">${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
+
         window.modSaleOngrid.updateOnGridLabor();
+    },
+
+    populateProductModalDropdown: () => {
+        const select = document.getElementById('md-device-select');
+        if (!select) return;
+        const fmt = window.modSaleOngrid.formatVND;
+        let html = '<option value="">-- Hoặc nhập thiết bị tự do bên dưới --</option>';
+        window.modSaleOngrid.dbProducts.forEach(p => {
+            html += `<option value="${p.sku}">[${p.category || 'Vật tư'}] ${p.product_name} - ${fmt(p.retail_price)}</option>`;
+        });
+        select.innerHTML = html;
+    },
+
+    onSelectExistingProduct: (sku) => {
+        if (!sku) return;
+        const p = window.modSaleOngrid.dbProducts.find(x => x.sku === sku);
+        if (p) {
+            document.getElementById('md-device-name').value = p.product_name || '';
+            document.getElementById('md-device-desc').value = p.description || window.modSaleOngrid.getProductShortDesc(p, 'ACCESSORY');
+            document.getElementById('md-device-unit').value = p.unit || 'Bộ';
+            document.getElementById('md-device-price').value = parseFloat(p.retail_price || 0);
+            document.getElementById('md-device-ws-price').value = parseFloat(p.wholesale_price || (p.retail_price / 1.15));
+        }
+    },
+
+    openAddDeviceModal: () => {
+        window.modSaleOngrid.deviceModalMode = 'ADD';
+        window.modSaleOngrid.targetReplaceIndex = null;
+        document.getElementById('md-device-title').innerText = 'Thêm Thiết Bị / Phụ Kiện Mới';
+        document.getElementById('md-device-select').value = '';
+        document.getElementById('md-device-name').value = '';
+        document.getElementById('md-device-desc').value = '';
+        document.getElementById('md-device-unit').value = 'Bộ';
+        document.getElementById('md-device-qty').value = '1';
+        document.getElementById('md-device-price').value = '0';
+        document.getElementById('md-device-ws-price').value = '0';
+        document.getElementById('modal-device-manager').classList.remove('hidden');
+    },
+
+    openReplaceDeviceModal: (index) => {
+        window.modSaleOngrid.deviceModalMode = 'REPLACE';
+        window.modSaleOngrid.targetReplaceIndex = index;
+        const item = window.modSaleOngrid.currentCalculatedItems[index];
+
+        document.getElementById('md-device-title').innerText = `Thay Thế: ${item.product_name}`;
+        document.getElementById('md-device-select').value = item.sku || '';
+        document.getElementById('md-device-name').value = item.product_name || '';
+        document.getElementById('md-device-desc').value = item.description || '';
+        document.getElementById('md-device-unit').value = item.unit || 'Bộ';
+        document.getElementById('md-device-qty').value = item.quantity || 1;
+        document.getElementById('md-device-price').value = item.unit_price || 0;
+        document.getElementById('md-device-ws-price').value = item.wholesale_price || 0;
+        document.getElementById('modal-device-manager').classList.remove('hidden');
+    },
+
+    closeDeviceModal: () => {
+        document.getElementById('modal-device-manager').classList.add('hidden');
+    },
+
+    saveDeviceItem: () => {
+        const name = document.getElementById('md-device-name').value.trim();
+        if (!name) { alert("Vui lòng nhập tên thiết bị / vật tư!"); return; }
+
+        const sku = document.getElementById('md-device-select').value || ('CUSTOM-' + Date.now());
+        const desc = document.getElementById('md-device-desc').value.trim();
+        const unit = document.getElementById('md-device-unit').value.trim() || 'Bộ';
+        const qty = parseFloat(document.getElementById('md-device-qty').value) || 1;
+        const price = parseFloat(document.getElementById('md-device-price').value) || 0;
+        const wsPrice = parseFloat(document.getElementById('md-device-ws-price').value) || (price * 0.85);
+
+        const originP = window.modSaleOngrid.dbProducts.find(p => p.sku === sku);
+        const imgUrl = originP ? window.modSaleOngrid.getProductImage(originP, 'ACCESSORY') : 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=100&auto=format&fit=crop&q=60';
+
+        const newItem = {
+            sku: sku,
+            product_name: name,
+            unit: unit,
+            quantity: qty,
+            wholesale_price: wsPrice,
+            unit_price: price,
+            image_url: imgUrl,
+            description: desc
+        };
+
+        if (window.modSaleOngrid.deviceModalMode === 'REPLACE' && window.modSaleOngrid.targetReplaceIndex !== null) {
+            window.modSaleOngrid.currentCalculatedItems[window.modSaleOngrid.targetReplaceIndex] = newItem;
+        } else {
+            window.modSaleOngrid.currentCalculatedItems.push(newItem);
+        }
+
+        window.modSaleOngrid.currentCalculatedItems = window.modSaleOngrid.sortQuotationItems(window.modSaleOngrid.currentCalculatedItems);
+        window.modSaleOngrid.closeDeviceModal();
+        window.modSaleOngrid.renderBOQTable();
+        window.modSaleOngrid.recalculateTotals();
+    },
+
+    deleteDeviceItem: (index) => {
+        const item = window.modSaleOngrid.currentCalculatedItems[index];
+        if (confirm(`Bạn có chắc muốn xóa thiết bị "${item.product_name}" khỏi báo giá?`)) {
+            window.modSaleOngrid.currentCalculatedItems.splice(index, 1);
+            window.modSaleOngrid.renderBOQTable();
+            window.modSaleOngrid.recalculateTotals();
+        }
+    },
+
+    openAddLaborModal: () => {
+        document.getElementById('md-labor-name').value = '';
+        document.getElementById('md-labor-unit').value = 'Trọn gói';
+        document.getElementById('md-labor-qty').value = '1';
+        document.getElementById('md-labor-price').value = '1500000';
+        document.getElementById('md-labor-ws-price').value = '1000000';
+        document.getElementById('modal-labor-manager').classList.remove('hidden');
+    },
+
+    closeLaborModal: () => {
+        document.getElementById('modal-labor-manager').classList.add('hidden');
+    },
+
+    saveLaborItem: () => {
+        const name = document.getElementById('md-labor-name').value.trim();
+        if (!name) { alert("Vui lòng nhập tên hạng mục thi công!"); return; }
+
+        const unit = document.getElementById('md-labor-unit').value;
+        const qty = parseFloat(document.getElementById('md-labor-qty').value) || 1;
+        const price = parseFloat(document.getElementById('md-labor-price').value) || 0;
+        const wsPrice = parseFloat(document.getElementById('md-labor-ws-price').value) || (price * 0.7);
+
+        window.modSaleOngrid.laborItems.push({
+            id: 'L_' + Date.now(),
+            name: name,
+            unit: unit,
+            qty: qty,
+            price: price,
+            wholesale: wsPrice
+        });
+
+        window.modSaleOngrid.closeLaborModal();
+        window.modSaleOngrid.renderLaborTable();
+        window.modSaleOngrid.recalculateTotals();
+    },
+
+    deleteLaborItem: (index) => {
+        const item = window.modSaleOngrid.laborItems[index];
+        if (confirm(`Bạn có chắc muốn xóa hạng mục thi công "${item.name}"?`)) {
+            window.modSaleOngrid.laborItems.splice(index, 1);
+            window.modSaleOngrid.renderLaborTable();
+            window.modSaleOngrid.recalculateTotals();
+        }
     },
 
     updateOnGridLabor: () => {
         const roofType = document.getElementById('roof-type-select').value;
         const kwpTarget = parseFloat(document.getElementById('kwp').value) || 14.8;
+        document.getElementById('display-kwp').innerText = `${kwpTarget} kWp`;
         const totalWp = Math.round(kwpTarget * 1000);
 
         let baseLaborPrice = 450;
         let frameCost = 1500000;
         let frameName = "Gia cố chân U nhôm / Bát Z áp mái tôn tiêu chuẩn";
-        let transportCost = 1800000;
+        let transportCost = 1500000;
 
         if (roofType === 'ROOF_STEEL_LOW') {
-            frameCost = 3500000; frameName = "Thi công khung sắt hộp chịu lực (Sắt 30x60/40x80) sơn chống gỉ cao ≤1.5m";
+            frameCost = 3000000; frameName = "Thi công khung sắt hộp chịu lực (Sắt 30x60/40x80) sơn chống gỉ cao ≤1.5m";
         } else if (roofType === 'ROOF_STEEL_HIGH') {
-            baseLaborPrice = 600; frameCost = 8500000; frameName = "Hàn giàn kết cấu khung sắt cao chịu lực, cột chống & xà gồ (>1.5m sân thượng)"; transportCost = 3000000;
+            baseLaborPrice = 550; frameCost = 7500000; frameName = "Hàn giàn kết cấu khung sắt cao chịu lực, cột chống & xà gồ (>1.5m sân thượng)"; transportCost = 2500000;
         } else if (roofType === 'ROOF_TILE') {
-            baseLaborPrice = 550; frameCost = 4500000; frameName = "Bộ bát móc ngói Inox 304, keo silicone chống rò nước & tháo/móc ngói";
+            baseLaborPrice = 500; frameCost = 3500000; frameName = "Bộ bát móc ngói Inox 304, keo silicone chống rò nước & tháo/móc ngói";
         }
 
         window.modSaleOngrid.laborItems = [
-            { id: 'L1', name: 'Nhân công kéo cáp DC, lắp dàn pin PV & treo Inverter On-Grid', unit: 'Wp', qty: totalWp, price: baseLaborPrice, wholesale: baseLaborPrice * 0.7 },
+            { id: 'L1', name: 'Nhân công kéo cáp DC, lắp giàn pin PV & treo Inverter On-Grid', unit: 'Wp', qty: totalWp, price: baseLaborPrice, wholesale: baseLaborPrice * 0.7 },
             { id: 'L2', name: frameName, unit: 'Trọn gói', qty: 1, price: frameCost, wholesale: frameCost * 0.7 },
-            { id: 'L3', name: 'Thi công tủ điện bảo vệ AC/DC & thiết bị chống sét lan truyền', unit: 'Bộ', qty: 1, price: 2500000, wholesale: 1800000 },
-            { id: 'L4', name: 'Thi công tiếp địa chống sét Cadivi & cọc đồng tiếp địa', unit: 'Bộ', qty: 1, price: 1200000, wholesale: 800000 },
-            { id: 'L5', name: 'Chi phí xe cẩu, vận chuyển vật tư & ăn ở công trình', unit: 'Chuyến', qty: 1, price: transportCost, wholesale: transportCost * 0.75 }
+            { id: 'L3', name: 'Thi công tủ điện đóng cắt AC/DC chống sét & kết nối đồng hồ Meter Zero-Export', unit: 'Bộ', qty: 1, price: 2000000, wholesale: 1500000 },
+            { id: 'L4', name: 'Thi công hệ thống tiếp địa an toàn & cọc đồng tiếp địa thoát sét', unit: 'Bộ', qty: 1, price: 1200000, wholesale: 800000 },
+            { id: 'L5', name: 'Chi phí xe cẩu, vận chuyển trọn gói vật tư & an toàn lao động', unit: 'Chuyến', qty: 1, price: transportCost, wholesale: transportCost * 0.75 }
         ];
         window.modSaleOngrid.calcBOQ();
     },
@@ -445,37 +1000,55 @@ window.modSaleOngrid = {
             const itemTotal = item.qty * item.price;
             totalLaborRetail += itemTotal;
             totalLaborWholesale += item.qty * item.wholesale;
+
             return `
                 <tr class="hover:bg-amber-50/50">
                     <td class="p-2.5 text-center text-slate-400 font-bold">${idx + 1}</td>
-                    <td class="p-2.5 font-semibold text-slate-800">${item.name}</td>
-                    <td class="p-2.5 text-center text-slate-500">${item.unit}</td>
+                    <td class="p-2.5 font-bold text-slate-800">${item.name}</td>
+                    <td class="p-2.5 text-center text-slate-500 font-medium">${item.unit}</td>
                     <td class="p-2.5 text-center font-bold text-slate-900">${item.qty.toLocaleString('vi-VN')}</td>
                     <td class="p-2.5 text-right">
-                        <input type="number" value="${item.price}" class="w-28 text-right border border-amber-300 rounded p-1 text-xs font-bold text-slate-800 outline-none" oninput="window.modSaleOngrid.updateLaborPrice(${idx}, this.value)" />
+                        <input type="number" value="${item.price}" class="w-28 text-right border border-amber-300 rounded-lg p-1 text-xs font-bold text-slate-800 outline-none focus:border-amber-500" oninput="window.modSaleOngrid.updateLaborPrice(${idx}, this.value)" />
                     </td>
-                    <td class="p-2.5 text-right font-black text-amber-700">${fmt(itemTotal)}</td>
-                </tr>`;
+                    <td class="p-2.5 text-right font-black text-amber-700 pr-4">${fmt(itemTotal)}</td>
+                    <td class="p-2.5 text-center">
+                        <button onclick="window.modSaleOngrid.deleteLaborItem(${idx})" class="text-red-500 hover:text-red-700 p-1 font-bold" title="Xóa hạng mục này"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+            `;
         }).join('');
 
         document.getElementById('pdf-labor-body').innerHTML = window.modSaleOngrid.laborItems.map((item, idx) => `
             <tr>
-                <td class="p-1.5 text-center text-slate-500 font-bold">${idx + 1}</td>
-                <td class="p-1.5 font-semibold text-slate-800">${item.name}</td>
-                <td class="p-1.5 text-center text-slate-500">${item.unit}</td>
-                <td class="p-1.5 text-center font-bold text-slate-900">${item.qty.toLocaleString('vi-VN')}</td>
-                <td class="p-1.5 text-right font-semibold text-slate-700">${fmt(item.price)}</td>
-                <td class="p-1.5 text-right font-bold text-amber-800">${fmt(item.qty * item.price)}</td>
-            </tr>`).join('');
+                <td class="p-2 text-center text-slate-400 font-bold">${idx + 1}</td>
+                <td class="p-2 font-bold text-slate-800">${item.name}</td>
+                <td class="p-2 text-center text-slate-500">${item.unit}</td>
+                <td class="p-2 text-center font-bold text-slate-900">${item.qty.toLocaleString('vi-VN')}</td>
+                <td class="p-2 text-right">
+                    <div class="flex items-center justify-end gap-1">
+                        <input type="number" value="${item.price}" 
+                            class="w-24 text-right p-1 border border-amber-300 rounded-lg text-xs font-bold outline-none bg-white no-print price-input-screen" 
+                            oninput="window.modSaleOngrid.updateLaborPrice(${idx}, this.value)" />
+                        <span class="price-print-only font-semibold text-slate-800 text-xs">${fmt(item.price)}</span>
+                    </div>
+                </td>
+                <td class="p-2 text-right font-black text-amber-800 pr-3">${fmt(item.qty * item.price)}</td>
+                <td class="p-2 text-center action-column no-print">
+                    <button onclick="window.modSaleOngrid.deleteLaborItem(${idx})" class="text-red-400 hover:text-red-600 p-1" title="Xóa hạng mục thi công này"><i class="fas fa-times-circle"></i></button>
+                </td>
+            </tr>
+        `).join('');
 
         document.getElementById('labor-grand-total').innerText = fmt(totalLaborRetail);
         document.getElementById('tab-labor-total').innerText = fmt(totalLaborRetail);
+
         return { totalLaborRetail, totalLaborWholesale };
     },
 
     updateLaborPrice: (index, val) => {
         window.modSaleOngrid.laborItems[index].price = parseFloat(val) || 0;
-        window.modSaleOngrid.calcBOQ();
+        window.modSaleOngrid.renderLaborTable();
+        window.modSaleOngrid.recalculateTotals();
     },
 
     computeFinancials: (totalCapex, actualSystemKwp, monthlyBill) => {
@@ -483,6 +1056,7 @@ window.modSaleOngrid = {
         const totalBankInterest20Y = (totalCapex * bankRate) * 20;
         const bill = monthlyBill || (actualSystemKwp * 4.1 * 30 * 2750);
         const annualSavingsY1 = Math.min(bill * 12, (actualSystemKwp * 4.1 * 365 * 2750));
+        
         let totalSolarCash20Y = 0;
         let currentYrSaving = annualSavingsY1;
 
@@ -491,12 +1065,74 @@ window.modSaleOngrid = {
             const netCash = currentYrSaving - (totalCapex * 0.01);
             totalSolarCash20Y += netCash;
         }
+
         const paybackYears = (totalCapex / annualSavingsY1).toFixed(1);
         const roePercent = (((annualSavingsY1 - (totalCapex / 20)) / totalCapex) * 100).toFixed(1);
 
         let npvSum = -totalCapex;
-        for (let y = 1; y <= 20; y++) { npvSum += (annualSavingsY1 * Math.pow(1.045, y-1)) / Math.pow(1.10, y); }
+        for (let y = 1; y <= 20; y++) {
+            npvSum += (annualSavingsY1 * Math.pow(1.045, y-1)) / Math.pow(1.10, y);
+        }
+
         return { totalBankInterest20Y, totalSolarCash20Y, paybackYears, roePercent, npvAmount: npvSum };
+    },
+
+    getProductImage: (product, defaultCategory) => {
+        if (product && product.image_url && product.image_url.trim().length > 5) {
+            const firstImg = product.image_url.split(',')[0].trim();
+            if (firstImg.startsWith('http')) return firstImg;
+        }
+        if (defaultCategory === 'PANEL') return 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=100&auto=format&fit=crop&q=60';
+        if (defaultCategory === 'INVERTER') return 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?w=100&auto=format&fit=crop&q=60';
+        return 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=100&auto=format&fit=crop&q=60';
+    },
+
+    getProductShortDesc: (product, categoryKey) => {
+        if (product && product.description && product.description.trim().length > 3) {
+            return product.description.trim();
+        }
+        if (categoryKey === 'PANEL') return 'Công nghệ N-Type TopCon 2 mặt kính, hiệu suất 22.8%, bảo hành 12/30 năm.';
+        if (categoryKey === 'INVERTER') return 'Inverter hòa lưới bám tải Zero-Export, hiệu suất 98.6%, bảo hành 5 năm.';
+        if (categoryKey === 'METER') return 'Smart Meter đo đếm đa kênh & biến dòng CT chống phát ngược lưới EVN.';
+        if (categoryKey === 'RAIL') return 'Hợp kim nhôm Anodized AL-6005-T5 chống ăn mòn muối biển, chịu bão cấp 12.';
+        if (categoryKey === 'CLAMP_MID') return 'Kẹp giữa nhôm kèm bu lông Inox 304 chống rỉ sét, cố định vững chắc.';
+        if (categoryKey === 'CLAMP_END') return 'Kẹp biên nhôm kèm bu lông Inox 304 khóa mép giàn tấm pin an toàn.';
+        if (categoryKey === 'DC_CABLE') return 'Cáp DC chuyên dụng chống tia UV, chịu nhiệt +120°C, chuẩn TUV Đức.';
+        if (categoryKey === 'MC4') return 'Đầu nối MC4 1000V/1500V 30A chống nước IP68, tiếp điểm mạ bạc giảm suy hao.';
+        if (categoryKey === 'BOX') return 'Tủ điện bảo vệ AC/DC tích hợp chống sét lan truyền SPD & MCB Schneider.';
+        return 'Vật tư tiêu chuẩn chuyên dụng cho hệ thống điện mặt trời.';
+    },
+
+    sortQuotationItems: (items) => {
+        let panelItem = null;
+        let invItem = null;
+        let otherItems = [];
+
+        items.forEach(item => {
+            const name = (item.product_name || '').toLowerCase();
+            const sku = (item.sku || '').toUpperCase();
+
+            if (!panelItem && (item.categoryKey === 'PANEL' || sku.startsWith('PAN-') || name.startsWith('tấm pin') || (name.includes('jinko') && !name.includes('inverter')))) {
+                panelItem = item;
+            } else if (!invItem && (item.categoryKey === 'INVERTER' || sku.startsWith('INV-') || name.includes('inverter') || name.includes('biến tần') || name.includes('deye') || name.includes('sofar'))) {
+                invItem = item;
+            } else {
+                otherItems.push(item);
+            }
+        });
+
+        otherItems.sort((a, b) => {
+            const totalA = (a.quantity || 1) * (a.unit_price || 0);
+            const totalB = (b.quantity || 1) * (b.unit_price || 0);
+            return totalB - totalA;
+        });
+
+        const sorted = [];
+        if (panelItem) sorted.push(panelItem);
+        if (invItem) sorted.push(invItem);
+        sorted.push(...otherItems);
+
+        return sorted;
     },
 
     calcBOQ: () => {
@@ -507,11 +1143,14 @@ window.modSaleOngrid = {
 
         const panel = dbP.find(p => p.sku === panelSku);
         const inv = dbP.find(p => p.sku === invSku);
-        const rail = dbP.find(p => p.sku === 'ACC-RAIL-20CM');
-        const midClamp = dbP.find(p => p.sku === 'ACC-CLAMP-MID');
-        const endClamp = dbP.find(p => p.sku === 'ACC-CLAMP-END');
-        const dcCable = dbP.find(p => p.sku === 'CBL-DC-04BLK');
-        const mc4 = dbP.find(p => p.sku === 'CON-MC4-30A');
+        
+        const rail = dbP.find(p => p.sku === 'ACC-RAIL-20CM' || p.sku === 'SP0036') || { sku: 'ACC-RAIL-20CM', product_name: 'Rail Nhôm mini 20cm', unit: 'Cái', wholesale_price: 25000, retail_price: 32000 };
+        const midClamp = dbP.find(p => p.sku === 'ACC-CLAMP-MID') || { sku: 'ACC-CLAMP-MID', product_name: 'Bộ kẹp giữa nhôm AL-60055', unit: 'Bộ', wholesale_price: 9000, retail_price: 10500 };
+        const endClamp = dbP.find(p => p.sku === 'ACC-CLAMP-END') || { sku: 'ACC-CLAMP-END', product_name: 'Bộ kẹp biên nhôm AL-60055', unit: 'Bộ', wholesale_price: 9000, retail_price: 10500 };
+        const dcCable = dbP.find(p => p.sku === 'CBL-DC-04BLK') || { sku: 'CBL-DC-04BLK', product_name: 'Cáp DC màu đen 4.0mm² (Chống tia TUV, +95°C)', unit: 'Mét', wholesale_price: 16500, retail_price: 19000 };
+        const mc4 = dbP.find(p => p.sku === 'CON-MC4-30A') || { sku: 'CON-MC4-30A', product_name: 'Jack MC4 1000V 30A (Cặp Đực/Cái)', unit: 'Cặp', wholesale_price: 12000, retail_price: 14000 };
+        const meter = dbP.find(p => p.category?.includes('Meter') || p.sku === 'MTR-01') || { sku: 'MTR-01', product_name: 'Smart Meter đo đếm bám tải Zero-Export & CT', unit: 'Bộ', wholesale_price: 2100000, retail_price: 2600000 };
+        const box = dbP.find(p => p.sku === 'BOX-ONG-01' || p.sku === 'SP0123') || { sku: 'BOX-ONG-01', product_name: 'Tủ điện bám tải AC/DC chống sét lan truyền SPD', unit: 'Bộ', wholesale_price: 2200000, retail_price: 2750000 };
 
         if (!panel || !inv) return 0;
 
@@ -530,21 +1169,108 @@ window.modSaleOngrid = {
         const mc4Pairs = Math.ceil(2 * rate);
 
         let items = [
-            { sku: panel.sku, product_name: panel.product_name, unit: panel.unit, quantity: panelQty, wholesale_price: parseFloat(panel.wholesale_price), unit_price: parseFloat(panel.retail_price) },
-            { sku: inv.sku, product_name: inv.product_name, unit: inv.unit, quantity: 1, wholesale_price: parseFloat(inv.wholesale_price), unit_price: parseFloat(inv.retail_price) }
+            { 
+                categoryKey: 'PANEL',
+                sku: panel.sku, 
+                product_name: panel.product_name, 
+                unit: panel.unit || 'Tấm', 
+                quantity: panelQty, 
+                wholesale_price: parseFloat(panel.wholesale_price || (panel.retail_price / 1.15)), 
+                unit_price: parseFloat(panel.retail_price),
+                image_url: window.modSaleOngrid.getProductImage(panel, 'PANEL'),
+                description: window.modSaleOngrid.getProductShortDesc(panel, 'PANEL')
+            },
+            { 
+                categoryKey: 'INVERTER',
+                sku: inv.sku, 
+                product_name: inv.product_name, 
+                unit: inv.unit || 'Bộ', 
+                quantity: 1, 
+                wholesale_price: parseFloat(inv.wholesale_price || (inv.retail_price / 1.15)), 
+                unit_price: parseFloat(inv.retail_price),
+                image_url: window.modSaleOngrid.getProductImage(inv, 'INVERTER'),
+                description: window.modSaleOngrid.getProductShortDesc(inv, 'INVERTER')
+            },
+            { 
+                categoryKey: 'METER',
+                sku: meter.sku, 
+                product_name: meter.product_name, 
+                unit: meter.unit || 'Bộ', 
+                quantity: 1, 
+                wholesale_price: parseFloat(meter.wholesale_price || (meter.retail_price / 1.15)), 
+                unit_price: parseFloat(meter.retail_price),
+                image_url: window.modSaleOngrid.getProductImage(meter, 'METER'),
+                description: window.modSaleOngrid.getProductShortDesc(meter, 'METER')
+            },
+            { 
+                categoryKey: 'BOX',
+                sku: box.sku, 
+                product_name: box.product_name, 
+                unit: box.unit || 'Bộ', 
+                quantity: 1, 
+                wholesale_price: parseFloat(box.wholesale_price || (box.retail_price / 1.15)), 
+                unit_price: parseFloat(box.retail_price),
+                image_url: window.modSaleOngrid.getProductImage(box, 'BOX'),
+                description: window.modSaleOngrid.getProductShortDesc(box, 'BOX')
+            },
+            { 
+                categoryKey: 'DC_CABLE',
+                sku: dcCable.sku, 
+                product_name: dcCable.product_name, 
+                unit: dcCable.unit || 'Mét', 
+                quantity: dcMeters, 
+                wholesale_price: parseFloat(dcCable.wholesale_price || (dcCable.retail_price / 1.15)), 
+                unit_price: parseFloat(dcCable.retail_price),
+                image_url: window.modSaleOngrid.getProductImage(dcCable, 'DC_CABLE'),
+                description: window.modSaleOngrid.getProductShortDesc(dcCable, 'DC_CABLE')
+            },
+            { 
+                categoryKey: 'RAIL',
+                sku: rail.sku, 
+                product_name: rail.product_name, 
+                unit: rail.unit || 'Cái', 
+                quantity: railQty, 
+                wholesale_price: parseFloat(rail.wholesale_price || (rail.retail_price / 1.15)), 
+                unit_price: parseFloat(rail.retail_price),
+                image_url: window.modSaleOngrid.getProductImage(rail, 'RAIL'),
+                description: window.modSaleOngrid.getProductShortDesc(rail, 'RAIL')
+            },
+            { 
+                categoryKey: 'CLAMP_MID',
+                sku: midClamp.sku, 
+                product_name: midClamp.product_name, 
+                unit: midClamp.unit || 'Bộ', 
+                quantity: midQty, 
+                wholesale_price: parseFloat(midClamp.wholesale_price || (midClamp.retail_price / 1.15)), 
+                unit_price: parseFloat(midClamp.retail_price),
+                image_url: window.modSaleOngrid.getProductImage(midClamp, 'CLAMP_MID'),
+                description: window.modSaleOngrid.getProductShortDesc(midClamp, 'CLAMP_MID')
+            },
+            { 
+                categoryKey: 'CLAMP_END',
+                sku: endClamp.sku, 
+                product_name: endClamp.product_name, 
+                unit: endClamp.unit || 'Bộ', 
+                quantity: endQty, 
+                wholesale_price: parseFloat(endClamp.wholesale_price || (endClamp.retail_price / 1.15)), 
+                unit_price: parseFloat(endClamp.retail_price),
+                image_url: window.modSaleOngrid.getProductImage(endClamp, 'CLAMP_END'),
+                description: window.modSaleOngrid.getProductShortDesc(endClamp, 'CLAMP_END')
+            },
+            { 
+                categoryKey: 'MC4',
+                sku: mc4.sku, 
+                product_name: mc4.product_name, 
+                unit: mc4.unit || 'Cặp', 
+                quantity: mc4Pairs, 
+                wholesale_price: parseFloat(mc4.wholesale_price || (mc4.retail_price / 1.15)), 
+                unit_price: parseFloat(mc4.retail_price),
+                image_url: window.modSaleOngrid.getProductImage(mc4, 'MC4'),
+                description: window.modSaleOngrid.getProductShortDesc(mc4, 'MC4')
+            }
         ];
 
-        if(rail && midClamp && endClamp && dcCable && mc4) {
-            items.push(
-                { sku: rail.sku, product_name: rail.product_name, unit: rail.unit, quantity: railQty, wholesale_price: parseFloat(rail.wholesale_price), unit_price: parseFloat(rail.retail_price) },
-                { sku: midClamp.sku, product_name: midClamp.product_name, unit: midClamp.unit, quantity: midQty, wholesale_price: parseFloat(midClamp.wholesale_price), unit_price: parseFloat(midClamp.retail_price) },
-                { sku: endClamp.sku, product_name: endClamp.product_name, unit: endClamp.unit, quantity: endQty, wholesale_price: parseFloat(endClamp.wholesale_price), unit_price: parseFloat(endClamp.retail_price) },
-                { sku: dcCable.sku, product_name: dcCable.product_name, unit: dcCable.unit, quantity: dcMeters, wholesale_price: parseFloat(dcCable.wholesale_price), unit_price: parseFloat(dcCable.retail_price) },
-                { sku: mc4.sku, product_name: mc4.product_name, unit: mc4.unit, quantity: mc4Pairs, wholesale_price: parseFloat(mc4.wholesale_price), unit_price: parseFloat(mc4.retail_price) }
-            );
-        }
-
-        window.modSaleOngrid.currentCalculatedItems = items;
+        window.modSaleOngrid.currentCalculatedItems = window.modSaleOngrid.sortQuotationItems(items);
         window.modSaleOngrid.renderLaborTable();
         window.modSaleOngrid.renderBOQTable();
         window.modSaleOngrid.recalculateTotals();
@@ -559,21 +1285,40 @@ window.modSaleOngrid = {
             const isInvalid = item.unit_price < minPrice;
             const borderClass = isInvalid ? 'border-2 border-red-500 bg-red-50 font-bold text-red-600' : 'border border-amber-300 bg-amber-50/40 font-semibold text-slate-800';
 
+            const imgUrl = item.image_url || 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=100&auto=format&fit=crop&q=60';
+            const shortDesc = item.description || '';
+
             return `
-                <tr class="hover:bg-amber-100/20">
-                    <td class="py-1.5 px-2 text-center text-slate-400 font-bold">${idx + 1}</td>
-                    <td class="py-1.5 px-2 font-mono text-slate-500">${item.sku}</td>
-                    <td class="py-1.5 px-2 font-bold text-slate-800">${item.product_name}</td>
-                    <td class="py-1.5 px-2 text-center text-slate-500">${item.unit}</td>
-                    <td class="py-1.5 px-2 text-center font-bold text-slate-900">${item.quantity}</td>
-                    <td class="py-1.5 px-2 text-right">
-                        <div class="flex items-center justify-end gap-1">
-                            <input type="number" value="${item.unit_price}" class="w-24 text-right p-1 border rounded text-xs font-bold outline-none ${borderClass} no-print" oninput="window.modSaleOngrid.updateItemPrice(${idx}, this.value)" />
-                            <span class="price-print-only hidden font-bold text-slate-800 bg-amber-50/60 px-2 py-0.5 rounded border border-amber-200">${fmt(item.unit_price)}</span>
+                <tr class="hover:bg-amber-50/40 transition">
+                    <td class="py-2 px-2 text-center text-slate-400 font-bold text-[11px]">${idx + 1}</td>
+                    <td class="py-2 px-2 text-center">
+                        <div class="w-10 h-10 mx-auto rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center p-0.5 shadow-sm">
+                            <img src="${imgUrl}" alt="${item.product_name}" class="w-full h-full object-cover rounded-md" onerror="this.src='https://images.unsplash.com/photo-1509391365360-2e959784a276?w=100&auto=format&fit=crop&q=60'"/>
                         </div>
                     </td>
-                    <td class="py-1.5 px-2 text-right font-black text-amber-700">${fmt(item.quantity * item.unit_price)}</td>
-                </tr>`;
+                    <td class="py-2 px-2">
+                        <div class="font-bold text-slate-900 text-xs">${item.product_name}</div>
+                        ${shortDesc ? `<p class="text-[10px] text-slate-500 font-normal leading-tight mt-0.5 max-w-md">${shortDesc}</p>` : ''}
+                    </td>
+                    <td class="py-2 px-2 text-center text-slate-600 font-medium">${item.unit}</td>
+                    <td class="py-2 px-2 text-center font-black text-slate-900 text-xs">${item.quantity}</td>
+                    <td class="py-2 px-2 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                            <input type="number" value="${item.unit_price}" 
+                                class="w-24 text-right p-1 border rounded-lg text-xs font-bold outline-none ${borderClass} no-print price-input-screen" 
+                                oninput="window.modSaleOngrid.updateItemPrice(${idx}, this.value)" />
+                            <span class="price-print-only font-bold text-slate-900 text-xs">${fmt(item.unit_price)}</span>
+                        </div>
+                    </td>
+                    <td class="py-2 px-2 text-right font-black text-amber-700 pr-3 text-xs">${fmt(item.quantity * item.unit_price)}</td>
+                    <td class="py-2 px-2 text-center action-column no-print">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="window.modSaleOngrid.openReplaceDeviceModal(${idx})" class="p-1 text-blue-600 hover:text-blue-800 transition" title="Thay thế thiết bị này"><i class="fas fa-exchange-alt"></i></button>
+                            <button onclick="window.modSaleOngrid.deleteDeviceItem(${idx})" class="p-1 text-red-400 hover:text-red-600 transition" title="Xóa thiết bị này"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
         }).join('');
     },
 
@@ -591,13 +1336,12 @@ window.modSaleOngrid = {
         const fmt = window.modSaleOngrid.formatVND;
 
         window.modSaleOngrid.currentCalculatedItems.forEach(item => {
-            const itemTotal = item.quantity * item.unit_price;
-            totalCapex += itemTotal;
+            totalCapex += item.quantity * item.unit_price;
             totalWholesale += item.quantity * item.wholesale_price;
             const minPriceAllowed = Math.ceil(item.wholesale_price * window.modSaleOngrid.MIN_PROFIT_MARGIN);
             if (item.unit_price < minPriceAllowed) {
                 hasViolation = true;
-                violationDetails.push(`${item.sku} (Sàn: ${fmt(minPriceAllowed)})`);
+                violationDetails.push(`${item.product_name} (Sàn: ${fmt(minPriceAllowed)})`);
             }
         });
 
@@ -614,19 +1358,26 @@ window.modSaleOngrid = {
         document.getElementById('side-total-price').innerText = fmt(finalTotal);
         document.getElementById('side-profit').innerText = fmt(profit);
         document.getElementById('side-commission').innerText = fmt(commission);
+
         document.getElementById('pdf-total-amount').innerText = fmt(finalTotal);
-        document.getElementById('pdf-vat-text').innerText = isVatChecked ? '* Báo giá đã bao gồm VAT (8%). Có hiệu lực trong 10 ngày.' : '* Báo giá chưa bao gồm VAT (8%). Có hiệu lực trong 10 ngày.';
+        document.getElementById('pdf-vat-text').innerText = isVatChecked ? '* Báo giá đã bao gồm VAT (8%). Đã bao gồm toàn bộ vật tư phụ & nhân công hoàn thiện.' : '* Báo giá chưa bao gồm VAT (8%). Đã bao gồm toàn bộ vật tư phụ & nhân công hoàn thiện.';
 
         const warnBox = document.getElementById('price-floor-warning');
         const actionArea = document.getElementById('save-action-area');
 
+        const btnText = window.modSaleOngrid.editingQuotationId ? '💾 Cập Nhật Báo Giá Đang Sửa' : '💾 Lưu & Xuất Báo Giá On-Grid';
+
         if (hasViolation) {
             warnBox.classList.remove('hidden');
-            document.getElementById('warning-text-detail').innerText = `Dưới sàn: ${violationDetails.join(', ')}`;
-            actionArea.innerHTML = `<button onclick="window.modSaleOngrid.saveQuotation('PENDING_APPROVAL')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg transition shadow-md">📩 Gửi Admin Duyệt Báo Giá Sàn</button>`;
+            document.getElementById('warning-text-detail').innerText = `Thiết bị dưới sàn: ${violationDetails.join(', ')}`;
+            actionArea.innerHTML = `<button onclick="window.modSaleOngrid.saveQuotation('PENDING_APPROVAL')" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-2xl transition shadow-lg shadow-red-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fas fa-paper-plane"></i> Gửi Admin Duyệt Báo Giá Chạm Sàn
+            </button>`;
         } else {
             warnBox.classList.add('hidden');
-            actionArea.innerHTML = `<button onclick="window.modSaleOngrid.saveQuotation('DRAFT')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2.5 rounded-lg transition shadow-sm">💾 Lưu & Xuất Báo Giá Bám Tải</button>`;
+            actionArea.innerHTML = `<button onclick="window.modSaleOngrid.saveQuotation('QUOTING')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black py-3 rounded-2xl transition shadow-lg shadow-amber-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fas fa-save text-sm"></i> ${btnText}
+            </button>`;
         }
 
         const systemKwp = parseFloat(document.getElementById('kwp').value) || 14.8;
@@ -641,8 +1392,10 @@ window.modSaleOngrid = {
         document.getElementById('calc-npv').innerText = `${(fin.npvAmount / 1000000).toFixed(1)} Tr VNĐ`;
 
         const cust = document.getElementById('cust-name').value;
+        const phone = document.getElementById('cust-phone')?.value || '';
         document.getElementById('pdf-cust-name').innerText = cust;
         document.getElementById('pdf-sign-cust-name').innerText = cust;
+        document.getElementById('pdf-cust-phone-disp').innerText = phone || '---';
         document.getElementById('pdf-kwp').innerText = `${document.getElementById('kwp').value} kWp`;
 
         const d = new Date();
@@ -653,12 +1406,11 @@ window.modSaleOngrid = {
 
     saveQuotation: async (statusReq) => {
         const name = document.getElementById('cust-name').value;
+        const phone = document.getElementById('cust-phone')?.value || '';
         const kwp = parseFloat(document.getElementById('kwp').value);
         const bill = window.modSaleOngrid.parseRawBillValue();
-        const brand = document.getElementById('brand-select').value;
         const total = window.modSaleOngrid.recalculateTotals();
 
-        
         const btn = document.getElementById('btn-save-quotation');
         const oldText = btn ? btn.innerHTML : '';
         if(btn) { 
@@ -666,7 +1418,6 @@ window.modSaleOngrid = {
             btn.classList.add('opacity-50', 'pointer-events-none'); 
         }
 
-        // Bổ sung product_id và chuẩn hóa price cho Backend
         const payloadItems = window.modSaleOngrid.currentCalculatedItems.map(i => {
             const originP = window.modSaleOngrid.dbProducts.find(p => p.sku === i.sku) || {};
             return {
@@ -676,70 +1427,345 @@ window.modSaleOngrid = {
                 unit: i.unit,
                 quantity: i.quantity,
                 price: i.unit_price,
-                wholesale_price: i.wholesale_price
+                wholesale_price: i.wholesale_price,
+                image_url: i.image_url || '',
+                description: i.description || ''
             };
         });
 
         let empName = 'Nguyễn Văn A (Sale)';
+        let empId = 'EMP001';
         try {
             const u = JSON.parse(localStorage.getItem('sungo_user') || '{}');
-            if (u.name) empName = `${u.name} (${u.role || 'Sale'})`;
+            if (u.name) empName = u.name;
+            if (u.empId) empId = u.empId;
         } catch(e) {}
 
+        const isEditing = !!window.modSaleOngrid.editingQuotationId;
+        const url = isEditing ? `/api/quotations/${window.modSaleOngrid.editingQuotationId}` : '/api/quotations';
+        const method = isEditing ? 'PUT' : 'POST';
+
         try {
-            const res = await fetch('/api/quotations', {
-                method: 'POST',
+            const res = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     store_id: 1, 
-                    brand_name: brand, 
-                    project_name: `Hệ Điện Mặt Trời Bám Tải ${kwp}kWp - ${name}`,
+                    brand_name: 'SUNGO ON-GRID', 
+                    project_name: `Dự Án Điện Mặt Trời Bám Tải ${kwp}kWp - ${name}`,
                     customer_name: name, 
+                    phone: phone,
                     sale_name: empName,
+                    created_by: empName,
+                    emp_id: empId,
                     system_type: 'ONGRID',
                     monthly_bill: bill,
                     system_kwp: kwp, 
                     total_amount: total, 
-                    payback_years: 3.0,
-                    npv_amount: 320000000, 
-                    roe_percent: 32.0, 
-                    status: statusReq || (total < 100000000 ? 'PENDING_APPROVAL' : 'QUOTING'),
+                    payback_years: 3.2,
+                    npv_amount: 250000000, 
+                    roe_percent: 31.5, 
+                    status: statusReq || 'QUOTING',
                     items: payloadItems
                 })
             });
             const data = await res.json();
             if(data.success) {
-                alert(`✅ Tạo Báo Giá Bám Tải Thành Công! Mã: ${data.quotation.quotation_code}\nTrạng thái: ${data.quotation.status === 'PENDING_APPROVAL' ? 'Chờ Admin Phê Duyệt' : 'Sẵn Sàng Báo Giá'}`);
+                const actionMsg = isEditing ? 'Cập Nhật Báo Giá Thành Công!' : 'Tạo Báo Giá Bám Tải Thành Công!';
+                alert(`✅ ${actionMsg}\nMã: ${data.quotation.quotation_code}\nTrạng thái: ${data.quotation.status === 'PENDING_APPROVAL' ? 'Chờ Admin Phê Duyệt (Giá sàn)' : 'Sẵn Sàng Báo Giá'}`);
+                
+                window.modSaleOngrid.resetFormToNew();
                 window.modSaleOngrid.loadHistory();
-                window.modSaleOngrid.viewDetail(data.quotation.quotation_id);
+                window.modSaleOngrid.viewDetail(data.quotation.quotation_id || data.quotation.id);
+            } else {
+                alert("❌ Lỗi: " + (data.error || 'Không lưu được báo giá'));
             }
         } catch(e) { 
             console.error(e); 
-            alert("❌ Lỗi kết nối mạng hoặc Server sập!"); 
+            alert("❌ Lỗi kết nối mạng hoặc Server!"); 
         } finally {
             if(btn) { btn.innerHTML = oldText; btn.classList.remove('opacity-50', 'pointer-events-none'); }
         }
     },
 
     loadHistory: async () => {
+        const tbody = document.getElementById('history-body');
+        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu báo giá...</td></tr>';
+        
         try {
-            const res = await fetch('/api/quotations');
+            const res = await fetch('/api/quotations?t=' + Date.now());
             const data = await res.json();
             if(data.success) {
-                document.getElementById('history-body').innerHTML = data.data.map(q => `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-2 font-bold text-amber-600">${q.brand_name || 'SUNGO ONGRID'}</td>
-                        <td class="p-2 font-mono text-slate-600">${q.quotation_code}</td>
-                        <td class="p-2 font-medium">${q.customer_name}</td>
-                        <td class="p-2 text-right font-bold">${window.modSaleOngrid.formatVND(q.total_amount)}</td>
-                        <td class="p-2 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">${q.status}</span></td>
-                        <td class="p-2 text-center flex justify-center gap-1">
-                            <button onclick="window.modSaleOngrid.viewDetail(${q.quotation_id})" class="text-xs bg-slate-800 text-white px-2 py-1 rounded">📄 Xem</button>
-                        </td>
-                    </tr>
-                `).join('');
+                let allQuotes = data.data || [];
+                window.modSaleOngrid.allRawOngridQuotes = allQuotes.filter(q => (q.system_type === 'ONGRID' || (q.quotation_code || '').startsWith('ONG') || (q.brand_name || '').includes('GRID') || (q.brand_name || '').includes('BÁM TẢI')));
+
+                window.modSaleOngrid.populateSaleAdminDropdown();
+                window.modSaleOngrid.updateHistoryCounts();
+                window.modSaleOngrid.applyHistoryFilters();
             }
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-red-500 font-bold">Lỗi kết nối lịch sử báo giá</td></tr>';
+        }
+    },
+
+    populateSaleAdminDropdown: () => {
+        const select = document.getElementById('filter-subordinate-sale');
+        if (!select) return;
+
+        const quotes = window.modSaleOngrid.allRawOngridQuotes;
+        const sales = Array.from(new Set(quotes.map(q => q.sale_name || q.created_by).filter(Boolean)));
+
+        let html = '<option value="ALL">🌟 Tất Cả Sale Tuyến Dưới</option><option value="MY_ONLY">👤 Chỉ Báo Giá Của Tôi</option>';
+        sales.forEach(s => {
+            html += `<option value="${s}">👨‍💼 Nhân viên: ${s}</option>`;
+        });
+        select.innerHTML = html;
+    },
+
+    updateHistoryCounts: () => {
+        const list = window.modSaleOngrid.getScopedUserQuotes();
+        document.getElementById('cnt-h-all').innerText = list.length;
+        document.getElementById('cnt-h-draft').innerText = list.filter(q => q.status === 'DRAFT').length;
+        document.getElementById('cnt-h-pending').innerText = list.filter(q => q.status === 'PENDING_APPROVAL').length;
+        document.getElementById('cnt-h-approved').innerText = list.filter(q => q.status === 'APPROVED' || q.status === 'QUOTING').length;
+        document.getElementById('cnt-h-won').innerText = list.filter(q => q.status === 'WON').length;
+        document.getElementById('cnt-h-rejected').innerText = list.filter(q => q.status === 'REJECTED' || q.status === 'LOST').length;
+    },
+
+    getScopedUserQuotes: () => {
+        let uName = '';
+        let uRole = 'SALE';
+        let uEmpId = '';
+        try {
+            const u = JSON.parse(localStorage.getItem('sungo_user') || '{}');
+            uName = (u.name || '').toLowerCase().trim();
+            uRole = (u.role || 'SALE').toUpperCase();
+            uEmpId = (u.empId || '').toLowerCase().trim();
         } catch(e) {}
+
+        let list = window.modSaleOngrid.allRawOngridQuotes;
+
+        if (uRole === 'SALE_ADMIN' || uRole === 'ADMIN' || uRole === 'SUPER_ADMIN') {
+            const saleFilter = document.getElementById('filter-subordinate-sale')?.value || 'ALL';
+            if (saleFilter === 'MY_ONLY') {
+                list = list.filter(q => {
+                    const qSale = (q.sale_name || q.created_by || '').toLowerCase();
+                    const qEmp = (q.emp_id || '').toLowerCase();
+                    return (uName && qSale.includes(uName)) || (uEmpId && qEmp === uEmpId);
+                });
+            } else if (saleFilter !== 'ALL') {
+                list = list.filter(q => (q.sale_name || q.created_by) === saleFilter);
+            }
+        } else {
+            list = list.filter(q => {
+                const qSale = (q.sale_name || q.created_by || '').toLowerCase();
+                const qEmp = (q.emp_id || '').toLowerCase();
+                return (uName && qSale.includes(uName)) || (uEmpId && qEmp === uEmpId);
+            });
+        }
+
+        return list;
+    },
+
+    setStatusFilter: (st) => {
+        window.modSaleOngrid.currentStatusFilter = st;
+        const buttons = ['ALL', 'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'WON', 'REJECTED'];
+        buttons.forEach(k => {
+            const el = document.getElementById('hst-btn-' + k);
+            if (!el) return;
+            if (k === st) {
+                el.className = 'px-3 py-1 rounded-full text-xs font-black uppercase transition border border-blue-500 bg-blue-50 text-blue-700 shadow-sm cursor-pointer';
+            } else {
+                el.className = 'px-3 py-1 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm cursor-pointer';
+            }
+        });
+        window.modSaleOngrid.applyHistoryFilters();
+    },
+
+    applyHistoryFilters: () => {
+        let list = window.modSaleOngrid.getScopedUserQuotes();
+        const st = window.modSaleOngrid.currentStatusFilter;
+
+        if (st === 'DRAFT') list = list.filter(q => q.status === 'DRAFT');
+        else if (st === 'PENDING_APPROVAL') list = list.filter(q => q.status === 'PENDING_APPROVAL');
+        else if (st === 'APPROVED') list = list.filter(q => q.status === 'APPROVED' || q.status === 'QUOTING');
+        else if (st === 'WON') list = list.filter(q => q.status === 'WON');
+        else if (st === 'REJECTED') list = list.filter(q => q.status === 'REJECTED' || q.status === 'LOST');
+
+        window.modSaleOngrid.renderHistoryTable(list);
+    },
+
+    renderHistoryTable: (list) => {
+        const tbody = document.getElementById('history-body');
+        if (!list || list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400 font-bold">Không có Báo Giá nào trong bộ lọc này.</td></tr>`;
+            return;
+        }
+
+        let uRole = 'SALE';
+        try {
+            const u = JSON.parse(localStorage.getItem('sungo_user') || '{}');
+            uRole = (u.role || 'SALE').toUpperCase();
+        } catch(e) {}
+
+        const isManager = (uRole === 'SALE_ADMIN' || uRole === 'ADMIN' || uRole === 'SUPER_ADMIN');
+
+        tbody.innerHTML = list.map(q => {
+            const d = q.created_at ? new Date(q.created_at) : new Date();
+            const dateStr = d.toLocaleDateString('vi-VN');
+
+            let stBadge = '';
+            if (q.status === 'PENDING_APPROVAL') stBadge = '<span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">Chờ Duyệt</span>';
+            else if (q.status === 'APPROVED' || q.status === 'QUOTING') stBadge = '<span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-black uppercase">Đã Duyệt</span>';
+            else if (q.status === 'WON') stBadge = '<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase">Khách Chốt</span>';
+            else if (q.status === 'REJECTED' || q.status === 'LOST') stBadge = '<span class="px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-black uppercase">Từ Chối</span>';
+            else stBadge = `<span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase">${q.status || 'Nháp'}</span>`;
+
+            const qId = q.quotation_id || q.id;
+
+            const canEdit = isManager || (q.status === 'DRAFT' || q.status === 'REJECTED');
+            const canDelete = isManager || (q.status === 'DRAFT' || q.status === 'REJECTED');
+            const canCancel = isManager && (q.status !== 'WON' && q.status !== 'REJECTED');
+
+            return `
+                <tr class="hover:bg-amber-50/40 transition border-b border-slate-100">
+                    <td class="p-3 pl-4 font-bold">
+                        <span class="font-mono text-blue-600 text-xs">${q.quotation_code}</span>
+                        <div class="text-[10px] text-slate-400 font-normal mt-0.5"><i class="fas fa-calendar-alt mr-1"></i>${dateStr}</div>
+                    </td>
+                    <td class="p-3">
+                        <p class="font-bold text-slate-800 text-xs">${q.customer_name}</p>
+                        <p class="text-[10px] text-slate-400 truncate max-w-xs">${q.project_name || 'Dự án Bám Tải'}</p>
+                    </td>
+                    <td class="p-3 font-semibold text-slate-700">
+                        <i class="fas fa-user-tie text-slate-400 mr-1"></i>${q.sale_name || q.created_by || 'Sale'}
+                    </td>
+                    <td class="p-3 text-center font-bold text-blue-700">${q.system_kwp || '---'} kWp</td>
+                    <td class="p-3 text-right font-black text-slate-900 text-xs">${window.modSaleOngrid.formatVND(q.total_amount)}</td>
+                    <td class="p-3 text-center font-black ${parseFloat(q.profit_margin || 0) < 15 ? 'text-red-500' : 'text-emerald-600'}">${q.profit_margin || 0}%</td>
+                    <td class="p-3 text-center">${stBadge}</td>
+                    <td class="p-3 pr-4 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="window.modSaleOngrid.viewDetail(${qId})" class="text-xs bg-slate-900 hover:bg-slate-800 text-white px-2.5 py-1.5 rounded-lg font-bold transition shadow-sm" title="Xem Báo Giá & In PDF">
+                                <i class="fas fa-eye"></i> Xem
+                            </button>
+                            ${canEdit ? `
+                                <button onclick="window.modSaleOngrid.editQuotation(${qId})" class="text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 px-2 py-1.5 rounded-lg font-bold transition shadow-sm" title="Sửa Báo Giá">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            ` : ''}
+                            ${canCancel ? `
+                                <button onclick="window.modSaleOngrid.cancelQuotation(${qId})" class="text-xs bg-orange-500 hover:bg-orange-600 text-white px-2 py-1.5 rounded-lg font-bold transition shadow-sm" title="Hủy Báo Giá (Sale Admin)">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            ` : ''}
+                            ${canDelete ? `
+                                <button onclick="window.modSaleOngrid.deleteQuotation(${qId})" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1.5 rounded-lg font-bold transition" title="Xóa Báo Giá">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    editQuotation: async (id) => {
+        try {
+            const res = await fetch(`/api/quotations/${id}`);
+            const data = await res.json();
+            if (data.success) {
+                const q = data.quotation;
+                window.modSaleOngrid.editingQuotationId = id;
+
+                document.getElementById('editing-mode-badge').innerText = `✏️ Đang sửa: ${q.quotation_code}`;
+                document.getElementById('editing-mode-badge').className = "text-[10px] bg-amber-500 text-slate-950 px-2 py-0.5 rounded-md font-black animate-pulse";
+                document.getElementById('edit-cancel-btn-area').classList.remove('hidden');
+
+                document.getElementById('cust-name').value = q.customer_name || '';
+                if (q.phone) document.getElementById('cust-phone').value = q.phone;
+                if (q.monthly_bill) {
+                    document.getElementById('monthly-bill').value = new Intl.NumberFormat('vi-VN').format(q.monthly_bill);
+                }
+                if (q.system_kwp) {
+                    document.getElementById('kwp').value = q.system_kwp;
+                    document.getElementById('display-kwp').innerText = `${q.system_kwp} kWp`;
+                }
+
+                if (q.items && q.items.length > 0) {
+                    window.modSaleOngrid.currentCalculatedItems = q.items.map(i => ({
+                        sku: i.sku, 
+                        product_name: i.product_name, 
+                        unit: i.unit,
+                        quantity: parseFloat(i.quantity || i.qty || 1),
+                        wholesale_price: parseFloat(i.wholesale_price || (i.price / 1.15)),
+                        unit_price: parseFloat(i.price || i.unit_price),
+                        image_url: i.image_url || window.modSaleOngrid.getProductImage(i, 'PANEL'),
+                        description: i.description || window.modSaleOngrid.getProductShortDesc(i, 'PANEL')
+                    }));
+                }
+
+                window.modSaleOngrid.currentCalculatedItems = window.modSaleOngrid.sortQuotationItems(window.modSaleOngrid.currentCalculatedItems);
+                window.modSaleOngrid.renderBOQTable();
+                window.modSaleOngrid.recalculateTotals();
+
+                document.getElementById('sale-control-panel').scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch(e) {
+            alert("Lỗi khi tải thông tin báo giá để sửa!");
+        }
+    },
+
+    resetFormToNew: () => {
+        window.modSaleOngrid.editingQuotationId = null;
+        document.getElementById('editing-mode-badge').innerText = 'Tạo mới';
+        document.getElementById('editing-mode-badge').className = "text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md font-bold";
+        document.getElementById('edit-cancel-btn-area').classList.add('hidden');
+        window.modSaleOngrid.calcBOQ();
+    },
+
+    deleteQuotation: async (id) => {
+        if (!confirm("Bạn có chắc chắn muốn XÓA Báo Giá này? Thao tác không thể hoàn tác!")) return;
+
+        try {
+            const res = await fetch(`/api/quotations/${id}`, { method: 'DELETE' });
+            const json = await res.json();
+            if (json.success) {
+                alert("🗑️ Đã xóa báo giá thành công!");
+                window.modSaleOngrid.loadHistory();
+            } else {
+                alert("❌ Lỗi: " + json.error);
+            }
+        } catch(e) {
+            alert("❌ Không thể kết nối để xóa báo giá!");
+        }
+    },
+
+    cancelQuotation: async (id) => {
+        const reason = prompt("Nhập lý do HỦY Báo Giá này:", "Khách hàng đổi phương án hoặc hủy yêu cầu");
+        if (reason === null) return;
+
+        try {
+            const res = await fetch(`/api/quotations/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    status: 'REJECTED',
+                    reject_reason: reason,
+                    approved_by: 'Sale Admin / Trưởng Phòng'
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert(`⚠️ Đã HỦY Báo Giá ${json.quotation.quotation_code}!`);
+                window.modSaleOngrid.loadHistory();
+            } else {
+                alert("❌ Lỗi: " + json.error);
+            }
+        } catch(e) {
+            alert("❌ Lỗi kết nối khi hủy báo giá!");
+        }
     },
 
     viewDetail: async (id) => {
@@ -748,23 +1774,47 @@ window.modSaleOngrid = {
             const data = await res.json();
             if(data.success) {
                 window.modSaleOngrid.currentQuotationData = data;
-                document.getElementById('pdf-brand-logo').innerText = `SUNGO SOLAR - ${data.quotation.brand_name || 'GERMAN ON-GRID'}`;
-                document.getElementById('pdf-q-code').innerText = data.quotation.quotation_code;
-                document.getElementById('pdf-cust-name').innerText = data.quotation.customer_name;
-                document.getElementById('pdf-sign-cust-name').innerText = data.quotation.customer_name;
-                document.getElementById('pdf-kwp').innerText = `${data.quotation.system_kwp} kWp`;
-                document.getElementById('pdf-total-amount').innerText = window.modSaleOngrid.formatVND(data.quotation.total_amount);
+                const q = data.quotation;
 
-                window.modSaleOngrid.currentCalculatedItems = data.items.map(i => ({
-                    sku: i.sku, product_name: i.product_name, unit: i.unit,
-                    quantity: parseFloat(i.quantity),
-                    wholesale_price: parseFloat(i.wholesale_price || (i.unit_price / 1.15)),
-                    unit_price: parseFloat(i.unit_price)
-                }));
+                document.getElementById('pdf-q-code').innerText = q.quotation_code;
+                document.getElementById('pdf-cust-name').innerText = q.customer_name;
+                document.getElementById('pdf-sign-cust-name').innerText = q.customer_name;
+                document.getElementById('pdf-cust-phone-disp').innerText = q.phone || '---';
+                document.getElementById('pdf-kwp').innerText = `${q.system_kwp} kWp`;
+                document.getElementById('pdf-total-amount').innerText = window.modSaleOngrid.formatVND(q.total_amount);
+
+                if (q.created_at) {
+                    const d = new Date(q.created_at);
+                    document.getElementById('pdf-date-now').innerText = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                }
+
+                document.getElementById('cust-name').value = q.customer_name || '';
+                if (q.phone) document.getElementById('cust-phone').value = q.phone;
+                if (q.system_kwp) {
+                    document.getElementById('kwp').value = q.system_kwp;
+                    document.getElementById('display-kwp').innerText = `${q.system_kwp} kWp`;
+                }
+
+                if (q.items && q.items.length > 0) {
+                    window.modSaleOngrid.currentCalculatedItems = q.items.map(i => ({
+                        sku: i.sku, 
+                        product_name: i.product_name, 
+                        unit: i.unit,
+                        quantity: parseFloat(i.quantity || i.qty || 1),
+                        wholesale_price: parseFloat(i.wholesale_price || (i.price / 1.15)),
+                        unit_price: parseFloat(i.price || i.unit_price),
+                        image_url: i.image_url || window.modSaleOngrid.getProductImage(i, 'PANEL'),
+                        description: i.description || window.modSaleOngrid.getProductShortDesc(i, 'PANEL')
+                    }));
+                }
+                
+                window.modSaleOngrid.currentCalculatedItems = window.modSaleOngrid.sortQuotationItems(window.modSaleOngrid.currentCalculatedItems);
                 window.modSaleOngrid.renderBOQTable();
                 window.modSaleOngrid.recalculateTotals();
+
+                document.getElementById('printable-quotation').scrollIntoView({ behavior: 'smooth' });
             }
-        } catch(e) { alert("Lỗi tải chi tiết!"); }
+        } catch(e) { alert("Lỗi tải chi tiết báo giá!"); }
     }
 };
 

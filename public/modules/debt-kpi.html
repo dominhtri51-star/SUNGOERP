@@ -1,0 +1,379 @@
+<div class="h-full flex flex-col space-y-4 sm:space-y-6 font-sans relative pb-10">
+    <!-- HEADER & THANH CÔNG CỤ -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shrink-0">
+                    <i class="fas fa-medal text-xl"></i>
+                </span>
+                <div>
+                    <h2 class="text-lg sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+                        KPI THU HỒI CÔNG NỢ & THƯỞNG PHẠT THEO BẬC
+                        <span class="text-[10px] bg-indigo-100 text-indigo-900 font-black px-2.5 py-0.5 rounded-full border border-indigo-200 uppercase tracking-wide">Incentive 4 Bậc</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Cơ chế thưởng/phạt cho nhân sự Back-office & Kế toán công nợ theo <b>Tỷ lệ thu nợ đúng hạn trong tháng</b>.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-auto flex flex-wrap items-center justify-between lg:justify-end gap-2">
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <span class="text-xs font-bold text-slate-500 px-2">Kỳ:</span>
+                <input type="month" id="debt-kpi-period" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-black text-indigo-900 outline-none focus:border-indigo-500">
+            </div>
+            <button onclick="window.modDebtKpi.openEvalModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-xl text-xs transition shadow-xs flex items-center gap-1.5">
+                <i class="fas fa-calculator"></i> <span>Chạy Đánh Giá KPI Tháng</span>
+            </button>
+            <button onclick="window.modDebtKpi.load()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition text-xs font-bold" title="Làm mới">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 4 THẺ QUY TẮC THƯỞNG PHẠT THEO BẬC (TIERED BONUS SYSTEM) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
+        <!-- BẬC 1: < 70% -->
+        <div class="bg-rose-50/70 rounded-2xl p-4 border border-rose-200/80 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-200 text-rose-800">DƯỚI 70%</span>
+                    <span class="text-xs font-black text-rose-700">KHÔNG ĐẠT</span>
+                </div>
+                <h4 class="font-black text-rose-950 text-sm">Cảnh Cáo / Phạt KPI</h4>
+                <p class="text-[11px] text-rose-700 mt-1">Đánh giá không hoàn thành nhiệm vụ. Trừ điểm KPI hoặc trừ phụ cấp trách nhiệm.</p>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-rose-200 flex items-center justify-between">
+                <span class="text-[11px] font-bold text-rose-600">Mức phạt:</span>
+                <span class="font-black font-mono text-sm text-rose-700">-1.000.000 đ</span>
+            </div>
+        </div>
+
+        <!-- BẬC 2: 70% - 84% -->
+        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">70% - 84%</span>
+                    <span class="text-xs font-bold text-slate-600">CƠ BẢN</span>
+                </div>
+                <h4 class="font-black text-slate-900 text-sm">Hưởng 100% Lương</h4>
+                <p class="text-[11px] text-slate-600 mt-1">Đạt mức thu nợ chuẩn thông thường. Hưởng đầy đủ lương cứng và phụ cấp, không có thưởng thêm.</p>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between">
+                <span class="text-[11px] font-bold text-slate-500">Mức thưởng:</span>
+                <span class="font-black font-mono text-sm text-slate-700">0 đ</span>
+            </div>
+        </div>
+
+        <!-- BẬC 3: 85% - 94% -->
+        <div class="bg-blue-50/70 rounded-2xl p-4 border border-blue-200/80 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-200 text-blue-800">85% - 94%</span>
+                    <span class="text-xs font-black text-blue-700">MỨC 1</span>
+                </div>
+                <h4 class="font-black text-blue-950 text-sm">Thưởng Thu Nợ Tốt</h4>
+                <p class="text-[11px] text-blue-700 mt-1">Thu hồi nợ hiệu quả, giảm rủi ro chiếm dụng vốn. Động lực thúc đẩy nhân sự Back-office.</p>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-blue-200 flex items-center justify-between">
+                <span class="text-[11px] font-bold text-blue-600">Mức thưởng:</span>
+                <span class="font-black font-mono text-sm text-blue-700">+1.500.000 đ</span>
+            </div>
+        </div>
+
+        <!-- BẬC 4: 95% - 100% -->
+        <div class="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200/80 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800">95% - 100%</span>
+                    <span class="text-xs font-black text-emerald-700">XUẤT SẮC</span>
+                </div>
+                <h4 class="font-black text-emerald-950 text-sm">Thưởng Vượt Trội</h4>
+                <p class="text-[11px] text-emerald-700 mt-1">Tỷ lệ thu hồi nợ gần như tuyệt đối, bảo toàn dòng tiền cho công ty cực kỳ xuất sắc!</p>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-emerald-200 flex items-center justify-between">
+                <span class="text-[11px] font-bold text-emerald-600">Mức thưởng:</span>
+                <span class="font-black font-mono text-sm text-emerald-700">+3.000.000 đ</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG LỊCH SỬ ĐÁNH GIÁ KPI THU NỢ -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col overflow-hidden">
+        <div class="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                <i class="fas fa-list-check text-indigo-600"></i> Danh Sách Đánh Giá KPI Thu Nợ & Kết Chuyển Lương
+            </h3>
+            <span class="text-xs font-bold text-slate-500">Tự động cộng thưởng / trừ phạt vào Bảng Lương tháng</span>
+        </div>
+
+        <div class="flex-1 overflow-x-auto overflow-y-auto">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-slate-100/80 text-slate-600 text-[11px] uppercase font-black tracking-wider border-b border-slate-200 sticky top-0 z-10">
+                    <tr>
+                        <th class="p-3.5 pl-4">Kỳ Đánh Giá</th>
+                        <th class="p-3.5">Nhân Viên Phụ Trách</th>
+                        <th class="p-3.5 text-right">Tổng Nợ Phải Thu</th>
+                        <th class="p-3.5 text-right">Đã Thu Đúng Hạn</th>
+                        <th class="p-3.5 text-center">Tỷ Lệ Thu Hồi</th>
+                        <th class="p-3.5 text-center">Bậc Đánh Giá</th>
+                        <th class="p-3.5 text-right">Thưởng (+) / Phạt (-)</th>
+                        <th class="p-3.5 text-center">Hạch Toán Lương</th>
+                        <th class="p-3.5 text-center pr-4">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="debt-kpi-tbody" class="divide-y divide-slate-100 text-xs">
+                    <tr>
+                        <td colspan="9" class="p-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Đang nạp dữ liệu KPI thu nợ...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL CHẠY ĐÁNH GIÁ KPI THU NỢ -->
+    <div id="eval-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400 text-sm">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3 class="font-black text-sm uppercase">Chạy Đánh Giá KPI Thu Nợ Tháng</h3>
+                </div>
+                <button onclick="window.modDebtKpi.closeModal()" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Kỳ đánh giá (Tháng)</label>
+                    <input type="month" id="eval-period" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nhân viên Phụ trách (Kế toán / Back-office)</label>
+                    <select id="eval-emp-id" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-indigo-500">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tổng Nợ Đến Hạn (đ)</label>
+                        <input type="number" id="eval-due" placeholder="Để trống để tự quét" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Đã Thu Đúng Hạn (đ)</label>
+                        <input type="number" id="eval-collected" placeholder="Để trống để tự quét" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold bg-white focus:border-indigo-500 outline-none">
+                    </div>
+                    <p class="col-span-2 text-[10px] text-slate-500 italic">💡 Nếu để trống, hệ thống sẽ tự động quét tổng doanh thu và thực thu qua Sổ Quỹ trong tháng đó.</p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="window.modDebtKpi.closeModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-200 text-xs font-bold">Hủy</button>
+                <button onclick="window.modDebtKpi.submitEvaluation()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md">
+                    Tính Toán & Áp Dụng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modDebtKpi = {
+    evaluations: [],
+    employees: [],
+
+    load: async () => {
+        try {
+            const periodInput = document.getElementById('debt-kpi-period');
+            if (!periodInput.value) {
+                periodInput.value = new Date().toISOString().slice(0, 7);
+            }
+            const period = periodInput.value;
+
+            // 1. Tải danh sách nhân viên
+            const empRes = await fetch('/api/hr/employees');
+            const empData = await empRes.json();
+            if (empData.success) {
+                window.modDebtKpi.employees = empData.data;
+                const empSelect = document.getElementById('eval-emp-id');
+                let optHtml = '';
+                empData.data.forEach(e => {
+                    optHtml += `<option value="${e.id}">${e.full_name} (${e.emp_code} - ${e.position || 'Nhân viên'})</option>`;
+                });
+                empSelect.innerHTML = optHtml;
+            }
+
+            // 2. Tải danh sách đánh giá KPI
+            const res = await fetch(`/api/debt-kpi?period_key=${period}`);
+            const data = await res.json();
+            if (data.success) {
+                window.modDebtKpi.evaluations = data.data;
+                window.modDebtKpi.renderTable(data.data);
+            }
+        } catch (err) {
+            console.error('Lỗi tải KPI thu nợ:', err);
+        }
+    },
+
+    renderTable: (list) => {
+        const tbody = document.getElementById('debt-kpi-tbody');
+        if (!list || list.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="p-8 text-center text-slate-400 font-bold">
+                        Chưa có đánh giá KPI thu nợ cho kỳ này.<br>
+                        <button onclick="window.modDebtKpi.openEvalModal()" class="mt-2 text-xs font-black text-indigo-600 hover:underline">
+                            + Bấm vào đây để Chạy Đánh Giá KPI Tháng
+                        </button>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = list.map(item => {
+            const rate = parseFloat(item.collection_rate) || 0;
+            const amt = parseFloat(item.reward_penalty_amount) || 0;
+
+            let tierBadge = '';
+            let barColor = 'bg-slate-400';
+            if (item.kpi_tier === 'TIER_UNDER_70') {
+                tierBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200"><i class="fas fa-exclamation-circle mr-1"></i> < 70% (Không đạt)</span>';
+                barColor = 'bg-rose-500';
+            } else if (item.kpi_tier === 'TIER_70_84') {
+                tierBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-800 border border-slate-200">70% - 84% (Cơ bản)</span>';
+                barColor = 'bg-slate-500';
+            } else if (item.kpi_tier === 'TIER_85_94') {
+                tierBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200"><i class="fas fa-award mr-1"></i> 85% - 94% (Mức 1)</span>';
+                barColor = 'bg-blue-500';
+            } else {
+                tierBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fas fa-star mr-1"></i> 95% - 100% (Xuất sắc)</span>';
+                barColor = 'bg-emerald-500';
+            }
+
+            let statusBadge = item.status === 'APPLIED_PAYROLL'
+                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200"><i class="fas fa-check-double mr-1"></i> Đã vào bảng lương</span>'
+                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">Sẵn sàng kết chuyển</span>';
+
+            let amtDisplay = amt > 0
+                ? `<span class="font-black font-mono text-sm text-emerald-600">+${amt.toLocaleString('vi-VN')} đ</span>`
+                : (amt < 0 ? `<span class="font-black font-mono text-sm text-rose-600">${amt.toLocaleString('vi-VN')} đ</span>` : `<span class="font-bold font-mono text-slate-500">0 đ</span>`);
+
+            return `
+                <tr class="hover:bg-indigo-50/30 transition border-b border-slate-100">
+                    <td class="p-3.5 pl-4 font-black font-mono text-indigo-900">${item.period_key}</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-slate-900">${item.employee_name || 'Kế Toán'}</div>
+                        <div class="text-[10px] text-slate-400 font-mono">${item.emp_code || ''} - ${item.position || 'Back-office'}</div>
+                    </td>
+                    <td class="p-3.5 text-right font-bold text-slate-700">${(parseFloat(item.total_due_debt) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3.5 text-right font-bold text-emerald-700">${(parseFloat(item.total_collected_debt) || 0).toLocaleString('vi-VN')} đ</td>
+                    <td class="p-3.5 text-center min-w-[120px]">
+                        <div class="text-xs font-black text-slate-800 mb-1">${rate}%</div>
+                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div class="${barColor} h-full" style="width: ${rate}%"></div>
+                        </div>
+                    </td>
+                    <td class="p-3.5 text-center">${tierBadge}</td>
+                    <td class="p-3.5 text-right">${amtDisplay}</td>
+                    <td class="p-3.5 text-center">${statusBadge}</td>
+                    <td class="p-3.5 text-center pr-4">
+                        <button onclick="window.modDebtKpi.editAmount(${item.id}, ${amt}, '${item.notes || ''}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs p-1.5 rounded-lg hover:bg-blue-50" title="Điều chỉnh thưởng/phạt">
+                            <i class="fas fa-edit"></i> Sửa
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    openEvalModal: () => {
+        const period = document.getElementById('debt-kpi-period').value || new Date().toISOString().slice(0, 7);
+        document.getElementById('eval-period').value = period;
+        document.getElementById('eval-due').value = '';
+        document.getElementById('eval-collected').value = '';
+        const m = document.getElementById('eval-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    closeModal: () => {
+        const m = document.getElementById('eval-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    },
+
+    submitEvaluation: async () => {
+        const period = document.getElementById('eval-period').value;
+        const empId = document.getElementById('eval-emp-id').value;
+        const customDue = document.getElementById('eval-due').value;
+        const customCollected = document.getElementById('eval-collected').value;
+
+        if (!period) {
+            alert('Vui lòng chọn kỳ tháng đánh giá!');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/debt-kpi/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    period_key: period,
+                    employee_id: empId || null,
+                    custom_due_debt: customDue ? parseFloat(customDue) : undefined,
+                    custom_collected_debt: customCollected ? parseFloat(customCollected) : undefined
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.modDebtKpi.closeModal();
+                document.getElementById('debt-kpi-period').value = period;
+                window.modDebtKpi.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    editAmount: async (id, currentAmt, currentNotes) => {
+        const newAmtStr = prompt(`Nhập số tiền Thưởng (+) hoặc Phạt (-) điều chỉnh (VNĐ):\n(VD: 1500000 hoặc -1000000)`, currentAmt);
+        if (newAmtStr === null) return;
+        const newAmt = parseFloat(newAmtStr);
+        if (isNaN(newAmt)) {
+            alert('Số tiền không hợp lệ!');
+            return;
+        }
+        const note = prompt('Ghi chú điều chỉnh:', currentNotes || 'Điều chỉnh tay theo quyết định Ban Giám Đốc');
+
+        try {
+            const res = await fetch(`/api/debt-kpi/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reward_penalty_amount: newAmt, notes: note })
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.modDebtKpi.load();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    }
+};
+
+// Tự động tải
+window.modDebtKpi.load();
+</script>
