@@ -21,7 +21,14 @@ app.get('/api/setup-db', async (req, res) => {
 // ==========================================
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(express.static('public')); // Cổng mở giao diện
+app.use(express.static('public', {
+    etag: false,
+    setHeaders: (res, filePath) => {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+})); // Cổng mở giao diện (luôn tải mới nhất, chống kẹt cache)
 
 // ==========================================
 // CƠ CHẾ AUTO-ROUTER (TỰ ĐỘNG NẠP API)
