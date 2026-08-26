@@ -132,30 +132,37 @@ const baseMenus = ALL_SYSTEM_GROUPS;
 const roleBottomNavs = {
     'ADMIN': [
         { id: 'admin-dash', icon: 'fa-chart-pie', label: 'Báo Cáo' },
+        { id: 'sale-orders', icon: 'fa-cart-plus', label: 'Bán Hàng' },
         { id: 'order-history', icon: 'fa-receipt', label: 'Đơn Hàng' },
-        { id: 'project-contractors', icon: 'fa-project-diagram', label: 'Dự Án Thầu' },
-        { id: 'accounting-vault', icon: 'fa-vault', label: 'Tài Chính' },
-        { id: '__more__', icon: 'fa-bars', label: 'Menu' }
+        { id: 'inventory-dash', icon: 'fa-boxes', label: 'Tồn Kho' },
+        { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
     ],
     'SUPER_ADMIN': [
         { id: 'admin-dash', icon: 'fa-chart-pie', label: 'Báo Cáo' },
+        { id: 'sale-orders', icon: 'fa-cart-plus', label: 'Bán Hàng' },
         { id: 'order-history', icon: 'fa-receipt', label: 'Đơn Hàng' },
-        { id: 'project-contractors', icon: 'fa-project-diagram', label: 'Dự Án Thầu' },
-        { id: 'accounting-vault', icon: 'fa-vault', label: 'Tài Chính' },
-        { id: '__more__', icon: 'fa-bars', label: 'Menu' }
+        { id: 'inventory-dash', icon: 'fa-boxes', label: 'Tồn Kho' },
+        { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
+    ],
+    'GIAM_DOC': [
+        { id: 'admin-dash', icon: 'fa-chart-pie', label: 'Báo Cáo' },
+        { id: 'sale-orders', icon: 'fa-cart-plus', label: 'Bán Hàng' },
+        { id: 'order-history', icon: 'fa-receipt', label: 'Đơn Hàng' },
+        { id: 'business-health', icon: 'fa-heartbeat', label: 'Tài Chính' },
+        { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
     ],
     'SALE': [
+        { id: 'sale-orders', icon: 'fa-cart-plus', label: 'Tạo Đơn' },
         { id: 'sale-crm', icon: 'fa-users', label: 'Khách CRM' },
-        { id: 'sale-orders', icon: 'fa-shopping-cart', label: 'Tạo Đơn' },
-        { id: 'sale-boq', icon: 'fa-file-invoice-dollar', label: 'Báo Giá' },
         { id: 'order-history', icon: 'fa-receipt', label: 'Đơn Hàng' },
+        { id: 'sale-boq', icon: 'fa-file-invoice-dollar', label: 'Báo Giá' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'SALES': [
+        { id: 'sale-orders', icon: 'fa-cart-plus', label: 'Tạo Đơn' },
         { id: 'sale-crm', icon: 'fa-users', label: 'Khách CRM' },
-        { id: 'sale-orders', icon: 'fa-shopping-cart', label: 'Tạo Đơn' },
-        { id: 'sale-boq', icon: 'fa-file-invoice-dollar', label: 'Báo Giá' },
         { id: 'order-history', icon: 'fa-receipt', label: 'Đơn Hàng' },
+        { id: 'sale-boq', icon: 'fa-file-invoice-dollar', label: 'Báo Giá' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'TRUONG_PHONG_KD': [
@@ -390,7 +397,7 @@ window.toggleMobileProfileSheet = function(show) {
     }
 };
 
-// Render thanh Mobile Bottom Navigation Bar
+// Render thanh Mobile Bottom Navigation Bar (Thanh điều hướng duy nhất trên mobile)
 window.renderMobileBottomNav = function(role, activeModuleId) {
     const nav = document.getElementById('mobile-bottom-nav');
     if (!nav) return;
@@ -398,23 +405,29 @@ window.renderMobileBottomNav = function(role, activeModuleId) {
     const userRole = role === 'KY_THUAT' ? 'BAO_HANH' : role;
     const navItems = roleBottomNavs[userRole] || roleBottomNavs['ADMIN'] || [];
     
+    const hasActiveItem = navItems.some(i => i.id === activeModuleId);
+    
     let html = '';
     navItems.forEach(item => {
         if (item.id === '__more__') {
+            const isMoreActive = !hasActiveItem;
+            const activeColor = isMoreActive ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200';
+            const activeBg = isMoreActive ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-400/40 shadow-xs' : 'text-slate-400';
+            
             html += `
-            <button onclick="toggleMobileSidebar()" class="flex-1 flex flex-col items-center justify-center py-1 text-slate-400 active:text-amber-400 transition cursor-pointer group">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-slate-800 transition">
-                    <i class="fas ${item.icon} text-base"></i>
+            <button onclick="toggleMobileSidebar()" class="flex-1 flex flex-col items-center justify-center py-1 ${activeColor} transition active:scale-90 cursor-pointer group">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center transition ${activeBg}">
+                    <i class="fas ${item.icon} text-sm"></i>
                 </div>
-                <span class="text-[10px] font-bold mt-0.5 tracking-tight">${item.label}</span>
+                <span class="text-[10px] ${isMoreActive ? 'font-black' : 'font-bold'} mt-0.5 tracking-tight">${item.label}</span>
             </button>`;
         } else {
             const isActive = item.id === activeModuleId;
             const activeColor = isActive ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200';
-            const activeBg = isActive ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-400/30' : 'text-slate-400';
+            const activeBg = isActive ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-400/40 shadow-xs' : 'text-slate-400';
             
             html += `
-            <button id="bottom-tab-${item.id}" onclick="loadModule('${item.id}', '${item.label}')" class="flex-1 flex flex-col items-center justify-center py-1 ${activeColor} transition cursor-pointer group relative">
+            <button id="bottom-tab-${item.id}" onclick="loadModule('${item.id}', '${item.label}')" class="flex-1 flex flex-col items-center justify-center py-1 ${activeColor} transition active:scale-90 cursor-pointer group relative">
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center transition ${activeBg}">
                     <i class="fas ${item.icon} text-sm"></i>
                 </div>

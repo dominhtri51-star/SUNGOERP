@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 
+const parseSafeNum = (val) => {
+    if (val === null || val === undefined || val === '') return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    let str = String(val).trim().replace(/[đĐ\s]/g, '');
+    if (/^-?\d+$/.test(str)) return parseInt(str, 10) || 0;
+    if (/^-?\d+\.\d{2}$/.test(str)) return parseFloat(str) || 0;
+    str = str.replace(/\./g, '').replace(/,/g, '.');
+    return parseFloat(str) || 0;
+};
+
 // GET: LẤY DANH SÁCH ĐƠN HÀNG (Sạch biến rác, Kèm Customer Tier & Nhân viên bán hàng)
 router.get('/', async (req, res) => {
     try {
@@ -88,14 +98,14 @@ router.post('/', async (req, res) => {
         const finalPaymentMethod = payment_method || 'TIEN_MAT';
         const finalNotes = notes || '';
 
-        const shipFee = parseFloat(shipping_fee) || 0;
-        const stnFee = parseFloat(station_fee) || 0;
-        const packFee = parseFloat(packaging_fee) || 0;
-        const handFee = parseFloat(handling_fee) || 0;
-        const othFee = parseFloat(other_fee) || 0;
+        const shipFee = parseSafeNum(shipping_fee);
+        const stnFee = parseSafeNum(station_fee);
+        const packFee = parseSafeNum(packaging_fee);
+        const handFee = parseSafeNum(handling_fee);
+        const othFee = parseSafeNum(other_fee);
         const othNote = (other_fee_note || '').trim();
-        const discAmount = parseFloat(discount_amount) || 0;
-        const ptsDiscount = parseFloat(points_discount) || 0;
+        const discAmount = parseSafeNum(discount_amount);
+        const ptsDiscount = parseSafeNum(points_discount);
         const fundSource = cost_fund_source || 'TIEN_MAT_QUY';
         const shouldSync = sync_accounting !== false;
 
@@ -127,22 +137,22 @@ router.post('/', async (req, res) => {
         let cogs = 0;
         if (items && Array.isArray(items)) {
             for (let item of items) {
-                const qty = parseFloat(item.quantity) || 1;
-                const price = parseFloat(item.price) || 0;
-                let impPrice = parseFloat(item.import_price) || 0;
+                const qty = parseSafeNum(item.quantity) || 1;
+                const price = parseSafeNum(item.price);
+                let impPrice = parseSafeNum(item.import_price);
                 if (!impPrice && item.product_id) {
                     const pRes = await client.query("SELECT import_price FROM products WHERE id = $1", [item.product_id]);
-                    if (pRes.rows.length > 0) impPrice = parseFloat(pRes.rows[0].import_price) || 0;
+                    if (pRes.rows.length > 0) impPrice = parseSafeNum(pRes.rows[0].import_price);
                 }
                 subtotal += qty * price;
                 cogs += qty * impPrice;
             }
         }
-        if (subtotal === 0 && total_amount) subtotal = parseFloat(total_amount) || 0;
+        if (subtotal === 0 && total_amount) subtotal = parseSafeNum(total_amount);
 
         const calculatedTotal = Math.max(0, subtotal - discAmount - ptsDiscount);
-        const finalTotal = total_amount !== undefined ? parseFloat(total_amount) : calculatedTotal;
-        const finalPaid = paid_amount !== undefined ? parseFloat(paid_amount) : finalTotal;
+        const finalTotal = total_amount !== undefined ? parseSafeNum(total_amount) : calculatedTotal;
+        const finalPaid = paid_amount !== undefined ? parseSafeNum(paid_amount) : finalTotal;
         const grossProfit = finalTotal - cogs;
         const totalOrderCosts = shipFee + stnFee + packFee + handFee + othFee;
         const netProfit = grossProfit - totalOrderCosts;
@@ -288,14 +298,14 @@ router.put('/:id', async (req, res) => {
         const custId = oldOrder.customer_id;
         const orderCode = oldOrder.order_code;
 
-        const shipFee = parseFloat(shipping_fee) || 0;
-        const stnFee = parseFloat(station_fee) || 0;
-        const packFee = parseFloat(packaging_fee) || 0;
-        const handFee = parseFloat(handling_fee) || 0;
-        const othFee = parseFloat(other_fee) || 0;
+        const shipFee = parseSafeNum(shipping_fee);
+        const stnFee = parseSafeNum(station_fee);
+        const packFee = parseSafeNum(packaging_fee);
+        const handFee = parseSafeNum(handling_fee);
+        const othFee = parseSafeNum(other_fee);
         const othNote = (other_fee_note || '').trim();
-        const discAmount = parseFloat(discount_amount) || 0;
-        const ptsDiscount = parseFloat(points_discount) || 0;
+        const discAmount = parseSafeNum(discount_amount);
+        const ptsDiscount = parseSafeNum(points_discount);
         const fundSource = cost_fund_source || oldOrder.cost_fund_source || 'TIEN_MAT_QUY';
         const shouldSync = sync_accounting !== undefined ? Boolean(sync_accounting) : true;
 
@@ -304,7 +314,7 @@ router.put('/:id', async (req, res) => {
         const finalDeliveryCompany = delivery_company !== undefined ? delivery_company : (oldOrder.delivery_company || '');
         const finalDriverName = driver_name !== undefined ? driver_name : (oldOrder.driver_name || '');
         const finalLicensePlate = license_plate !== undefined ? license_plate : (oldOrder.license_plate || '');
-        const finalPaidAmount = paid_amount !== undefined ? (parseFloat(paid_amount) || 0) : (parseFloat(oldOrder.paid_amount) || 0);
+        const finalPaidAmount = paid_amount !== undefined ? parseSafeNum(paid_amount) : parseSafeNum(oldOrder.paid_amount);
         const finalStatus = status || oldStatus || 'PENDING';
         const finalPaymentMethod = payment_method || oldOrder.payment_method || 'TIỀN MẶT';
 
@@ -313,15 +323,15 @@ router.put('/:id', async (req, res) => {
 
         if (items && items.length > 0) {
             for(let i of items) {
-                const qty = parseFloat(i.quantity) || 0;
-                const price = parseFloat(i.price) || 0;
+                const qty = parseSafeNum(i.quantity) || 1;
+                const price = parseSafeNum(i.price);
                 const itemTotal = qty * price;
                 newSubtotal += itemTotal;
 
-                let impPrice = parseFloat(i.import_price) || 0;
+                let impPrice = parseSafeNum(i.import_price);
                 if (!impPrice && i.product_id) {
                     const pRes = await client.query("SELECT import_price FROM products WHERE id = $1", [i.product_id]);
-                    if (pRes.rows.length > 0) impPrice = parseFloat(pRes.rows[0].import_price) || 0;
+                    if (pRes.rows.length > 0) impPrice = parseSafeNum(pRes.rows[0].import_price);
                 }
                 newCogs += qty * impPrice;
 
@@ -346,8 +356,8 @@ router.put('/:id', async (req, res) => {
                 }
             }
         } else {
-            newSubtotal = parseFloat(oldOrder.subtotal_amount) || parseFloat(oldOrder.total_amount) || 0;
-            newCogs = parseFloat(oldOrder.cost_of_goods) || 0;
+            newSubtotal = parseSafeNum(oldOrder.subtotal_amount) || parseSafeNum(oldOrder.total_amount) || 0;
+            newCogs = parseSafeNum(oldOrder.cost_of_goods) || 0;
         }
 
         const newTotalAmount = Math.max(0, newSubtotal - discAmount - ptsDiscount);

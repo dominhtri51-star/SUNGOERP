@@ -113,14 +113,12 @@ async function autoInitDatabase() {
             END $$;
 
             -- Đảm bảo Unique Index và Defaults trên bảng products để hỗ trợ Bulk Upsert
-            await pool.query(`
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku ON products (sku);
-                ALTER TABLE products ALTER COLUMN wholesale_price SET DEFAULT 0;
-                ALTER TABLE products ALTER COLUMN wholesale_price DROP NOT NULL;
-                ALTER TABLE products ALTER COLUMN unit SET DEFAULT 'Bộ';
-                ALTER TABLE products ALTER COLUMN category SET DEFAULT 'Khác';
-                ALTER TABLE products ALTER COLUMN retail_price SET DEFAULT 0;
-            `);
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku ON products (sku);
+            ALTER TABLE products ALTER COLUMN wholesale_price SET DEFAULT 0;
+            ALTER TABLE products ALTER COLUMN wholesale_price DROP NOT NULL;
+            ALTER TABLE products ALTER COLUMN unit SET DEFAULT 'Bộ';
+            ALTER TABLE products ALTER COLUMN category SET DEFAULT 'Khác';
+            ALTER TABLE products ALTER COLUMN retail_price SET DEFAULT 0;
 
             -- Đảm bảo các cột mở rộng trong bảng invoices (Phục vụ quy trình e-Invoice 4 bước & Snapshot dòng hàng)
             DO $$ 
