@@ -1,26 +1,99 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
+const googleDriveService = require('../services/googleDrive.service');
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './public/uploads/');
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+// Sử dụng MemoryStorage để nhận buffer trực tiếp và chuyển tới Google Drive / Local Storage Service
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 } // Tối đa 50MB
+});
+
+// Middleware linh hoạt nhận field 'image', 'file', hoặc 'proof_file'
+const uploadFlexible = upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'file', maxCount: 1 },
+    { name: 'proof_file', maxCount: 1 },
+    { name: 'signed_file', maxCount: 1 }
+]);
+
+/**
+ * GET /api/upload/drive-status
+ * Kiểm tra trạng thái kết nối Google Drive API
+ */
+router.get('/drive-status', async (req, res) => {
+    try {
+        const status = await googleDriveService.checkStatus();
+        res.json({ success: true, ...status });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 
-const upload = multer({ storage: storage });
+/**
+ * POST /api/upload
+ * Upload 1 file ảnh hoặc tài liệu
+ */
+router.post('/', uploadFlexible, async (req, res) => {
+    try {
+        const file = req.files?.image?.[0] || req.files?.file?.[0] || req.files?.proof_file?.[0] || req.files?.signed_file?.[0] || req.file;
 
-router.post('/', upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ success: false, error: 'Chưa nhận được file ảnh!' });
+        if (!file) {
+            return res.status(400).json({ success: false, error: 'Chưa nhận được file upload!' });
+        }
+
+        const subfolder = req.body.subfolder || 'general';
+        const result = await googleDriveService.uploadFile({
+            buffer: file.buffer,
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            subfolder: subfolder
+        });
+
+        res.json({
+            success: true,
+            url: result.url,
+            storage: result.storage,
+            fileId: result.fileId || null,
+            webViewLink: result.webViewLink || null,
+            downloadUrl: result.downloadUrl || null,
+            fileName: result.fileName
+        });
+    } catch (error) {
+        console.error('LỖI UPLOAD FILE:', error);
+        res.status(500).json({ success: false, error: error.message });
     }
-    const fileUrl = '/uploads/' + req.file.filename;
-    res.json({ success: true, url: fileUrl });
+});
+
+/**
+ * POST /api/upload/multiple
+ * Upload nhiều file cùng lúc
+ */
+router.post('/multiple', upload.array('files', 10), async (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ success: false, error: 'Chưa nhận được file nào!' });
+        }
+
+        const subfolder = req.body.subfolder || 'general';
+        const uploadPromises = req.files.map(file =>
+            googleDriveService.uploadFile({
+                buffer: file.buffer,
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                subfolder: subfolder
+            })
+        );
+
+        const results = await Promise.all(uploadPromises);
+        res.json({
+            success: true,
+            files: results
+        });
+    } catch (error) {
+        console.error('LỖI UPLOAD MULTIPLE:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 module.exports = router;

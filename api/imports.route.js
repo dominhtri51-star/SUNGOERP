@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const router = express.Router();
+const googleDriveService = require('../services/googleDrive.service');
 
 const dbFile = path.join(__dirname, '../data/imports.json');
 
@@ -90,27 +91,35 @@ router.get('/:id/docs', (req, res) => {
     } catch(e) { res.json({success: false}); }
 });
 
-router.post('/:id/docs', (req, res) => {
+router.post('/:id/docs', async (req, res) => {
     try {
         const id = req.params.id;
         const payload = req.body;
         if (!payload.file_data) return res.status(400).json({ success: false, error: 'Thiếu dữ liệu file' });
 
         let buffer;
-        const parts = payload.file_data.split('base64,');
-        if (parts.length === 2) buffer = Buffer.from(parts[1], 'base64');
-        else buffer = Buffer.from(payload.file_data.split(',')[1] || payload.file_data, 'base64');
+        let mimeType = 'application/octet-stream';
+        const matches = payload.file_data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        if (matches) {
+            mimeType = matches[1];
+            buffer = Buffer.from(matches[2], 'base64');
+        } else {
+            const parts = payload.file_data.split('base64,');
+            buffer = parts.length === 2 ? Buffer.from(parts[1], 'base64') : Buffer.from(payload.file_data.split(',')[1] || payload.file_data, 'base64');
+        }
 
         const ext = (payload.file_name || '').toLowerCase().includes('.pdf') ? '.pdf' : 
                    ((payload.file_name || '').toLowerCase().includes('.xls') ? '.xlsx' : '.jpg');
-        const fileName = 'import_' + (payload.doc_type || 'doc') + '_' + id + '_' + Date.now() + ext;
-        const uploadPath = path.join(__dirname, '../public/uploads/proofs', fileName);
+        const rawFileName = payload.file_name || `import_${payload.doc_type || 'doc'}_${id}_${Date.now()}${ext}`;
 
-        if (!fs.existsSync(path.join(__dirname, '../public/uploads/proofs'))) {
-            fs.mkdirSync(path.join(__dirname, '../public/uploads/proofs'), { recursive: true });
-        }
-        fs.writeFileSync(uploadPath, buffer);
-        const fileUrl = '/uploads/proofs/' + fileName;
+        const uploadResult = await googleDriveService.uploadFile({
+            buffer: buffer,
+            originalname: rawFileName,
+            mimetype: mimeType,
+            subfolder: 'proofs'
+        });
+
+        const fileUrl = uploadResult.url;
 
         let data = readDB();
         const index = data.findIndex(x => Number(x.id) === Number(id));
@@ -127,6 +136,8 @@ router.post('/:id/docs', (req, res) => {
                 name: payload.doc_note || payload.file_name, 
                 url: fileUrl,
                 original_name: payload.file_name,
+                storage: uploadResult.storage,
+                fileId: uploadResult.fileId || null,
                 uploaded_at: new Date().toISOString()
             });
             

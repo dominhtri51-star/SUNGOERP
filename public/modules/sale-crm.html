@@ -23,8 +23,31 @@
                     <input type="search" id="crm-search" name="crm_search_field_no_fill" autocomplete="off" data-lpignore="true" data-form-type="other" oninput="window.modCRM.render()" placeholder="🔍 Tìm tên, SĐT, Nickname..." class="w-full border border-slate-200 rounded-xl py-2 pl-9 pr-3 outline-none focus:border-amber-500 font-bold text-xs bg-slate-50 focus:bg-white transition">
                 </form>
 
+                <!-- NÚT UPLOAD NHANH EXCEL -->
+                <button type="button" onclick="window.modCRM.openUploadModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-black py-2 px-3.5 rounded-xl text-xs transition shadow-md shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer shrink-0" title="Nhập danh sách khách hàng từ file Excel">
+                    <i class="fas fa-file-excel"></i> <span>Upload Nhanh Excel</span>
+                </button>
+
+                <!-- MENU EXCEL (MỞ RỘNG) -->
+                <div class="relative group">
+                    <button type="button" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow flex items-center gap-1.5 shrink-0">
+                        <i class="fas fa-ellipsis-v text-slate-300"></i> Excel <i class="fas fa-chevron-down text-[9px] text-slate-300"></i>
+                    </button>
+                    <div class="absolute right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-40 overflow-hidden divide-y divide-slate-100">
+                        <button type="button" onclick="window.modCRM.downloadExcelTemplate()" class="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-emerald-50 font-bold flex justify-between items-center transition">
+                            <span>1. Tải File Mẫu Chuẩn Excel</span> <i class="fas fa-download text-emerald-500"></i>
+                        </button>
+                        <button type="button" onclick="window.modCRM.openUploadModal()" class="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-blue-50 font-bold flex justify-between items-center transition">
+                            <span>2. Upload Nhanh & Xem Trước</span> <i class="fas fa-upload text-blue-500"></i>
+                        </button>
+                        <button type="button" onclick="window.modCRM.exportToExcel()" class="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-amber-50 font-bold flex justify-between items-center transition">
+                            <span>3. Xuất Danh Sách KH (Backup)</span> <i class="fas fa-file-export text-amber-500"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- NÚT TẠO MỚI -->
-                <button type="button" onclick="window.modCRM.openDrawer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl font-bold shadow-xs text-xs whitespace-nowrap transition flex items-center gap-1.5 shrink-0"><i class="fas fa-plus"></i> <span>Tạo Khách Mới</span></button>
+                <button type="button" onclick="window.modCRM.openDrawer()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl font-bold shadow-xs text-xs whitespace-nowrap transition flex items-center gap-1.5 shrink-0"><i class="fas fa-plus"></i> <span>Tạo Khách Mới</span></button>
             </div>
         </div>
 
@@ -405,6 +428,142 @@
             </div>
             <button type="button" onclick="window.modCRM.confirmDeleteCustomer()" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3.5 rounded-xl mt-2 shadow-md transition uppercase tracking-wide">Xác Nhận Tiêu Hủy</button>
         </form>
+    </div>
+</div>
+
+<!-- MODAL UPLOAD EXCEL SIÊU TỐC & XEM TRƯỚC (CRM PREVIEW MODAL) -->
+<div id="crm-excel-upload-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center z-[80] p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh] transform transition-all">
+        <!-- Header Modal -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-4 text-white flex justify-between items-center shrink-0 border-b border-slate-700">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center text-base shadow-md shadow-emerald-500/20">
+                    <i class="fas fa-file-excel"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-sm text-slate-100 flex items-center gap-2">
+                        Upload & Đồng Bộ Dữ Liệu Khách Hàng Excel
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Bulk Upsert Siêu Tốc</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-300">Tự động nhận diện cột thông minh, cập nhật phân hạng đối tác, hạn mức nợ & thông tin VAT theo SĐT/Mã KH.</p>
+                </div>
+            </div>
+            <button type="button" onclick="window.modCRM.closeUploadModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <div class="p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs">
+            
+            <!-- KHU VỰC KÉO THẢ FILE EXCEL (DROPZONE) -->
+            <div 
+                id="crm-excel-dropzone" 
+                ondragover="window.modCRM.handleDragOverDropzone(event)" 
+                ondragleave="window.modCRM.handleDragLeaveDropzone(event)" 
+                ondrop="window.modCRM.handleDropFile(event)"
+                class="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/60 hover:bg-emerald-50/40 rounded-2xl p-6 text-center transition-all cursor-pointer relative group"
+                onclick="document.getElementById('crm-excel-file-picker').click()"
+            >
+                <input type="file" id="crm-excel-file-picker" accept=".xlsx, .xls, .csv" class="hidden" onchange="window.modCRM.handleFilePicker(this)">
+                
+                <div class="flex flex-col items-center justify-center gap-2">
+                    <div class="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-md group-hover:scale-110 group-hover:border-emerald-400 group-hover:bg-emerald-500 group-hover:text-white text-emerald-600 flex items-center justify-center text-2xl transition duration-200">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                    </div>
+                    <div>
+                        <p class="font-extrabold text-sm text-slate-800 group-hover:text-emerald-700">Kéo & Thả file Excel vào đây, hoặc <span class="text-blue-600 underline">bấm để chọn file</span></p>
+                        <p class="text-[11px] text-slate-500 mt-1">Hỗ trợ định dạng: <b>.xlsx, .xls, .csv</b> (Dung lượng tối đa 50MB, xử lý đến 5.000 dòng)</p>
+                    </div>
+                </div>
+
+                <!-- Thanh công cụ phụ: Tải file mẫu & Hướng dẫn -->
+                <div class="mt-3.5 pt-3 border-t border-slate-200 flex items-center justify-center gap-4 text-xs font-semibold text-slate-600" onclick="event.stopPropagation()">
+                    <button type="button" onclick="window.modCRM.downloadExcelTemplate()" class="text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-200 transition flex items-center gap-1.5 font-bold cursor-pointer">
+                        <i class="fas fa-download"></i> Tải File Mẫu Chuẩn SUNGO (.xlsx)
+                    </button>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-slate-500 text-[11px]"><i class="fas fa-info-circle text-blue-500 mr-1"></i>Hệ thống tự động map tên cột thông minh</span>
+                </div>
+            </div>
+
+            <!-- THANH TRẠNG THÁI & TIẾN TRÌNH XỬ LÝ -->
+            <div id="crm-excel-progress-box" class="hidden bg-slate-900 text-white p-3.5 rounded-xl border border-slate-700 space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                    <span id="crm-excel-progress-text" class="font-bold text-emerald-400 flex items-center gap-2">
+                        <i class="fas fa-spinner fa-spin"></i> Đang đọc file Excel...
+                    </span>
+                    <span id="crm-excel-progress-pct" class="font-mono font-bold text-slate-300">0%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div id="crm-excel-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- KHU VỰC XEM TRƯỚC DỮ LIỆU (PREVIEW AREA) -->
+            <div id="crm-excel-preview-section" class="hidden space-y-3">
+                <!-- Thống kê dữ liệu phân tích được -->
+                <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-slate-700 flex items-center gap-1">
+                            <i class="fas fa-table-list text-blue-600"></i> Tổng số dòng đọc được:
+                            <b id="crm-preview-total-count" class="text-blue-700 font-black ml-1 text-sm">0</b>
+                        </span>
+                        <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+                            <i class="fas fa-check-circle"></i> Hợp lệ: <b id="crm-preview-valid-count" class="font-black">0</b>
+                        </span>
+                        <span id="crm-preview-warn-badge" class="hidden font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                            <i class="fas fa-exclamation-triangle"></i> Bỏ qua (thiếu Tên/SĐT): <b id="crm-preview-invalid-count" class="font-black">0</b>
+                        </span>
+                    </div>
+                    <div class="text-[11px] text-slate-500">
+                        <i class="fas fa-bolt text-amber-500 mr-1"></i>Trùng SĐT hoặc Mã KH sẽ được <b>cập nhật mới nhất</b>
+                    </div>
+                </div>
+
+                <!-- Bảng preview 20 dòng đầu -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                    <div class="p-2 bg-slate-200 text-slate-700 font-bold text-[11px] uppercase flex justify-between items-center">
+                        <span>Bảng Xem Trước Dữ Liệu Phân Tích (Hiển thị tối đa 20 dòng)</span>
+                        <span id="crm-preview-file-name" class="text-slate-500 font-mono font-normal lowercase truncate max-w-xs"></span>
+                    </div>
+                    <div class="max-h-56 overflow-y-auto custom-scrollbar bg-white">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead class="bg-slate-50 text-[10px] uppercase text-slate-600 sticky top-0 border-b border-slate-200 font-bold">
+                                <tr>
+                                    <th class="p-2 w-10 text-center">STT</th>
+                                    <th class="p-2 w-28">Mã KH</th>
+                                    <th class="p-2 min-w-[160px]">Tên Khách Hàng</th>
+                                    <th class="p-2 w-28">Số Điện Thoại</th>
+                                    <th class="p-2 w-24 text-center">Phân Hạng</th>
+                                    <th class="p-2 w-28 text-right">Hạn Mức Nợ</th>
+                                    <th class="p-2 min-w-[140px]">Công Ty / MST VAT</th>
+                                    <th class="p-2 min-w-[140px]">Địa Chỉ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crm-preview-tbody" class="divide-y divide-slate-100 text-slate-700 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
+            <button type="button" onclick="window.modCRM.closeUploadModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition text-xs cursor-pointer">
+                Đóng
+            </button>
+            <div class="flex items-center gap-2">
+                <button 
+                    id="btn-crm-confirm-upload" 
+                    onclick="window.modCRM.confirmBulkUpload()" 
+                    disabled 
+                    class="opacity-50 cursor-not-allowed px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-black shadow-lg shadow-emerald-600/20 transition text-xs flex items-center gap-2"
+                >
+                    <i class="fas fa-cloud-arrow-up"></i> <span id="btn-crm-confirm-upload-text">Tiến Hành Nạp Dữ Liệu</span>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1267,6 +1426,487 @@
                 }
             } catch (e) {
                 alert('❌ Lỗi kết nối máy chủ!');
+            }
+        },
+
+        // ==========================================
+        // EXCEL SMART IMPORT & EXPORT (CRM BACKUP & BULK)
+        // ==========================================
+
+        // ĐẢM BẢO THƯ VIỆN XLSX ĐƯỢC TẢI
+        ensureXLSX: () => {
+            return new Promise((resolve, reject) => {
+                if (typeof XLSX !== 'undefined') return resolve(window.XLSX);
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+                script.onload = () => resolve(window.XLSX);
+                script.onerror = () => reject(new Error('Không thể tải thư viện XLSX từ CDN!'));
+                document.head.appendChild(script);
+            });
+        },
+
+        // CHUYỂN ĐỔI SỐ / TIỀN TỆ VNĐ TỪ EXCEL
+        parseExcelNumber: (val, defaultVal = 0) => {
+            if (val === undefined || val === null || val === '') return defaultVal;
+            if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
+            if (typeof val === 'string') {
+                let s = val.replace(/[^0-9.,-]/g, '').trim();
+                if (!s) return defaultVal;
+                if (s.includes('.') && s.includes(',')) {
+                    if (s.lastIndexOf('.') > s.lastIndexOf(',')) {
+                        s = s.replace(/,/g, '');
+                    } else {
+                        s = s.replace(/\./g, '').replace(',', '.');
+                    }
+                } else if (s.includes(',')) {
+                    const parts = s.split(',');
+                    if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+                        s = s.replace(/,/g, '');
+                    } else {
+                        s = s.replace(',', '.');
+                    }
+                } else if (s.includes('.')) {
+                    const parts = s.split('.');
+                    if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+                        s = s.replace(/\./g, '');
+                    }
+                }
+                const num = parseFloat(s);
+                return isNaN(num) ? defaultVal : num;
+            }
+            return defaultVal;
+        },
+
+        // TỪ ĐIỂN TÊN CỘT THÔNG MINH (SMART AUTO-MAPPER ALIASES CHO KHÁCH HÀNG CRM)
+        COLUMN_ALIASES: {
+            customer_code: ['mã kh', 'mã khách hàng', 'mã khách', 'mã đối tác', 'customer code', 'code', 'cust code', 'mã'],
+            name: ['tên khách hàng', 'tên đối tác', 'tên khách', 'họ và tên', 'họ tên', 'tên', 'khách hàng', 'customer name', 'name', 'full name', 'fullname', 'tên cty/khách hàng', 'tên công ty / khách hàng'],
+            phone: ['số điện thoại', 'sđt', 'điện thoại', 'phone', 'telephone', 'mobile', 'tel', 'số đt', 'liên hệ', 'sdt', 'hotline'],
+            nickname: ['tên gợi nhớ', 'nickname', 'biệt danh', 'nick', 'tên thường gọi', 'tên quen gọi', 'ghi chú tên'],
+            address: ['địa chỉ', 'địa chỉ nhận hàng', 'địa chỉ giao hàng', 'address', 'nơi ở', 'địa bàn', 'tỉnh thành', 'khu vực', 'địa chỉ khách hàng'],
+            tier: ['cấp bậc', 'hạng', 'tier', 'hạng khách', 'phân loại', 'nhóm khách', 'cấp đại lý', 'vip level', 'vip', 'cấp bậc (1-6)', 'hạng (1-6)', 'cấp bậc (tier)'],
+            debt_limit: ['hạn mức nợ', 'hạn mức công nợ', 'hạn mức tín dụng', 'debt limit', 'hạn mức', 'mức nợ tối đa', 'hạn mức nợ (vnđ)', 'hạn mức công nợ (vnđ)'],
+            reward_points: ['điểm thưởng', 'điểm tích lũy', 'điểm', 'reward points', 'points', 'quỹ điểm'],
+            vat_company: ['tên công ty vat', 'tên doanh nghiệp', 'công ty vat', 'pháp nhân', 'tên công ty', 'company name', 'vat company', 'tên công ty (vat)', 'tên pháp nhân (công ty)', 'tên pháp nhân'],
+            vat_taxcode: ['mã số thuế', 'mst', 'mã số thuế vat', 'tax code', 'vat taxcode', 'taxcode', 'mst cty'],
+            vat_address: ['địa chỉ vat', 'địa chỉ hóa đơn', 'địa chỉ cty', 'địa chỉ công ty', 'vat address', 'địa chỉ xuất hóa đơn', 'địa chỉ hóa đơn (vat)'],
+            vat_email: ['email kế toán', 'email vat', 'email hóa đơn', 'email nhận hóa đơn', 'vat email', 'email', 'hộp thư kế toán']
+        },
+
+        resolveRowField: (row, aliases) => {
+            const keys = Object.keys(row);
+            for (const alias of aliases) {
+                const aliasNorm = alias.toLowerCase().replace(/[^a-z0-9à-ỹ]/gi, '');
+                for (const key of keys) {
+                    const keyNorm = key.toLowerCase().replace(/[^a-z0-9à-ỹ]/gi, '');
+                    if (keyNorm === aliasNorm) {
+                        return row[key];
+                    }
+                }
+            }
+            return undefined;
+        },
+
+        // BIẾN LƯU TRỮ TẠM KHÁCH HÀNG ĐÃ PARSE ĐỂ NẠP BULK
+        stagedExcelItems: [],
+
+        openUploadModal: () => {
+            window.modCRM.stagedExcelItems = [];
+            const modal = document.getElementById('crm-excel-upload-modal');
+            const dropzone = document.getElementById('crm-excel-dropzone');
+            const progressBox = document.getElementById('crm-excel-progress-box');
+            const previewSec = document.getElementById('crm-excel-preview-section');
+            const confirmBtn = document.getElementById('btn-crm-confirm-upload');
+            const filePicker = document.getElementById('crm-excel-file-picker');
+
+            if (filePicker) filePicker.value = '';
+            if (progressBox) progressBox.classList.add('hidden');
+            if (previewSec) previewSec.classList.add('hidden');
+            if (dropzone) {
+                dropzone.classList.remove('hidden', 'border-emerald-500', 'bg-emerald-50');
+            }
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.className = 'opacity-50 cursor-not-allowed px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-black shadow-lg transition text-xs flex items-center gap-2';
+                document.getElementById('btn-crm-confirm-upload-text').innerText = 'Tiến Hành Nạp Dữ Liệu';
+            }
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        },
+
+        closeUploadModal: () => {
+            const modal = document.getElementById('crm-excel-upload-modal');
+            if (modal) {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
+            window.modCRM.stagedExcelItems = [];
+        },
+
+        handleDragOverDropzone: (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropzone = document.getElementById('crm-excel-dropzone');
+            if (dropzone) {
+                dropzone.classList.add('border-emerald-500', 'bg-emerald-50/80');
+            }
+        },
+
+        handleDragLeaveDropzone: (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropzone = document.getElementById('crm-excel-dropzone');
+            if (dropzone) {
+                dropzone.classList.remove('border-emerald-500', 'bg-emerald-50/80');
+            }
+        },
+
+        handleDropFile: (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropzone = document.getElementById('crm-excel-dropzone');
+            if (dropzone) dropzone.classList.remove('border-emerald-500', 'bg-emerald-50/80');
+
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                window.modCRM.processExcelFile(e.dataTransfer.files[0]);
+            }
+        },
+
+        handleFilePicker: (input) => {
+            if (input.files && input.files.length > 0) {
+                window.modCRM.processExcelFile(input.files[0]);
+            }
+        },
+
+        // XỬ LÝ FILE EXCEL VỚI SMART MAPPER VÀ HIỂN THỊ PREVIEW KHÁCH HÀNG
+        processExcelFile: async (file) => {
+            if (!file) return;
+
+            const progressBox = document.getElementById('crm-excel-progress-box');
+            const progressText = document.getElementById('crm-excel-progress-text');
+            const progressPct = document.getElementById('crm-excel-progress-pct');
+            const progressBar = document.getElementById('crm-excel-progress-bar');
+            const previewSec = document.getElementById('crm-excel-preview-section');
+            const confirmBtn = document.getElementById('btn-crm-confirm-upload');
+            const confirmText = document.getElementById('btn-crm-confirm-upload-text');
+
+            if (progressBox) progressBox.classList.remove('hidden');
+            if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Đang tải thư viện Excel & đọc tệp...';
+            if (progressBar) progressBar.style.width = '30%';
+            if (progressPct) progressPct.innerText = '30%';
+
+            try {
+                await window.modCRM.ensureXLSX();
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        if (progressBar) progressBar.style.width = '60%';
+                        if (progressPct) progressPct.innerText = '60%';
+                        if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Đang phân tích các dòng dữ liệu khách hàng...';
+
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { defval: '' });
+
+                        if (!rows || rows.length === 0) {
+                            alert('⚠️ File Excel không có dữ liệu ở Sheet đầu tiên!');
+                            if (progressBox) progressBox.classList.add('hidden');
+                            return;
+                        }
+
+                        const parsedItems = [];
+                        let invalidCount = 0;
+
+                        rows.forEach((row, idx) => {
+                            const rawCode = window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.customer_code);
+                            const rawName = window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.name);
+                            const rawPhone = window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.phone);
+                            
+                            const customerCode = String(rawCode || '').trim().toUpperCase();
+                            const name = String(rawName || '').trim();
+                            const phone = String(rawPhone || '').trim();
+
+                            // Nếu thiếu cả Tên, SĐT và Mã KH thì bỏ qua
+                            if (!name && !phone && !customerCode) {
+                                invalidCount++;
+                                return;
+                            }
+
+                            const finalName = name || (phone ? 'Khách ' + phone : 'Khách Mới ' + (idx + 1));
+
+                            // Phân tích phân hạng tier (1-6)
+                            let tierRaw = window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.tier);
+                            let tier = 1;
+                            if (typeof tierRaw === 'number') {
+                                tier = Math.min(6, Math.max(1, Math.floor(tierRaw)));
+                            } else if (typeof tierRaw === 'string') {
+                                const tLower = tierRaw.toLowerCase();
+                                if (tLower.includes('6') || tLower.includes('npp') || tLower.includes('cắt lô')) tier = 6;
+                                else if (tLower.includes('5') || tLower.includes('vip')) tier = 5;
+                                else if (tLower.includes('4') || tLower.includes('sỉ') || tLower.includes('c1')) tier = 4;
+                                else if (tLower.includes('3') || tLower.includes('thợ') || tLower.includes('đại lý')) tier = 3;
+                                else if (tLower.includes('2') || tLower.includes('chốt sale')) tier = 2;
+                                else tier = 1;
+                            }
+
+                            const debtLimit = window.modCRM.parseExcelNumber(window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.debt_limit), 0);
+                            const rewardPoints = window.modCRM.parseExcelNumber(window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.reward_points), 0);
+
+                            const item = {
+                                customer_code: customerCode,
+                                name: finalName,
+                                full_name: finalName,
+                                phone: phone,
+                                nickname: String(window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.nickname) || '').trim(),
+                                address: String(window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.address) || '').trim(),
+                                tier: tier,
+                                vip_level: tier,
+                                customer_tier: tier,
+                                debt_limit: debtLimit,
+                                reward_points: rewardPoints,
+                                vat_company: String(window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.vat_company) || '').trim(),
+                                vat_taxcode: String(window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.vat_taxcode) || '').trim(),
+                                vat_address: String(window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.vat_address) || '').trim(),
+                                vat_email: String(window.modCRM.resolveRowField(row, window.modCRM.COLUMN_ALIASES.vat_email) || '').trim()
+                            };
+
+                            parsedItems.push(item);
+                        });
+
+                        window.modCRM.stagedExcelItems = parsedItems;
+
+                        if (progressBar) progressBar.style.width = '100%';
+                        if (progressPct) progressPct.innerText = '100%';
+                        if (progressText) progressText.innerHTML = `✅ Đã phân tích xong: <b>${parsedItems.length}</b> khách hàng sẵn sàng!`;
+
+                        // Render Thống kê Preview
+                        const totalCountEl = document.getElementById('crm-preview-total-count');
+                        const validCountEl = document.getElementById('crm-preview-valid-count');
+                        const invalidCountEl = document.getElementById('crm-preview-invalid-count');
+                        const warnBadge = document.getElementById('crm-preview-warn-badge');
+                        const fileNameEl = document.getElementById('crm-preview-file-name');
+
+                        if (totalCountEl) totalCountEl.innerText = rows.length;
+                        if (validCountEl) validCountEl.innerText = parsedItems.length;
+                        if (fileNameEl) fileNameEl.innerText = file.name;
+
+                        if (invalidCount > 0 && warnBadge && invalidCountEl) {
+                            invalidCountEl.innerText = invalidCount;
+                            warnBadge.classList.remove('hidden');
+                        } else if (warnBadge) {
+                            warnBadge.classList.add('hidden');
+                        }
+
+                        // Render 20 dòng đầu vào bảng Preview
+                        const previewTbody = document.getElementById('crm-preview-tbody');
+                        if (previewTbody) {
+                            const previewSlice = parsedItems.slice(0, 20);
+                            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+                            const tierNames = { 1: '1. Khách Lẻ', 2: '2. Chốt Sale', 3: '3. Đại Lý', 4: '4. Sỉ C1', 5: '5. Sỉ VIP', 6: '6. NPP' };
+
+                            previewTbody.innerHTML = previewSlice.map((it, idx) => `
+                                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                                    <td class="p-2 text-center text-slate-400 font-bold">${idx + 1}</td>
+                                    <td class="p-2 font-mono font-bold text-blue-700">${it.customer_code || '<span class="text-slate-400 italic">Tự sinh</span>'}</td>
+                                    <td class="p-2 font-bold text-slate-800 truncate max-w-xs" title="${it.name}">
+                                        ${it.name} ${it.nickname ? `<span class="text-amber-600 font-normal">(${it.nickname})</span>` : ''}
+                                    </td>
+                                    <td class="p-2 font-mono font-bold text-slate-600">${it.phone || '<span class="text-slate-400">---</span>'}</td>
+                                    <td class="p-2 text-center"><span class="bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold border border-amber-200">${tierNames[it.tier] || it.tier}</span></td>
+                                    <td class="p-2 text-right font-black ${it.debt_limit > 0 ? 'text-red-600' : 'text-slate-400'}">${it.debt_limit > 0 ? fmt(it.debt_limit) + ' đ' : 'Không khóa'}</td>
+                                    <td class="p-2 text-slate-600 truncate max-w-[150px]" title="${it.vat_company || it.vat_taxcode}">${it.vat_company || it.vat_taxcode || '---'}</td>
+                                    <td class="p-2 text-slate-500 truncate max-w-[150px]" title="${it.address}">${it.address || '---'}</td>
+                                </tr>
+                            `).join('');
+                        }
+
+                        if (previewSec) previewSec.classList.remove('hidden');
+
+                        // Kích hoạt nút xác nhận
+                        if (confirmBtn && parsedItems.length > 0) {
+                            confirmBtn.disabled = false;
+                            confirmBtn.className = 'cursor-pointer px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl font-black shadow-lg shadow-emerald-600/25 transition text-xs flex items-center gap-2';
+                            if (confirmText) confirmText.innerText = `Nạp Ngay ${parsedItems.length} Khách Hàng Vào Hệ Thống`;
+                        }
+
+                    } catch (parseErr) {
+                        alert('Lỗi đọc nội dung file Excel: ' + parseErr.message);
+                        if (progressBox) progressBox.classList.add('hidden');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+
+            } catch (err) {
+                alert('Lỗi khởi tạo trình đọc Excel: ' + err.message);
+                if (progressBox) progressBox.classList.add('hidden');
+            }
+        },
+
+        // GỬI REQUEST BULK UPSERT LÊN SERVER
+        confirmBulkUpload: async () => {
+            const items = window.modCRM.stagedExcelItems;
+            if (!items || items.length === 0) return alert('Không có khách hàng nào để nạp!');
+
+            const confirmBtn = document.getElementById('btn-crm-confirm-upload');
+            const confirmText = document.getElementById('btn-crm-confirm-upload-text');
+            const progressBox = document.getElementById('crm-excel-progress-box');
+            const progressText = document.getElementById('crm-excel-progress-text');
+            const progressBar = document.getElementById('crm-excel-progress-bar');
+            const progressPct = document.getElementById('crm-excel-progress-pct');
+
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.classList.add('opacity-60', 'pointer-events-none');
+            }
+            if (confirmText) confirmText.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang nạp vào CSDL...';
+            if (progressBox) progressBox.classList.remove('hidden');
+            if (progressText) progressText.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i> Đang lưu đồng thời <b>${items.length}</b> khách hàng vào hệ thống...`;
+            if (progressBar) progressBar.style.width = '75%';
+            if (progressPct) progressPct.innerText = '75%';
+
+            try {
+                const startTime = Date.now();
+                const res = await fetch('/api/customers/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items })
+                });
+                const data = await res.json();
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                if (data.success) {
+                    if (progressBar) progressBar.style.width = '100%';
+                    if (progressPct) progressPct.innerText = '100%';
+                    
+                    alert(`⚡ ${data.message} (Xử lý trong ${duration}s)`);
+                    
+                    setTimeout(async () => {
+                        window.modCRM.closeUploadModal();
+                        await window.modCRM.load();
+                    }, 500);
+
+                } else {
+                    alert('Lỗi nạp dữ liệu từ Server: ' + (data.error || 'Không xác định'));
+                    if (confirmBtn) {
+                        confirmBtn.disabled = false;
+                        confirmBtn.classList.remove('opacity-60', 'pointer-events-none');
+                        if (confirmText) confirmText.innerText = 'Thử Lại';
+                    }
+                }
+            } catch (err) {
+                alert('Lỗi kết nối mạng khi nạp khách hàng: ' + err.message);
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.classList.remove('opacity-60', 'pointer-events-none');
+                    if (confirmText) confirmText.innerText = 'Thử Lại';
+                }
+            }
+        },
+
+        // TẢI FILE MẪU EXCEL CHUẨN KHÁCH HÀNG CRM
+        downloadExcelTemplate: async () => {
+            try {
+                await window.modCRM.ensureXLSX();
+                const templateData = [
+                    {
+                        "Mã Khách Hàng": "KH-SOLAR-001",
+                        "Tên Khách Hàng": "Công ty TNHH Năng Lượng Xanh Miền Nam",
+                        "Tên Gợi Nhớ": "Anh Hùng Xanh",
+                        "Số Điện Thoại": "0908123456",
+                        "Địa Chỉ Nhận Hàng": "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM",
+                        "Cấp Bậc (1-6)": 4,
+                        "Hạn Mức Nợ (VNĐ)": 100000000,
+                        "Điểm Thưởng": 50000,
+                        "Tên Công Ty (VAT)": "Công ty TNHH Năng Lượng Xanh Miền Nam",
+                        "Mã Số Thuế": "0312345678",
+                        "Địa Chỉ Hóa Đơn": "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM",
+                        "Email Kế Toán": "ketoan@greenenergy.vn"
+                    },
+                    {
+                        "Mã Khách Hàng": "KH-SOLAR-002",
+                        "Tên Khách Hàng": "Nguyễn Văn Thợ",
+                        "Tên Gợi Nhớ": "Thợ Điện Bình Dương",
+                        "Số Điện Thoại": "0987654321",
+                        "Địa Chỉ Nhận Hàng": "45 Đường 30/4, TP. Thủ Dầu Một, Bình Dương",
+                        "Cấp Bậc (1-6)": 3,
+                        "Hạn Mức Nợ (VNĐ)": 30000000,
+                        "Điểm Thưởng": 10000,
+                        "Tên Công Ty (VAT)": "",
+                        "Mã Số Thuế": "",
+                        "Địa Chỉ Hóa Đơn": "",
+                        "Email Kế Toán": ""
+                    },
+                    {
+                        "Mã Khách Hàng": "KH-SOLAR-003",
+                        "Tên Khách Hàng": "Trần Thị Mai",
+                        "Tên Gợi Nhớ": "Chị Mai Biệt Thự Thảo Điền",
+                        "Số Điện Thoại": "0912334455",
+                        "Địa Chỉ Nhận Hàng": "Số 12 Đường Trúc Đường, Thảo Điền, TP. Thủ Đức",
+                        "Cấp Bậc (1-6)": 1,
+                        "Hạn Mức Nợ (VNĐ)": 0,
+                        "Điểm Thưởng": 0,
+                        "Tên Công Ty (VAT)": "",
+                        "Mã Số Thuế": "",
+                        "Địa Chỉ Hóa Đơn": "",
+                        "Email Kế Toán": ""
+                    }
+                ];
+                const ws = XLSX.utils.json_to_sheet(templateData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "SUNGO_CRM_Template");
+                XLSX.writeFile(wb, "SUNGO_Bieu_Mau_Khach_Hang_Chuan.xlsx");
+            } catch (e) {
+                alert('Lỗi tải file mẫu: ' + e.message);
+            }
+        },
+
+        // XUẤT TOÀN BỘ DANH SÁCH KHÁCH HÀNG ĐỂ BACKUP RA FILE EXCEL
+        exportToExcel: async () => {
+            try {
+                await window.modCRM.ensureXLSX();
+                const list = window.modCRM.list || [];
+                if (list.length === 0) return alert('Chưa có dữ liệu khách hàng nào trong hệ thống để xuất!');
+
+                const tierNames = { 1: '1. Khách Lẻ', 2: '2. Chốt Sale', 3: '3. Đại Lý', 4: '4. Sỉ C1', 5: '5. Sỉ VIP', 6: '6. NPP' };
+
+                const exportRows = list.map(c => {
+                    const tierVal = parseInt(c.customer_tier || c.tier || c.vip_level || 1);
+                    return {
+                        "Mã Khách Hàng": c.customer_code || '',
+                        "Tên Khách Hàng": c.name || c.full_name || '',
+                        "Tên Gợi Nhớ": c.nickname || '',
+                        "Số Điện Thoại": c.phone || '',
+                        "Địa Chỉ Nhận Hàng": c.address || '',
+                        "Cấp Bậc (1-6)": tierVal,
+                        "Tên Phân Hạng": tierNames[tierVal] || 'Khách Lẻ',
+                        "Hạn Mức Nợ (VNĐ)": parseFloat(c.debt_limit) || 0,
+                        "Công Nợ Hiện Tại (VNĐ)": parseFloat(c.current_debt) || 0,
+                        "Tổng Doanh Số (VNĐ)": parseFloat(c.total_sales) || 0,
+                        "Điểm Tích Lũy": parseFloat(c.reward_points) || 0,
+                        "Tên Công Ty (VAT)": c.vat_company || '',
+                        "Mã Số Thuế": c.vat_taxcode || '',
+                        "Địa Chỉ Hóa Đơn": c.vat_address || '',
+                        "Email Kế Toán": c.vat_email || '',
+                        "Số Lượng Quà Tri Ân": parseInt(c.total_gifts_count) || 0,
+                        "Tổng Giá Trị Quà (VNĐ)": parseFloat(c.total_gifts_value) || 0,
+                        "Ngày Tặng Quà Gần Nhất": c.last_gift_date ? new Date(c.last_gift_date).toLocaleDateString('vi-VN') : '',
+                        "Tên Quà Gần Nhất": c.last_gift_name || '',
+                        "Dịp Tặng Quà": c.last_gift_occasion || ''
+                    };
+                });
+
+                const ws = XLSX.utils.json_to_sheet(exportRows);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "SUNGO_Customers_Backup");
+                const today = new Date().toISOString().slice(0, 10);
+                XLSX.writeFile(wb, `SUNGO_Backup_Danh_Sach_Khach_Hang_${today}.xlsx`);
+            } catch (e) {
+                alert('Lỗi xuất file backup Excel: ' + e.message);
             }
         }
     };

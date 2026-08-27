@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
+const fs = require('fs');
+const path = require('path');
+const googleDriveService = require('../services/googleDrive.service');
 
 const parseSafeNum = (val) => {
     if (val === null || val === undefined || val === '') return 0;
@@ -839,17 +842,23 @@ router.put('/:id/wms-out', async (req, res) => {
         // Xử lý Upload Ảnh Giao Hàng
         let proofUrls = [];
         if (delivery_proofs && Array.isArray(delivery_proofs)) {
-            const uploadDir = path.join(__dirname, '../public/uploads/proofs');
-            if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-            
             for (let i = 0; i < delivery_proofs.length; i++) {
                 const proof = delivery_proofs[i];
-                if (proof.startsWith('data:image')) {
-                    const base64Data = proof.replace(/^data:image\/\w+;base64,/, '');
-                    const fileName = 'proof_' + id + '_' + Date.now() + '_' + i + '.jpg';
-                    fs.writeFileSync(path.join(uploadDir, fileName), base64Data, 'base64');
-                    proofUrls.push('/uploads/proofs/' + fileName);
-                } else {
+                if (proof && proof.startsWith('data:image')) {
+                    const matches = proof.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+                    const mime = matches ? matches[1] : 'image/jpeg';
+                    const base64Str = matches ? matches[2] : proof.replace(/^data:image\/\w+;base64,/, '');
+                    const buffer = Buffer.from(base64Str, 'base64');
+                    const fileName = `proof_${id}_${Date.now()}_${i}.jpg`;
+                    
+                    const uploadResult = await googleDriveService.uploadFile({
+                        buffer: buffer,
+                        originalname: fileName,
+                        mimetype: mime,
+                        subfolder: 'proofs'
+                    });
+                    proofUrls.push(uploadResult.url);
+                } else if (proof) {
                     proofUrls.push(proof); // Ảnh cũ đã có URL
                 }
             }
@@ -954,8 +963,8 @@ router.delete('/:id/force', async (req, res) => {
         res.json({ success: false, error: e.message });
     }
 });
-// API UPLOAD CHỨNG TỪ (Đã cấu hình tự động tạo nơi lưu file)
-router.post('/:id/docs', (req, res) => {
+// API UPLOAD CHỨNG TỪ (Tự động đồng bộ Google Drive / Local)
+router.post('/:id/docs', async (req, res) => {
     try {
         const id = req.params.id; // Lấy ID đơn hàng
         const payload = req.body;
@@ -964,38 +973,45 @@ router.post('/:id/docs', (req, res) => {
             return res.status(400).json({success: false, error: 'Thiếu file data'});
         }
 
-        const fs = require('fs');
-        const path = require('path');
-        
-        // 1. CHỈ ĐỊNH NƠI LƯU FILE (Tự động tạo thư mục nếu chưa có)
-        const uploadDir = path.join(__dirname, '../public/uploads/proofs');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-
-        // 2. Giải mã file Base64
+        // 1. Giải mã file Base64
         const matches = payload.file_data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
         if (!matches) return res.status(400).json({success: false, error: 'File sai định dạng'});
 
+        const mimeType = matches[1];
         const buffer = Buffer.from(matches[2], 'base64');
-        const ext = payload.file_name.toLowerCase().includes('pdf') ? '.pdf' : '.jpg';
-        const fileName = 'proof_' + id + '_' + Date.now() + ext;
-        const uploadPath = path.join(uploadDir, fileName);
+        const ext = payload.file_name?.toLowerCase().includes('pdf') ? '.pdf' : '.jpg';
+        const rawFileName = payload.file_name || `proof_${id}_${Date.now()}${ext}`;
 
-        // 3. Ghi file thẳng vào ổ cứng
-        fs.writeFileSync(uploadPath, buffer);
-        const fileUrl = '/uploads/proofs/' + fileName;
+        // 2. Upload file qua Google Drive Service
+        const uploadResult = await googleDriveService.uploadFile({
+            buffer: buffer,
+            originalname: rawFileName,
+            mimetype: mimeType,
+            subfolder: 'proofs'
+        });
 
-        // 4. Lưu đường dẫn vào Database
+        const fileUrl = uploadResult.url;
+
+        // 3. Lưu đường dẫn vào Database
         const dbFile = path.join(__dirname, '../data/orders.json');
         if (fs.existsSync(dbFile)) {
             let data = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
             const idx = data.findIndex(x => x.id == id);
             if (idx !== -1) {
                 if(!data[idx].docs) data[idx].docs = [];
-                data[idx].docs.push({ id: Date.now(), doc_type: payload.file_name, file_url: fileUrl });
+                data[idx].docs.push({
+                    id: Date.now(),
+                    doc_type: payload.file_name,
+                    file_url: fileUrl,
+                    storage: uploadResult.storage,
+                    fileId: uploadResult.fileId || null
+                });
                 fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
-                return res.json({success: true, file_url: fileUrl});
+                return res.json({
+                    success: true,
+                    file_url: fileUrl,
+                    storage: uploadResult.storage
+                });
             }
         }
         res.status(404).json({success: false, error: 'Không tìm thấy đơn hàng trong Database'});

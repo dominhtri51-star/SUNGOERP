@@ -4,24 +4,15 @@ const pool = require('../config/database');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const googleDriveService = require('../services/googleDrive.service');
 
 // ===============================================
 // CẤU HÌNH UPLOAD ẢNH / BIÊN BẢN KIỂM KHO
 // ===============================================
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const dir = path.join(__dirname, '../public/uploads/audits');
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-        cb(null, dir);
-    },
-    filename: function (req, file, cb) {
-        const ext = path.extname(file.originalname) || '.jpg';
-        cb(null, 'audit_proof_' + Date.now() + '_' + Math.floor(Math.random() * 1000) + ext);
-    }
+const uploadAudit = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 }
 });
-const uploadAudit = multer({ storage: storage });
 
 // ===============================================
 // 1. GET /api/inventory - LẤY DANH SÁCH TỒN KHO THỰC TẾ & METRICS
@@ -127,17 +118,30 @@ router.get('/audits/:id', async (req, res) => {
 // ===============================================
 // 4. POST /api/inventory/upload-proof - UPLOAD ẢNH/CHỨNG TỪ BIÊN BẢN KIỂM KHO
 // ===============================================
-router.post('/upload-proof', uploadAudit.array('proof_files', 10), (req, res) => {
+router.post('/upload-proof', uploadAudit.array('proof_files', 10), async (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ success: false, error: 'Không có file nào được tải lên' });
         }
-        const fileUrls = req.files.map(f => ({
-            name: f.originalname,
-            url: '/uploads/audits/' + f.filename,
-            size: f.size,
-            uploaded_at: new Date().toISOString()
-        }));
+        
+        const uploadPromises = req.files.map(async f => {
+            const uploadResult = await googleDriveService.uploadFile({
+                buffer: f.buffer,
+                originalname: f.originalname,
+                mimetype: f.mimetype,
+                subfolder: 'audits'
+            });
+            return {
+                name: f.originalname,
+                url: uploadResult.url,
+                storage: uploadResult.storage,
+                fileId: uploadResult.fileId || null,
+                size: f.size,
+                uploaded_at: new Date().toISOString()
+            };
+        });
+
+        const fileUrls = await Promise.all(uploadPromises);
         res.json({ success: true, files: fileUrls });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });

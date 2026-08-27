@@ -1,29 +1,20 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer'); // Thêm multer để xử lý Upload file từ WMS
+const multer = require('multer');
 const pool = require('../config/database');
 const router = express.Router();
+const googleDriveService = require('../services/googleDrive.service');
 
 const dbFile = path.join(__dirname, '../data/purchases.json');
 
 // ===============================================
 // CẤU HÌNH UPLOAD FILE (LƯU CHỨNG TỪ KHO)
 // ===============================================
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const dir = path.join(__dirname, '../public/uploads/proofs');
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-        cb(null, dir);
-    },
-    filename: function (req, file, cb) {
-        const ext = path.extname(file.originalname) || '.jpg';
-        cb(null, 'wms_receipt_po_' + req.params.id + '_' + Date.now() + ext);
-    }
+const uploadWms = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 }
 });
-const uploadWms = multer({ storage: storage });
 
 function readDB() {
     try { return JSON.parse(fs.readFileSync(dbFile, 'utf8')); } catch(e) { return []; }
@@ -140,14 +131,22 @@ router.put('/:id/receive', uploadWms.array('receipt_documents', 5), async (req, 
             if (!po.docs || typeof po.docs !== 'object' || Array.isArray(po.docs)) po.docs = {};
             if (!po.docs.wms_receipt) po.docs.wms_receipt = [];
             
-            req.files.forEach(file => {
+            for (const file of req.files) {
+                const uploadResult = await googleDriveService.uploadFile({
+                    buffer: file.buffer,
+                    originalname: file.originalname,
+                    mimetype: file.mimetype,
+                    subfolder: 'proofs'
+                });
                 po.docs.wms_receipt.push({
                     name: 'Bằng chứng giao hàng',
-                    url: '/uploads/proofs/' + file.filename,
+                    url: uploadResult.url,
                     original_name: file.originalname,
+                    storage: uploadResult.storage,
+                    fileId: uploadResult.fileId || null,
                     uploaded_at: new Date().toISOString()
                 });
-            });
+            }
         }
 
         // Lưu dữ liệu

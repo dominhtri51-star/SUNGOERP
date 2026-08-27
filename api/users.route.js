@@ -15,6 +15,7 @@ const DEFAULT_USERS = [
 ];
 
 // Đảm bảo bảng users luôn tồn tại
+// Đảm bảo bảng users luôn tồn tại
 const initUsers = async () => {
     try {
         const dataDir = path.join(__dirname, '../data');
@@ -44,6 +45,7 @@ const initUsers = async () => {
                 END $$;
             `);
 
+            // Chỉ chèn dữ liệu mẫu nếu chưa có tài khoản, KHÔNG ghi đè mật khẩu đã sửa
             await pool.query(`
                 INSERT INTO users (emp_id, username, password, full_name, role, custom_modules) VALUES
                 ('EMP001', 'admin', '123456', 'Quản Trị Viên', 'ADMIN', '[]'::jsonb),
@@ -51,7 +53,7 @@ const initUsers = async () => {
                 ('TC001', 'thauthicong', '123456', 'Đội Thi Công Solar Fast', 'NHA_THAU_THI_CONG', '[]'::jsonb),
                 ('GS001', 'thaugiamsat', '123456', 'Đơn Vị Giám Sát EPC Pro', 'NHA_THAU_GIAM_SAT', '[]'::jsonb),
                 ('NCC001', 'nhacungcap', '123456', 'Nhà Cung Cấp Pin & Inverter SunPower', 'NHA_CUNG_CAP', '[]'::jsonb)
-                ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password, role = EXCLUDED.role, full_name = EXCLUDED.full_name;
+                ON CONFLICT (username) DO NOTHING;
             `);
         }
     } catch(e) {
@@ -84,7 +86,6 @@ function formatUserRow(row) {
 // Lấy danh sách tài khoản
 router.get('/', async (req, res) => {
     try {
-        await initUsers();
         if (pool && typeof pool.query === 'function') {
             const { rows } = await pool.query("SELECT id, emp_id, username, full_name, role, custom_modules FROM users ORDER BY id DESC");
             if (rows && rows.length > 0) return res.json({ success: true, data: rows.map(formatUserRow) });
@@ -104,7 +105,6 @@ router.get('/', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        await initUsers();
         
         // 1. Thử qua DB
         try {
@@ -156,7 +156,7 @@ router.put('/:id/permissions', async (req, res) => {
         if (pool && typeof pool.query === 'function') {
             try {
                 await pool.query(
-                    "UPDATE users SET custom_modules = $1 WHERE id = $2 OR user_id = $2",
+                    "UPDATE users SET custom_modules = $1 WHERE id = $2",
                     [JSON.stringify(customMods), id]
                 );
                 updatedInDb = true;
@@ -201,10 +201,12 @@ router.post('/', async (req, res) => {
 
             // Tự động liên kết với bảng employees nếu có mã nhân viên trùng khớp
             if (finalEmpId) {
-                await pool.query(
-                    "UPDATE employees SET user_id = $1 WHERE UPPER(emp_code) = $2",
-                    [newUser.id, finalEmpId]
-                );
+                try {
+                    await pool.query(
+                        "UPDATE employees SET user_id = $1 WHERE UPPER(emp_code) = $2",
+                        [newUser.id, finalEmpId]
+                    );
+                } catch(empErr) {}
             }
         }
 
@@ -245,12 +247,12 @@ router.put('/:id', async (req, res) => {
                 // Có nhập mật khẩu mới -> Cập nhật cả mật khẩu
                 if (custom_modules !== undefined) {
                     await pool.query(
-                        "UPDATE users SET emp_id = $1, username = $2, full_name = $3, role = $4, password = $5, custom_modules = $6 WHERE id = $7 OR user_id = $7",
+                        "UPDATE users SET emp_id = $1, username = $2, full_name = $3, role = $4, password = $5, custom_modules = $6 WHERE id = $7",
                         [finalEmpId, username, full_name, role, password, JSON.stringify(custom_modules), id]
                     );
                 } else {
                     await pool.query(
-                        "UPDATE users SET emp_id = $1, username = $2, full_name = $3, role = $4, password = $5 WHERE id = $6 OR user_id = $6",
+                        "UPDATE users SET emp_id = $1, username = $2, full_name = $3, role = $4, password = $5 WHERE id = $6",
                         [finalEmpId, username, full_name, role, password, id]
                     );
                 }
@@ -258,12 +260,12 @@ router.put('/:id', async (req, res) => {
                 // Để trống mật khẩu -> Chỉ cập nhật thông tin
                 if (custom_modules !== undefined) {
                     await pool.query(
-                        "UPDATE users SET emp_id = $1, username = $2, full_name = $3, role = $4, custom_modules = $5 WHERE id = $6 OR user_id = $6",
+                        "UPDATE users SET emp_id = $1, username = $2, full_name = $3, role = $4, custom_modules = $5 WHERE id = $6",
                         [finalEmpId, username, full_name, role, JSON.stringify(custom_modules), id]
                     );
                 } else {
                     await pool.query(
-                        "UPDATE users SET emp_id = $1, username = $2, full_name = $3, role = $4 WHERE id = $5 OR user_id = $5",
+                        "UPDATE users SET emp_id = $1, username = $2, full_name = $3, role = $4 WHERE id = $5",
                         [finalEmpId, username, full_name, role, id]
                     );
                 }
@@ -271,10 +273,12 @@ router.put('/:id', async (req, res) => {
 
             // Đồng bộ liên kết với bảng employees
             if (finalEmpId) {
-                await pool.query(
-                    "UPDATE employees SET user_id = $1 WHERE UPPER(emp_code) = $2",
-                    [id, finalEmpId]
-                );
+                try {
+                    await pool.query(
+                        "UPDATE employees SET user_id = $1 WHERE UPPER(emp_code) = $2",
+                        [id, finalEmpId]
+                    );
+                } catch(empErr) {}
             }
         }
 
@@ -305,13 +309,17 @@ router.put('/:id', async (req, res) => {
 // Xóa tài khoản
 router.delete('/:id', async (req, res) => {
     try {
+        const { id } = req.params;
         if (pool && typeof pool.query === 'function') {
-            await pool.query("DELETE FROM users WHERE id = $1", [req.params.id]);
+            try {
+                await pool.query("UPDATE employees SET user_id = NULL WHERE user_id = $1", [id]);
+            } catch(empErr) {}
+            await pool.query("DELETE FROM users WHERE id = $1", [id]);
         }
         try {
             if (fs.existsSync(usersFile)) {
                 let fileUsers = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-                fileUsers = fileUsers.filter(u => String(u.id) !== String(req.params.id));
+                fileUsers = fileUsers.filter(u => String(u.id) !== String(id));
                 fs.writeFileSync(usersFile, JSON.stringify(fileUsers, null, 2), 'utf8');
             }
         } catch(fErr) {}

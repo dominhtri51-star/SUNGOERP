@@ -141,22 +141,24 @@ window.modUsers = {
 
                     // Action buttons
                     let actionButtons = '';
-                    if (u.role === 'SUPER_ADMIN') {
+                    const isSelf = (currentUser && (currentUser.id === u.id || currentUser.empId === u.emp_id || currentUser.name === u.full_name));
+
+                    if (u.role === 'SUPER_ADMIN' && myRole !== 'SUPER_ADMIN') {
                         actionButtons = `<span class="text-[10px] text-red-400 font-bold uppercase"><i class="fas fa-lock mr-1"></i> Bất khả xâm phạm</span>`;
                     } else if (u.role === 'ADMIN' && myRole !== 'SUPER_ADMIN' && myRole !== 'ADMIN') {
                         actionButtons = `<span class="text-xs text-slate-400"><i class="fas fa-shield-alt mr-1"></i>Bảo vệ</span>`;
                     } else {
                         actionButtons = `
-                            <button onclick="window.modUsers.goToSettingsPermissions(${u.id})" class="text-emerald-600 hover:text-emerald-800 font-bold text-xs mr-3 transition" title="Cấp quyền riêng cho nhân viên này"><i class="fas fa-key"></i> Phân Quyền</button>
-                            <button onclick="window.modUsers.editUser(${u.id})" class="text-blue-500 hover:text-blue-700 font-bold text-xs mr-3 transition"><i class="fas fa-edit"></i> Sửa</button>
-                            <button onclick="window.modUsers.deleteUser(${u.id}, '${u.username}')" class="text-red-400 hover:text-red-600 font-bold text-xs transition"><i class="fas fa-trash"></i> Xóa</button>
+                            <button onclick="window.modUsers.goToSettingsPermissions(${u.id})" class="text-emerald-600 hover:text-emerald-800 font-bold text-xs mr-3 transition cursor-pointer" title="Cấp quyền riêng cho nhân viên này"><i class="fas fa-key"></i> Phân Quyền</button>
+                            <button onclick="window.modUsers.editUser(${u.id})" class="text-blue-500 hover:text-blue-700 font-bold text-xs mr-3 transition cursor-pointer" title="Sửa thông tin hoặc đổi mật khẩu"><i class="fas fa-edit"></i> Đổi Pass / Sửa</button>
+                            <button onclick="window.modUsers.deleteUser(${u.id}, '${u.username}')" class="text-red-400 hover:text-red-600 font-bold text-xs transition cursor-pointer" title="Xóa tài khoản"><i class="fas fa-trash"></i> Xóa</button>
                         `;
                     }
 
                     return `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-50">
                         <td class="p-4 py-3 font-black text-amber-600 text-[13px] bg-amber-50/30">${u.emp_id || 'N/A'}</td>
-                        <td class="p-4 py-3 font-bold text-blue-600 text-[13px]">${u.username}</td>
+                        <td class="p-4 py-3 font-bold text-blue-600 text-[13px]">${u.username} ${isSelf ? '<span class="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-normal ml-1">Đang đăng nhập</span>' : ''}</td>
                         <td class="p-4 py-3 font-bold text-slate-700">${u.full_name}</td>
                         <td class="p-4 py-3">${rBadge}</td>
                         <td class="p-4 py-3">${customBadge}</td>
@@ -194,7 +196,7 @@ window.modUsers = {
         document.getElementById('usr-username').value = '';
         document.getElementById('usr-password').value = '';
         document.getElementById('usr-fullname').value = '';
-        document.getElementById('usr-password').placeholder = '******';
+        document.getElementById('usr-password').placeholder = 'Nhập mật khẩu (bắt buộc khi tạo mới)';
         
         const m = document.getElementById('user-modal');
         m.classList.remove('hidden'); m.classList.add('flex');
@@ -211,7 +213,7 @@ window.modUsers = {
         document.getElementById('usr-role').value = user.role;
         
         document.getElementById('usr-password').value = '';
-        document.getElementById('usr-password').placeholder = 'Nhập mật khẩu mới (hoặc để trống)';
+        document.getElementById('usr-password').placeholder = 'Nhập mật khẩu mới (để trống nếu giữ nguyên)';
         
         const m = document.getElementById('user-modal');
         m.classList.remove('hidden'); m.classList.add('flex');
@@ -249,34 +251,48 @@ window.modUsers = {
             });
             const data = await res.json();
             if(data.success) {
-                alert(id ? "✅ Cập nhật tài khoản thành công!" : "✅ Tạo tài khoản thành công!");
+                alert(id ? "✅ Cập nhật tài khoản & mật khẩu thành công!" : "✅ Tạo tài khoản mới thành công!");
                 window.modUsers.closeModal();
                 window.modUsers.load();
-            } else alert("❌ " + data.error);
-        } catch(e) { alert("Lỗi mạng! API backend chưa hoạt động chuẩn."); }
+                
+                // Nếu đang sửa chính tài khoản đang đăng nhập, cập nhật lại localStorage
+                const curUserStr = localStorage.getItem('sungo_user');
+                if (curUserStr && id) {
+                    const curUser = JSON.parse(curUserStr);
+                    if (String(curUser.id) === String(id)) {
+                        curUser.name = payload.full_name;
+                        curUser.empId = payload.emp_id;
+                        curUser.role = payload.role;
+                        localStorage.setItem('sungo_user', JSON.stringify(curUser));
+                    }
+                }
+            } else alert("❌ " + (data.error || 'Lỗi lưu tài khoản!'));
+        } catch(e) { alert("❌ Lỗi kết nối máy chủ khi lưu tài khoản!"); }
     },
 
     deleteUser: async (id, name) => {
-        const confirmText = `Xóa vĩnh viễn tài khoản ${name}?\nHệ thống KPI liên quan tới Mã NV này sẽ trở thành Vô Danh.\n\nVui lòng nhập mã bảo mật để xác nhận xóa:`;
-        const pwd = prompt(confirmText);
-        
-        if (pwd === null) return; 
-        
-        if (pwd !== 'sungo123') {
-            alert("❌ Mã bảo mật không chính xác. Hủy thao tác xóa!");
-            return;
+        const curUserStr = localStorage.getItem('sungo_user');
+        if (curUserStr) {
+            const curUser = JSON.parse(curUserStr);
+            if (String(curUser.id) === String(id) || curUser.username === name) {
+                return alert("❌ Bạn không thể tự xóa tài khoản đang đăng nhập hiện tại!");
+            }
         }
+
+        const confirmMsg = `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${name}" khỏi hệ thống không?`;
+        if (!confirm(confirmMsg)) return;
 
         try {
             const res = await fetch('/api/users/' + id, { method: 'DELETE' });
-            if(res.ok) {
+            const data = await res.json();
+            if(res.ok && data.success) {
                 alert("✅ Đã xóa tài khoản thành công!");
                 window.modUsers.load();
             } else {
-                alert("❌ Lỗi khi xóa từ server.");
+                alert("❌ Lỗi khi xóa từ server: " + (data.error || 'Không thể xóa'));
             }
         } catch(e) { 
-            alert("Lỗi kết nối khi xóa tài khoản!"); 
+            alert("❌ Lỗi kết nối khi xóa tài khoản!"); 
         }
     }
 };

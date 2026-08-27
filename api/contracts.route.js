@@ -5,17 +5,12 @@ const multer = require('multer');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const googleDriveService = require('../services/googleDrive.service');
 
-const uploadDir = path.join(__dirname, '../public/uploads/contracts');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) { cb(null, uploadDir); },
-    filename: function (req, file, cb) { cb(null, 'unc-' + Date.now() + '-' + file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')); }
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 }
 });
-const upload = multer({ storage: storage });
 
 // Helper: Chuyển đổi số thành chữ tiếng Việt chuẩn cho tiền tệ
 function docSoThanhChu(so) {
@@ -340,7 +335,15 @@ router.post('/public/sign-digital-stamp/:token', async (req, res) => {
 router.post('/public/upload-signed-file/:token', upload.single('signed_file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ success: false, error: 'Vui lòng chọn file hợp đồng đã ký (PDF hoặc Ảnh scan)!' });
-        const fileUrl = `/uploads/contracts/${req.file.filename}`;
+        
+        const uploadResult = await googleDriveService.uploadFile({
+            buffer: req.file.buffer,
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            subfolder: 'contracts'
+        });
+
+        const fileUrl = uploadResult.url;
         const fileName = req.file.originalname;
 
         const updateRes = await pool.query(`
@@ -359,6 +362,7 @@ router.post('/public/upload-signed-file/:token', upload.single('signed_file'), a
             success: true,
             message: `✅ Đã tải file hợp đồng đã ký (${fileName}) lên hệ thống thành công!`,
             file_url: fileUrl,
+            storage: uploadResult.storage,
             data: updateRes.rows[0]
         });
     } catch (err) {
@@ -912,7 +916,16 @@ router.post('/:id/pay', upload.single('proof_file'), async (req, res) => {
         const paymentMethod = req.body.payment_method || 'Chuyển Khoản';
         const note = req.body.note || '';
         const vatInvoiceNo = req.body.vat_invoice_no || '';
-        const proofUrl = req.file ? `/uploads/contracts/${req.file.filename}` : null;
+        let proofUrl = null;
+        if (req.file) {
+            const uploadRes = await googleDriveService.uploadFile({
+                buffer: req.file.buffer,
+                originalname: req.file.originalname,
+                mimetype: req.file.mimetype,
+                subfolder: 'contracts'
+            });
+            proofUrl = uploadRes.url;
+        }
 
         if (amount <= 0) throw new Error('Số tiền thanh toán phải lớn hơn 0');
 
@@ -996,7 +1009,15 @@ router.post('/:id/pay', upload.single('proof_file'), async (req, res) => {
 router.post('/:id/upload-signed-file', upload.single('signed_file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ success: false, error: 'Vui lòng chọn file hợp đồng đã ký (PDF hoặc Ảnh scan)!' });
-        const fileUrl = `/uploads/contracts/${req.file.filename}`;
+        
+        const uploadResult = await googleDriveService.uploadFile({
+            buffer: req.file.buffer,
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            subfolder: 'contracts'
+        });
+
+        const fileUrl = uploadResult.url;
         const fileName = req.file.originalname;
 
         const updateRes = await pool.query(`
@@ -1015,6 +1036,7 @@ router.post('/:id/upload-signed-file', upload.single('signed_file'), async (req,
             success: true,
             message: `✅ Đã tải và lưu trữ file hợp đồng đã ký (${fileName}) thành công!`,
             file_url: fileUrl,
+            storage: uploadResult.storage,
             data: updateRes.rows[0]
         });
     } catch (err) {
