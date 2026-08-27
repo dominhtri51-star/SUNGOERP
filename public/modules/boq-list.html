@@ -11,75 +11,89 @@
 <div class="h-full flex flex-col bg-slate-50 relative overflow-hidden text-sm" id="boq-wrapper">
     
     <!-- MÀN HÌNH 1: BẢNG DANH SÁCH BOQ -->
-    <div id="boq-list-container" class="flex-1 flex flex-col p-6 w-full h-full overflow-y-auto">
-        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
-            <div class="flex items-center gap-4 shrink-0">
-                <div>
-                    <h2 class="text-[22px] font-black text-slate-900 flex items-center gap-2">
-                        <i class="fas fa-file-invoice-dollar text-blue-600"></i> Quản Lý Danh Sách BOQ Báo Giá
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Theo dõi lịch sử tính toán, trạng thái duyệt và chuyển đổi báo giá thành Đơn Hàng.</p>
+    <div id="boq-list-container" class="flex-1 flex flex-col p-2.5 sm:p-4 md:p-6 w-full h-full overflow-y-auto">
+        <!-- HEADER VÀ BỘ ĐIỀU KHIỂN (GÓI GỌN 1 HÀNG DUY NHẤT) -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2.5 mb-2.5 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs shrink-0">
+            <div class="flex items-center justify-between w-full lg:w-auto gap-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm sm:text-base font-black text-slate-800 tracking-tight leading-tight">Quản Lý Báo Giá BOQ</h2>
+                        <p class="text-[10px] text-slate-400 font-medium hidden sm:block">Theo dõi lịch sử tính toán, trạng thái duyệt và chuyển đổi thành Đơn Hàng</p>
+                    </div>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                <button onclick="loadModule('sale-boq', 'Báo Giá Dự Án (BOQ)')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-xs shadow-md transition flex items-center gap-2">
-                    <i class="fas fa-plus"></i> Tạo BOQ Mới
+            
+            <!-- THANH ĐIỀU KHIỂN GÓI GỌN 1 HÀNG DUY NHẤT TRÊN MOBILE -->
+            <div class="flex flex-nowrap items-center gap-1.5 w-full lg:w-auto overflow-x-auto no-scrollbar py-0.5">
+                <button type="button" onclick="loadModule('sale-boq', 'Báo Giá Dự Án (BOQ)')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-2.5 py-1.5 rounded-xl font-black text-xs shadow-2xs transition flex items-center gap-1 shrink-0 cursor-pointer">
+                    <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tạo BOQ Mới</span><span class="sm:hidden">Tạo BOQ</span>
                 </button>
-                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
-                    <span class="text-slate-500 text-[11px] font-bold uppercase"><i class="fas fa-calendar-alt mr-1"></i>Từ:</span>
-                    <input type="date" id="boq-date-from" onchange="window.modBoq.applyFilters()" class="text-xs font-bold outline-none text-blue-700 bg-transparent cursor-pointer">
+                
+                <!-- Cặp chọn ngày Từ - Đến gộp chung 1 capsule gọn gàng -->
+                <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 shrink-0 text-xs shadow-2xs">
+                    <input type="date" id="boq-date-from" onchange="window.modBoq.applyFilters()" title="Từ ngày" class="text-[11px] font-bold outline-none text-blue-700 bg-transparent cursor-pointer w-24 sm:w-28">
+                    <span class="text-slate-400 font-bold text-[10px]">-</span>
+                    <input type="date" id="boq-date-to" onchange="window.modBoq.applyFilters()" title="Đến ngày" class="text-[11px] font-bold outline-none text-blue-700 bg-transparent cursor-pointer w-24 sm:w-28">
                 </div>
-                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
-                    <span class="text-slate-500 text-[11px] font-bold uppercase"><i class="fas fa-calendar-check mr-1"></i>Đến:</span>
-                    <input type="date" id="boq-date-to" onchange="window.modBoq.applyFilters()" class="text-xs font-bold outline-none text-blue-700 bg-transparent cursor-pointer">
-                </div>
-                <button onclick="window.modBoq.loadData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold shadow-sm transition">
-                    <i class="fas fa-sync-alt mr-1"></i> Tải Lại
+
+                <button type="button" onclick="window.modBoq.loadData()" class="bg-slate-900 hover:bg-black active:scale-95 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs transition flex items-center gap-1 shrink-0 cursor-pointer" title="Tải lại danh sách">
+                    <i class="fas fa-sync-alt" id="boq-refresh-icon"></i> <span class="hidden sm:inline">Làm Mới</span>
                 </button>
             </div>
         </div>
 
-        <!-- BỘ LỌC TRẠNG THÁI -->
-        <div class="flex flex-wrap items-center gap-2 mb-4" id="boq-filters">
-            <span class="text-slate-400 text-[11px] font-bold uppercase mr-1"><i class="fas fa-filter mr-1"></i>Lọc trạng thái:</span>
-            <button onclick="window.modBoq.setStatusFilter('ALL')" id="b-st-ALL" class="px-3.5 py-1.5 rounded-full text-xs font-black uppercase transition border border-blue-500 bg-blue-50 text-blue-700 shadow-sm">Tất cả (<span id="cnt-ALL">0</span>)</button>
-            <button onclick="window.modBoq.setStatusFilter('PENDING_APPROVAL')" id="b-st-PENDING_APPROVAL" class="px-3.5 py-1.5 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm">Chờ Duyệt (<span id="cnt-PENDING">0</span>)</button>
-            <button onclick="window.modBoq.setStatusFilter('APPROVED')" id="b-st-APPROVED" class="px-3.5 py-1.5 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm">Đã Duyệt (<span id="cnt-APPROVED">0</span>)</button>
-            <button onclick="window.modBoq.setStatusFilter('QUOTING')" id="b-st-QUOTING" class="px-3.5 py-1.5 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm">Đang Báo Giá (<span id="cnt-QUOTING">0</span>)</button>
-            <button onclick="window.modBoq.setStatusFilter('WON')" id="b-st-WON" class="px-3.5 py-1.5 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm">Khách Đã Chốt (<span id="cnt-WON">0</span>)</button>
-            <button onclick="window.modBoq.setStatusFilter('REJECTED')" id="b-st-REJECTED" class="px-3.5 py-1.5 rounded-full text-xs font-black uppercase transition border border-slate-200 text-slate-500 hover:bg-slate-50 shadow-sm">Từ Chối (<span id="cnt-REJECTED">0</span>)</button>
+        <!-- BỘ LỌC TRẠNG THÁI (CUỘN NGANG 1 HÀNG DUY NHẤT) -->
+        <div class="flex flex-nowrap items-center gap-1.5 mb-2.5 overflow-x-auto no-scrollbar py-0.5 shrink-0" id="boq-filters">
+            <span class="hidden sm:inline text-slate-400 text-[10px] font-bold uppercase mr-1 shrink-0"><i class="fas fa-filter mr-1"></i>Lọc:</span>
+            <button type="button" onclick="window.modBoq.setStatusFilter('ALL')" id="b-st-ALL" class="px-2.5 py-1 rounded-xl text-[11px] font-black uppercase transition border border-blue-600 bg-blue-600 text-white shadow-2xs shrink-0 cursor-pointer">Tất cả (<span id="cnt-ALL">0</span>)</button>
+            <button type="button" onclick="window.modBoq.setStatusFilter('PENDING_APPROVAL')" id="b-st-PENDING_APPROVAL" class="px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase transition border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 shadow-2xs shrink-0 cursor-pointer">Chờ Duyệt (<span id="cnt-PENDING">0</span>)</button>
+            <button type="button" onclick="window.modBoq.setStatusFilter('APPROVED')" id="b-st-APPROVED" class="px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase transition border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 shadow-2xs shrink-0 cursor-pointer">Đã Duyệt (<span id="cnt-APPROVED">0</span>)</button>
+            <button type="button" onclick="window.modBoq.setStatusFilter('QUOTING')" id="b-st-QUOTING" class="px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase transition border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 shadow-2xs shrink-0 cursor-pointer">Đang Báo Giá (<span id="cnt-QUOTING">0</span>)</button>
+            <button type="button" onclick="window.modBoq.setStatusFilter('WON')" id="b-st-WON" class="px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase transition border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 shadow-2xs shrink-0 cursor-pointer">Khách Đã Chốt (<span id="cnt-WON">0</span>)</button>
+            <button type="button" onclick="window.modBoq.setStatusFilter('REJECTED')" id="b-st-REJECTED" class="px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase transition border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 shadow-2xs shrink-0 cursor-pointer">Từ Chối (<span id="cnt-REJECTED">0</span>)</button>
         </div>
         
-        <!-- BẢNG DANH SÁCH -->
-        <div class="border border-slate-200 rounded-2xl shadow-sm flex flex-col bg-white overflow-hidden flex-1">
-            <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+        <!-- BẢNG DANH SÁCH & SMART MOBILE CARDS -->
+        <div class="border border-slate-200 rounded-2xl shadow-2xs flex flex-col bg-white overflow-hidden flex-1 min-h-0">
+            <!-- Thanh tìm kiếm -->
+            <div class="p-2.5 sm:p-3 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shrink-0">
                 <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <h3 class="font-black text-slate-800 text-sm">Lịch Sử Toàn Bộ Báo Giá BOQ</h3>
+                    <div class="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
+                    <h3 class="font-black text-slate-800 text-xs sm:text-sm">Lịch Sử Toàn Bộ Báo Giá BOQ</h3>
                 </div>
-                <div class="relative w-72">
-                    <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                    <input type="text" id="boq-search" placeholder="Tìm Mã BOQ, Tên Dự Án, KH, SĐT, Sale..." oninput="window.modBoq.applyFilters()" class="w-full border border-slate-200 rounded-xl py-1.5 pl-8 pr-4 text-xs font-medium outline-none focus:border-blue-500 bg-white transition">
+                <div class="relative w-full sm:w-72">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs pointer-events-none"></i>
+                    <input type="text" id="boq-search" placeholder="🔍 Tìm Mã BOQ, Tên Dự Án, KH, SĐT, Sale..." oninput="window.modBoq.applyFilters()" class="w-full border border-slate-200 rounded-xl py-1.5 pl-8 pr-4 text-xs font-medium outline-none focus:border-blue-500 bg-white shadow-2xs transition">
                 </div>
             </div>
-            <div class="overflow-x-auto flex-1">
+
+            <!-- 1. DESKTOP DATA TABLE (hidden on mobile md:block) -->
+            <div class="hidden md:block overflow-x-auto flex-1">
                 <table class="w-full text-left whitespace-nowrap text-xs">
                     <thead class="bg-slate-100 text-slate-600 uppercase font-black tracking-wider border-b border-slate-200">
                         <tr>
-                            <th class="p-4 py-3 pl-5">Mã BOQ / Ngày</th>
-                            <th class="p-4 py-3">Thông Tin Dự Án & Khách Hàng</th>
-                            <th class="p-4 py-3">Sale Phụ Trách</th>
-                            <th class="p-4 py-3 text-center">Hệ Thống & Công Suất</th>
-                            <th class="p-4 py-3 text-right">Tổng Tiền Báo Giá</th>
-                            <th class="p-4 py-3 text-center">Biên Lợi Nhuận</th>
-                            <th class="p-4 py-3 text-center">Trạng Thái</th>
-                            <th class="p-4 py-3 pr-5 text-center">Thao Tác</th>
+                            <th class="p-3 pl-4">Mã BOQ / Ngày</th>
+                            <th class="p-3">Thông Tin Dự Án & Khách Hàng</th>
+                            <th class="p-3">Sale Phụ Trách</th>
+                            <th class="p-3 text-center">Hệ Thống & Công Suất</th>
+                            <th class="p-3 text-right">Tổng Tiền Báo Giá</th>
+                            <th class="p-3 text-center">Biên Lợi Nhuận</th>
+                            <th class="p-3 text-center">Trạng Thái</th>
+                            <th class="p-3 pr-4 text-center">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="boq-tbody" class="divide-y divide-slate-100 text-slate-700">
-                        <tr><td colspan="8" class="p-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Đang tải dữ liệu BOQ...</p></td></tr>
+                        <tr><td colspan="8" class="p-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-blue-500"></i><p class="font-bold text-xs mt-1">Đang tải dữ liệu BOQ...</p></td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- 2. MOBILE SMART CARDS (md:hidden) -->
+            <div id="boq-mobile-cards" class="md:hidden flex-1 overflow-y-auto p-2.5 space-y-2.5 bg-slate-50/70">
+                <div class="p-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-blue-500"></i><p class="font-bold text-xs">Đang tải...</p></div>
             </div>
         </div>
     </div>
@@ -187,7 +201,12 @@ window.modBoq = {
 
     loadData: async () => {
         const tbody = document.getElementById('boq-tbody');
-        tbody.innerHTML = '<tr><td colspan="8" class="p-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Đang tải danh sách BOQ...</p></td></tr>';
+        const mobileCards = document.getElementById('boq-mobile-cards');
+        const icon = document.getElementById('boq-refresh-icon');
+        if (icon) icon.classList.add('fa-spin');
+
+        if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-blue-500"></i><p class="font-bold text-xs mt-1">Đang tải danh sách BOQ...</p></td></tr>';
+        if (mobileCards) mobileCards.innerHTML = '<div class="p-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-blue-500"></i><p class="font-bold text-xs">Đang tải danh sách BOQ...</p></div>';
         
         try {
             const res = await fetch('/api/quotations?t=' + Date.now());
@@ -197,10 +216,14 @@ window.modBoq = {
                 window.modBoq.updateCounts();
                 window.modBoq.applyFilters();
             } else {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500 font-bold">Lỗi: ${data.error}</td></tr>`;
+                if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-red-500 font-bold">Lỗi: ${data.error}</td></tr>`;
+                if (mobileCards) mobileCards.innerHTML = `<div class="p-8 text-center text-red-500 font-bold">Lỗi: ${data.error}</div>`;
             }
         } catch(e) {
-            tbody.innerHTML = '<tr><td colspan="8" class="p-10 text-center text-red-500 font-bold">Lỗi kết nối cơ sở dữ liệu BOQ</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-10 text-center text-red-500 font-bold">Lỗi kết nối cơ sở dữ liệu BOQ</td></tr>';
+            if (mobileCards) mobileCards.innerHTML = '<div class="p-8 text-center text-red-500 font-bold">Lỗi kết nối máy chủ BOQ</div>';
+        } finally {
+            if (icon) icon.classList.remove('fa-spin');
         }
     },
 
@@ -261,70 +284,153 @@ window.modBoq = {
 
     renderTable: (dataList) => {
         const tbody = document.getElementById('boq-tbody');
+        const mobileCards = document.getElementById('boq-mobile-cards');
+
         if(!dataList || dataList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="p-10 text-center text-slate-400 font-bold">Không có Báo Giá BOQ nào phù hợp điều kiện lọc.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-10 text-center text-slate-400 font-bold">Không có Báo Giá BOQ nào phù hợp điều kiện lọc.</td></tr>';
+            if (mobileCards) mobileCards.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold text-xs bg-white rounded-2xl border border-slate-200">Không có Báo Giá BOQ nào phù hợp.</div>';
             return;
         }
 
-        tbody.innerHTML = dataList.map(o => {
-            const d = o.created_at ? new Date(o.created_at) : new Date();
-            const dateStr = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
-            
+        // Helper render badges
+        const getBadges = (o) => {
             let stBadge = '';
-            if (o.status === 'PENDING_APPROVAL') stBadge = '<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase animate-pulse">Chờ Duyệt</span>';
-            else if (o.status === 'APPROVED') stBadge = '<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] font-black uppercase">Đã Duyệt</span>';
-            else if (o.status === 'QUOTING') stBadge = '<span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase">Đang Báo Giá</span>';
-            else if (o.status === 'WON') stBadge = '<span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase">Khách Chốt</span>';
-            else if (o.status === 'REJECTED') stBadge = '<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-[10px] font-black uppercase">Từ Chối</span>';
-            else stBadge = '<span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase">Bản Nháp</span>';
+            if (o.status === 'PENDING_APPROVAL') stBadge = '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">Chờ Duyệt</span>';
+            else if (o.status === 'APPROVED') stBadge = '<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-black uppercase">Đã Duyệt</span>';
+            else if (o.status === 'QUOTING') stBadge = '<span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase">Đang Báo Giá</span>';
+            else if (o.status === 'WON') stBadge = '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase">Khách Chốt</span>';
+            else if (o.status === 'REJECTED') stBadge = '<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-black uppercase">Từ Chối</span>';
+            else stBadge = '<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase">Bản Nháp</span>';
 
             let sysBadge = '';
-            if (o.system_type === 'HYBRID') sysBadge = '<span class="px-2 py-0.5 rounded border border-amber-500 text-amber-600 text-[10px] font-black"><i class="fas fa-bolt mr-1"></i>HYBRID</span>';
-            else if (o.system_type === 'PUMP') sysBadge = '<span class="px-2 py-0.5 rounded border border-blue-500 text-blue-600 text-[10px] font-black"><i class="fas fa-water mr-1"></i>BƠM NƯỚC</span>';
-            else if (o.system_type === 'ONGRID') sysBadge = '<span class="px-2 py-0.5 rounded border border-emerald-500 text-emerald-600 text-[10px] font-black"><i class="fas fa-sun mr-1"></i>BÁM TẢI</span>';
-            else sysBadge = '<span class="px-2 py-0.5 rounded border border-purple-500 text-purple-600 text-[10px] font-black"><i class="fas fa-battery-full mr-1"></i>ĐỘC LẬP</span>';
+            if (o.system_type === 'HYBRID') sysBadge = '<span class="px-1.5 py-0.5 rounded border border-amber-400 bg-amber-50 text-amber-700 text-[10px] font-black"><i class="fas fa-bolt mr-0.5"></i>HYBRID</span>';
+            else if (o.system_type === 'PUMP') sysBadge = '<span class="px-1.5 py-0.5 rounded border border-blue-400 bg-blue-50 text-blue-700 text-[10px] font-black"><i class="fas fa-water mr-0.5"></i>BƠM NƯỚC</span>';
+            else if (o.system_type === 'ONGRID') sysBadge = '<span class="px-1.5 py-0.5 rounded border border-emerald-400 bg-emerald-50 text-emerald-700 text-[10px] font-black"><i class="fas fa-sun mr-0.5"></i>BÁM TẢI</span>';
+            else sysBadge = '<span class="px-1.5 py-0.5 rounded border border-purple-400 bg-purple-50 text-purple-700 text-[10px] font-black"><i class="fas fa-battery-full mr-0.5"></i>ĐỘC LẬP</span>';
 
-            const margin = parseFloat(o.profit_margin || 0);
-            let marginClass = margin < 15 ? 'text-red-500 font-black' : (margin < 20 ? 'text-amber-600 font-bold' : 'text-emerald-600 font-black');
+            return { stBadge, sysBadge };
+        };
 
-            const qId = o.quotation_id || o.id;
+        // 1. RENDER DESKTOP DATA TABLE
+        if (tbody) {
+            tbody.innerHTML = dataList.map(o => {
+                const d = o.created_at ? new Date(o.created_at) : new Date();
+                const dateStr = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+                const { stBadge, sysBadge } = getBadges(o);
+                const margin = parseFloat(o.profit_margin || 0);
+                const marginClass = margin < 15 ? 'text-red-500 font-black' : (margin < 20 ? 'text-amber-600 font-bold' : 'text-emerald-600 font-black');
+                const qId = o.quotation_id || o.id;
 
-            return `
-            <tr class="hover:bg-blue-50/40 transition border-b border-slate-100">
-                <td class="p-4 py-3 pl-5 font-bold">
-                    <span class="text-blue-600 text-[13px] font-mono cursor-pointer hover:underline" onclick="window.modBoq.openDetail(${qId})">${o.quotation_code}</span>
-                    <br><span class="text-[10px] text-slate-400 font-normal">${dateStr}</span>
-                </td>
-                <td class="p-4 py-3">
-                    <p class="font-bold text-slate-800 text-[13px]">${o.project_name || 'Dự án điện mặt trời'}</p>
-                    <p class="text-[11px] text-slate-500 mt-0.5"><i class="fas fa-user text-slate-400 mr-1"></i>${o.customer_name} | <i class="fas fa-phone ml-1 mr-1 text-slate-400"></i>${o.phone || '---'}</p>
-                </td>
-                <td class="p-4 py-3 font-semibold text-slate-700">
-                    <i class="fas fa-user-tie text-slate-400 mr-1"></i>${o.sale_name || 'Sale'}
-                </td>
-                <td class="p-4 py-3 text-center">
-                    ${sysBadge}
-                    ${o.system_kwp ? `<div class="text-[11px] font-bold text-slate-600 mt-1">${o.system_kwp} kWp</div>` : ''}
-                </td>
-                <td class="p-4 py-3 text-right font-black text-slate-900 text-sm">${window.modBoq.fmt(o.total_amount)} đ</td>
-                <td class="p-4 py-3 text-center ${marginClass}">${margin}%</td>
-                <td class="p-4 py-3 text-center">${stBadge}</td>
-                <td class="p-4 py-3 pr-5 text-center">
-                    <div class="flex items-center justify-center gap-1.5">
-                        <button onclick="window.modBoq.openDetail(${qId})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-bold text-xs transition" title="Xem Chi Tiết BOQ">
-                            <i class="fas fa-eye mr-1"></i> Xem
-                        </button>
-                        ${o.status === 'WON' ? `
-                            <span class="px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-lg border border-emerald-200">Đã lên đơn</span>
-                        ` : `
-                            <button onclick="window.modBoq.quickConvertToOrder(${qId})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg font-bold text-xs transition shadow-sm" title="Tạo Đơn Hàng">
-                                <i class="fas fa-cart-arrow-down"></i>
+                return `
+                <tr class="hover:bg-blue-50/40 transition border-b border-slate-100">
+                    <td class="p-3 pl-4 font-bold">
+                        <span class="text-blue-600 text-[13px] font-mono font-black cursor-pointer hover:underline" onclick="window.modBoq.openDetail(${qId})">${o.quotation_code}</span>
+                        <br><span class="text-[10px] text-slate-400 font-normal">${dateStr}</span>
+                    </td>
+                    <td class="p-3">
+                        <p class="font-bold text-slate-800 text-[13px]">${o.project_name || 'Dự án điện mặt trời'}</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5"><i class="fas fa-user text-slate-400 mr-1"></i>${o.customer_name} | <i class="fas fa-phone ml-1 mr-1 text-slate-400"></i>${o.phone || '---'}</p>
+                    </td>
+                    <td class="p-3 font-semibold text-slate-700">
+                        <i class="fas fa-user-tie text-slate-400 mr-1"></i>${o.sale_name || 'Sale'}
+                    </td>
+                    <td class="p-3 text-center">
+                        ${sysBadge}
+                        ${o.system_kwp ? `<div class="text-[11px] font-bold text-slate-600 mt-1">${o.system_kwp} kWp</div>` : ''}
+                    </td>
+                    <td class="p-3 text-right font-black text-slate-900 text-sm">${window.modBoq.fmt(o.total_amount)} đ</td>
+                    <td class="p-3 text-center ${marginClass}">${margin}%</td>
+                    <td class="p-3 text-center">${stBadge}</td>
+                    <td class="p-3 pr-4 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="window.modBoq.openDetail(${qId})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer" title="Xem Chi Tiết BOQ">
+                                <i class="fas fa-eye mr-1"></i> Xem
                             </button>
-                        `}
+                            <button onclick="window.modBoq.editQuotation(${qId})" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-2.5 py-1.5 rounded-lg font-black text-xs transition cursor-pointer shadow-2xs" title="Sửa Báo Giá Dự Án">
+                                <i class="fas fa-edit"></i> Sửa
+                            </button>
+                            ${o.status === 'WON' ? `
+                                <span class="px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-lg border border-emerald-200">Đã lên đơn</span>
+                            ` : `
+                                <button onclick="window.modBoq.quickConvertToOrder(${qId})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg font-bold text-xs transition shadow-sm cursor-pointer" title="Tạo Đơn Hàng">
+                                    <i class="fas fa-cart-arrow-down"></i>
+                                </button>
+                            `}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // 2. RENDER MOBILE SMART CARDS
+        if (mobileCards) {
+            mobileCards.innerHTML = dataList.map(o => {
+                const d = o.created_at ? new Date(o.created_at) : new Date();
+                const dateStr = d.toLocaleDateString('vi-VN');
+                const { stBadge, sysBadge } = getBadges(o);
+                const margin = parseFloat(o.profit_margin || 0);
+                const marginClass = margin < 15 ? 'text-red-500 font-black' : (margin < 20 ? 'text-amber-600 font-bold' : 'text-emerald-600 font-black');
+                const qId = o.quotation_id || o.id;
+
+                return `
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                    <!-- Dòng 1: Mã BOQ + Hệ thống + Trạng thái -->
+                    <div class="flex items-center justify-between gap-1.5">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="text-blue-600 font-mono font-black text-xs cursor-pointer hover:underline" onclick="window.modBoq.openDetail(${qId})">${o.quotation_code}</span>
+                            ${sysBadge}
+                        </div>
+                        <div class="shrink-0">
+                            ${stBadge}
+                        </div>
                     </div>
-                </td>
-            </tr>`;
-        }).join('');
+
+                    <!-- Dòng 2: Tên dự án & Khách hàng -->
+                    <div class="space-y-0.5 cursor-pointer" onclick="window.modBoq.openDetail(${qId})">
+                        <h4 class="font-black text-slate-900 text-xs leading-snug line-clamp-2">${o.project_name || 'Dự án điện mặt trời'}</h4>
+                        <div class="text-[11px] text-slate-500 flex items-center justify-between">
+                            <span><i class="fas fa-user text-slate-400 mr-1"></i><b>${o.customer_name}</b></span>
+                            <span class="text-slate-400 font-medium">${dateStr}</span>
+                        </div>
+                    </div>
+
+                    <!-- Dòng 3: Thông số kỹ thuật & Sale -->
+                    <div class="flex items-center justify-between text-[10px] bg-slate-50 p-2 rounded-xl border border-slate-200/70">
+                        <div>
+                            <span class="text-slate-400">Sale:</span> <b class="text-slate-700">${o.sale_name || 'Sale'}</b>
+                            ${o.system_kwp ? `<span class="ml-2 text-slate-400">CS:</span> <b class="text-blue-600">${o.system_kwp} kWp</b>` : ''}
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Lãi:</span> <b class="${marginClass}">${margin}%</b>
+                        </div>
+                    </div>
+
+                    <!-- Dòng 4: Tổng tiền & Bộ nút thao tác -->
+                    <div class="flex items-center justify-between pt-1.5 border-t border-slate-100">
+                        <div>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase">Tổng Báo Giá</p>
+                            <strong class="text-xs sm:text-sm font-black text-amber-700">${window.modBoq.fmt(o.total_amount)} đ</strong>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="window.modBoq.openDetail(${qId})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black text-[11px] px-2.5 py-1 rounded-lg border border-blue-200 transition flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-eye text-[10px]"></i> Xem
+                            </button>
+                            <button type="button" onclick="window.modBoq.editQuotation(${qId})" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] px-2.5 py-1 rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-edit text-[10px]"></i> Sửa
+                            </button>
+                            ${o.status === 'WON' ? `
+                                <span class="px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-lg border border-emerald-200">Đã chốt</span>
+                            ` : `
+                                <button type="button" onclick="window.modBoq.quickConvertToOrder(${qId})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] px-2.5 py-1 rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fas fa-cart-arrow-down text-[10px]"></i> Lên Đơn
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
     },
 
     openDetail: async (id) => {
@@ -437,6 +543,40 @@ window.modBoq = {
             }
         } catch(e) {
             alert("❌ Không kết nối được máy chủ để tạo đơn hàng!");
+        }
+    },
+
+    editQuotation: async (qId) => {
+        let q = null;
+        if (qId) {
+            q = window.modBoq.allData.find(x => (x.quotation_id === qId || x.id === qId));
+        }
+        if (!q && window.modBoq.selectedQuotation) {
+            q = window.modBoq.selectedQuotation;
+        }
+        if (!q) return;
+
+        const id = q.quotation_id || q.id;
+        const sysType = (q.system_type || '').toUpperCase();
+        const code = (q.quotation_code || '').toUpperCase();
+
+        let targetModule = 'sale-boq-hybrid';
+        let moduleTitle = 'Báo Giá Dự Án (Hybrid VIP)';
+
+        if (sysType === 'ONGRID' || code.startsWith('ONG')) {
+            targetModule = 'sale-boq-ongrid';
+            moduleTitle = 'Báo Giá Dự Án Bám Tải (On-Grid)';
+        } else if (sysType === 'OFFGRID' || code.startsWith('OFF')) {
+            targetModule = 'sale-boq-offgrid';
+            moduleTitle = 'Báo Giá Dự Án Độc Lập (Off-Grid)';
+        } else if (sysType === 'PUMP' || code.startsWith('PMP') || code.startsWith('BOM')) {
+            targetModule = 'sale-boq-pump';
+            moduleTitle = 'Báo Giá Bơm Nước Năng Lượng Mặt Trời';
+        }
+
+        sessionStorage.setItem('pending_edit_quotation_id', id);
+        if (typeof loadModule === 'function') {
+            await loadModule(targetModule, moduleTitle);
         }
     },
 

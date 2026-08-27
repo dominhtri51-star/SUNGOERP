@@ -105,9 +105,9 @@ const DEFAULT_ROLE_PERMISSIONS = {
     'ADMIN': ['*'],
     'SUPER_ADMIN': ['*'],
     'GIAM_DOC': ['*'],
-    'SALE_ADMIN': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'boq-list', 'admin-approve', 'inventory-dash', 'bidding-marketplace'],
-    'SALE': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'boq-list'],
-    'SALES': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'boq-list'],
+    'SALE_ADMIN': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'sale-boq-hybrid', 'sale-boq-ongrid', 'sale-boq-offgrid', 'sale-boq-pump', 'boq-list', 'admin-approve', 'inventory-dash', 'bidding-marketplace'],
+    'SALE': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'sale-boq-hybrid', 'sale-boq-ongrid', 'sale-boq-offgrid', 'sale-boq-pump', 'boq-list'],
+    'SALES': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'sale-boq-hybrid', 'sale-boq-ongrid', 'sale-boq-offgrid', 'sale-boq-pump', 'boq-list'],
     'THU_MUA': ['suppliers', 'import-orders', 'purchases', 'procurement-inventory'],
     'NHAN_VIEN_KHO': ['inventory-dash', 'warehouse-in', 'warehouse-out', 'return-orders'],
     'WAREHOUSE': ['inventory-dash', 'warehouse-in', 'warehouse-out', 'return-orders'],
@@ -301,18 +301,75 @@ function getMenuForRole(role, customModules = [], dynamicRolePerms = null) {
 }
 window.getMenuForRole = getMenuForRole;
 
+// Bản đồ liên kết phân hệ con và phân hệ cha (Sub-module to Parent mapping)
+const SUB_MODULE_MAP = {
+    // 1. Phân hệ Báo Giá BOQ & các loại báo giá chi tiết
+    'sale-boq-hybrid': 'sale-boq',
+    'sale-boq-ongrid': 'sale-boq',
+    'sale-boq-offgrid': 'sale-boq',
+    'sale-boq-pump': 'sale-boq',
+    
+    // 2. Bán hàng & Đơn hàng
+    'pos': 'sale-orders',
+    'admin-orders': 'sale-orders',
+    'orders': 'order-history',
+    'order-management': 'order-history',
+    'order-history-backup': 'order-history',
+    'sale-history': 'order-history',
+    
+    // 3. CRM & Khách hàng
+    'admin-crm': 'sale-crm',
+    'customer-crm.module': 'sale-crm',
+    'customer-profile.module': 'sale-crm',
+    
+    // 4. Quản lý dự án, nhà thầu & thi công
+    'contractor-active': 'project-contractors',
+    'contractor-bidding': 'project-contractors',
+    'contractor-eval': 'project-contractors',
+    'contractor-handover': 'project-contractors',
+    'contractor-payout': 'project-contractors',
+    'contractor-progress': 'project-contractors',
+    'construction-management': 'project-contractors',
+    
+    // 5. Cổng nghiệm thu nhà thầu
+    'supervisor-evaluation': 'contractor-portal',
+    
+    // 6. Thu mua & Nhà cung cấp
+    'supplier-bom-requests': 'suppliers',
+    'supplier-products': 'suppliers',
+    'supplier-quotes': 'suppliers'
+};
+window.SUB_MODULE_MAP = SUB_MODULE_MAP;
+
 function isModuleAllowed(moduleId, user) {
     if (!user) return false;
-    const role = user.role || 'GUEST';
+    const role = (user.role || 'GUEST').toUpperCase();
     if (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'GIAM_DOC') return true;
 
-    const customMods = user.custom_modules || [];
-    if (Array.isArray(customMods) && customMods.includes(moduleId)) return true;
+    const parentModuleId = SUB_MODULE_MAP[moduleId] || null;
 
+    // 1. Kiểm tra quyền riêng được cấp cho nhân viên (custom_modules)
+    const customMods = user.custom_modules || [];
+    if (Array.isArray(customMods)) {
+        if (customMods.includes(moduleId) || (parentModuleId && customMods.includes(parentModuleId))) {
+            return true;
+        }
+    }
+
+    // 2. Kiểm tra quyền theo Vai trò (Role permissions)
     const permsMap = window.__rolePermissions || {};
-    const rolePerms = permsMap[role] || DEFAULT_ROLE_PERMISSIONS[role] || [];
+    let rolePerms = permsMap[role] || permsMap[user.role];
+    if (!rolePerms || !Array.isArray(rolePerms)) {
+        rolePerms = DEFAULT_ROLE_PERMISSIONS[role] || DEFAULT_ROLE_PERMISSIONS[user.role] || [];
+    }
+
     if (rolePerms.includes('*') || rolePerms.includes('all')) return true;
-    return rolePerms.includes(moduleId);
+
+    // Được phép nếu Role có quyền trực tiếp vào moduleId hoặc có quyền vào phân hệ cha
+    if (rolePerms.includes(moduleId)) return true;
+    if (parentModuleId && rolePerms.includes(parentModuleId)) return true;
+
+    return false;
 }
 window.isModuleAllowed = isModuleAllowed;
 
@@ -452,7 +509,7 @@ window.reloadAppMenu = function() {
     userGroups.forEach(group => {
         menuHtml += `<div class="px-5 py-2 mt-3 border-t border-slate-800/80 pt-3 first:border-0 first:mt-0 first:pt-1"><p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">${group.group}</p></div>`;
         group.items.forEach(m => {
-            menuHtml += `<a id="menu-btn-${m.id}" onclick="loadModule('${m.id}', '${m.title}')" class="menu-item flex items-center px-5 py-2.5 text-xs md:text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-amber-400 cursor-pointer transition rounded-xl mx-2 my-0.5"><i class="fas ${m.icon} w-5 text-center"></i><span class="ml-3 truncate">${m.title}</span></a>`;
+            menuHtml += `<a href="javascript:void(0)" id="menu-btn-${m.id}" onclick="loadModule('${m.id}', '${m.title}'); return false;" class="menu-item flex items-center px-5 py-2.5 text-xs md:text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-amber-400 cursor-pointer transition rounded-xl mx-2 my-0.5"><i class="fas ${m.icon} w-5 text-center"></i><span class="ml-3 truncate">${m.title}</span></a>`;
         });
     });
     
@@ -520,7 +577,7 @@ async function initApp() {
         group.items.forEach(m => {
             if (!firstMenu) firstMenu = m;
             if (hashModule && m.id === hashModule) targetMenu = m;
-            menuHtml += `<a id="menu-btn-${m.id}" onclick="loadModule('${m.id}', '${m.title}')" class="menu-item flex items-center px-5 py-2.5 text-xs md:text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-amber-400 cursor-pointer transition rounded-xl mx-2 my-0.5"><i class="fas ${m.icon} w-5 text-center"></i><span class="ml-3 truncate">${m.title}</span></a>`;
+            menuHtml += `<a href="javascript:void(0)" id="menu-btn-${m.id}" onclick="loadModule('${m.id}', '${m.title}'); return false;" class="menu-item flex items-center px-5 py-2.5 text-xs md:text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-amber-400 cursor-pointer transition rounded-xl mx-2 my-0.5"><i class="fas ${m.icon} w-5 text-center"></i><span class="ml-3 truncate">${m.title}</span></a>`;
         });
     });
     

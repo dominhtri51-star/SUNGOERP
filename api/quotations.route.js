@@ -16,6 +16,17 @@ function readDB() {
     }
 }
 
+function findQuotationIndex(data, rawId) {
+    if (!rawId) return -1;
+    const strId = String(rawId).trim();
+    const numId = parseInt(strId, 10);
+    return data.findIndex(x => (
+        (!isNaN(numId) && (x.quotation_id === numId || x.id === numId || parseInt(x.quotation_id) === numId || parseInt(x.id) === numId)) ||
+        (x.quotation_code && x.quotation_code.toLowerCase() === strId.toLowerCase()) ||
+        (x.code && x.code.toLowerCase() === strId.toLowerCase())
+    ));
+}
+
 function writeDB(data) {
     fs.writeFileSync(dbFile, JSON.stringify(data, null, 2), 'utf8');
 }
@@ -134,12 +145,41 @@ router.post('/', (req, res) => {
     }
 });
 
-// [GET] Lấy chi tiết Báo giá theo ID
+// [GET] Lấy chi tiết bóc tách vật tư & nhân công
+router.get('/:id/details', (req, res) => {
+    try {
+        const data = readDB();
+        const idx = findQuotationIndex(data, req.params.id);
+        const q = idx !== -1 ? data[idx] : null;
+        
+        if (q) {
+            const enriched = enrichQuotation(q);
+            const allDetails = [
+                ...(enriched.items || []).map(i => ({ ...i, is_labor: false })),
+                ...(enriched.labor_items || []).map(l => ({ 
+                    ...l, 
+                    is_labor: true, 
+                    product_name: l.name || l.item_name || 'Hạng mục thi công', 
+                    quantity: parseFloat(l.qty || l.quantity || 1), 
+                    price: parseFloat(l.price || l.unit_price || 0),
+                    total: parseFloat(l.qty || l.quantity || 1) * parseFloat(l.price || l.unit_price || 0)
+                }))
+            ];
+            res.json({ success: true, data: allDetails, quotation: enriched });
+        } else {
+            res.status(404).json({ success: false, error: 'Không tìm thấy chi tiết báo giá' });
+        }
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// [GET] Lấy chi tiết Báo giá theo ID hoặc Mã Code
 router.get('/:id', (req, res) => {
     try {
         const data = readDB();
-        const id = parseInt(req.params.id);
-        const q = data.find(x => (x.quotation_id === id || x.id === id));
+        const idx = findQuotationIndex(data, req.params.id);
+        const q = idx !== -1 ? data[idx] : null;
         
         if (q) {
             const enriched = enrichQuotation(q);
@@ -156,8 +196,7 @@ router.get('/:id', (req, res) => {
 router.put('/:id', (req, res) => {
     try {
         const data = readDB();
-        const id = parseInt(req.params.id);
-        const idx = data.findIndex(x => (x.quotation_id === id || x.id === id));
+        const idx = findQuotationIndex(data, req.params.id);
         
         if (idx === -1) {
             return res.status(404).json({ success: false, error: 'Không tìm thấy báo giá để cập nhật' });
@@ -205,8 +244,7 @@ router.put('/:id', (req, res) => {
 router.put('/:id/status', (req, res) => {
     try {
         const data = readDB();
-        const id = parseInt(req.params.id);
-        const idx = data.findIndex(x => (x.quotation_id === id || x.id === id));
+        const idx = findQuotationIndex(data, req.params.id);
         
         if (idx === -1) {
             return res.status(404).json({ success: false, error: 'Không tìm thấy báo giá' });
@@ -241,8 +279,7 @@ router.put('/:id/status', (req, res) => {
 router.post('/:id/convert-to-order', async (req, res) => {
     try {
         const data = readDB();
-        const id = parseInt(req.params.id);
-        const idx = data.findIndex(x => (x.quotation_id === id || x.id === id));
+        const idx = findQuotationIndex(data, req.params.id);
         
         if (idx === -1) {
             return res.status(404).json({ success: false, error: 'Không tìm thấy báo giá để chuyển đơn' });
@@ -314,14 +351,13 @@ router.post('/:id/convert-to-order', async (req, res) => {
 router.delete('/:id', (req, res) => {
     try {
         let data = readDB();
-        const id = parseInt(req.params.id);
-        const initialLength = data.length;
-        data = data.filter(x => (x.quotation_id !== id && x.id !== id));
+        const idx = findQuotationIndex(data, req.params.id);
         
-        if (data.length === initialLength) {
+        if (idx === -1) {
             return res.status(404).json({ success: false, error: 'Không tìm thấy báo giá để xóa' });
         }
 
+        data.splice(idx, 1);
         writeDB(data);
         res.json({ success: true, message: 'Đã xóa báo giá thành công' });
     } catch (e) {

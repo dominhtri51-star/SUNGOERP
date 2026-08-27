@@ -96,11 +96,21 @@
         </div>
     </div>
 
+    <!-- THANH CHUYỂN TAB TRÊN MOBILE (CHỈ HIỆN TRÊN MOBILE lg:hidden) -->
+    <div class="lg:hidden flex items-center bg-slate-200/90 p-1 rounded-xl gap-1 shrink-0 select-none shadow-2xs">
+        <button type="button" onclick="window.modProducts.switchMobileView('PRODUCTS')" id="m-btn-view-products" class="flex-1 py-2 px-2.5 rounded-lg text-xs font-black transition flex items-center justify-center gap-1.5 bg-white text-blue-700 shadow-xs cursor-pointer">
+            <i class="fas fa-boxes-stacked"></i> <span>Danh Sách Thiết Bị (<span id="m-tab-prod-count">0</span>)</span>
+        </button>
+        <button type="button" onclick="window.modProducts.switchMobileView('CATEGORIES')" id="m-btn-view-categories" class="flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer">
+            <i class="fas fa-sitemap text-amber-500"></i> <span>Cây Danh Mục (<span id="m-tab-cat-count">0</span>)</span>
+        </button>
+    </div>
+
     <!-- KHU VỰC CHÍNH: 2 CỘT (CÂY DANH MỤC TRÁI + BẢNG SẢN PHẨM PHẢI) -->
-    <div class="flex-1 flex flex-col lg:flex-row gap-3 min-h-0">
+    <div class="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 overflow-hidden">
 
         <!-- CỘT TRÁI: CÂY DANH MỤC HỆ THỐNG (CỐ ĐỊNH / CHẾ ĐỘ SẮP XẾP ADMIN) -->
-        <div class="w-full lg:w-84 xl:w-96 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col shrink-0 overflow-hidden">
+        <div id="card-category-tree" class="hidden lg:flex w-full lg:w-84 xl:w-96 bg-white rounded-xl shadow-sm border border-slate-200 flex-col shrink-0 overflow-hidden">
             <!-- Header Cây Danh Mục -->
             <div class="p-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
@@ -170,7 +180,7 @@
         </div>
 
         <!-- CỘT PHẢI: QUẢN LÝ & DANH SÁCH SẢN PHẨM -->
-        <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col min-w-0 overflow-hidden">
+        <div id="card-product-list" class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col min-w-0 overflow-hidden">
             
             <!-- Breadcrumb & Bộ Lọc Nhanh -->
             <div class="p-3 bg-slate-50 border-b border-slate-200 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
@@ -179,6 +189,9 @@
                     <div id="current-category-breadcrumb" class="flex items-center gap-1.5 font-bold text-slate-800 bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
                         <span>Tất Cả Sản Phẩm</span>
                     </div>
+                    <button type="button" onclick="window.modProducts.switchMobileView('CATEGORIES')" class="lg:hidden text-[10px] font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 px-2 py-1 rounded-md border border-amber-300 transition flex items-center gap-1 cursor-pointer shrink-0" title="Chạm để mở Cây Danh Mục chọn nhánh">
+                        <i class="fas fa-sitemap text-amber-600"></i> Đổi Danh Mục ▾
+                    </button>
                     <button onclick="window.modProducts.setCategory('ALL', 'Tất Cả Sản Phẩm')" id="btn-clear-cat" class="hidden text-[10px] text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded border border-red-200 font-bold transition">
                         <i class="fas fa-times mr-1"></i>Bỏ Lọc
                     </button>
@@ -1276,6 +1289,46 @@
         pageSize: 50,
         filteredTotal: 0,
 
+        mobileView: 'PRODUCTS',
+
+        switchMobileView: (view) => {
+            window.modProducts.mobileView = view;
+            const treeCard = document.getElementById('card-category-tree');
+            const prodCard = document.getElementById('card-product-list');
+            const btnProd = document.getElementById('m-btn-view-products');
+            const btnCat = document.getElementById('m-btn-view-categories');
+
+            if (!treeCard || !prodCard) return;
+
+            if (window.innerWidth >= 1024) {
+                treeCard.classList.remove('hidden');
+                prodCard.classList.remove('hidden');
+                return;
+            }
+
+            if (view === 'CATEGORIES') {
+                treeCard.classList.remove('hidden');
+                prodCard.classList.add('hidden');
+
+                if (btnCat) {
+                    btnCat.className = "flex-1 py-2 px-2.5 rounded-lg text-xs font-black transition flex items-center justify-center gap-1.5 bg-white text-amber-700 shadow-xs cursor-pointer";
+                }
+                if (btnProd) {
+                    btnProd.className = "flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer";
+                }
+            } else {
+                prodCard.classList.remove('hidden');
+                treeCard.classList.add('hidden');
+
+                if (btnProd) {
+                    btnProd.className = "flex-1 py-2 px-2.5 rounded-lg text-xs font-black transition flex items-center justify-center gap-1.5 bg-white text-blue-700 shadow-xs cursor-pointer";
+                }
+                if (btnCat) {
+                    btnCat.className = "flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer";
+                }
+            }
+        },
+
         setCategory: (catId, catName) => {
             window.modProducts.currentCatId = catId;
             window.modProducts.currentCatName = catName;
@@ -1316,6 +1369,11 @@
 
             window.modCats.renderTree();
             window.modProducts.renderTable();
+
+            // Nếu đang trên Mobile, tự động chuyển về tab Danh Sách Sản Phẩm để xem ngay
+            if (window.innerWidth < 1024) {
+                window.modProducts.switchMobileView('PRODUCTS');
+            }
         },
 
         // Lấy danh sách tên danh mục của nhánh (bao gồm con cháu)
@@ -2373,6 +2431,10 @@
                     if (countBadge) countBadge.innerText = `${window.modCats.data.length} danh mục`;
                     const allBadge = document.getElementById('badge-all-count');
                     if (allBadge) allBadge.innerText = `${json.total_products || 0} SP`;
+                    const mTabCat = document.getElementById('m-tab-cat-count');
+                    if (mTabCat) mTabCat.innerText = window.modCats.data.length;
+                    const mTabProd = document.getElementById('m-tab-prod-count');
+                    if (mTabProd) mTabProd.innerText = json.total_products || 0;
                     const headerBadge = document.getElementById('header-total-badge');
                     if (headerBadge) headerBadge.innerText = `${json.total_products || 0} Sản Phẩm • ${window.modCats.data.length} Danh Mục`;
                     window.modCats.renderTree();
@@ -2405,6 +2467,10 @@
                     if (countBadge) countBadge.innerText = `${window.modCats.data.length} danh mục`;
                     const allBadge = document.getElementById('badge-all-count');
                     if (allBadge) allBadge.innerText = `${catRes.total_products || 0} SP`;
+                    const mTabCat = document.getElementById('m-tab-cat-count');
+                    if (mTabCat) mTabCat.innerText = window.modCats.data.length;
+                    const mTabProd = document.getElementById('m-tab-prod-count');
+                    if (mTabProd) mTabProd.innerText = catRes.total_products || 0;
                     const headerBadge = document.getElementById('header-total-badge');
                     if (headerBadge) headerBadge.innerText = `${catRes.total_products || 0} Sản Phẩm • ${window.modCats.data.length} Danh Mục`;
                     window.modCats.renderTree();
@@ -2421,11 +2487,23 @@
                     window.modProducts.list = prodRes.data || [];
                     window.modProducts.renderTable();
                 }
+
+                // Thiết lập trạng thái hiển thị mobile mặc định (Xem Danh Sách Sản Phẩm)
+                if (typeof window.modProducts.switchMobileView === 'function') {
+                    window.modProducts.switchMobileView('PRODUCTS');
+                }
             } catch (e) {
                 console.error("Lỗi khởi tạo module:", e);
             }
         }
     };
+
+    // Lắng nghe resize màn hình
+    window.addEventListener('resize', () => {
+        if (typeof window.modProducts?.switchMobileView === 'function') {
+            window.modProducts.switchMobileView(window.modProducts.mobileView || 'PRODUCTS');
+        }
+    });
 
     // KHỞI ĐỘNG MODULE TỨC THÌ
     window.modStore.init();

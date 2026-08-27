@@ -208,20 +208,191 @@
 
             </div>
 
-            <!-- TAB: QUOTE -->
+            <!-- TAB: QUOTE (TRÌNH TÙY BIẾN MẪU BÁO GIÁ & HÓA ĐƠN ĐA NĂNG) -->
             <div id="tab-quote" class="setting-tab hidden space-y-5">
-                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5 flex items-center gap-2">
-                    <i class="fas fa-file-invoice-dollar text-blue-600"></i> Tùy Chỉnh Mẫu Báo Giá
-                </h3>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mẫu Báo Giá</label>
-                    <select id="set-quote-template" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500">
-                        <option value="tpl_minimal">Mẫu 1: Tiêu chuẩn Điện Mặt Trời SUNGO</option>
-                    </select>
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                        <h3 class="font-black text-slate-800 uppercase text-base flex items-center gap-2">
+                            <i class="fas fa-file-invoice-dollar text-amber-500"></i> Tùy Chỉnh Mẫu Báo Giá & Hóa Đơn Bán Hàng
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Tùy biến đa năng tiêu đề, logo, thông tin shop, số tài khoản ngân hàng, mã VietQR và điều khoản</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="window.modSettings.printSampleQuote()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                            <i class="fas fa-print text-amber-400"></i> In Thử Mẫu Này
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Điều Khoản & Ghi Chú Mặc Định</label>
-                    <textarea id="set-quote-notes" rows="6" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500"></textarea>
+
+                <!-- 2 CỘT: TRÁI LÀ FORM CẤU HÌNH, PHẢI LÀ LIVE PREVIEW A4 THỜI GIAN THỰC -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    
+                    <!-- CỘT TRÁI (7 CỘT): FORM CẤU HÌNH CHI TIẾT -->
+                    <div class="lg:col-span-7 space-y-4">
+                        
+                        <!-- KHỐI 1: THÔNG TIN SHOP & NHẬN DIỆN THƯƠNG HIỆU -->
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                            <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                <i class="fas fa-store text-blue-600"></i> 1. Thông Tin Shop / Doanh Nghiệp (Góc Phải Trên)
+                            </h4>
+                            
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Công Ty / Cửa Hàng In Trên Báo Giá</label>
+                                <input type="text" id="set-quote-store-name" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-200">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mã Số Thuế (MST)</label>
+                                    <input type="text" id="set-quote-store-tax" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: 0315614349" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Hotline / Số Điện Thoại</label>
+                                    <input type="text" id="set-quote-store-phone" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: 0855.959.656" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Địa Chỉ Văn Phòng / Kho Hàng</label>
+                                <input type="text" id="set-quote-store-address" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: Tòa nhà Mộc Gia, Phường Tân Sơn Nhì, Tp.HCM" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-medium text-slate-800 outline-none focus:border-amber-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Link URL Logo Doanh Nghiệp</label>
+                                <input type="text" id="set-quote-store-logo" oninput="window.modSettings.updateQuotePreview()" placeholder="https://domain.com/logo.png" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-mono outline-none focus:border-amber-500">
+                            </div>
+                        </div>
+
+                        <!-- KHỐI 2: TIÊU ĐỀ PHIẾU IN & GIAO DIỆN -->
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                            <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                <i class="fas fa-heading text-purple-600"></i> 2. Tiêu Đề & Phong Cách Giao Diện
+                            </h4>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Phiếu In Chính</label>
+                                <input type="text" id="set-quote-title" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-amber-500">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mẫu Bố Cục In (Layout Theme)</label>
+                                    <select id="set-quote-template" onchange="window.modSettings.updateQuotePreview()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                        <option value="tpl_sungo_modern">⭐ Mẫu 1: Hiện đại (Viền mềm + VietQR)</option>
+                                        <option value="tpl_sungo_corporate">💼 Mẫu 2: Doanh nghiệp chuẩn mực</option>
+                                        <option value="tpl_sungo_minimal">📄 Mẫu 3: Tối giản tiết kiệm mực</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tông Màu Điểm Nhấn</label>
+                                    <select id="set-quote-primary-color" onchange="window.modSettings.updateQuotePreview()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                        <option value="#f59e0b">☀️ Cam Amber (Solar)</option>
+                                        <option value="#2563eb">🔷 Xanh Dương (Corporate)</option>
+                                        <option value="#10b981">🌿 Xanh Lá (Eco Energy)</option>
+                                        <option value="#0f172a">🖤 Đen Slate (Classic)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KHỐI 3: TÀI KHOẢN NGÂN HÀNG & VIETQR THANH TOÁN -->
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                            <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                                <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2">
+                                    <i class="fas fa-qrcode text-emerald-600"></i> 3. Tài Khoản Ngân Hàng & Tự Động Tạo Mã VietQR
+                                </h4>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="checkbox" id="set-quote-show-qr" onchange="window.modSettings.updateQuotePreview()" checked class="w-4 h-4 text-emerald-600 accent-emerald-600 cursor-pointer">
+                                    <label for="set-quote-show-qr" class="text-xs font-bold text-slate-700 cursor-pointer select-none">Bật VietQR</label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Khối Thanh Toán</label>
+                                <input type="text" id="set-quote-bank-title" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: Thanh toán tiền mặt hoặc chuyển khoản:" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Ngân Hàng (Tên & Mã VietQR)</label>
+                                    <select id="set-quote-bank-code" onchange="window.modSettings.onBankSelectChange()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                        <option value="TCB" data-name="Techcombank">Techcombank (TCB)</option>
+                                        <option value="VCB" data-name="Vietcombank">Vietcombank (VCB)</option>
+                                        <option value="MB" data-name="MB Bank (Quân Đội)">MB Bank (MB)</option>
+                                        <option value="ACB" data-name="ACB (Á Châu)">ACB (ACB)</option>
+                                        <option value="BIDV" data-name="BIDV (Đầu Tư & Phát Triển)">BIDV (BIDV)</option>
+                                        <option value="ICB" data-name="VietinBank (Công Thương)">VietinBank (ICB)</option>
+                                        <option value="VPB" data-name="VPBank (Việt Nam Thịnh Vượng)">VPBank (VPB)</option>
+                                        <option value="STB" data-name="Sacombank">Sacombank (STB)</option>
+                                        <option value="TPB" data-name="TPBank (Tiên Phong)">TPBank (TPB)</option>
+                                        <option value="VIB" data-name="VIB (Quốc Tế)">VIB (VIB)</option>
+                                        <option value="MSB" data-name="MSB (Hàng Hải)">MSB (MSB)</option>
+                                        <option value="HDB" data-name="HDBank">HDBank (HDB)</option>
+                                        <option value="OCB" data-name="OCB (Phương Đông)">OCB (OCB)</option>
+                                        <option value="SHB" data-name="SHB (Sài Gòn - Hà Nội)">SHB (SHB)</option>
+                                        <option value="LPB" data-name="LPBank (Lộc Phát)">LPBank (LPB)</option>
+                                        <option value="CUSTOM" data-name="Ngân Hàng Khác">Ngân Hàng Khác</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Ngân Hàng Hiển Thị</label>
+                                    <input type="text" id="set-quote-bank-name" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: Techcombank" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Số Tài Khoản (STK)</label>
+                                    <input type="text" id="set-quote-bank-acc" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: 1903xxxxxxxx" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Chủ Tài Khoản</label>
+                                    <input type="text" id="set-quote-bank-holder" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold uppercase text-slate-900 outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KHỐI 4: ĐIỀU KHOẢN & CHỮ KÝ -->
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                            <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                <i class="fas fa-file-contract text-indigo-600"></i> 4. Điều Khoản Bảo Hành & Chữ Ký Chân Trang
+                            </h4>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Điều Khoản & Cam Kết Bảo Hành</label>
+                                <textarea id="set-quote-notes" rows="3" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của SUNGO! Bảo hành chính hãng theo số Serial/IMEI..." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-amber-500"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Người Ký Trái</label>
+                                    <input type="text" id="set-quote-left-sign" oninput="window.modSettings.updateQuotePreview()" value="KHÁCH HÀNG" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Người Ký Phải</label>
+                                    <input type="text" id="set-quote-right-sign" oninput="window.modSettings.updateQuotePreview()" value="NGƯỜI BÁN" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CỘT PHẢI (5 CỘT): KHUNG XEM TRƯỚC LIVE PREVIEW TRỰC QUAN -->
+                    <div class="lg:col-span-5 sticky top-2">
+                        <div class="bg-slate-900 rounded-2xl p-3 border border-slate-800 shadow-xl space-y-2 text-white">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                                <span class="text-xs font-black uppercase text-amber-400 flex items-center gap-1.5">
+                                    <i class="fas fa-eye"></i> Xem Trước Mẫu In (Live Preview)
+                                </span>
+                                <span class="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-bold">A4 Tỷ lệ chuẩn</span>
+                            </div>
+
+                            <!-- KHUNG TRANG GIẤY A4 MÔ PHỎNG -->
+                            <div id="quote-live-preview-box" class="bg-white text-slate-900 p-4 sm:p-5 rounded-xl shadow-inner font-sans text-[11px] leading-relaxed border border-slate-300 max-h-[620px] overflow-y-auto pos-scroll select-none">
+                                <!-- Dynamic Preview rendered by JS -->
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -263,6 +434,144 @@ window.modSettings = {
         { code: 'NHA_CUNG_CAP', name: '🏭 Nhà Cung Cấp', desc: 'Cổng giao việc dự án & hồ sơ nhà cung cấp.' }
     ],
 
+
+    onBankSelectChange: () => {
+        const select = document.getElementById('set-quote-bank-code');
+        const nameInput = document.getElementById('set-quote-bank-name');
+        if (select && nameInput && select.value !== 'CUSTOM') {
+            const opt = select.options[select.selectedIndex];
+            nameInput.value = opt.getAttribute('data-name') || opt.text;
+        }
+        window.modSettings.updateQuotePreview();
+    },
+
+    updateQuotePreview: () => {
+        const previewBox = document.getElementById('quote-live-preview-box');
+        if (!previewBox) return;
+
+        const storeName = document.getElementById('set-quote-store-name')?.value || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+        const storeTax = document.getElementById('set-quote-store-tax')?.value || '0315614349';
+        const storePhone = document.getElementById('set-quote-store-phone')?.value || '0855.959.656';
+        const storeAddr = document.getElementById('set-quote-store-address')?.value || 'Tp. Hồ Chí Minh, Việt Nam';
+        const storeLogo = document.getElementById('set-quote-store-logo')?.value || '';
+
+        const quoteTitle = document.getElementById('set-quote-title')?.value || 'HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH';
+        const primaryColor = document.getElementById('set-quote-primary-color')?.value || '#f59e0b';
+        const bankTitle = document.getElementById('set-quote-bank-title')?.value || 'Thanh toán tiền mặt hoặc chuyển khoản:';
+        const bankName = document.getElementById('set-quote-bank-name')?.value || 'Techcombank';
+        const bankCode = document.getElementById('set-quote-bank-code')?.value || 'TCB';
+        const bankAcc = document.getElementById('set-quote-bank-acc')?.value || '19035678901234';
+        const bankHolder = document.getElementById('set-quote-bank-holder')?.value || storeName;
+        const showQr = document.getElementById('set-quote-show-qr')?.checked !== false;
+
+        const notes = document.getElementById('set-quote-notes')?.value || 'Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của chúng tôi!';
+        const leftSign = document.getElementById('set-quote-left-sign')?.value || 'KHÁCH HÀNG';
+        const rightSign = document.getElementById('set-quote-right-sign')?.value || 'NGƯỜI BÁN';
+
+        const logoHtml = storeLogo 
+            ? `<img src="${storeLogo}" style="max-height:48px; max-width:140px; object-contain;" alt="Logo">`
+            : `<div style="font-weight:900; font-size:18px; color:${primaryColor};">SUNGO SOLAR</div>`;
+
+        let qrImgHtml = '';
+        if (showQr && bankAcc) {
+            const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAcc}-compact2.png?amount=23621000&addInfo=TT%20DH-9181991797%20-%20Khach%20Le&accountName=${encodeURIComponent(bankHolder)}`;
+            qrImgHtml = `
+            <div style="text-align:center; padding-left:8px; border-left:1px dashed #e2e8f0; margin-left:8px;" class="shrink-0">
+                <img src="${qrUrl}" style="width:78px; height:78px; object-contain; border-radius:6px; border:1px solid #e2e8f0;" alt="VietQR">
+                <span style="font-size:8px; font-weight:bold; color:#059669; display:block; margin-top:2px;">Quét VietQR</span>
+            </div>`;
+        }
+
+        previewBox.innerHTML = `
+        <div style="border-bottom: 2px solid ${primaryColor}; padding-bottom: 8px; margin-bottom: 12px; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <div>${logoHtml}</div>
+            <div style="text-align:right; font-size:10px; line-height:1.3; color:#334155;">
+                <strong style="color:#0f172a; font-size:11px; text-transform:uppercase;">${storeName}</strong><br>
+                <span>MST: ${storeTax}</span><br>
+                <span>Địa chỉ: ${storeAddr}</span><br>
+                <span>SĐT: <strong>${storePhone}</strong></span>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin: 10px 0 12px 0;">
+            <h2 style="margin:0; font-size:14px; font-weight:900; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">${quoteTitle}</h2>
+            <p style="margin:2px 0 0 0; font-size:9px; color:#64748b;">Mã Đơn: DH-9181991797 - Ngày 27/08/2026</p>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; margin-bottom:10px; font-size:10px; line-height:1.4;">
+            <div><strong>Khách hàng:</strong> Khách Lẻ (Anh Minh) • <strong>SĐT:</strong> 0909.123.456</div>
+            <div><strong>Địa chỉ:</strong> Tân Sơn Nhì, Q.Tân Phú, Tp.HCM</div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:10px;">
+            <thead>
+                <tr style="background:#f1f5f9; border-top:1px solid #cbd5e1; border-bottom:1px solid #cbd5e1;">
+                    <th style="padding:4px 6px; text-align:center; width:24px;">STT</th>
+                    <th style="padding:4px 6px; text-align:left;">Sản Phẩm / Thiết Bị</th>
+                    <th style="padding:4px 6px; text-align:center; width:28px;">SL</th>
+                    <th style="padding:4px 6px; text-align:right; width:65px;">Đơn Giá</th>
+                    <th style="padding:4px 6px; text-align:right; width:75px;">Thành Tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:4px 6px; text-align:center;">1</td>
+                    <td style="padding:4px 6px;"><strong>Deye Hybrid 6kw GS04</strong></td>
+                    <td style="padding:4px 6px; text-align:center;">1</td>
+                    <td style="padding:4px 6px; text-align:right;">22.550.000 đ</td>
+                    <td style="padding:4px 6px; text-align:right; font-weight:bold;">22.550.000 đ</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:4px 6px; text-align:center;">2</td>
+                    <td style="padding:4px 6px;"><strong>Jack MC4 Sunpeace (Cặp)</strong></td>
+                    <td style="padding:4px 6px; text-align:center;">10</td>
+                    <td style="padding:4px 6px; text-align:right;">25.000 đ</td>
+                    <td style="padding:4px 6px; text-align:right; font-weight:bold;">250.000 đ</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="display:flex; justify-content:space-between; align-items:stretch; gap:8px; margin-bottom:12px;">
+            <div style="flex:1; border:1px dashed #cbd5e1; background:#f8fafc; border-radius:8px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:9.5px; line-height:1.35; flex:1;">
+                    <strong style="color:#0f172a; font-size:10px;">${bankTitle}</strong><br>
+                    <span>Ngân hàng: <strong>${bankName}</strong></span><br>
+                    <span>Số TK: <strong style="color:#2563eb; font-family:monospace; font-size:10.5px;">${bankAcc}</strong></span><br>
+                    <span>Chủ TK: <strong>${bankHolder}</strong></span><br>
+                    <span style="color:#dc2626; font-size:9px;">Nội dung: <em>TT DH-9181991797</em></span>
+                </div>
+                ${qrImgHtml}
+            </div>
+
+            <div style="width:135px; text-align:right; font-size:10px; line-height:1.4; display:flex; flex-direction:column; justify-content:center;">
+                <div>Tiền hàng: <strong>22.800.000 đ</strong></div>
+                <div style="color:#dc2626;">Giảm trừ: <strong>-0 đ</strong></div>
+                <div style="border-top:1.5px solid #0f172a; margin-top:3px; padding-top:3px;">
+                    <span style="font-size:9px; font-weight:bold; color:#0f172a;">TỔNG CỘNG:</span><br>
+                    <strong style="color:#dc2626; font-size:12px;">22.800.000 đ</strong>
+                </div>
+            </div>
+        </div>
+
+        <div style="font-size:9px; color:#475569; border-top:1px dashed #cbd5e1; padding-top:4px; margin-bottom:12px; font-style:italic;">
+            ${notes.replace(/\n/g, '<br>')}
+        </div>
+
+        <div style="display:flex; justify-content:space-around; text-align:center; font-size:10px; font-weight:bold;">
+            <div>${leftSign}<br><span style="font-size:8.5px; font-weight:normal; color:#64748b;">(Ký và ghi rõ họ tên)</span></div>
+            <div>${rightSign}<br><span style="font-size:8.5px; font-weight:normal; color:#64748b;">(Ký và ghi rõ họ tên)</span></div>
+        </div>
+        `;
+    },
+
+    printSampleQuote: () => {
+        const previewBox = document.getElementById('quote-live-preview-box');
+        if (!previewBox) return;
+        const win = window.open('', '', 'width=900,height=800');
+        win.document.write('<html><head><title>IN THỬ MẪU BÁO GIÁ</title><style>body { font-family: Arial, sans-serif; padding: 25px; color:#000; }</style></head><body>' + previewBox.innerHTML + '<script>window.print();<\/script></body></html>');
+        win.document.close();
+    },
+
     load: async () => {
         try {
             const res = await fetch('/api/settings?t=' + Date.now());
@@ -274,8 +583,35 @@ window.modSettings = {
                 document.getElementById('set-store-address').value = d.store_address || '';
                 document.getElementById('set-store-tax').value = d.store_tax || '';
                 document.getElementById('set-store-logo').value = d.store_logo || '';
-                document.getElementById('set-quote-notes').value = d.quote_notes || '';
-                document.getElementById('set-quote-template').value = d.quote_template || 'tpl_minimal';
+                // Quote / Invoice customizer fields
+                const storeNameVal = d.quote_store_name || d.store_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+                const storeTaxVal = d.quote_store_tax || d.store_tax || '0315614349';
+                const storePhoneVal = d.quote_store_phone || d.store_phone || '0855.959.656';
+                const storeAddrVal = d.quote_store_address || d.store_address || 'Tp. Hồ Chí Minh, Việt Nam';
+                const storeLogoVal = d.quote_store_logo || d.store_logo || '';
+
+                if (document.getElementById('set-quote-store-name')) document.getElementById('set-quote-store-name').value = storeNameVal;
+                if (document.getElementById('set-quote-store-tax')) document.getElementById('set-quote-store-tax').value = storeTaxVal;
+                if (document.getElementById('set-quote-store-phone')) document.getElementById('set-quote-store-phone').value = storePhoneVal;
+                if (document.getElementById('set-quote-store-address')) document.getElementById('set-quote-store-address').value = storeAddrVal;
+                if (document.getElementById('set-quote-store-logo')) document.getElementById('set-quote-store-logo').value = storeLogoVal;
+
+                if (document.getElementById('set-quote-title')) document.getElementById('set-quote-title').value = d.quote_title || 'HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH';
+                if (document.getElementById('set-quote-template')) document.getElementById('set-quote-template').value = d.quote_template || 'tpl_sungo_modern';
+                if (document.getElementById('set-quote-primary-color')) document.getElementById('set-quote-primary-color').value = d.quote_primary_color || '#f59e0b';
+
+                if (document.getElementById('set-quote-bank-title')) document.getElementById('set-quote-bank-title').value = d.quote_bank_title || 'Thanh toán tiền mặt hoặc chuyển khoản:';
+                if (document.getElementById('set-quote-bank-code')) document.getElementById('set-quote-bank-code').value = d.quote_bank_code || 'TCB';
+                if (document.getElementById('set-quote-bank-name')) document.getElementById('set-quote-bank-name').value = d.quote_bank_name || d.bank_name || 'Techcombank';
+                if (document.getElementById('set-quote-bank-acc')) document.getElementById('set-quote-bank-acc').value = d.quote_bank_account_number || d.bank_account_number || '';
+                if (document.getElementById('set-quote-bank-holder')) document.getElementById('set-quote-bank-holder').value = d.quote_bank_account_holder || d.bank_account_holder || storeNameVal;
+                if (document.getElementById('set-quote-show-qr')) document.getElementById('set-quote-show-qr').checked = d.quote_show_qr !== false;
+
+                if (document.getElementById('set-quote-notes')) document.getElementById('set-quote-notes').value = d.quote_notes || 'Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của chúng tôi!';
+                if (document.getElementById('set-quote-left-sign')) document.getElementById('set-quote-left-sign').value = d.quote_left_sign_title || 'KHÁCH HÀNG';
+                if (document.getElementById('set-quote-right-sign')) document.getElementById('set-quote-right-sign').value = d.quote_right_sign_title || 'NGƯỜI BÁN';
+
+                window.modSettings.updateQuotePreview();
                 document.getElementById('set-delivery-notes').value = d.delivery_notes || '';
                 
                 // Warehouses
@@ -818,14 +1154,38 @@ window.modSettings = {
     // ============================================================
 
     save: async () => {
+        const quoteStoreName = document.getElementById('set-quote-store-name')?.value || document.getElementById('set-store-name').value;
+        const quoteStorePhone = document.getElementById('set-quote-store-phone')?.value || document.getElementById('set-store-phone').value;
+        const quoteStoreAddr = document.getElementById('set-quote-store-address')?.value || document.getElementById('set-store-address').value;
+        const quoteStoreTax = document.getElementById('set-quote-store-tax')?.value || document.getElementById('set-store-tax').value;
+        const quoteStoreLogo = document.getElementById('set-quote-store-logo')?.value || document.getElementById('set-store-logo').value;
+
         const payload = {
-            store_name: document.getElementById('set-store-name').value,
-            store_phone: document.getElementById('set-store-phone').value,
-            store_address: document.getElementById('set-store-address').value,
-            store_tax: document.getElementById('set-store-tax').value,
-            store_logo: document.getElementById('set-store-logo').value,
-            quote_notes: document.getElementById('set-quote-notes').value,
-            quote_template: document.getElementById('set-quote-template').value,
+            store_name: quoteStoreName,
+            store_phone: quoteStorePhone,
+            store_address: quoteStoreAddr,
+            store_tax: quoteStoreTax,
+            store_logo: quoteStoreLogo,
+
+            // Cấu hình Báo Giá & Hóa Đơn
+            quote_store_name: quoteStoreName,
+            quote_store_phone: quoteStorePhone,
+            quote_store_address: quoteStoreAddr,
+            quote_store_tax: quoteStoreTax,
+            quote_store_logo: quoteStoreLogo,
+            quote_title: document.getElementById('set-quote-title')?.value || 'HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH',
+            quote_template: document.getElementById('set-quote-template')?.value || 'tpl_sungo_modern',
+            quote_primary_color: document.getElementById('set-quote-primary-color')?.value || '#f59e0b',
+            quote_bank_title: document.getElementById('set-quote-bank-title')?.value || 'Thanh toán tiền mặt hoặc chuyển khoản:',
+            quote_bank_code: document.getElementById('set-quote-bank-code')?.value || 'TCB',
+            quote_bank_name: document.getElementById('set-quote-bank-name')?.value || 'Techcombank',
+            quote_bank_account_number: document.getElementById('set-quote-bank-acc')?.value || '',
+            quote_bank_account_holder: document.getElementById('set-quote-bank-holder')?.value || quoteStoreName,
+            quote_show_qr: document.getElementById('set-quote-show-qr') ? document.getElementById('set-quote-show-qr').checked : true,
+            quote_notes: document.getElementById('set-quote-notes')?.value || '',
+            quote_left_sign_title: document.getElementById('set-quote-left-sign')?.value || 'KHÁCH HÀNG',
+            quote_right_sign_title: document.getElementById('set-quote-right-sign')?.value || 'NGƯỜI BÁN',
+
             delivery_notes: document.getElementById('set-delivery-notes').value,
             warehouses: window.modSettings.warehouses,
             role_permissions: window.modSettings.rolePermissions

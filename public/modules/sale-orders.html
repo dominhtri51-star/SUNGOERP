@@ -69,6 +69,24 @@
 
 <div class="h-full flex flex-col gap-1.5 sm:gap-2.5 text-slate-800 select-none pb-1 relative" id="pos-root-container">
     
+    <!-- BANNER CHẾ ĐỘ SỬA ĐƠN HÀNG (KHI MỞ TỪ QUẢN LÝ ĐƠN HÀNG) -->
+    <div id="pos-editing-banner" class="hidden bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-slate-950 px-3 py-2 rounded-xl flex items-center justify-between font-bold text-xs shadow-sm shrink-0 border border-amber-400 animate-in slide-in-from-top-1">
+        <div class="flex items-center gap-2 min-w-0">
+            <span class="w-6 h-6 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center text-xs shrink-0 font-black">
+                <i class="fas fa-edit"></i>
+            </span>
+            <div class="truncate">
+                <span class="text-[10px] uppercase font-black text-slate-900/80 block leading-none">Chế độ sửa giỏ hàng đơn</span>
+                <strong id="pos-editing-order-code" class="font-mono text-sm underline text-slate-950 font-black">---</strong>
+            </div>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" onclick="window.modPos.cancelEditing()" class="bg-slate-900 hover:bg-black text-white px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-xs transition flex items-center gap-1 cursor-pointer">
+                <i class="fas fa-arrow-left text-[10px]"></i> <span>Hủy sửa & Quay lại</span>
+            </button>
+        </div>
+    </div>
+
     <!-- THANH HEADER POS TINH GỌN (SIÊU GỌN TRÊN MOBILE) -->
     <div class="bg-white rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 border border-slate-200 shadow-2xs flex justify-between items-center gap-2 shrink-0">
         <div class="flex items-center gap-2 min-w-0">
@@ -258,28 +276,12 @@
                     <span id="pos-total" class="text-lg sm:text-xl font-black text-emerald-400 tracking-tight">0 đ</span>
                 </div>
 
-                <!-- NÚT TẠO ĐƠN DUY NHẤT -->
+                <!-- NÚT TẠO / CẬP NHẬT ĐƠN -->
                 <button type="button" onclick="window.modPos.checkout()" id="btn-pos-checkout" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] text-white font-black text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl shadow-lg transition flex justify-center items-center gap-1.5 uppercase tracking-wider cursor-pointer">
-                    <i class="fas fa-check-circle text-sm sm:text-base"></i> <span>TẠO ĐƠN HÀNG</span>
+                    <i class="fas fa-check-circle text-sm sm:text-base" id="btn-pos-checkout-icon"></i> <span id="btn-pos-checkout-label">TẠO ĐƠN HÀNG</span>
                 </button>
             </div>
         </div>
-    </div>
-
-    <!-- FLOATING BOTTOM CART BAR TRÊN MOBILE KHI ĐANG DUYỆT SẢN PHẨM -->
-    <div id="pos-mobile-floating-cart" class="lg:hidden hidden fixed bottom-18 left-3 right-3 z-30 bg-slate-900/95 text-white px-3.5 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 flex items-center justify-between animate-in slide-in-from-bottom-4 duration-200">
-        <div class="flex items-center gap-2 min-w-0">
-            <div class="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xs shadow-md shrink-0">
-                <i class="fas fa-shopping-cart"></i>
-            </div>
-            <div class="min-w-0">
-                <p class="text-[10px] font-bold text-slate-400"><span id="m-float-qty">0</span> món trong giỏ</p>
-                <p class="text-xs font-black text-emerald-400 truncate" id="m-float-total">0 đ</p>
-            </div>
-        </div>
-        <button type="button" onclick="window.modPos.setMobileTab('CART')" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-md shrink-0 cursor-pointer">
-            <span>Xem Giỏ & Tạo Đơn</span> <i class="fas fa-arrow-right text-[10px]"></i>
-        </button>
     </div>
 </div>
 
@@ -347,6 +349,8 @@ window.modPos = {
     selectedSubCatId: 'ALL',
     onlyInStock: false,
     lastCreatedOrder: null,
+    editingOrderId: null,
+    editingOrderCode: null,
     mobileTab: 'CATALOG', // 'CATALOG' | 'CART'
 
     tierNames: {
@@ -398,6 +402,11 @@ window.modPos = {
             window.modPos.renderCategoryTabs();
             window.modPos.renderProducts();
             window.modPos.updateMobileLayout();
+
+            // Nếu đang ở chế độ sửa đơn hàng từ Quản Lý Đơn Hàng
+            if (window.posEditingOrder) {
+                window.modPos.applyEditingOrder(window.posEditingOrder);
+            }
         } catch(e) {
             console.error("POS Load Error:", e);
             if (grid) {
@@ -420,14 +429,12 @@ window.modPos = {
         const rightPanel = document.getElementById('pos-right-panel');
         const btnCat = document.getElementById('pos-tab-btn-catalog');
         const btnCart = document.getElementById('pos-tab-btn-cart');
-        const floatCart = document.getElementById('pos-mobile-floating-cart');
 
         if (!leftPanel || !rightPanel) return;
 
         if (!isMobile) {
             leftPanel.classList.remove('hidden');
             rightPanel.classList.remove('hidden');
-            if (floatCart) floatCart.classList.add('hidden');
             return;
         }
 
@@ -441,16 +448,6 @@ window.modPos = {
             if (btnCart) {
                 btnCart.className = "flex-1 py-1.5 px-2 rounded-md flex items-center justify-center gap-1 transition text-slate-600 hover:text-slate-900 font-bold text-xs";
             }
-
-            // Hiện floating cart nếu có món
-            const totalQty = window.modPos.cart.reduce((sum, i) => sum + i.quantity, 0);
-            if (floatCart) {
-                if (totalQty > 0) {
-                    floatCart.classList.remove('hidden');
-                } else {
-                    floatCart.classList.add('hidden');
-                }
-            }
         } else {
             leftPanel.classList.add('hidden');
             rightPanel.classList.remove('hidden');
@@ -461,8 +458,59 @@ window.modPos = {
             if (btnCart) {
                 btnCart.className = "flex-1 py-1.5 px-2 rounded-md flex items-center justify-center gap-1 transition bg-white text-blue-700 shadow-2xs font-black text-xs";
             }
+        }
+    },
 
-            if (floatCart) floatCart.classList.add('hidden');
+
+    // Nạp đơn hàng cần sửa vào POS
+    applyEditingOrder: (order) => {
+        if (!order) return;
+        window.modPos.editingOrderId = order.id;
+        window.modPos.editingOrderCode = order.order_code;
+
+        const banner = document.getElementById('pos-editing-banner');
+        const bannerCode = document.getElementById('pos-editing-order-code');
+        if (banner) banner.classList.remove('hidden');
+        if (bannerCode) bannerCode.innerText = order.order_code;
+
+        const btnLabel = document.getElementById('btn-pos-checkout-label');
+        if (btnLabel) btnLabel.innerText = "CẬP NHẬT ĐƠN (" + order.order_code + ")";
+
+        // Nạp giỏ hàng từ items của đơn
+        if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+            window.modPos.cart = order.items.map(i => {
+                const p = (window.modPos.products || []).find(x => x.id === i.product_id) || {};
+                return {
+                    product_id: i.product_id,
+                    sku: i.sku || p.sku || '',
+                    product_name: i.product_name || p.product_name || 'Thiết bị',
+                    price: parseFloat(i.price) || 0,
+                    quantity: parseFloat(i.quantity) || 1,
+                    image_url: i.image_url || p.image_url,
+                    serial_number: i.serial_number || ''
+                };
+            });
+            window.modPos.renderCart();
+        }
+
+        // Chọn khách hàng nếu có
+        if (order.customer_id) {
+            const cust = (window.modPos.customers || []).find(c => c.id === order.customer_id);
+            if (cust) {
+                window.modPos.selectCustomer(cust.id);
+            }
+        }
+    },
+
+    cancelEditing: () => {
+        if (confirm("Hủy chỉnh sửa đơn hàng và quay lại Quản Lý Đơn Hàng?")) {
+            window.posEditingOrder = null;
+            window.modPos.editingOrderId = null;
+            window.modPos.editingOrderCode = null;
+            window.modPos.cart = [];
+            if (typeof loadModule === 'function') {
+                loadModule('order-history', 'Quản Lý Đơn Hàng');
+            }
         }
     },
 
@@ -1037,14 +1085,12 @@ window.modPos = {
 
         const totEl = document.getElementById('pos-total');
         const tabTotEl = document.getElementById('pos-tab-total-cart');
-        const floatTotEl = document.getElementById('m-float-total');
 
         if (totEl) totEl.innerText = fmt(subtotal) + ' đ';
         if (tabTotEl) tabTotEl.innerText = fmt(subtotal) + ' đ';
-        if (floatTotEl) floatTotEl.innerText = fmt(subtotal) + ' đ';
     },
 
-    // Tạo đơn hàng mới từ POS
+    // Tạo đơn hàng mới hoặc Cập nhật đơn hàng (nếu đang ở chế độ sửa)
     checkout: async () => {
         if (window.modPos.cart.length === 0) {
             alert("❌ Giỏ hàng đang trống! Vui lòng chọn ít nhất 1 sản phẩm.");
@@ -1061,11 +1107,71 @@ window.modPos = {
             customerName = window.modPos.selectedCustomer.full_name || window.modPos.selectedCustomer.name || 'Khách Lẻ';
         }
 
+        const btn = document.getElementById('btn-pos-checkout');
+
+        // ==========================================================
+        // TRƯỜNG HỢP 1: ĐANG Ở CHẾ ĐỘ SỬA ĐƠN HÀNG (PUT /api/orders/:id)
+        // ==========================================================
+        if (window.modPos.editingOrderId) {
+            const orderId = window.modPos.editingOrderId;
+            const orderCode = window.modPos.editingOrderCode;
+
+            const payload = {
+                customer_id: customerId,
+                customer_name: customerName,
+                total_amount: subtotal,
+                items: window.modPos.cart.map(i => ({
+                    product_id: i.product_id,
+                    quantity: i.quantity,
+                    price: i.price,
+                    serial_number: i.serial_number || ''
+                }))
+            };
+
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ĐANG CẬP NHẬT...';
+                btn.classList.add('opacity-50', 'pointer-events-none');
+            }
+
+            try {
+                const res = await fetch('/api/orders/' + orderId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ ĐÃ CẬP NHẬT THÀNH CÔNG SẢN PHẨM CHO ĐƠN HÀNG: " + orderCode + "!");
+                    window.posEditingOrder = null;
+                    window.modPos.editingOrderId = null;
+                    window.modPos.editingOrderCode = null;
+                    window.modPos.cart = [];
+                    if (typeof loadModule === 'function') {
+                        loadModule('order-history', 'Quản Lý Đơn Hàng');
+                    }
+                } else {
+                    alert("❌ Lỗi cập nhật đơn: " + (data.error || "Không xác định"));
+                }
+            } catch(e) {
+                console.error("POS Update Error:", e);
+                alert("❌ Lỗi kết nối máy chủ khi cập nhật đơn hàng!");
+            } finally {
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-save text-sm sm:text-base"></i> <span id="btn-pos-checkout-label">CẬP NHẬT ĐƠN (' + orderCode + ')</span>';
+                    btn.classList.remove('opacity-50', 'pointer-events-none');
+                }
+            }
+            return;
+        }
+
+        // ==========================================================
+        // TRƯỜNG HỢP 2: TẠO ĐƠN HÀNG MỚI (POST /api/orders)
+        // ==========================================================
         const payload = {
             customer_id: customerId,
             customer_name: customerName,
             total_amount: subtotal,
-            paid_amount: 0, // Sẽ xử lý thanh toán / công nợ / chiết khấu / chi phí trong Quản Lý Đơn Hàng
+            paid_amount: 0,
             payment_method: 'TIEN_MAT',
             notes: '',
             items: window.modPos.cart.map(i => ({
@@ -1075,7 +1181,6 @@ window.modPos = {
             }))
         };
 
-        const btn = document.getElementById('btn-pos-checkout');
         if (btn) {
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ĐANG TẠO ĐƠN...';
             btn.classList.add('opacity-50', 'pointer-events-none');
@@ -1121,7 +1226,7 @@ window.modPos = {
             alert("❌ Lỗi kết nối máy chủ khi tạo đơn hàng!");
         } finally {
             if (btn) {
-                btn.innerHTML = '<i class="fas fa-check-circle text-sm sm:text-base"></i> <span>TẠO ĐƠN HÀNG</span>';
+                btn.innerHTML = '<i class="fas fa-check-circle text-sm sm:text-base" id="btn-pos-checkout-icon"></i> <span id="btn-pos-checkout-label">TẠO ĐƠN HÀNG</span>';
                 btn.classList.remove('opacity-50', 'pointer-events-none');
             }
         }

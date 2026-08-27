@@ -31,9 +31,9 @@ router.get('/', async (req, res) => {
         if (orders.length > 0) {
             const orderIds = orders.map(o => o.id);
             const itemsRes = await pool.query(`
-                SELECT oi.order_id, p.product_name, p.sku, oi.price, oi.quantity, oi.product_id, p.import_price 
+                SELECT oi.id, oi.order_id, COALESCE(oi.product_name, p.product_name, 'Thiết bị') as product_name, COALESCE(oi.sku, p.sku, 'N/A') as sku, oi.price, COALESCE(oi.quantity, oi.qty, 1) as quantity, oi.product_id, COALESCE(p.import_price, 0) as import_price, oi.serial_number 
                 FROM order_items oi 
-                JOIN products p ON oi.product_id = p.id 
+                LEFT JOIN products p ON oi.product_id = p.id 
                 WHERE oi.order_id = ANY($1)
             `, [orderIds]);
             orders.forEach(o => { o.items = itemsRes.rows.filter(i => i.order_id === o.id); });
@@ -317,11 +317,25 @@ router.put('/:id', async (req, res) => {
         const finalPaidAmount = paid_amount !== undefined ? parseSafeNum(paid_amount) : parseSafeNum(oldOrder.paid_amount);
         const finalStatus = status || oldStatus || 'PENDING';
         const finalPaymentMethod = payment_method || oldOrder.payment_method || 'TIỀN MẶT';
-
         let newSubtotal = 0;
         let newCogs = 0;
 
-        if (items && items.length > 0) {
+        if (items && Array.isArray(items)) {
+            const orderIdInt = parseInt(req.params.id, 10);
+            // 1. Hoàn lại kho cho các mặt hàng cũ của đơn này nếu đơn cũ chưa bị hủy/trả
+            if (oldStatus !== 'CANCELLED' && oldStatus !== 'RETURNED') {
+                const oldItemsRes = await client.query("SELECT product_id, quantity FROM order_items WHERE order_id = $1", [orderIdInt]);
+                for (let oldItem of oldItemsRes.rows) {
+                    if (oldItem.product_id) {
+                        await client.query("UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2", [parseFloat(oldItem.quantity) || 0, oldItem.product_id]);
+                    }
+                }
+            }
+
+            // 2. Xóa các dòng order_items cũ để ghi nhận danh sách thiết bị mới cập nhật
+            await client.query("DELETE FROM order_items WHERE order_id = $1", [orderIdInt]);
+
+            // 3. Chèn các mặt hàng mới & Trừ kho
             for(let i of items) {
                 const qty = parseSafeNum(i.quantity) || 1;
                 const price = parseSafeNum(i.price);
@@ -336,9 +350,14 @@ router.put('/:id', async (req, res) => {
                 newCogs += qty * impPrice;
 
                 await client.query(
-                    "UPDATE order_items SET quantity=$1, price=$2, total=$3, serial_number=$4 WHERE id=$5", 
-                    [qty, price, itemTotal, i.serial_number || '', i.id]
+                    "INSERT INTO order_items (order_id, product_id, quantity, price, total, serial_number) VALUES ($1, $2, $3, $4, $5, $6)", 
+                    [orderIdInt, i.product_id, qty, price, itemTotal, i.serial_number || '']
                 );
+
+                // Trừ kho thực tế nếu trạng thái đơn không phải CANCELLED hoặc RETURNED
+                if (finalStatus !== 'CANCELLED' && finalStatus !== 'RETURNED' && i.product_id) {
+                    await client.query("UPDATE products SET stock_qty = GREATEST(0, stock_qty - $1) WHERE id = $2", [qty, i.product_id]);
+                }
 
                 // Tự động kích hoạt bảo hành
                 if (i.serial_number && i.serial_number.trim() !== '') {

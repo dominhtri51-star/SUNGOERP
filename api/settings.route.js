@@ -10,8 +10,8 @@ const settingsFile = path.join(__dirname, '../data/settings.json');
 const DEFAULT_ROLE_PERMISSIONS = {
     'ADMIN': ['*'],
     'SUPER_ADMIN': ['*'],
-    'SALE_ADMIN': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'boq-list', 'admin-approve', 'inventory-dash', 'bidding-marketplace'],
-    'SALE': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'boq-list'],
+    'SALE_ADMIN': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'sale-boq-hybrid', 'sale-boq-ongrid', 'sale-boq-offgrid', 'sale-boq-pump', 'boq-list', 'admin-approve', 'inventory-dash', 'bidding-marketplace'],
+    'SALE': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'sale-boq-hybrid', 'sale-boq-ongrid', 'sale-boq-offgrid', 'sale-boq-pump', 'boq-list'],
     'THU_MUA': ['suppliers', 'import-orders', 'purchases', 'procurement-inventory'],
     'NHAN_VIEN_KHO': ['inventory-dash', 'warehouse-in', 'warehouse-out', 'return-orders'],
     'KE_TOAN': ['accounting-vault', 'accounting-cashbook', 'accounting-cash', 'accounting-payments', 'contract-billing', 'accounting-vat', 'accounting-tax', 'business-health', 'hr-employees', 'sales-commissions', 'debt-kpi', 'payroll-manager', 'finance-loans', 'finance-capital'],
@@ -35,21 +35,26 @@ const initTable = async () => {
                     setting_value TEXT
                 );
             `);
-            // Khởi tạo data mặc định nếu chưa có
-            await pool.query(`
-                INSERT INTO system_settings (setting_key, setting_value) VALUES 
-                ('store_name', 'SUNGO ERP - NĂNG LƯỢNG THÔNG MINH'),
-                ('store_phone', '09xx.xxx.xxx'),
-                ('store_address', 'Tp. Hồ Chí Minh, Việt Nam'),
-                ('store_tax', ''),
-                ('store_logo', ''),
-                ('quote_notes', 'Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của chúng tôi!'),
-                ('delivery_notes', 'Hàng hóa đã xuất kho vui lòng kiểm tra kỹ. Không nhận đổi trả nếu không phải lỗi từ Nhà sản xuất.'),
-                ('role_permissions', $1)
-                ON CONFLICT (setting_key) DO NOTHING;
-            `, [JSON.stringify(DEFAULT_ROLE_PERMISSIONS)]);
+            
+            const defaults = [
+                ['store_name', 'SUNGO ERP - NĂNG LƯỢNG THÔNG MINH'],
+                ['store_phone', '09xx.xxx.xxx'],
+                ['store_address', 'Tp. Hồ Chí Minh, Việt Nam'],
+                ['store_tax', ''],
+                ['store_logo', ''],
+                ['quote_notes', 'Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của chúng tôi!'],
+                ['delivery_notes', 'Hàng hóa đã xuất kho vui lòng kiểm tra kỹ. Không nhận đổi trả nếu không phải lỗi từ Nhà sản xuất.'],
+                ['role_permissions', JSON.stringify(DEFAULT_ROLE_PERMISSIONS)]
+            ];
+
+            for (const [k, v] of defaults) {
+                await pool.query(
+                    'INSERT INTO system_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO NOTHING',
+                    [k, v]
+                );
+            }
         }
-    } catch(e) { console.error("Lỗi tạo bảng system_settings:", e); }
+    } catch(e) { console.error("Lỗi tạo bảng system_settings:", e.message); }
 };
 initTable();
 
