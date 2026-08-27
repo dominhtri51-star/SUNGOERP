@@ -1,56 +1,122 @@
 <div class="h-full flex flex-col bg-slate-50 relative overflow-hidden text-sm">
-    <div class="flex-1 overflow-y-auto p-6 w-full h-full">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-[22px] font-bold text-slate-800">Tổng Quan Kho Hàng (WMS)</h2>
-            <div class="text-xs font-bold text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm"><i class="fas fa-user-shield text-emerald-500 mr-1"></i> Role: THỦ KHO</div>
-        </div>
-
-        <!-- 4 CHỈ SỐ MÙ GIÁ -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4 border-l-4 border-l-blue-500">
-                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-xl"><i class="fas fa-boxes"></i></div>
-                <div><p class="text-[10px] font-black text-slate-400 uppercase">Tổng mã SKU</p><h3 class="text-2xl font-black text-slate-800" id="wms-total-sku">0</h3></div>
+    <div class="flex-1 overflow-y-auto p-3 sm:p-6 w-full h-full space-y-4">
+        
+        <!-- HEADER TRANG -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+                <h2 class="text-lg sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                    <i class="fas fa-warehouse text-blue-600"></i> Sơ Đồ & Tồn Kho (WMS)
+                </h2>
+                <p class="text-xs text-slate-500 font-medium">Tra cứu vị trí kệ hàng, sơ đồ kho và số lượng tồn kho thực tế</p>
             </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4 border-l-4 border-l-emerald-500">
-                <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl"><i class="fas fa-layer-group"></i></div>
-                <div><p class="text-[10px] font-black text-slate-400 uppercase">Tổng tồn hệ thống</p><h3 class="text-2xl font-black text-slate-800" id="wms-total-stock">0</h3></div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4 border-l-4 border-l-red-500">
-                <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-xl"><i class="fas fa-exclamation-triangle"></i></div>
-                <div><p class="text-[10px] font-black text-slate-400 uppercase">Cảnh báo hết hàng</p><h3 class="text-2xl font-black text-red-600" id="wms-low-stock">0</h3></div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4 border-l-4 border-l-orange-500">
-                <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center text-xl"><i class="fas fa-truck-loading"></i></div>
-                <div><p class="text-[10px] font-black text-slate-400 uppercase">Chờ đóng gói (Đơn)</p><h3 class="text-2xl font-black text-slate-800" id="wms-pending-out">0</h3></div>
+            <div class="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end">
+                <div class="text-xs font-bold text-slate-600 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-1.5">
+                    <i class="fas fa-user-shield text-emerald-500"></i> <span>Role: THỦ KHO</span>
+                </div>
+                <button onclick="window.modWmsDash.load()" class="bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs transition flex items-center gap-1 cursor-pointer text-xs">
+                    <i class="fas fa-sync-alt text-slate-400"></i> <span>Làm Mới</span>
+                </button>
             </div>
         </div>
 
-        <!-- BẢNG TỒN KHO THỰC TẾ (ĐA KHO) -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 class="font-bold text-slate-800 text-[13px]"><i class="fas fa-list text-slate-500 mr-2"></i>Bản Đồ Tồn Kho (Đa Kho)</h3>
-                <div class="relative w-64">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search"></i></span>
-                    <input type="text" id="wms-search" oninput="window.modWmsDash.renderTable()" placeholder="Tìm Tên, SKU..." class="w-full border border-slate-200 rounded-lg py-1.5 pl-10 pr-3 text-xs outline-none focus:border-blue-500">
+        <!-- 4 CHỈ SỐ KPI TỒN KHO THỰC TẾ (2 CỘT MOBILE / 4 CỘT DESKTOP) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3 sm:p-4 flex items-center gap-3 border-l-4 border-l-blue-500">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg shrink-0">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">Tổng mã SKU</p>
+                    <h3 class="text-lg sm:text-2xl font-black text-slate-800 leading-tight" id="wms-total-sku">0</h3>
                 </div>
             </div>
-            <div class="overflow-x-auto max-h-[500px]">
+
+            <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3 sm:p-4 flex items-center gap-3 border-l-4 border-l-emerald-500">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">Tổng tồn thực tế</p>
+                    <h3 class="text-lg sm:text-2xl font-black text-slate-800 leading-tight" id="wms-total-stock">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3 sm:p-4 flex items-center gap-3 border-l-4 border-l-red-500">
+                <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-lg shrink-0">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">Cảnh báo tồn ít (≤ 5)</p>
+                    <h3 class="text-lg sm:text-2xl font-black text-red-600 leading-tight" id="wms-low-stock">0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3 sm:p-4 flex items-center gap-3 border-l-4 border-l-orange-500">
+                <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-lg shrink-0">
+                    <i class="fas fa-truck-loading"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">Chờ đóng gói (Đơn)</p>
+                    <h3 class="text-lg sm:text-2xl font-black text-slate-800 leading-tight" id="wms-pending-out">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- KHU VỰC TÌM KIẾM, BỘ LỌC & DANH SÁCH TỒN KHO -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex flex-col overflow-hidden">
+            
+            <!-- THANH TÌM KIẾM & CHIPS DANH MỤC -->
+            <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/70 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2.5">
+                <div class="relative flex-1 max-w-md">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fas fa-search text-xs"></i>
+                    </span>
+                    <input type="text" id="wms-search" oninput="window.modWmsDash.renderTable()" placeholder="🔍 Gõ tìm tên thiết bị, mã SKU, vị trí kệ..." class="w-full pl-9 pr-8 py-2 text-xs font-bold border border-slate-300 rounded-xl outline-none bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-2xs">
+                    <button type="button" onclick="document.getElementById('wms-search').value=''; window.modWmsDash.renderTable();" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-300 hover:text-slate-500 cursor-pointer">
+                        <i class="fas fa-times-circle text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- CHIPS LỌC NHANH TRÊN MOBILE & DESKTOP -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5" id="wms-filter-chips">
+                    <button type="button" onclick="window.modWmsDash.setFilterCategory('ALL')" id="wf-ALL" class="wms-fchip active px-3 py-1.5 rounded-xl text-xs font-bold border border-blue-500 bg-blue-600 text-white whitespace-nowrap cursor-pointer shadow-2xs">
+                        Tất Cả (<span id="wf-cnt-all">0</span>)
+                    </button>
+                    <button type="button" onclick="window.modWmsDash.setFilterCategory('LOW_STOCK')" id="wf-LOW_STOCK" class="wms-fchip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-red-600 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+                        ⚠️ Sắp Hết (≤5)
+                    </button>
+                    <button type="button" onclick="window.modWmsDash.setFilterCategory('PANEL')" id="wf-PANEL" class="wms-fchip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+                        ☀️ Tấm Pin PV
+                    </button>
+                    <button type="button" onclick="window.modWmsDash.setFilterCategory('INVERTER')" id="wf-INVERTER" class="wms-fchip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+                        ⚡ Biến Tần
+                    </button>
+                    <button type="button" onclick="window.modWmsDash.setFilterCategory('BATTERY')" id="wf-BATTERY" class="wms-fchip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+                        🔋 Pin Lưu Trữ
+                    </button>
+                </div>
+            </div>
+
+            <!-- BẢNG DESKTOP (HIỂN THỊ TRÊN MÀN HÌNH LỚN) -->
+            <div class="hidden md:block overflow-x-auto max-h-[600px]">
                 <table class="w-full text-left whitespace-nowrap">
-                    <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold sticky top-0 shadow-sm z-10">
+                    <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold sticky top-0 shadow-xs z-10">
                         <tr id="wms-thead-row">
-                            <!-- JS sẽ tự động generate các cột kho vào đây -->
                             <th class="p-3">Mã SKU</th>
                             <th class="p-3">Tên Hàng Hóa</th>
-                            <th class="p-3 text-center bg-slate-100">Tổng Tồn</th>
-                            <!-- Các cột kho sẽ chèn ở đây -->
-                            <th class="p-3 text-center">Đang Giữ (Ảo)</th>
+                            <th class="p-3 text-center bg-slate-100 border-x border-slate-200">Tổng Tồn</th>
+                            <th class="p-3 text-center border-l border-slate-200">Đang Giữ (Ảo)</th>
                             <th class="p-3 text-center">Có thể Xuất</th>
-                            <th class="p-3">Vị trí</th>
+                            <th class="p-3">Vị trí Kệ</th>
                         </tr>
                     </thead>
-                    <tbody id="wms-tbody" class="divide-y divide-slate-100"></tbody>
+                    <tbody id="wms-tbody" class="divide-y divide-slate-100 text-xs"></tbody>
                 </table>
             </div>
+
+            <!-- THẺ SMART CARDS TRÊN MOBILE (HIỂN THỊ TRÊN ĐIỆN THOẠI) -->
+            <div id="wms-mobile-cards" class="md:hidden p-3 space-y-2.5 bg-slate-100/50 min-h-[200px]"></div>
+
         </div>
     </div>
 </div>
@@ -58,119 +124,217 @@
 <script>
 window.modWmsDash = {
     products: [],
-    warehouses: [], // Lưu trữ danh sách kho cấu hình
+    warehouses: [],
+    activeCategory: 'ALL',
 
     load: async () => {
+        const tbody = document.getElementById('wms-tbody');
+        const mobileCards = document.getElementById('wms-mobile-cards');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i></td></tr>';
+        if (mobileCards) mobileCards.innerHTML = '<div class="p-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i></div>';
+
         try {
-            // 1. Fetch danh sách kho từ Settings
-            const setRes = await fetch('/api/settings?t=' + Date.now());
+            const [setRes, pRes, oRes] = await Promise.all([
+                fetch('/api/settings?t=' + Date.now()),
+                fetch('/api/products?t=' + Date.now()),
+                fetch('/api/orders?t=' + Date.now()).catch(() => ({ json: () => ({ data: [] }) }))
+            ]);
+
             const setJson = await setRes.json();
-            if(setJson.success && setJson.data && setJson.data.warehouses) {
-                window.modWmsDash.warehouses = setJson.data.warehouses;
+            if (setJson.success && setJson.data && setJson.data.warehouses) {
+                let whData = setJson.data.warehouses;
+                if (typeof whData === 'string') {
+                    try { whData = JSON.parse(whData); } catch(e) { whData = []; }
+                }
+                window.modWmsDash.warehouses = Array.isArray(whData) ? whData : [];
             }
 
-            // 2. Fetch danh sách sản phẩm
-            const res = await fetch('/api/products?t=' + Date.now());
-            const data = await res.json();
-            if(data.success) {
-                window.modWmsDash.products = data.data || [];
-                window.modWmsDash.updateMetrics();
-                window.modWmsDash.renderTable();
+            const pData = await pRes.json();
+            if (pData.success) {
+                window.modWmsDash.products = pData.data || [];
             }
+
+            // Đếm đơn chờ xuất
+            try {
+                const oData = await oRes.json();
+                if (oData.success && Array.isArray(oData.data)) {
+                    const pendingOutCount = oData.data.filter(o => o.status === 'SHIPPING_CMD' || o.status === 'PACKED' || o.status === 'PROCESSING').length;
+                    const elPending = document.getElementById('wms-pending-out');
+                    if (elPending) elPending.innerText = pendingOutCount;
+                }
+            } catch(e) {}
+
+            window.modWmsDash.updateMetrics();
+            window.modWmsDash.renderTable();
         } catch(e) {
             console.error("Lỗi tải dữ liệu WMS", e);
         }
     },
 
+    setFilterCategory: (catKey) => {
+        window.modWmsDash.activeCategory = catKey;
+        const chips = document.querySelectorAll('.wms-fchip');
+        chips.forEach(c => {
+            c.className = "wms-fchip px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100";
+        });
+        const activeBtn = document.getElementById('wf-' + catKey);
+        if (activeBtn) {
+            activeBtn.className = "wms-fchip active px-3 py-1.5 rounded-xl text-xs font-bold border border-blue-500 bg-blue-600 text-white whitespace-nowrap cursor-pointer shadow-2xs font-black";
+        }
+        window.modWmsDash.renderTable();
+    },
+
     updateMetrics: () => {
         const ps = window.modWmsDash.products;
-        document.getElementById('wms-total-sku').innerText = ps.length;
+        const allSkuEl = document.getElementById('wms-total-sku');
+        const cntAll = document.getElementById('wf-cnt-all');
+        if (allSkuEl) allSkuEl.innerText = ps.length;
+        if (cntAll) cntAll.innerText = ps.length;
+
         let totalStock = 0;
         let lowStock = 0;
         ps.forEach(p => {
             const sq = parseFloat(p.stock_qty) || 0;
             totalStock += sq;
-            if (sq <= 5) lowStock++; // Cảnh báo tổng tồn dưới 5 cái
+            if (sq <= 5) lowStock++;
         });
-        document.getElementById('wms-total-stock').innerText = new Intl.NumberFormat('vi-VN').format(totalStock);
-        document.getElementById('wms-low-stock').innerText = lowStock;
+        const totEl = document.getElementById('wms-total-stock');
+        const lowEl = document.getElementById('wms-low-stock');
+        if (totEl) totEl.innerText = new Intl.NumberFormat('vi-VN').format(totalStock);
+        if (lowEl) lowEl.innerText = lowStock;
     },
 
     renderTable: () => {
-        // 1. Khởi tạo và render tiêu đề bảng (Thêm cột động theo số lượng kho)
         const theadRow = document.getElementById('wms-thead-row');
         let whHeaders = window.modWmsDash.warehouses.map(wh => `
-            <th class="p-3 text-center text-blue-600 border-l border-slate-200 bg-blue-50/30" title="${wh.name}">${wh.code}</th>
+            <th class="p-3 text-center text-blue-600 border-l border-slate-200 bg-blue-50/30" title="${wh.name}">${wh.code || wh.name}</th>
         `).join('');
 
-        if (window.modWmsDash.warehouses.length === 0) {
-            whHeaders = `<th class="p-3 text-center text-red-500">Chưa cài đặt kho</th>`;
+        if (theadRow) {
+            theadRow.innerHTML = `
+                <th class="p-3">Mã SKU</th>
+                <th class="p-3">Tên Hàng Hóa</th>
+                <th class="p-3 text-center bg-slate-100 border-x border-slate-200">Tổng Tồn</th>
+                ${whHeaders}
+                <th class="p-3 text-center border-l border-slate-200">Đang Giữ (Ảo)</th>
+                <th class="p-3 text-center">Có thể Xuất</th>
+                <th class="p-3">Vị trí Kệ</th>
+            `;
         }
 
-        theadRow.innerHTML = `
-            <th class="p-3">Mã SKU</th>
-            <th class="p-3">Tên Hàng Hóa</th>
-            <th class="p-3 text-center bg-slate-100 border-x border-slate-200">Tổng Tồn</th>
-            ${whHeaders}
-            <th class="p-3 text-center border-l border-slate-200">Đang Giữ (Ảo)</th>
-            <th class="p-3 text-center">Có thể Xuất</th>
-            <th class="p-3">Vị trí</th>
-        `;
+        const term = (document.getElementById('wms-search')?.value || '').toLowerCase().trim();
+        const catKey = window.modWmsDash.activeCategory || 'ALL';
+        let filtered = window.modWmsDash.products || [];
 
-        // 2. Render nội dung
-        const term = document.getElementById('wms-search').value.toLowerCase().trim();
-        let filtered = window.modWmsDash.products;
-        
-        if(term) {
-            filtered = filtered.filter(p => (p.product_name||'').toLowerCase().includes(term) || (p.sku||'').toLowerCase().includes(term));
+        if (catKey === 'LOW_STOCK') {
+            filtered = filtered.filter(p => (parseFloat(p.stock_qty) || 0) <= 5);
+        } else if (catKey === 'PANEL') {
+            filtered = filtered.filter(p => (p.category || '').toLowerCase().includes('pin') || (p.sku || '').toLowerCase().startsWith('pan-') || (p.product_name || '').toLowerCase().includes('tấm pin'));
+        } else if (catKey === 'INVERTER') {
+            filtered = filtered.filter(p => (p.category || '').toLowerCase().includes('inverter') || (p.category || '').toLowerCase().includes('biến tần') || (p.product_name || '').toLowerCase().includes('inverter'));
+        } else if (catKey === 'BATTERY') {
+            filtered = filtered.filter(p => (p.category || '').toLowerCase().includes('lưu trữ') || (p.category || '').toLowerCase().includes('lithium') || (p.product_name || '').toLowerCase().includes('battery') || (p.product_name || '').toLowerCase().includes('apess'));
         }
-        
+
+        if (term) {
+            filtered = filtered.filter(p => 
+                (p.product_name || '').toLowerCase().includes(term) || 
+                (p.sku || '').toLowerCase().includes(term) || 
+                (p.bin_location || '').toLowerCase().includes(term)
+            );
+        }
+
         const tbody = document.getElementById('wms-tbody');
-        if(filtered.length === 0) { 
-            tbody.innerHTML = `<tr><td colspan="${6 + window.modWmsDash.warehouses.length}" class="p-6 text-center text-slate-400">Không có dữ liệu</td></tr>`; 
-            return; 
+        const mobileContainer = document.getElementById('wms-mobile-cards');
+
+        if (filtered.length === 0) {
+            const emptyMsg = '<div class="p-8 text-center text-slate-400 font-bold text-xs bg-white rounded-2xl border border-dashed border-slate-200"><i class="fas fa-box-open text-2xl mb-2 text-slate-300 block"></i>Không tìm thấy hàng hóa phù hợp.</div>';
+            if (tbody) tbody.innerHTML = `<tr><td colspan="${6 + window.modWmsDash.warehouses.length}" class="p-6 text-center text-slate-400">Không có dữ liệu</td></tr>`;
+            if (mobileContainer) mobileContainer.innerHTML = emptyMsg;
+            return;
         }
 
-        tbody.innerHTML = filtered.map(p => {
-            const sq = parseFloat(p.stock_qty) || 0;
-            const vq = parseFloat(p.virtual_stock) || 0;
-            const avail = sq - vq;
-            
-            let availClass = avail > 5 ? 'text-emerald-600' : (avail > 0 ? 'text-orange-500' : 'text-red-500');
+        // Render Desktop Table
+        if (tbody) {
+            tbody.innerHTML = filtered.map(p => {
+                const sq = parseFloat(p.stock_qty) || 0;
+                const vq = parseFloat(p.virtual_stock) || 0;
+                const avail = sq - vq;
+                let availClass = avail > 5 ? 'text-emerald-600' : (avail > 0 ? 'text-orange-500' : 'text-red-500');
 
-            // Render dữ liệu tồn từng kho
-            let whCells = window.modWmsDash.warehouses.map(wh => {
-                let whStock = 0;
-                if(p.stocks && typeof p.stocks === 'object' && p.stocks[wh.id] !== undefined) {
-                    whStock = p.stocks[wh.id];
-                } else if (!p.stocks && window.modWmsDash.warehouses.length > 0 && wh.id === window.modWmsDash.warehouses[0].id) {
-                    // Tương thích ngược: Nếu sản phẩm cũ chưa chia kho, dồn hết số lượng hiển thị tạm vào kho đầu tiên
-                    whStock = p.stock_qty || 0;
-                }
-                
-                // Highlight nếu kho hết hàng
-                let stockColorClass = whStock > 0 ? 'text-blue-700 font-bold' : 'text-slate-300 font-normal';
+                let whCells = window.modWmsDash.warehouses.map(wh => {
+                    let whStock = 0;
+                    if (p.stocks && typeof p.stocks === 'object' && p.stocks[wh.id] !== undefined) {
+                        whStock = p.stocks[wh.id];
+                    } else if (!p.stocks && window.modWmsDash.warehouses.length > 0 && wh.id === window.modWmsDash.warehouses[0].id) {
+                        whStock = p.stock_qty || 0;
+                    }
+                    let stockColorClass = whStock > 0 ? 'text-blue-700 font-bold' : 'text-slate-300 font-normal';
+                    return `<td class="p-3 text-center border-l border-slate-100 ${stockColorClass}">${whStock}</td>`;
+                }).join('');
 
-                return `<td class="p-3 text-center border-l border-slate-100 ${stockColorClass}">${whStock}</td>`;
+                return `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-3 font-mono text-xs text-slate-700 font-black">${p.sku || 'N/A'}</td>
+                    <td class="p-3 font-bold text-slate-900 text-xs">${p.product_name}</td>
+                    <td class="p-3 text-center font-black text-slate-800 bg-slate-50 border-x border-slate-100">${sq}</td>
+                    ${whCells}
+                    <td class="p-3 text-center font-bold text-slate-400 border-l border-slate-100">${vq}</td>
+                    <td class="p-3 text-center font-black ${availClass}">${avail}</td>
+                    <td class="p-3 text-xs text-blue-600 font-black"><span class="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200">📍 ${p.bin_location || 'A1-00'}</span></td>
+                </tr>`;
             }).join('');
+        }
 
-            if (window.modWmsDash.warehouses.length === 0) {
-                whCells = `<td class="p-3 text-center text-slate-400">-</td>`;
-            }
+        // Render Mobile Smart Cards
+        if (mobileContainer) {
+            mobileContainer.innerHTML = filtered.map(p => {
+                const sq = parseFloat(p.stock_qty) || 0;
+                const vq = parseFloat(p.virtual_stock) || 0;
+                const avail = sq - vq;
+                let availBadge = avail > 5 
+                    ? '<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">🟢 Xuất được: ' + avail + '</span>'
+                    : (avail > 0 
+                        ? '<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-orange-100 text-orange-800 border border-orange-300">🟠 Còn ít: ' + avail + '</span>'
+                        : '<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300">🔴 Hết hàng</span>'
+                    );
 
-            return `
-            <tr class="hover:bg-slate-50 transition-colors">
-                <td class="p-3 font-mono text-xs text-slate-500 font-bold">${p.sku || 'N/A'}</td>
-                <td class="p-3 font-bold text-slate-800 text-xs">${p.product_name}</td>
-                <td class="p-3 text-center font-black text-slate-700 bg-slate-50 border-x border-slate-100">${sq}</td>
-                
-                ${whCells} <!-- Các cột kho được chèn vào đây -->
-                
-                <td class="p-3 text-center font-bold text-slate-400 border-l border-slate-100">${vq}</td>
-                <td class="p-3 text-center font-black ${availClass}">${avail}</td>
-                <td class="p-3 text-xs text-blue-600 font-bold">${p.bin_location || 'A1-00'}</td>
-            </tr>`;
-        }).join('');
+                let whPills = window.modWmsDash.warehouses.map(wh => {
+                    let whStock = 0;
+                    if (p.stocks && typeof p.stocks === 'object' && p.stocks[wh.id] !== undefined) {
+                        whStock = p.stocks[wh.id];
+                    } else if (!p.stocks && window.modWmsDash.warehouses.length > 0 && wh.id === window.modWmsDash.warehouses[0].id) {
+                        whStock = p.stock_qty || 0;
+                    }
+                    return `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px] border border-slate-200">${wh.name || wh.code}: <b>${whStock}</b></span>`;
+                }).join(' ');
+
+                return `
+                <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs space-y-2">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-mono font-black text-xs border border-slate-200">${p.sku || 'N/A'}</span>
+                            <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-black text-[10px] border border-blue-200">📍 ${p.bin_location || 'A1-00'}</span>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-xl bg-slate-900 text-white font-black text-xs shrink-0">
+                            📦 Tồn: ${sq} ${p.unit || 'Bộ'}
+                        </span>
+                    </div>
+
+                    <div>
+                        <h4 class="font-black text-slate-900 text-xs leading-snug">${p.product_name}</h4>
+                        <p class="text-[10px] text-slate-400 mt-0.5">${p.category || ''} ${p.brand ? '• ' + p.brand : ''}</p>
+                    </div>
+
+                    ${whPills ? `<div class="flex flex-wrap gap-1 pt-1 border-t border-slate-100">${whPills}</div>` : ''}
+
+                    <div class="flex justify-between items-center pt-1.5 border-t border-slate-100 text-xs">
+                        <span class="text-[10px] text-slate-400 font-medium">Đang giữ ảo: <b>${vq}</b></span>
+                        <div>${availBadge}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
     }
 };
 

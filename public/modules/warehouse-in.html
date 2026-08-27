@@ -1,83 +1,123 @@
 <div class="h-full flex flex-col bg-slate-50 relative overflow-hidden text-sm">
-    <div id="wms-in-list" class="flex-1 overflow-y-auto p-6 w-full h-full">
-        <div class="flex justify-between items-center mb-6">
+    
+    <!-- MÀN HÌNH 1: DANH SÁCH LỆNH NHẬP KHO (INBOUND) -->
+    <div id="wms-in-list" class="flex-1 overflow-y-auto p-3 sm:p-6 w-full h-full space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <div>
-                <h2 class="text-[22px] font-bold text-slate-800">Lệnh Nhập Kho (Inbound)</h2>
-                <p class="text-xs text-slate-500 mt-1">Quản lý nhận hàng, phân bổ kho/vị trí kệ và đính kèm bằng chứng giao nhận bắt buộc.</p>
+                <h2 class="text-lg sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                    <i class="fas fa-box-open text-blue-600"></i> Lệnh Nhập Kho (Inbound)
+                </h2>
+                <p class="text-xs text-slate-500 font-medium">Quản lý nhận hàng, phân bổ kho/vị trí kệ và đính kèm bằng chứng đối soát.</p>
             </div>
-            <button onclick="window.modWmsIn.load()" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-100"><i class="fas fa-sync-alt mr-1"></i>Tải Lại</button>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-            <table class="w-full text-left whitespace-nowrap">
-                <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold border-b border-slate-100">
-                    <tr>
-                        <th class="p-4 py-3">Mã Lệnh Nhập (PO)</th>
-                        <th class="p-4 py-3">Đơn vị cung cấp</th>
-                        <th class="p-4 py-3 text-center">Ngày ghi nhận</th>
-                        <th class="p-4 py-3">Ghi chú vận đơn</th>
-                        <th class="p-4 py-3 text-center">Trạng Thái</th>
-                    </tr>
-                </thead>
-                <tbody id="wms-in-tbody" class="divide-y divide-slate-50"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- CHI TIẾT LỆNH NHẬP -->
-    <div id="wms-in-detail" class="absolute inset-0 bg-slate-50 z-20 flex-col hidden overflow-hidden transition-all transform translate-x-full">
-        <div class="bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm shrink-0">
-            <button onclick="window.modWmsIn.hideDetail()" class="text-slate-500 hover:text-blue-600 font-black text-sm flex items-center gap-2"><i class="fas fa-arrow-left"></i> TRỞ VỀ LỆNH NHẬP</button>
-            <h2 class="font-black text-slate-800 text-lg">PHIẾU YÊU CẦU NHẬP KHO: <span id="po-code-display" class="text-blue-600">---</span></h2>
-            <button id="btn-confirm-wms" onclick="window.modWmsIn.confirmReceive()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded text-[13px] font-black shadow-sm transition">
-                <i class="fas fa-check-double mr-1"></i> XÁC NHẬN NHẬP KHO
+            <button onclick="window.modWmsIn.load()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer self-end sm:self-auto">
+                <i class="fas fa-sync-alt text-slate-400"></i> <span>Tải Lại</span>
             </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6 max-w-5xl mx-auto w-full">
-            <div class="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl mb-6 text-xs font-medium">
-                <i class="fas fa-shield-alt mr-1"></i> <b>YÊU CẦU TỪ KẾ TOÁN:</b> Bắt buộc phải CHỤP HÌNH biên nhận/xe tải có hàng để làm bằng chứng đối soát công nợ. Số phiếu và thông tin xe nhập nếu có.
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex flex-col overflow-hidden">
+            
+            <!-- DESKTOP TABLE VIEW -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-left whitespace-nowrap">
+                    <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold border-b border-slate-100">
+                        <tr>
+                            <th class="p-4 py-3">Mã Lệnh Nhập (PO)</th>
+                            <th class="p-4 py-3">Đơn vị cung cấp</th>
+                            <th class="p-4 py-3 text-center">Ngày ghi nhận</th>
+                            <th class="p-4 py-3">Ghi chú vận đơn</th>
+                            <th class="p-4 py-3 text-center">Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wms-in-tbody" class="divide-y divide-slate-50 text-xs"></tbody>
+                </table>
+            </div>
+
+            <!-- MOBILE SMART CARDS VIEW -->
+            <div id="wms-in-mobile-cards" class="md:hidden p-3 space-y-2.5 bg-slate-100/50 min-h-[150px]"></div>
+
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH 2: CHI TIẾT LỆNH NHẬP & KIỂM ĐẾM THIẾT BỊ -->
+    <div id="wms-in-detail" class="absolute inset-0 bg-slate-50 z-20 flex flex-col hidden overflow-hidden transition-all duration-300 transform translate-x-full">
+        
+        <!-- HEADER CHI TIẾT -->
+        <div class="bg-white border-b border-slate-200 p-3 sm:p-4 flex justify-between items-center shadow-2xs shrink-0 gap-2">
+            <button onclick="window.modWmsIn.hideDetail()" class="text-slate-600 hover:text-blue-600 font-bold text-xs flex items-center gap-1.5 bg-slate-100 active:bg-slate-200 px-3 py-1.5 sm:py-2 rounded-xl transition cursor-pointer shrink-0">
+                <i class="fas fa-arrow-left"></i> <span>Quay Lại</span>
+            </button>
+            <h2 class="font-black text-slate-800 text-xs sm:text-base truncate">
+                NHẬP KHO: <span id="po-code-display" class="text-blue-600 font-mono">---</span>
+            </h2>
+            <button id="btn-confirm-wms" onclick="window.modWmsIn.confirmReceive()" class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5 cursor-pointer shrink-0">
+                <i class="fas fa-check-double"></i> <span>XÁC NHẬN</span>
+            </button>
+        </div>
+
+        <!-- NỘI DUNG FORM CHI TIẾT -->
+        <div class="flex-1 overflow-y-auto p-3 sm:p-6 max-w-5xl mx-auto w-full space-y-4 pb-20">
+            
+            <div class="bg-amber-50 border border-amber-200 text-amber-900 p-3 sm:p-4 rounded-2xl text-xs font-medium space-y-1">
+                <div class="font-black text-amber-800 flex items-center gap-1.5">
+                    <i class="fas fa-shield-alt"></i> YÊU CẦU ĐỐI SOÁT KHO & KẾ TOÁN:
+                </div>
+                <p>Bắt buộc chụp hình biên nhận/xe tải giao hàng để làm bằng chứng nhập kho và thanh toán công nợ.</p>
             </div>
 
             <!-- Block bằng chứng giao nhận -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6">
-                <h3 class="font-bold text-slate-800 text-sm mb-4 pb-2 border-b"><i class="fas fa-truck-loading text-blue-600 mr-2"></i>Thông Tin & Bằng Chứng Giao Nhận</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-4 sm:p-5 space-y-3.5">
+                <h3 class="font-black text-slate-800 text-xs sm:text-sm pb-2 border-b border-slate-100 flex items-center gap-2">
+                    <i class="fas fa-truck-loading text-blue-600"></i> Thông Tin Vận Chuyển & Chứng Từ
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Ngày nhập kho thực tế <span class="text-red-500">*</span></label>
-                        <input type="date" id="actual-receive-date" class="w-full border border-slate-300 rounded px-3 py-2 text-sm outline-none focus:border-blue-500 font-bold bg-slate-50">
+                        <label class="block font-black text-slate-700 mb-1">Ngày nhập kho thực tế <span class="text-red-500">*</span></label>
+                        <input type="date" id="actual-receive-date" class="w-full border border-slate-300 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold bg-white shadow-2xs">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Số phiếu giao hàng / Vận đơn</label>
-                        <input type="text" id="delivery-note" placeholder="VD: PXK-99923 (Nếu có)..." class="w-full border border-slate-300 rounded px-3 py-2 text-sm outline-none focus:border-blue-500 font-bold">
+                        <label class="block font-black text-slate-700 mb-1">Số phiếu giao hàng / Vận đơn</label>
+                        <input type="text" id="delivery-note" placeholder="VD: PXK-99923 (Nếu có)..." class="w-full border border-slate-300 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold bg-white shadow-2xs">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Thông tin Nhà xe / Biển số / SĐT</label>
-                        <input type="text" id="vehicle-info" placeholder="VD: Xe tải 51C-123.45 (Nếu có)..." class="w-full border border-slate-300 rounded px-3 py-2 text-sm outline-none focus:border-blue-500 font-bold">
+                        <label class="block font-black text-slate-700 mb-1">Thông tin Nhà xe / Biển số / SĐT</label>
+                        <input type="text" id="vehicle-info" placeholder="VD: Xe tải 51C-123.45..." class="w-full border border-slate-300 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold bg-white shadow-2xs">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Chụp hình Phiếu giao & Xe (Tối đa 5 ảnh) <span class="text-red-500">*</span></label>
-                        <input type="file" id="receipt-documents" multiple accept="image/*,.pdf" class="w-full border border-slate-300 rounded px-3 py-1.5 text-sm outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                        <p class="text-[10px] text-red-500 mt-1 italic font-medium" id="receipt-warning">Bắt buộc tải lên đối với đơn nhập kho mới.</p>
+                        <label class="block font-black text-slate-700 mb-1">Chụp hình Phiếu giao & Xe <span class="text-red-500">*</span></label>
+                        <input type="file" id="receipt-documents" multiple accept="image/*,.pdf" class="w-full border border-slate-300 rounded-xl p-1.5 outline-none file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer shadow-2xs">
+                        <p class="text-[10px] text-red-500 mt-1 font-bold" id="receipt-warning">Bắt buộc tải lên đối với đơn nhập kho mới.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Bảng kiểm đếm & Phân bổ KHO -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <table class="w-full text-left text-[13px]">
-                    <thead class="bg-slate-800 text-white font-bold uppercase text-[10px]">
-                        <tr>
-                            <th class="p-3 w-10 text-center">STT</th>
-                            <th class="p-3">Sản Phẩm / Vật Tư</th>
-                            <th class="p-3 text-center bg-blue-700">THỰC NHẬN</th>
-                            <th class="p-3 bg-slate-700 w-44">Chọn Kho Nhận</th>
-                            <th class="p-3 bg-slate-700">Vị trí Kệ/Ngăn</th>
-                            <th class="p-3 bg-slate-600">Trạng thái kệ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="po-items-tbody" class="divide-y divide-slate-100"></tbody>
-                </table>
+            <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
+                <div class="p-3 bg-slate-900 text-white flex justify-between items-center">
+                    <h3 class="font-black text-xs uppercase tracking-wide flex items-center gap-1.5">
+                        <i class="fas fa-boxes text-amber-400"></i> Danh Sách Vật Tư Cần Kiểm Đếm
+                    </h3>
+                    <span class="text-[10px] text-slate-400">Điều chỉnh số lượng thực nhận</span>
+                </div>
+
+                <!-- Desktop Table View -->
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-800 text-white font-bold uppercase text-[10px]">
+                            <tr>
+                                <th class="p-3 w-10 text-center">STT</th>
+                                <th class="p-3">Sản Phẩm / Vật Tư</th>
+                                <th class="p-3 text-center bg-blue-700 w-24">THỰC NHẬN</th>
+                                <th class="p-3 bg-slate-700 w-44">Chọn Kho Nhận</th>
+                                <th class="p-3 bg-slate-700">Vị trí Kệ/Ngăn</th>
+                                <th class="p-3 bg-slate-600">Trạng thái kệ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="po-items-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Smart Receiving Items -->
+                <div id="po-items-mobile-container" class="md:hidden p-3 space-y-3 bg-slate-50/60"></div>
             </div>
         </div>
     </div>
@@ -88,14 +128,15 @@ window.modWmsIn = {
     currentPOId: null,
     currentPOStatus: null,
     currentItems: [],
-    warehouses: [], // Lưu trữ danh sách kho động
+    warehouses: [],
 
     load: async () => {
         const tbody = document.getElementById('wms-in-tbody');
-        tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-slate-400 text-2xl"></i></td></tr>';
+        const mobileContainer = document.getElementById('wms-in-mobile-cards');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-slate-400 text-2xl"></i></td></tr>';
+        if (mobileContainer) mobileContainer.innerHTML = '<div class="p-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i></div>';
         
         try {
-            // Gọi song song API mua hàng và API cài đặt để lấy danh sách Kho
             const [resPurchases, resSettings] = await Promise.all([
                 fetch('/api/purchases?t=' + Date.now()),
                 fetch('/api/settings?t=' + Date.now())
@@ -104,7 +145,6 @@ window.modWmsIn = {
             const data = await resPurchases.json();
             const dataSettings = await resSettings.json();
             
-            // Xử lý danh sách Kho
             if (dataSettings.success && dataSettings.data && dataSettings.data.warehouses) {
                 let whData = dataSettings.data.warehouses;
                 if (typeof whData === 'string') {
@@ -113,14 +153,14 @@ window.modWmsIn = {
                 window.modWmsIn.warehouses = Array.isArray(whData) ? whData : [];
             }
             if (window.modWmsIn.warehouses.length === 0) {
-                window.modWmsIn.warehouses = [{ name: 'Kho Mặc Định' }]; // Dự phòng nếu chưa có kho
+                window.modWmsIn.warehouses = [{ name: 'Kho Mặc Định', code: 'KHO-01' }];
             }
 
             if(data.success) {
                 const now = new Date().getTime();
                 const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
 
-                const displayPOs = data.data.filter(po => {
+                const displayPOs = (data.data || []).filter(po => {
                     if (po.status === 'Đã Duyệt - Đợi Giao' || po.status === 'Đang Vận Chuyển') return true;
                     if (po.status === 'Hoàn Tất Nhập Kho') {
                         const hasPendingShelf = po.items && po.items.some(i => i.shelf_status !== 'SHELVED');
@@ -132,7 +172,9 @@ window.modWmsIn = {
                 });
 
                 if(displayPOs.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-400">Không có lệnh nhập kho hoặc công việc chờ lên kệ nào.</td></tr>';
+                    const emptyMsg = '<div class="p-8 text-center text-slate-400 font-bold text-xs bg-white rounded-2xl border border-dashed border-slate-200"><i class="fas fa-box-open text-2xl mb-2 text-slate-300 block"></i>Không có lệnh nhập kho hoặc công việc chờ lên kệ nào.</div>';
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-400">Không có lệnh nhập kho nào.</td></tr>';
+                    if (mobileContainer) mobileContainer.innerHTML = emptyMsg;
                     return;
                 }
 
@@ -166,15 +208,15 @@ window.modWmsIn = {
 
                     if (mappedPo.status === 'PENDING_RECV') {
                         sortPriority = 1;
-                        stBadge = '<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded font-black text-[9px] uppercase shadow-sm">Chờ Nhập Kho</span>';
+                        stBadge = '<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-lg font-black text-[10px] uppercase shadow-2xs">Chờ Nhập Kho</span>';
                     } else {
                         const isPendingShelf = mappedPo.items.some(i => i.shelf_status !== 'SHELVED');
                         if (isPendingShelf) {
                             sortPriority = 2;
-                            stBadge = '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded font-black text-[9px] uppercase shadow-sm">Chờ Lên Kệ</span>';
+                            stBadge = '<span class="bg-blue-100 text-blue-800 border border-blue-300 px-2.5 py-1 rounded-lg font-black text-[10px] uppercase shadow-2xs">Chờ Lên Kệ</span>';
                         } else {
                             sortPriority = 3;
-                            stBadge = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-black text-[9px] uppercase shadow-sm">Đã Lên Kệ</span>';
+                            stBadge = '<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-lg font-black text-[10px] uppercase shadow-2xs">Đã Lên Kệ</span>';
                         }
                     }
 
@@ -188,18 +230,51 @@ window.modWmsIn = {
                     return (a.supplier_name || '').localeCompare(b.supplier_name || '', 'vi');
                 });
 
-                tbody.innerHTML = mappedPOs.map(mappedPo => `
-                    <tr class="hover:bg-blue-50/50 cursor-pointer border-b border-slate-50 transition" onclick='window.modWmsIn.showDetail(${JSON.stringify(mappedPo).replace(/'/g, "\'")})'>
-                        <td class="p-4 py-3 font-bold text-blue-600 text-[13px]"><i class="fas fa-file-import mr-2 text-slate-300"></i>${mappedPo.po_code}</td>
-                        <td class="p-4 py-3 font-bold text-slate-700">${mappedPo.supplier_name}</td>
-                        <td class="p-4 py-3 text-center text-slate-500 font-medium">${mappedPo.dStr}</td>
-                        <td class="p-4 py-3 text-xs text-slate-500">${mappedPo.notes || ''}</td>
-                        <td class="p-4 py-3 text-center">${mappedPo._stBadge}</td>
-                    </tr>
-                `).join('');
+                // Desktop Table
+                if (tbody) {
+                    tbody.innerHTML = mappedPOs.map(mappedPo => `
+                        <tr class="hover:bg-blue-50/50 cursor-pointer border-b border-slate-50 transition" onclick='window.modWmsIn.showDetail(${JSON.stringify(mappedPo).replace(/'/g, "\\'")})'>
+                            <td class="p-4 py-3 font-mono font-black text-blue-600 text-xs"><i class="fas fa-file-import mr-2 text-slate-300"></i>${mappedPo.po_code}</td>
+                            <td class="p-4 py-3 font-bold text-slate-800 text-xs">${mappedPo.supplier_name}</td>
+                            <td class="p-4 py-3 text-center text-slate-500 font-medium text-xs">${mappedPo.dStr}</td>
+                            <td class="p-4 py-3 text-xs text-slate-500">${mappedPo.notes || ''}</td>
+                            <td class="p-4 py-3 text-center">${mappedPo._stBadge}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Mobile Cards
+                if (mobileContainer) {
+                    mobileContainer.innerHTML = mappedPOs.map(mappedPo => `
+                        <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs space-y-2.5 cursor-pointer active:bg-slate-50 transition" onclick='window.modWmsIn.showDetail(${JSON.stringify(mappedPo).replace(/'/g, "\\'")})'>
+                            <div class="flex justify-between items-start gap-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 font-mono font-black text-xs">
+                                        ${mappedPo.po_code}
+                                    </span>
+                                    <span class="text-[10px] text-slate-400 font-medium">${mappedPo.dStr}</span>
+                                </div>
+                                <div>${mappedPo._stBadge}</div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-black text-slate-900 text-xs leading-snug">${mappedPo.supplier_name || 'Nhà Cung Cấp'}</h4>
+                                ${mappedPo.delivery_note ? `<p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-file-alt text-slate-400 mr-1"></i>Số phiếu: ${mappedPo.delivery_note}</p>` : ''}
+                                ${mappedPo.vehicle_info ? `<p class="text-[10px] text-slate-500"><i class="fas fa-truck text-slate-400 mr-1"></i>Xe: ${mappedPo.vehicle_info}</p>` : ''}
+                            </div>
+
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
+                                <span class="text-[10px] font-bold text-slate-400">${mappedPo.items.length} thiết bị / vật tư</span>
+                                <button class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-[10px] shadow-2xs flex items-center gap-1">
+                                    <span>Chi Tiết / Nhận Hàng</span> <i class="fas fa-chevron-right text-[8px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
             }
         } catch(e) { 
-            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">Lỗi kết nối dữ liệu</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">Lỗi kết nối dữ liệu</td></tr>';
         }
     },
 
@@ -218,20 +293,20 @@ window.modWmsIn = {
         document.getElementById('receipt-documents').value = ''; 
 
         if (po.status === 'RECEIVED') {
-            btnConfirm.innerHTML = '<i class="fas fa-check-double mr-1"></i> CẬP NHẬT TRẠNG THÁI KỆ';
-            btnConfirm.className = 'bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-[13px] font-black shadow-sm transition';
+            btnConfirm.innerHTML = '<i class="fas fa-check-double mr-1"></i> CẬP NHẬT KỆ';
+            btnConfirm.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 rounded-xl text-xs font-black shadow-sm transition';
             document.getElementById('actual-receive-date').value = po.receive_date ? po.receive_date.split('T')[0] : new Date().toISOString().split('T')[0];
-            warningTxt.classList.add('hidden'); 
+            if (warningTxt) warningTxt.classList.add('hidden'); 
             
             document.getElementById('delivery-note').disabled = true;
             document.getElementById('vehicle-info').disabled = true;
             document.getElementById('delivery-note').classList.add('bg-slate-100', 'text-slate-500');
             document.getElementById('vehicle-info').classList.add('bg-slate-100', 'text-slate-500');
         } else {
-            btnConfirm.innerHTML = '<i class="fas fa-check-double mr-1"></i> XÁC NHẬN NHẬP KHO';
-            btnConfirm.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded text-[13px] font-black shadow-sm transition';
+            btnConfirm.innerHTML = '<i class="fas fa-check-double mr-1"></i> XÁC NHẬN NHẬP';
+            btnConfirm.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-4 sm:px-6 py-2 rounded-xl text-xs font-black shadow-sm transition';
             document.getElementById('actual-receive-date').value = new Date().toISOString().split('T')[0];
-            warningTxt.classList.remove('hidden'); 
+            if (warningTxt) warningTxt.classList.remove('hidden'); 
             
             document.getElementById('delivery-note').disabled = false;
             document.getElementById('vehicle-info').disabled = false;
@@ -240,56 +315,158 @@ window.modWmsIn = {
         }
 
         const tbody = document.getElementById('po-items-tbody');
-        tbody.innerHTML = window.modWmsIn.currentItems.map((i, idx) => {
-            
-            let savedWh = window.modWmsIn.warehouses[0].name; 
-            let savedBin = i.bin_location || '';
-            if (savedBin.includes(' | ')) {
-                const parts = savedBin.split(' | ');
-                savedWh = parts[0].trim();
-                savedBin = parts[1].trim();
-            }
+        const mobileContainer = document.getElementById('po-items-mobile-container');
 
-            // Render động danh sách kho từ Settings
-            let whOptions = window.modWmsIn.warehouses.map(w => {
-                return `<option value="${w.name}" ${savedWh === w.name ? 'selected' : ''}>${w.name}</option>`;
+        // Render Desktop Table Rows
+        if (tbody) {
+            tbody.innerHTML = window.modWmsIn.currentItems.map((i, idx) => {
+                let savedWh = window.modWmsIn.warehouses[0]?.name || 'Kho Mặc Định'; 
+                let savedBin = i.bin_location || '';
+                if (savedBin.includes(' | ')) {
+                    const parts = savedBin.split(' | ');
+                    savedWh = parts[0].trim();
+                    savedBin = parts[1].trim();
+                }
+
+                let whOptions = window.modWmsIn.warehouses.map(w => {
+                    return `<option value="${w.name}" ${savedWh === w.name ? 'selected' : ''}>${w.name}</option>`;
+                }).join('');
+                
+                if (!window.modWmsIn.warehouses.some(w => w.name === savedWh) && savedWh) {
+                    whOptions += `<option value="${savedWh}" selected>${savedWh} (Lịch sử)</option>`;
+                }
+
+                return `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 text-center font-bold text-slate-500">${idx + 1}</td>
+                    <td class="p-3">
+                        <p class="font-bold text-slate-800 text-xs">${i.product_name}</p>
+                        <p class="text-[10px] text-slate-400 font-mono mt-0.5">Cần nhập: ${i.expected_qty} ${i.sku || ''}</p>
+                    </td>
+                    <td class="p-3 text-center bg-blue-50/50">
+                        <input type="number" id="actual-qty-${i.id}" value="${i.actual_qty}" min="0" 
+                               oninput="window.modWmsIn.syncQty(${i.id}, this.value)"
+                               class="w-16 border-2 border-blue-200 rounded-lg px-2 py-1 text-center outline-none focus:border-blue-600 font-black text-blue-700 bg-white shadow-inner">
+                    </td>
+                    <td class="p-3">
+                        <select id="warehouse-${i.id}" onchange="window.modWmsIn.syncWarehouse(${i.id}, this.value)" class="w-full border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold outline-none focus:border-slate-500 bg-white text-blue-700 cursor-pointer">
+                            ${whOptions}
+                        </select>
+                    </td>
+                    <td class="p-3">
+                        <input type="text" id="bin-loc-${i.id}" value="${savedBin}" oninput="window.modWmsIn.syncBin(${i.id}, this.value)" placeholder="Vd: Kệ A1..." class="w-full border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold outline-none focus:border-slate-500 bg-white">
+                    </td>
+                    <td class="p-3">
+                        <select id="shelf-status-${i.id}" onchange="window.modWmsIn.syncShelfStatus(${i.id}, this.value)" class="w-full border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold outline-none focus:border-slate-500 cursor-pointer ${i.shelf_status === 'SHELVED' ? 'bg-emerald-50 text-emerald-700' : 'bg-white text-slate-700'}">
+                            <option value="PENDING_SHELF" ${i.shelf_status !== 'SHELVED' ? 'selected' : ''}>Chờ lên kệ</option>
+                            <option value="SHELVED" ${i.shelf_status === 'SHELVED' ? 'selected' : ''}>Đã lên kệ</option>
+                        </select>
+                    </td>
+                </tr>`;
             }).join('');
-            
-            // Nếu kho đã lưu trước đó không tồn tại trong danh sách (vd: bị xóa), vẫn hiển thị dưới dạng Lịch sử
-            if (!window.modWmsIn.warehouses.some(w => w.name === savedWh) && savedWh) {
-                whOptions += `<option value="${savedWh}" selected>${savedWh} (Lịch sử)</option>`;
-            }
+        }
 
-            return `
-            <tr class="hover:bg-slate-50">
-                <td class="p-3 text-center font-bold text-slate-500">${idx + 1}</td>
-                <td class="p-3">
-                    <p class="font-bold text-slate-800 text-sm line-clamp-2">${i.product_name}</p>
-                    <p class="text-[10px] text-slate-400 font-mono mt-0.5">Cần nhập: ${i.expected_qty} ${i.sku || ''}</p>
-                </td>
-                <td class="p-3 text-center bg-blue-50/50">
-                    <input type="number" id="actual-qty-${i.id}" value="${i.actual_qty}" min="0" class="w-16 border-2 border-blue-200 rounded-lg px-2 py-1.5 text-center outline-none focus:border-blue-600 font-black text-blue-700 bg-white shadow-inner">
-                </td>
-                <td class="p-3">
-                    <select id="warehouse-${i.id}" class="w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-bold outline-none focus:border-slate-500 bg-white text-blue-700 cursor-pointer">
-                        ${whOptions}
-                    </select>
-                </td>
-                <td class="p-3">
-                    <input type="text" id="bin-loc-${i.id}" value="${savedBin}" placeholder="Vd: Kệ A1..." class="w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-bold outline-none focus:border-slate-500 bg-white">
-                </td>
-                <td class="p-3">
-                    <select id="shelf-status-${i.id}" class="w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-bold outline-none focus:border-slate-500 cursor-pointer ${i.shelf_status === 'SHELVED' ? 'bg-emerald-50 text-emerald-700' : 'bg-white text-slate-700'}">
-                        <option value="PENDING_SHELF" ${i.shelf_status !== 'SHELVED' ? 'selected' : ''}>Chờ lên kệ</option>
-                        <option value="SHELVED" ${i.shelf_status === 'SHELVED' ? 'selected' : ''}>Đã lên kệ</option>
-                    </select>
-                </td>
-            </tr>
-            `;
-        }).join('');
+        // Render Mobile Smart Cards
+        if (mobileContainer) {
+            mobileContainer.innerHTML = window.modWmsIn.currentItems.map((i, idx) => {
+                let savedWh = window.modWmsIn.warehouses[0]?.name || 'Kho Mặc Định'; 
+                let savedBin = i.bin_location || '';
+                if (savedBin.includes(' | ')) {
+                    const parts = savedBin.split(' | ');
+                    savedWh = parts[0].trim();
+                    savedBin = parts[1].trim();
+                }
+
+                let whOptions = window.modWmsIn.warehouses.map(w => {
+                    return `<option value="${w.name}" ${savedWh === w.name ? 'selected' : ''}>${w.name}</option>`;
+                }).join('');
+
+                return `
+                <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs space-y-3">
+                    <div class="flex justify-between items-start gap-2">
+                        <div>
+                            <span class="text-[10px] font-black text-slate-400 uppercase">#${idx + 1}</span>
+                            <h4 class="font-black text-slate-900 text-xs">${i.product_name}</h4>
+                            <p class="text-[10px] text-slate-500">Kế hoạch giao: <strong class="text-slate-800">${i.expected_qty}</strong> ${i.sku || 'Bộ'}</p>
+                        </div>
+                    </div>
+
+                    <!-- Stepper Thực Nhận -->
+                    <div class="bg-blue-50/60 p-2.5 rounded-xl border border-blue-200 flex items-center justify-between">
+                        <span class="text-xs font-black text-blue-900 uppercase">Số Lượng Thực Nhận:</span>
+                        <div class="flex items-center border border-blue-300 rounded-xl overflow-hidden bg-white shadow-2xs">
+                            <button type="button" onclick="window.modWmsIn.stepActualQty(${i.id}, -1)" class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 font-black cursor-pointer">-</button>
+                            <input type="number" id="m-actual-qty-${i.id}" value="${i.actual_qty}" min="0" 
+                                   oninput="window.modWmsIn.syncQty(${i.id}, this.value)"
+                                   class="w-16 text-center p-1 text-xs font-black text-blue-700 outline-none bg-transparent">
+                            <button type="button" onclick="window.modWmsIn.stepActualQty(${i.id}, 1)" class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 font-black cursor-pointer">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Cụm Kho & Kệ & Trạng Thái -->
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <label class="block font-bold text-slate-600 text-[10px] mb-1">Kho Nhận:</label>
+                            <select id="m-warehouse-${i.id}" onchange="window.modWmsIn.syncWarehouse(${i.id}, this.value)" class="w-full border border-slate-300 rounded-xl p-2 text-xs font-bold outline-none bg-white text-blue-700">
+                                ${whOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 text-[10px] mb-1">Vị trí Kệ/Ngăn:</label>
+                            <input type="text" id="m-bin-loc-${i.id}" value="${savedBin}" oninput="window.modWmsIn.syncBin(${i.id}, this.value)" placeholder="VD: Kệ A1..." class="w-full border border-slate-300 rounded-xl p-2 text-xs font-bold outline-none bg-white">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-600 text-[10px] mb-1">Trạng thái lên kệ:</label>
+                        <select id="m-shelf-status-${i.id}" onchange="window.modWmsIn.syncShelfStatus(${i.id}, this.value)" class="w-full border border-slate-300 rounded-xl p-2 text-xs font-bold outline-none ${i.shelf_status === 'SHELVED' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-white text-slate-700'}">
+                            <option value="PENDING_SHELF" ${i.shelf_status !== 'SHELVED' ? 'selected' : ''}>⏳ Chờ lên kệ</option>
+                            <option value="SHELVED" ${i.shelf_status === 'SHELVED' ? 'selected' : ''}>✅ Đã lên kệ</option>
+                        </select>
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
         document.getElementById('wms-in-list').classList.add('hidden');
         document.getElementById('wms-in-detail').classList.remove('hidden', 'translate-x-full');
+    },
+
+    stepActualQty: (itemId, delta) => {
+        const desktopInput = document.getElementById('actual-qty-' + itemId);
+        const mobileInput = document.getElementById('m-actual-qty-' + itemId);
+        let cur = parseFloat(mobileInput?.value || desktopInput?.value) || 0;
+        cur = Math.max(0, cur + delta);
+        if (desktopInput) desktopInput.value = cur;
+        if (mobileInput) mobileInput.value = cur;
+    },
+
+    syncQty: (itemId, val) => {
+        const desktopInput = document.getElementById('actual-qty-' + itemId);
+        const mobileInput = document.getElementById('m-actual-qty-' + itemId);
+        if (desktopInput && desktopInput.value !== val) desktopInput.value = val;
+        if (mobileInput && mobileInput.value !== val) mobileInput.value = val;
+    },
+
+    syncWarehouse: (itemId, val) => {
+        const desktopSel = document.getElementById('warehouse-' + itemId);
+        const mobileSel = document.getElementById('m-warehouse-' + itemId);
+        if (desktopSel && desktopSel.value !== val) desktopSel.value = val;
+        if (mobileSel && mobileSel.value !== val) mobileSel.value = val;
+    },
+
+    syncBin: (itemId, val) => {
+        const desktopInp = document.getElementById('bin-loc-' + itemId);
+        const mobileInp = document.getElementById('m-bin-loc-' + itemId);
+        if (desktopInp && desktopInp.value !== val) desktopInp.value = val;
+        if (mobileInp && mobileInp.value !== val) mobileInp.value = val;
+    },
+
+    syncShelfStatus: (itemId, val) => {
+        const desktopSel = document.getElementById('shelf-status-' + itemId);
+        const mobileSel = document.getElementById('m-shelf-status-' + itemId);
+        if (desktopSel && desktopSel.value !== val) desktopSel.value = val;
+        if (mobileSel && mobileSel.value !== val) mobileSel.value = val;
     },
 
     hideDetail: () => {
@@ -319,15 +496,17 @@ window.modWmsIn = {
         if(!confirm(confirmMsg)) return;
 
         const receivedData = window.modWmsIn.currentItems.map(i => {
-            const wh = document.getElementById('warehouse-' + i.id).value;
-            const bin = document.getElementById('bin-loc-' + i.id).value.trim();
+            const wh = (document.getElementById('warehouse-' + i.id) || document.getElementById('m-warehouse-' + i.id))?.value || 'Kho Mặc Định';
+            const bin = (document.getElementById('bin-loc-' + i.id) || document.getElementById('m-bin-loc-' + i.id))?.value.trim() || '';
             const finalLocation = bin ? `${wh} | ${bin}` : wh; 
+            const qtyVal = parseFloat((document.getElementById('actual-qty-' + i.id) || document.getElementById('m-actual-qty-' + i.id))?.value) || 0;
+            const shelfSt = (document.getElementById('shelf-status-' + i.id) || document.getElementById('m-shelf-status-' + i.id))?.value || 'PENDING_SHELF';
 
             return {
                 id: i.id,
-                actual_qty: parseFloat(document.getElementById('actual-qty-' + i.id).value) || 0,
+                actual_qty: qtyVal,
                 bin_location: finalLocation, 
-                shelf_status: document.getElementById('shelf-status-' + i.id).value
+                shelf_status: shelfSt
             };
         });
 

@@ -2,129 +2,191 @@
     <style>
         #wms-out-container { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
         .wms-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
     
     <!-- MÀN HÌNH 1: BẢNG DANH SÁCH LỆNH XUẤT -->
-    <div id="wms-list" class="wms-scroll flex-1 flex flex-col p-6 w-full h-full">
-        <div class="flex justify-between items-center mb-6 shrink-0">
+    <div id="wms-list" class="wms-scroll flex-1 flex flex-col p-3 sm:p-6 w-full h-full space-y-3">
+        
+        <!-- HEADER TRANG -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shrink-0">
             <div>
-                <h2 class="text-[22px] font-bold text-slate-800">Lệnh Xuất & Đóng Gói (WMS Outbound)</h2>
-                <p class="text-xs text-slate-500 mt-1"><i class="fas fa-user-shield text-orange-500 mr-1"></i> Giao diện chuẩn: Đồng bộ Vận Chuyển từ Sale, Ẩn Giá Tiền.</p>
+                <h2 class="text-lg sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                    <i class="fas fa-dolly text-orange-500"></i> Lệnh Xuất & Đóng Gói (Outbound)
+                </h2>
+                <p class="text-xs text-slate-500 font-medium">Soạn hàng theo đơn, quét serial, in tem chành xe & lưu chứng từ giao hàng.</p>
             </div>
-            <button onclick="window.modWmsOut.loadData()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-slate-100 transition"><i class="fas fa-sync-alt mr-2"></i>Làm Mới</button>
+            <button onclick="window.modWmsOut.loadData()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer text-xs self-end sm:self-auto">
+                <i class="fas fa-sync-alt text-slate-400"></i> <span>Làm Mới</span>
+            </button>
         </div>
 
-        <div class="border border-slate-100 rounded-xl shadow-sm flex flex-col bg-white overflow-hidden flex-1 mb-10">
-            <div class="p-4 border-b border-slate-100 flex items-center bg-slate-50 shrink-0">
-                <div class="w-2.5 h-2.5 bg-orange-500 rounded-sm mr-2"></div>
-                <h3 class="font-bold text-slate-800 text-[13px]">Danh Sách Đơn Cần Xuất</h3>
-                <div class="ml-auto relative w-72">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search"></i></span>
-                    <input type="text" id="wms-search" placeholder="Tìm Mã Đơn, Khách hàng..." oninput="window.modWmsOut.applyFilters()" class="w-full border border-slate-200 rounded-lg py-1.5 pl-10 pr-4 text-xs outline-none focus:border-orange-500">
+        <!-- THANH LỌC TRẠNG THÁI WMS OUTBOUND -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5" id="wms-filter-container">
+            <button onclick="window.modWmsOut.toggleStatus('SHIPPING_CMD')" id="w-st-SHIPPING_CMD" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-orange-500 bg-orange-600 text-white whitespace-nowrap cursor-pointer shadow-2xs">
+                🚛 Lệnh Xuất (<span id="w-cnt-cmd">0</span>)
+            </button>
+            <button onclick="window.modWmsOut.toggleStatus('PACKED')" id="w-st-PACKED" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-indigo-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+                📦 Sẵn Sàng Giao (<span id="w-cnt-packed">0</span>)
+            </button>
+            <button onclick="window.modWmsOut.toggleStatus('SHIPPED')" id="w-st-SHIPPED" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-emerald-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+                ✅ Đã Giao (<span id="w-cnt-shipped">0</span>)
+            </button>
+            <button onclick="window.modWmsOut.toggleStatus('PROCESSING')" id="w-st-PROCESSING" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-blue-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+                ⏳ Chờ Xử Lý (<span id="w-cnt-proc">0</span>)
+            </button>
+        </div>
+
+        <!-- CONTAINER BẢNG / CARDS -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex flex-col overflow-hidden flex-1 mb-6">
+            
+            <div class="p-3 sm:p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/70 shrink-0 gap-2">
+                <div class="relative flex-1 max-w-md">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fas fa-search text-xs"></i>
+                    </span>
+                    <input type="text" id="wms-search" placeholder="🔍 Tìm mã đơn, tên khách, SĐT, chành xe..." oninput="window.modWmsOut.applyFilters()" class="w-full pl-9 pr-8 py-2 text-xs font-bold border border-slate-300 rounded-xl outline-none bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-100 shadow-2xs">
+                    <button type="button" onclick="document.getElementById('wms-search').value=''; window.modWmsOut.applyFilters();" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-300 hover:text-slate-500 cursor-pointer">
+                        <i class="fas fa-times-circle text-xs"></i>
+                    </button>
                 </div>
             </div>
-            <div class="overflow-x-auto wms-scroll h-full">
+
+            <!-- DESKTOP TABLE -->
+            <div class="hidden md:block overflow-x-auto wms-scroll h-full">
                 <table class="w-full text-left whitespace-nowrap">
-                    <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold tracking-wider sticky top-0 z-10 shadow-sm">
+                    <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold tracking-wider sticky top-0 z-10 shadow-2xs">
                         <tr>
                             <th class="p-4 py-3">Mã Lệnh</th>
                             <th class="p-4 py-3">Khách Hàng / Nhận Hộ</th>
                             <th class="p-4 py-3">Danh Sách Hàng Hóa</th>
                             <th class="p-4 py-3">Thông tin Chành xe</th>
-                            <th class="p-4 py-3 text-center">Trạng Thái</th>
+                            <th class="p-4 py-3 text-center">Trạng Thái & Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody id="wms-tbody" class="divide-y divide-slate-50"></tbody>
+                    <tbody id="wms-tbody" class="divide-y divide-slate-50 text-xs"></tbody>
                 </table>
             </div>
+
+            <!-- MOBILE SMART CARDS -->
+            <div id="wms-out-mobile-cards" class="md:hidden p-3 space-y-2.5 bg-slate-100/50 min-h-[150px]"></div>
+
         </div>
     </div>
 
     <!-- MÀN HÌNH 2: CHI TIẾT ĐÓNG GÓI & XUẤT KHO -->
-    <div id="wms-detail" class="absolute inset-0 bg-slate-50 z-20 flex-col hidden overflow-hidden transition-all duration-300 transform translate-x-full">
-        <div class="bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm shrink-0">
-            <button onclick="window.modWmsOut.showList()" class="text-slate-500 hover:text-orange-600 font-black text-sm flex items-center gap-2"><i class="fas fa-arrow-left"></i> TRỞ VỀ LỆNH XUẤT</button>
-            <h2 class="font-black text-slate-800 text-lg">ĐÓNG GÓI MÃ: <span id="wms-order-code" class="text-orange-600">---</span></h2>
-            <div class="flex gap-2">
-                <button onclick="window.modWmsOut.printShippingLabel()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded text-[13px] font-black shadow-sm transition"><i class="fas fa-box mr-1"></i> IN TEM GỬI</button>
-                <button onclick="window.modWmsOut.printDeliveryNote()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded text-[13px] font-black shadow-sm transition"><i class="fas fa-print mr-1"></i> IN PHIẾU XUẤT</button>
-                <button id="btn-wms-save" onclick="window.modWmsOut.confirmShipment()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded text-[13px] font-black shadow-sm transition"><i class="fas fa-truck-loading mr-1"></i> XÁC NHẬN XUẤT</button>
+    <div id="wms-detail" class="absolute inset-0 bg-slate-50 z-20 flex flex-col hidden overflow-hidden transition-all duration-300 transform translate-x-full">
+        
+        <!-- HEADER TOP ACTION BAR -->
+        <div class="bg-white border-b border-slate-200 p-3 sm:p-4 flex justify-between items-center shadow-2xs shrink-0 gap-2 flex-wrap sm:flex-nowrap">
+            <button onclick="window.modWmsOut.showList()" class="text-slate-600 hover:text-orange-600 font-bold text-xs flex items-center gap-1.5 bg-slate-100 active:bg-slate-200 px-3 py-1.5 sm:py-2 rounded-xl transition cursor-pointer shrink-0">
+                <i class="fas fa-arrow-left"></i> <span>Quay Lại</span>
+            </button>
+            
+            <h2 class="font-black text-slate-800 text-xs sm:text-base truncate flex items-center gap-1.5">
+                ĐƠN: <span id="wms-order-code" class="text-orange-600 font-mono">---</span>
+            </h2>
+
+            <div class="flex items-center gap-1.5 shrink-0 flex-wrap sm:flex-nowrap">
+                <button onclick="window.modWmsOut.printShippingLabel()" class="bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1 cursor-pointer">
+                    <i class="fas fa-box text-[10px]"></i> <span>Tem Gửi</span>
+                </button>
+                <button onclick="window.modWmsOut.printDeliveryNote()" class="bg-slate-800 hover:bg-slate-900 active:bg-slate-950 text-white px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1 cursor-pointer">
+                    <i class="fas fa-print text-[10px]"></i> <span>Phiếu Xuất</span>
+                </button>
+                <button id="btn-wms-save" onclick="window.modWmsOut.confirmShipment()" class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs font-black shadow-md transition flex items-center gap-1 cursor-pointer">
+                    <i class="fas fa-truck-loading text-[10px]"></i> <span>XÁC NHẬN</span>
+                </button>
             </div>
         </div>
 
-        <div class="flex-1 wms-scroll p-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto pb-32">
+        <div class="flex-1 wms-scroll p-3 sm:p-6 pb-24">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto">
                 
                 <!-- CỘT TRÁI: DANH SÁCH VẬT TƯ -->
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                        <h3 class="font-black text-slate-800 text-sm uppercase mb-4 border-b pb-2"><i class="fas fa-box-open text-orange-500 mr-2"></i>Vật Tư Cần Xuất</h3>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-[13px]">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-4 sm:p-5">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+                            <h3 class="font-black text-slate-800 text-xs sm:text-sm uppercase flex items-center gap-2">
+                                <i class="fas fa-box-open text-orange-500"></i> Vật Tư Cần Soạn Xuất
+                            </h3>
+                            <span class="text-[10px] text-slate-400 font-bold">Kiểm đếm & quét mã Serial/IMEI</span>
+                        </div>
+
+                        <!-- Desktop Table Items -->
+                        <div class="hidden md:block overflow-x-auto">
+                            <table class="w-full text-left text-xs">
                                 <thead class="bg-slate-800 text-white font-bold uppercase text-[10px]">
                                     <tr>
-                                        <th class="p-3 text-center">STT</th>
+                                        <th class="p-3 text-center w-10">STT</th>
                                         <th class="p-3">Tên Hàng Hóa</th>
-                                        <th class="p-3 text-center bg-orange-600">SL CẦN LẤY</th>
+                                        <th class="p-3 text-center bg-orange-600 w-24">SL CẦN LẤY</th>
                                         <th class="p-3">Nhập/Quét Serial</th>
                                     </tr>
                                 </thead>
                                 <tbody id="wms-items" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
+
+                        <!-- Mobile Smart Item Cards -->
+                        <div id="wms-items-mobile-container" class="md:hidden space-y-2.5"></div>
                     </div>
 
                     <!-- KHU VỰC HỒ SƠ GIAO HÀNG (MINH CHỨNG) -->
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                        <h3 class="font-black text-slate-800 text-[12px] uppercase mb-4 border-b pb-2 text-blue-600"><i class="fas fa-camera mr-2"></i>Hồ Sơ Giao Hàng (Phiếu ký, Ảnh chụp)</h3>
+                    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-4 sm:p-5 space-y-3">
+                        <h3 class="font-black text-slate-800 text-xs sm:text-sm pb-2 border-b border-slate-100 flex items-center gap-2 text-blue-600">
+                            <i class="fas fa-camera"></i> Hình Ảnh Bằng Chứng Giao Nhận (Xe, Phiếu ký)
+                        </h3>
                         <input type="file" id="wms-upload" multiple accept="image/*" onchange="window.modWmsOut.handleUpload(event)" class="hidden">
-                        <label for="wms-upload" class="cursor-pointer bg-slate-50 border-2 border-dashed border-blue-300 rounded-xl p-6 flex flex-col items-center justify-center text-blue-500 hover:bg-blue-100 transition">
-                            <i class="fas fa-cloud-upload-alt text-3xl mb-2"></i>
-                            <span class="font-bold text-sm">Nhấn để tải lên ảnh chụp kiện hàng, phiếu biên nhận...</span>
+                        <label for="wms-upload" class="cursor-pointer bg-slate-50 border-2 border-dashed border-blue-300 rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center text-blue-600 hover:bg-blue-50/80 active:bg-blue-100 transition shadow-2xs">
+                            <i class="fas fa-cloud-upload-alt text-2xl sm:text-3xl mb-1 text-blue-500"></i>
+                            <span class="font-black text-xs">Chụp ảnh hoặc chọn hình kiện hàng / biên nhận</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">Hỗ trợ JPG, PNG • Tối đa 5 ảnh</span>
                         </label>
-                        <div id="wms-proof-gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
+                        <div id="wms-proof-gallery" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2"></div>
                     </div>
                 </div>
 
                 <!-- CỘT PHẢI: GIAO HÀNG & CHÀNH XE -->
-                <div class="space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                        <h3 class="font-black text-emerald-600 text-[13px] uppercase mb-4 border-b pb-2"><i class="fas fa-truck mr-2"></i> Thông Tin Chành Xe / Giao Hàng</h3>
+                <div class="space-y-4">
+                    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-4 sm:p-5 space-y-3">
+                        <h3 class="font-black text-emerald-700 text-xs sm:text-sm pb-2 border-b border-slate-100 flex items-center gap-2">
+                            <i class="fas fa-truck text-emerald-600"></i> Thông Tin Chành Xe & Nhận Hàng
+                        </h3>
                         
-                        <div class="space-y-4">
+                        <div class="space-y-3 text-xs">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Đơn vị VC / Tên chành xe</label>
-                                <input type="text" id="wms-delivery" placeholder="VD: Chành xe Quốc Trung..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500 font-bold text-slate-700 shadow-sm">
+                                <label class="block font-black text-slate-700 text-[10px] uppercase mb-1">Đơn vị VC / Tên chành xe</label>
+                                <input type="text" id="wms-delivery" placeholder="VD: Chành xe Quốc Trung..." class="w-full border border-slate-300 rounded-xl p-2.5 outline-none focus:border-emerald-500 font-bold bg-white shadow-2xs">
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">SĐT Chành xe / Tài xế</label>
-                                <input type="text" id="wms-driver" placeholder="VD: 0932628656" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full md:w-1/2 border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500 font-bold text-slate-700 shadow-sm">
+                                <label class="block font-black text-slate-700 text-[10px] uppercase mb-1">SĐT Chành xe / Tài xế</label>
+                                <input type="text" id="wms-driver" placeholder="VD: 0932628656" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full border border-slate-300 rounded-xl p-2.5 outline-none focus:border-emerald-500 font-bold bg-white shadow-2xs">
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-blue-600 uppercase mb-1">Tên người nhận (Nhận hộ)</label>
-                                    <input type="text" id="wms-recipient-name" placeholder="Tên người nhận thực tế" class="w-full border border-blue-200 bg-blue-50 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 font-bold text-blue-700 shadow-sm">
+                                    <label class="block font-black text-blue-700 text-[10px] uppercase mb-1">Tên người nhận (Nhận hộ)</label>
+                                    <input type="text" id="wms-recipient-name" placeholder="Tên người nhận thực tế" class="w-full border border-blue-200 bg-blue-50/50 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold text-blue-800 shadow-2xs">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-blue-600 uppercase mb-1">SĐT người nhận (Nhận hộ)</label>
-                                    <input type="text" id="wms-recipient-phone" placeholder="VD: 09..." oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full border border-blue-200 bg-blue-50 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 font-bold text-blue-700 shadow-sm">
+                                    <label class="block font-black text-blue-700 text-[10px] uppercase mb-1">SĐT người nhận</label>
+                                    <input type="text" id="wms-recipient-phone" placeholder="VD: 09..." oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full border border-blue-200 bg-blue-50/50 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold text-blue-800 shadow-2xs">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Địa chỉ người nhận</label>
-                                <input type="text" id="wms-address" placeholder="Nhập địa chỉ giao hàng.." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500 font-bold text-slate-700 shadow-sm">
+                                <label class="block font-black text-slate-700 text-[10px] uppercase mb-1">Địa chỉ giao hàng</label>
+                                <input type="text" id="wms-address" placeholder="Nhập địa chỉ giao hàng.." class="w-full border border-slate-300 rounded-xl p-2.5 outline-none focus:border-emerald-500 font-bold bg-white shadow-2xs">
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-red-500 uppercase mb-1">Ghi chú dán thùng (In lên tem)</label>
-                                <input type="text" id="wms-shipping-note" value="Hàng điện tử - Dễ vỡ xin nhẹ tay" class="w-full border border-red-200 bg-red-50 rounded-lg p-2.5 text-sm outline-none focus:border-red-500 font-bold text-red-600 shadow-sm">
+                                <label class="block font-black text-red-600 text-[10px] uppercase mb-1">Ghi chú dán thùng (In lên tem)</label>
+                                <input type="text" id="wms-shipping-note" value="Hàng điện tử - Dễ vỡ xin nhẹ tay" class="w-full border border-red-200 bg-red-50/50 rounded-xl p-2.5 outline-none focus:border-red-500 font-bold text-red-700 shadow-2xs">
                             </div>
                         </div>
                     </div>
@@ -132,6 +194,30 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL XEM TRƯỚC VÀ IN TÀI LIỆU (KHÔNG BỊ CHẶN POPUP TRÊN MOBILE) -->
+    <div id="modal-wms-print-preview" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 hidden">
+        <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col w-full max-w-4xl max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-5 py-3.5 border-b border-slate-200 flex justify-between items-center bg-slate-900 text-white shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-print text-amber-400"></i>
+                    <h3 class="font-black text-sm text-slate-100" id="wms-print-modal-title">Xem Trước Bản In</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="window.modWmsOut.triggerIframePrint()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition">
+                        <i class="fas fa-print"></i> <span>IN NGAY / LƯU PDF</span>
+                    </button>
+                    <button type="button" onclick="window.modWmsOut.closePrintModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 flex items-center justify-center cursor-pointer transition">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-100/60" id="wms-print-preview-container"></div>
+        </div>
+    </div>
+
+    <iframe id="wms-print-iframe" class="hidden" style="position:fixed;right:10000px;bottom:10000px;width:0;height:0;border:0;"></iframe>
 </div>
 
 <script>
@@ -140,120 +226,179 @@ window.modWmsOut = {
     currentDetailId: null,
     currentData: null,
     currentItems: [],
-    currentProofs: [], // Mảng chứa base64 hoặc url ảnh
-    activeStatuses: ['SHIPPING_CMD'], // Mặc định Lệnh Xuất
+    currentProofs: [],
+    activeStatuses: ['SHIPPING_CMD'],
 
     init: () => { window.modWmsOut.loadData(); },
 
     loadData: async () => {
         const tbody = document.getElementById('wms-tbody');
-        tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Đang tải dữ liệu kho...</td></tr>';
+        const mobileContainer = document.getElementById('wms-out-mobile-cards');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-orange-500"></i><br>Đang tải dữ liệu kho...</td></tr>';
+        if (mobileContainer) mobileContainer.innerHTML = '<div class="p-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl text-orange-500"></i></div>';
+
         try {
             const res = await fetch('/api/orders?t=' + Date.now());
             const data = await res.json();
             if(data.success) {
                 window.modWmsOut.allOrders = data.data || [];
-                window.modWmsOut.renderStatusFilters(); // Hiển thị nút lọc
+                window.modWmsOut.updateStatusCounts();
                 window.modWmsOut.applyFilters();
             }
         } catch(e) {}
     },
 
-    // 1. TẠO THANH LỌC TRẠNG THÁI CHO WMS ĐÚNG THỨ TỰ (PROCESSING -> SHIPPING_CMD -> PACKED -> SHIPPED)
-    renderStatusFilters: () => {
-        const filterContainer = document.getElementById('wms-filter-container');
-        if (!filterContainer) {
-            // Chèn thanh lọc ngay trên bảng danh sách nếu chưa có
-            const tableContainer = document.querySelector('#wms-list .border.border-slate-100');
-            const filtersHTML = `
-                <div class="flex flex-wrap items-center gap-2 mb-4" id="wms-filter-container">
-                    <span class="text-slate-400 text-[11px] font-bold uppercase mr-2"><i class="fas fa-filter mr-1"></i>Lọc kho:</span>
-                    <button onclick="window.modWmsOut.toggleStatus('PROCESSING')" id="w-st-PROCESSING" class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 shadow-sm">Chờ xuất hàng</button>
-                    <button onclick="window.modWmsOut.toggleStatus('SHIPPING_CMD')" id="w-st-SHIPPING_CMD" class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 shadow-sm">Lệnh xuất</button>
-                    <button onclick="window.modWmsOut.toggleStatus('PACKED')" id="w-st-PACKED" class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 shadow-sm">Sẵn sàng giao</button>
-                    <button onclick="window.modWmsOut.toggleStatus('SHIPPED')" id="w-st-SHIPPED" class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 shadow-sm">Đã giao</button>
-                </div>
-            `;
-            tableContainer.insertAdjacentHTML('beforebegin', filtersHTML);
-        }
+    updateStatusCounts: () => {
+        const all = window.modWmsOut.allOrders;
+        const cntCmd = all.filter(o => o.status === 'SHIPPING_CMD').length;
+        const cntPacked = all.filter(o => o.status === 'PACKED').length;
+        const cntShipped = all.filter(o => o.status === 'SHIPPED').length;
+        const cntProc = all.filter(o => o.status === 'PROCESSING').length;
 
-        // Cập nhật màu sắc nút lọc
-        const configs = {
-            'PROCESSING': 'bg-blue-100 border-blue-400 text-blue-700 shadow-inner',
-            'SHIPPING_CMD': 'bg-orange-100 border-orange-400 text-orange-700 shadow-inner',
-            'PACKED': 'bg-indigo-100 border-indigo-400 text-indigo-700 shadow-inner',
-            'SHIPPED': 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner'
-        };
-        Object.keys(configs).forEach(k => {
-            const el = document.getElementById('w-st-' + k);
-            if (!el) return;
-            el.className = 'px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border border-slate-200 text-slate-400 hover:bg-slate-50 cursor-pointer shadow-sm';
-            if (window.modWmsOut.activeStatuses.includes(k)) el.className = 'px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition border cursor-pointer ' + configs[k];
-        });
+        const elCmd = document.getElementById('w-cnt-cmd');
+        const elPacked = document.getElementById('w-cnt-packed');
+        const elShipped = document.getElementById('w-cnt-shipped');
+        const elProc = document.getElementById('w-cnt-proc');
+
+        if (elCmd) elCmd.innerText = cntCmd;
+        if (elPacked) elPacked.innerText = cntPacked;
+        if (elShipped) elShipped.innerText = cntShipped;
+        if (elProc) elProc.innerText = cntProc;
     },
 
     toggleStatus: (st) => {
-        const idx = window.modWmsOut.activeStatuses.indexOf(st);
-        if (idx > -1) {
-            // Bắt buộc phải có ít nhất 1 tab
-            if (window.modWmsOut.activeStatuses.length > 1) {
-                 window.modWmsOut.activeStatuses.splice(idx, 1);
+        window.modWmsOut.activeStatuses = [st];
+        
+        const configs = {
+            'SHIPPING_CMD': { id: 'w-st-SHIPPING_CMD', active: 'border-orange-500 bg-orange-600 text-white font-black' },
+            'PACKED': { id: 'w-st-PACKED', active: 'border-indigo-500 bg-indigo-600 text-white font-black' },
+            'SHIPPED': { id: 'w-st-SHIPPED', active: 'border-emerald-500 bg-emerald-600 text-white font-black' },
+            'PROCESSING': { id: 'w-st-PROCESSING', active: 'border-blue-500 bg-blue-600 text-white font-black' }
+        };
+
+        Object.keys(configs).forEach(k => {
+            const btn = document.getElementById(configs[k].id);
+            if (!btn) return;
+            if (k === st) {
+                btn.className = `px-3 py-1.5 rounded-xl text-xs font-bold border ${configs[k].active} whitespace-nowrap cursor-pointer shadow-2xs`;
+            } else {
+                btn.className = `px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100`;
             }
-        } else {
-            // Chế độ xem 1 tab duy nhất
-            window.modWmsOut.activeStatuses = [st];
-        }
-        window.modWmsOut.renderStatusFilters();
+        });
+
         window.modWmsOut.applyFilters();
     },
 
     applyFilters: () => {
-        const term = document.getElementById('wms-search').value.toLowerCase().trim();
-        let filtered = window.modWmsOut.allOrders;
+        const term = (document.getElementById('wms-search')?.value || '').toLowerCase().trim();
+        let filtered = window.modWmsOut.allOrders || [];
 
-        // Lọc theo mảng trạng thái
         if (window.modWmsOut.activeStatuses.length > 0) {
-             filtered = filtered.filter(o => window.modWmsOut.activeStatuses.includes(o.status));
+            filtered = filtered.filter(o => window.modWmsOut.activeStatuses.includes(o.status));
         }
 
-        if (term) filtered = filtered.filter(o => (o.order_code||'').toLowerCase().includes(term) || (o.customer_name||'').toLowerCase().includes(term));
+        if (term) {
+            filtered = filtered.filter(o => 
+                (o.order_code || '').toLowerCase().includes(term) || 
+                (o.customer_name || '').toLowerCase().includes(term) ||
+                (o.phone || '').toLowerCase().includes(term) ||
+                (o.delivery_company || '').toLowerCase().includes(term)
+            );
+        }
         
         const tbody = document.getElementById('wms-tbody');
-        if(filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold">Không có Lệnh kho nào trong mục này.</td></tr>'; return; }
+        const mobileContainer = document.getElementById('wms-out-mobile-cards');
 
-        tbody.innerHTML = filtered.map(o => {
-            let stBadge = '';
-            if (o.status === 'PROCESSING') stBadge = '<span class="px-3 py-1 bg-blue-100 text-blue-600 text-[10px] font-black uppercase rounded shadow-sm">⚙️ Chờ xuất hàng</span>';
-            else if (o.status === 'SHIPPING_CMD') stBadge = '<span class="px-3 py-1 bg-orange-100 text-orange-600 text-[10px] font-black uppercase rounded shadow-sm">🚛 Lệnh xuất</span>';
-            else if (o.status === 'PACKED') stBadge = '<span class="px-3 py-1 bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase rounded shadow-sm">📦 Sẵn sàng giao</span>';
-            else if (o.status === 'SHIPPED') stBadge = '<span class="px-3 py-1 bg-emerald-100 text-emerald-600 text-[10px] font-black uppercase rounded shadow-sm">✅ Đã giao</span>';
-            
-            let itemsHtml = '<span class="text-[10px] text-slate-400 italic">Không có SP</span>';
-            if (o.items && o.items.length > 0) {
-                itemsHtml = o.items.slice(0, 5).map(i => '<p class="text-[11px] text-slate-700 font-bold truncate">- ' + i.product_name + ' <span class="text-orange-600 bg-orange-50 border border-orange-100 px-1 rounded">(x' + i.quantity + ')</span></p>').join('');
-                if (o.items.length > 5) {
-                    itemsHtml += '<p class="text-[10px] text-blue-500 italic mt-1 font-black">+ ' + (o.items.length - 5) + ' sản phẩm khác...</p>';
+        if(filtered.length === 0) { 
+            const emptyMsg = '<div class="p-8 text-center text-slate-400 font-bold text-xs bg-white rounded-2xl border border-dashed border-slate-200"><i class="fas fa-dolly text-2xl mb-2 text-slate-300 block"></i>Không có lệnh xuất kho nào trong mục này.</div>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold">Không có Lệnh kho nào trong mục này.</td></tr>';
+            if (mobileContainer) mobileContainer.innerHTML = emptyMsg;
+            return; 
+        }
+
+        // Desktop Table
+        if (tbody) {
+            tbody.innerHTML = filtered.map(o => {
+                let stBadge = '';
+                if (o.status === 'PROCESSING') stBadge = '<span class="px-2.5 py-1 bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">⚙️ Chờ xuất hàng</span>';
+                else if (o.status === 'SHIPPING_CMD') stBadge = '<span class="px-2.5 py-1 bg-orange-100 text-orange-800 border border-orange-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">🚛 Lệnh xuất</span>';
+                else if (o.status === 'PACKED') stBadge = '<span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 border border-indigo-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">📦 Sẵn sàng giao</span>';
+                else if (o.status === 'SHIPPED') stBadge = '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">✅ Đã giao</span>';
+                
+                let itemsHtml = '<span class="text-[10px] text-slate-400 italic">Không có SP</span>';
+                if (o.items && o.items.length > 0) {
+                    itemsHtml = o.items.slice(0, 4).map(i => '<p class="text-[11px] text-slate-700 font-bold truncate">• ' + i.product_name + ' <span class="text-orange-700 bg-orange-50 border border-orange-200 px-1 rounded font-mono font-black">(x' + i.quantity + ')</span></p>').join('');
+                    if (o.items.length > 4) {
+                        itemsHtml += '<p class="text-[10px] text-blue-600 italic mt-0.5 font-bold">+ ' + (o.items.length - 4) + ' sản phẩm khác...</p>';
+                    }
                 }
-            }
 
-            // Nút Thao tác Nhanh ngay ngoài bảng cho Kho
-            let quickActionBtn = '';
-            if (o.status === 'SHIPPING_CMD') {
-                 quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'PACKED')" class="mt-2 text-[9px] font-bold bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded shadow-sm transition">👉 XONG SOẠN HÀNG</button>`;
-            } else if (o.status === 'PACKED') {
-                 quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'SHIPPED')" class="mt-2 text-[9px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded shadow-sm transition">👉 XÁC NHẬN ĐÃ GIAO</button>`;
-            } else if (o.status === 'PROCESSING') {
-                 quickActionBtn = `<span class="mt-2 inline-block text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded shadow-sm">⏳ Chờ Sale Lên Lệnh</span>`;
-            }
+                let quickActionBtn = '';
+                if (o.status === 'SHIPPING_CMD') {
+                    quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'PACKED')" class="mt-1 text-[10px] font-black bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg shadow-2xs transition cursor-pointer">👉 SOẠN XONG</button>`;
+                } else if (o.status === 'PACKED') {
+                    quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'SHIPPED')" class="mt-1 text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg shadow-2xs transition cursor-pointer">👉 ĐÃ GIAO XE</button>`;
+                }
 
-            return '<tr class="hover:bg-orange-50 cursor-pointer transition border-b border-slate-50" onclick="window.modWmsOut.openDetail(' + o.id + ')">' +
-                '<td class="p-4 py-3 font-bold text-orange-600 text-[13px]">' + o.order_code + '</td>' +
-                '<td class="p-4 py-3"><p class="font-bold text-slate-800 text-[13px]">' + (o.customer_name || 'Khách Lẻ') + '</p><p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-phone-alt mr-1"></i>' + (o.phone || '---') + '</p></td>' +
-                '<td class="p-4 py-3 bg-slate-50/40 min-w-[200px] max-w-[300px] whitespace-normal border-l border-r border-slate-100">' + itemsHtml + '</td>' +
-                '<td class="p-4 py-3 text-xs text-slate-600 font-medium whitespace-normal max-w-[200px]">' + (o.delivery_company || 'Chưa có thông tin') + (o.driver_name ? '<br><i class="fas fa-phone-alt mt-1 mr-1 text-slate-400"></i>' + o.driver_name : '') + '</td>' +
-                '<td class="p-4 py-3 text-center">' + stBadge + '<br>' + quickActionBtn + '</td>' +
-            '</tr>';
-        }).join('');
+                return '<tr class="hover:bg-orange-50/60 cursor-pointer transition border-b border-slate-50" onclick="window.modWmsOut.openDetail(' + o.id + ')">' +
+                    '<td class="p-4 py-3 font-mono font-black text-orange-600 text-xs">' + o.order_code + '</td>' +
+                    '<td class="p-4 py-3"><p class="font-bold text-slate-900 text-xs">' + (o.customer_name || 'Khách Lẻ') + '</p><p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-phone-alt mr-1"></i>' + (o.phone || '---') + '</p></td>' +
+                    '<td class="p-4 py-3 bg-slate-50/40 min-w-[200px] max-w-[300px] whitespace-normal border-l border-r border-slate-100">' + itemsHtml + '</td>' +
+                    '<td class="p-4 py-3 text-xs text-slate-700 font-medium whitespace-normal max-w-[200px]">' + (o.delivery_company || '<span class="text-slate-400 italic">Chưa có chành xe</span>') + (o.driver_name ? '<br><span class="text-[10px] text-slate-500 font-bold"><i class="fas fa-phone-alt mr-1 text-slate-400"></i>' + o.driver_name + '</span>' : '') + '</td>' +
+                    '<td class="p-4 py-3 text-center">' + stBadge + (quickActionBtn ? '<br>' + quickActionBtn : '') + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        // Mobile Cards
+        if (mobileContainer) {
+            mobileContainer.innerHTML = filtered.map(o => {
+                let stBadge = '';
+                if (o.status === 'PROCESSING') stBadge = '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">⚙️ Chờ xuất</span>';
+                else if (o.status === 'SHIPPING_CMD') stBadge = '<span class="px-2 py-0.5 bg-orange-100 text-orange-800 border border-orange-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">🚛 Lệnh xuất</span>';
+                else if (o.status === 'PACKED') stBadge = '<span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 border border-indigo-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">📦 Sẵn sàng</span>';
+                else if (o.status === 'SHIPPED') stBadge = '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">✅ Đã giao</span>';
+
+                let itemsHtml = '<span class="text-[10px] text-slate-400 italic">Không có SP</span>';
+                if (o.items && o.items.length > 0) {
+                    itemsHtml = o.items.map(i => '<p class="text-[11px] text-slate-800 font-bold truncate leading-tight">• ' + i.product_name + ' <span class="text-orange-700 bg-orange-50 border border-orange-200 px-1 rounded font-mono font-black text-[10px]">(x' + i.quantity + ')</span></p>').join('');
+                }
+
+                let quickActionBtn = '';
+                if (o.status === 'SHIPPING_CMD') {
+                    quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'PACKED')" class="text-[10px] font-black bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl shadow-2xs transition cursor-pointer">👉 SOẠN XONG</button>`;
+                } else if (o.status === 'PACKED') {
+                    quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'SHIPPED')" class="text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl shadow-2xs transition cursor-pointer">👉 ĐÃ GIAO XE</button>`;
+                }
+
+                return `
+                <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs space-y-2.5 cursor-pointer active:bg-slate-50 transition" onclick="window.modWmsOut.openDetail(${o.id})">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 border border-orange-200 font-mono font-black text-xs">${o.order_code}</span>
+                            <span class="font-black text-slate-800 text-xs truncate max-w-[140px]">${o.customer_name || 'Khách Lẻ'}</span>
+                        </div>
+                        <div>${stBadge}</div>
+                    </div>
+
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
+                        ${itemsHtml}
+                    </div>
+
+                    <div class="text-[10px] text-slate-500 flex justify-between items-center">
+                        <span><i class="fas fa-truck text-slate-400 mr-1"></i>${o.delivery_company || 'Chưa chọn chành xe'}</span>
+                        ${o.phone ? `<span><i class="fas fa-phone-alt text-slate-400 mr-1"></i>${o.phone}</span>` : ''}
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-100 gap-2">
+                        <button onclick="event.stopPropagation(); window.modWmsOut.openDetail(${o.id})" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 font-black rounded-xl text-[10px] shadow-2xs flex items-center gap-1">
+                            <span>Chi Tiết Đóng Gói</span> <i class="fas fa-chevron-right text-[8px]"></i>
+                        </button>
+                        <div>${quickActionBtn}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
     },
 
     fastUpdateStatus: async (id, nextStatus) => {
@@ -287,35 +432,61 @@ window.modWmsOut = {
                 document.getElementById('wms-address').value = o.customer_address || o.address || '';
                 document.getElementById('wms-shipping-note').value = o.notes || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
 
-                // LOGIC NÚT BẤM BÊN TRONG CHI TIẾT
                 const actionBtn = document.getElementById('btn-wms-save');
                 if (o.status === 'PROCESSING') {
                      actionBtn.innerHTML = '<i class="fas fa-spinner mr-1"></i> CHỜ SALE PHÁT LỆNH';
-                     actionBtn.className = 'bg-slate-400 text-white px-6 py-2 rounded text-[13px] font-black shadow-sm cursor-not-allowed';
-                     actionBtn.setAttribute('onclick', ''); // Khóa nút
+                     actionBtn.className = 'bg-slate-400 text-white px-4 sm:px-6 py-2 rounded-xl text-xs font-black shadow-sm cursor-not-allowed';
+                     actionBtn.setAttribute('onclick', '');
                 } else if (o.status === 'SHIPPING_CMD') {
-                     actionBtn.innerHTML = '<i class="fas fa-box mr-1"></i> HOÀN THÀNH SOẠN HÀNG';
-                     actionBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded text-[13px] font-black shadow-sm transition';
+                     actionBtn.innerHTML = '<i class="fas fa-box mr-1"></i> XONG SOẠN HÀNG';
+                     actionBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2 rounded-xl text-xs font-black shadow-sm transition cursor-pointer';
                      actionBtn.setAttribute('onclick', 'window.modWmsOut.confirmShipment("PACKED")');
                 } else if (o.status === 'PACKED') {
-                     actionBtn.innerHTML = '<i class="fas fa-truck-loading mr-1"></i> XÁC NHẬN GIAO HÀNG';
-                     actionBtn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded text-[13px] font-black shadow-sm transition';
+                     actionBtn.innerHTML = '<i class="fas fa-truck-loading mr-1"></i> XÁC NHẬN GIAO';
+                     actionBtn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-4 sm:px-6 py-2 rounded-xl text-xs font-black shadow-sm transition cursor-pointer';
                      actionBtn.setAttribute('onclick', 'window.modWmsOut.confirmShipment("SHIPPED")');
                 } else {
-                     actionBtn.innerHTML = '<i class="fas fa-check mr-1"></i> LƯU THÔNG TIN BỔ SUNG';
-                     actionBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-[13px] font-black shadow-sm transition';
+                     actionBtn.innerHTML = '<i class="fas fa-check mr-1"></i> LƯU BỔ SUNG';
+                     actionBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 rounded-xl text-xs font-black shadow-sm transition cursor-pointer';
                      actionBtn.setAttribute('onclick', `window.modWmsOut.confirmShipment("${o.status}")`);
                 }
 
                 window.modWmsOut.currentItems = o.items || [];
+                
+                // Desktop Items Table
                 document.getElementById('wms-items').innerHTML = window.modWmsOut.currentItems.map((i, idx) => `
                     <tr class="border-b border-slate-100 hover:bg-slate-50">
                         <td class="p-3 text-center font-bold text-slate-400">${idx + 1}</td>
                         <td class="p-3 font-bold text-slate-800 leading-tight">${i.product_name}<br><span class="text-[10px] text-slate-400 font-mono">SKU: ${i.sku || 'N/A'}</span></td>
-                        <td class="p-3 text-center font-black text-xl text-orange-600 bg-orange-50" id="wms-qty-${i.product_id}">${i.quantity}</td>
-                        <td class="p-3"><input type="text" id="wms-serial-${i.product_id}" value="${i.serial_number || ''}" class="w-full border-2 border-slate-200 rounded p-2 text-xs font-mono uppercase bg-white outline-none focus:border-orange-500" placeholder="Serial..."></td>
+                        <td class="p-3 text-center font-black text-lg text-orange-600 bg-orange-50" id="wms-qty-${i.product_id}">${i.quantity}</td>
+                        <td class="p-3">
+                            <input type="text" id="wms-serial-${i.product_id}" value="${i.serial_number || ''}" oninput="window.modWmsOut.syncSerial(${i.product_id}, this.value)" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono uppercase bg-white outline-none focus:border-orange-500" placeholder="Serial/IMEI...">
+                        </td>
                     </tr>
                 `).join('');
+
+                // Mobile Smart Item Cards
+                const mobileItemsContainer = document.getElementById('wms-items-mobile-container');
+                if (mobileItemsContainer) {
+                    mobileItemsContainer.innerHTML = window.modWmsOut.currentItems.map((i, idx) => `
+                        <div class="bg-slate-50 rounded-2xl border border-slate-200 p-3 space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <div class="min-w-0">
+                                    <span class="text-[10px] font-black text-slate-400">#${idx + 1}</span>
+                                    <h4 class="font-black text-slate-900 text-xs leading-snug">${i.product_name}</h4>
+                                    <p class="text-[10px] text-slate-400 font-mono">SKU: ${i.sku || 'N/A'}</p>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-xl bg-orange-600 text-white font-black text-sm shrink-0 shadow-2xs">
+                                    x${i.quantity}
+                                </span>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 text-[10px] mb-1">Mã Serial / IMEI:</label>
+                                <input type="text" id="m-wms-serial-${i.product_id}" value="${i.serial_number || ''}" oninput="window.modWmsOut.syncSerial(${i.product_id}, this.value)" placeholder="Quét / Nhập Serial thiết bị..." class="w-full border border-slate-300 rounded-xl p-2 text-xs font-mono uppercase bg-white outline-none focus:border-orange-500">
+                            </div>
+                        </div>
+                    `).join('');
+                }
 
                 try { window.modWmsOut.currentProofs = o.delivery_proofs ? JSON.parse(o.delivery_proofs) : []; } catch(e) { window.modWmsOut.currentProofs = []; }
                 window.modWmsOut.renderProofs();
@@ -324,6 +495,13 @@ window.modWmsOut = {
                 document.getElementById('wms-detail').classList.remove('hidden', 'translate-x-full');
             }
         } catch(e) { alert("Lỗi tải chi tiết!"); }
+    },
+
+    syncSerial: (productId, val) => {
+        const dInp = document.getElementById('wms-serial-' + productId);
+        const mInp = document.getElementById('m-wms-serial-' + productId);
+        if (dInp && dInp.value !== val) dInp.value = val;
+        if (mInp && mInp.value !== val) mInp.value = val;
     },
 
     handleUpload: (e) => {
@@ -345,10 +523,11 @@ window.modWmsOut = {
 
     renderProofs: () => {
         const gal = document.getElementById('wms-proof-gallery');
+        if (!gal) return;
         gal.innerHTML = window.modWmsOut.currentProofs.map((p, idx) => `
-            <div class="relative group rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+            <div class="relative group rounded-xl overflow-hidden border border-slate-200 shadow-2xs bg-slate-100">
                 <img src="${p}" class="w-full h-24 object-cover">
-                <button onclick="window.modWmsOut.removeProof(${idx})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fas fa-times text-xs"></i></button>
+                <button onclick="window.modWmsOut.removeProof(${idx})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition shadow-md cursor-pointer"><i class="fas fa-times text-xs"></i></button>
             </div>
         `).join('');
     },
@@ -376,7 +555,7 @@ window.modWmsOut = {
             delivery_proofs: window.modWmsOut.currentProofs,
             items: window.modWmsOut.currentItems.map(i => ({
                 product_id: i.product_id,
-                serial_number: (document.getElementById('wms-serial-' + i.product_id) || {}).value || ''
+                serial_number: (document.getElementById('wms-serial-' + i.product_id) || document.getElementById('m-wms-serial-' + i.product_id) || {}).value || ''
             }))
         };
         
@@ -396,6 +575,44 @@ window.modWmsOut = {
         }
     },
 
+    // IN TEM VÀ IN PHIẾU XUẤT QUA MODAL XEM TRƯỚC (100% TƯƠNG THÍCH MOBILE, KHÔNG BỊ POPUP BLOCKER)
+    executePrint: (printHTML, title) => {
+        const modal = document.getElementById('modal-wms-print-preview');
+        const container = document.getElementById('wms-print-preview-container');
+        const titleEl = document.getElementById('wms-print-modal-title');
+        const iframe = document.getElementById('wms-print-iframe');
+
+        if (titleEl) titleEl.innerText = title;
+        if (container) container.innerHTML = `<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-2xl mx-auto">${printHTML}</div>`;
+        if (modal) modal.classList.remove('hidden');
+
+        if (iframe) {
+            try {
+                const doc = iframe.contentWindow.document;
+                doc.open();
+                doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title><style>@page{size:auto;margin:10mm;} body{font-family:"Arial",sans-serif;color:#000;margin:0;padding:10px;}</style></head><body>' + printHTML + '</body></html>');
+                doc.close();
+            } catch(e) {
+                console.error("Lỗi ghi iframe print", e);
+            }
+        }
+    },
+
+    closePrintModal: () => {
+        const modal = document.getElementById('modal-wms-print-preview');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    triggerIframePrint: () => {
+        const iframe = document.getElementById('wms-print-iframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        } else {
+            window.print();
+        }
+    },
+
     printShippingLabel: async () => {
         const o = window.modWmsOut.currentData;
         let sys = {};
@@ -409,16 +626,40 @@ window.modWmsOut = {
         const finalPhone = document.getElementById('wms-recipient-phone').value || '';
         const finalAddress = document.getElementById('wms-address').value || '';
 
-        const printHTML = '<html><head><title>Tem Gửi Hàng</title>' +
-            '<style>body{font-family:Arial;padding:20px;max-width:500px;margin:0 auto;border:2px dashed #000;} h1{text-align:center;font-size:32px;margin-bottom:10px;} .warning{text-align:center;font-weight:bold;font-size:20px;margin-bottom:25px;text-transform:uppercase;} .box{border:2px solid #000;padding:15px;margin-bottom:20px;border-radius:8px;font-size:18px;line-height:1.6;} .highlight{font-size:22px;font-weight:900;text-transform:uppercase;}</style></head><body>' +
-            '<div style="text-align:center;margin-bottom:20px;"><button onclick="window.print()" style="padding:10px 20px;background:#3b82f6;color:#fff;border:none;font-weight:bold;cursor:pointer;">🖨️ IN TEM NÀY</button></div>' +
-            '<h1>PHIẾU GỬI HÀNG</h1><div class="warning">' + notes + '</div>' +
-            '<div class="box" style="text-align:center;font-size:24px;font-weight:900;">' + deliveryName + ' ' + deliveryPhone + '</div>' +
-            '<div class="box"><strong>Người gửi:</strong><br><span class="highlight">' + (sys.store_name||'SUNGO') + '</span><br>SĐT: ' + (sys.store_phone||'') + '</div>' +
-            '<div class="box"><strong>Người nhận:</strong><br><span class="highlight">' + finalRecipient + '</span><br>SĐT: ' + finalPhone + '<br>Địa chỉ: ' + finalAddress + '</div>' +
-            '<div style="text-align:center;font-size:12px;margin-top:20px;">Mã đơn: ' + o.order_code + ' - Ký nhận chành xe: ........................</div>' +
-            '</body></html>';
-        const w = window.open('','','width=600,height=800'); w.document.write(printHTML); w.document.close();
+        const printHTML = `
+            <div style="font-family:Arial,sans-serif;padding:20px;border:2px dashed #000;border-radius:12px;background:#fff;">
+                <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:15px;">
+                    <h1 style="font-size:24px;font-black;margin:0;text-transform:uppercase;">PHIẾU GỬI HÀNG CHÀNH XE</h1>
+                    <p style="font-size:14px;color:#dc2626;font-weight:bold;margin:5px 0 0 0;">⚠️ ${notes}</p>
+                </div>
+
+                <div style="border:2px solid #000;padding:12px;margin-bottom:15px;border-radius:8px;font-size:16px;text-align:center;background:#f8fafc;">
+                    <strong style="font-size:18px;">🚚 CHÀNH XE: ${deliveryName}</strong>
+                    ${deliveryPhone ? `<br><span>SĐT XE: <b>${deliveryPhone}</b></span>` : ''}
+                </div>
+
+                <div style="border:1.5px solid #000;padding:12px;margin-bottom:12px;border-radius:8px;font-size:14px;line-height:1.5;">
+                    <strong style="text-transform:uppercase;color:#475569;">Người Gửi:</strong><br>
+                    <span style="font-size:16px;font-weight:900;">${sys.store_name || 'SUNGO SOLAR'}</span><br>
+                    <span>Hotline: <b>${sys.store_phone || '---'}</b></span><br>
+                    <span>Địa chỉ: ${sys.store_address || '---'}</span>
+                </div>
+
+                <div style="border:1.5px solid #000;padding:12px;margin-bottom:15px;border-radius:8px;font-size:14px;line-height:1.5;background:#eff6ff;">
+                    <strong style="text-transform:uppercase;color:#1e40af;">Người Nhận:</strong><br>
+                    <span style="font-size:18px;font-weight:900;color:#1e3a8a;">${finalRecipient}</span><br>
+                    <span style="font-size:16px;font-weight:bold;">SĐT: ${finalPhone || '---'}</span><br>
+                    <span>Địa chỉ: ${finalAddress || '---'}</span>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;font-size:12px;border-top:1px solid #cbd5e1;padding-top:10px;">
+                    <span>Mã Đơn: <b>${o.order_code}</b></span>
+                    <span>Ký nhận chành xe: ........................</span>
+                </div>
+            </div>
+        `;
+
+        window.modWmsOut.executePrint(printHTML, "Tem Gửi Hàng - " + o.order_code);
     },
 
     printDeliveryNote: async () => {
@@ -427,23 +668,53 @@ window.modWmsOut = {
         try { const r = await fetch('/api/settings'); sys = (await r.json()).data || {}; } catch(e) {}
 
         const itemsRows = window.modWmsOut.currentItems.map((i, idx) => {
-            const sEl = document.getElementById('wms-serial-' + i.product_id);
-            const serial = (sEl ? sEl.value : i.serial_number) ? '<br><span style="color:#2563eb;font-size:12px;">Serial: ' + (sEl ? sEl.value : i.serial_number) + '</span>' : '';
-            return '<tr><td style="padding:12px;border:1px solid #000;text-align:center;">' + (idx+1) + '</td>' +
-                   '<td style="padding:12px;border:1px solid #000;"><strong>' + i.product_name + '</strong>' + serial + '</td>' +
-                   '<td style="padding:12px;border:1px solid #000;text-align:center;font-size:18px;font-weight:bold;">' + i.quantity + '</td>' +
-                   '<td style="padding:12px;border:1px solid #000;"></td></tr>';
+            const sEl = document.getElementById('wms-serial-' + i.product_id) || document.getElementById('m-wms-serial-' + i.product_id);
+            const serial = (sEl ? sEl.value : i.serial_number) ? '<br><span style="color:#2563eb;font-size:11px;font-family:monospace;">Serial: ' + (sEl ? sEl.value : i.serial_number) + '</span>' : '';
+            return '<tr>' +
+                   '<td style="padding:8px 10px;border:1px solid #000;text-align:center;">' + (idx+1) + '</td>' +
+                   '<td style="padding:8px 10px;border:1px solid #000;"><strong>' + i.product_name + '</strong>' + serial + '</td>' +
+                   '<td style="padding:8px 10px;border:1px solid #000;text-align:center;font-size:14px;font-weight:bold;">' + i.quantity + '</td>' +
+                   '<td style="padding:8px 10px;border:1px solid #000;text-align:center;">' + (i.sku || 'Bộ') + '</td>' +
+                   '</tr>';
         }).join('');
 
-        const logoHtml = sys.store_logo ? '<img src="' + sys.store_logo + '" style="max-height:60px;display:inline-block;"/>' : '';
-        const printHTML = '<html><head><title>Phiếu Xuất Kho</title><style>body{font-family:"Times New Roman",serif;padding:40px;color:#000;} table{width:100%;border-collapse:collapse;margin-bottom:40px;} th{background:#f1f5f9;border:1px solid #000;padding:12px;} .footer{display:flex;justify-content:space-between;text-align:center;margin-top:50px;}</style></head><body>' +
-            '<div style="text-align:center;margin-bottom:20px;"><button onclick="window.print()" style="padding:10px 20px;background:#3b82f6;color:#fff;border:none;font-weight:bold;cursor:pointer;">🖨️ IN PHIẾU NÀY</button></div>' +
-            '<div style="text-align:center;">' + logoHtml + '<h2>PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG</h2><p>Mã Đơn: <strong>' + o.order_code + '</strong></p></div>' +
-            '<div style="border:1px solid #000;padding:15px;margin-bottom:20px;"><strong>Người nhận:</strong> ' + (document.getElementById('wms-recipient-name').value || 'Khách Lẻ') + '<br><strong>SĐT:</strong> ' + document.getElementById('wms-recipient-phone').value + '<br><strong>Địa chỉ:</strong> ' + document.getElementById('wms-address').value + '<br><br><strong>Ghi chú đơn hàng:</strong> ' + (document.getElementById('wms-shipping-note').value || 'Không có') + '<br><strong>Vận chuyển:</strong> ' + document.getElementById('wms-delivery').value + '</div>' +
-            '<table><thead><tr><th>STT</th><th>Tên Hàng Hóa</th><th>Số Lượng</th><th>Ghi chú</th></tr></thead><tbody>' + itemsRows + '</tbody></table>' +
-            '<div class="footer"><div><strong>NGƯỜI NHẬN</strong></div><div><strong>NGƯỜI GIAO</strong></div><div><strong>THỦ KHO XUẤT</strong></div></div>' +
-            '</body></html>';
-        const w = window.open('','','width=900,height=800'); w.document.write(printHTML); w.document.close();
+        const logoHtml = sys.store_logo ? '<img src="' + sys.store_logo + '" style="max-height:50px;display:inline-block;margin-bottom:8px;"/>' : '';
+        const printHTML = `
+            <div style="font-family:'Times New Roman',serif;padding:20px;color:#000;background:#fff;">
+                <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:15px;">
+                    ${logoHtml}
+                    <h2 style="font-size:20px;font-weight:bold;margin:0;text-transform:uppercase;">PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG</h2>
+                    <p style="font-size:13px;margin:4px 0 0 0;">Mã Đơn: <strong>${o.order_code}</strong> • Ngày: ${new Date().toLocaleDateString('vi-VN')}</p>
+                </div>
+
+                <div style="border:1px solid #000;padding:12px;margin-bottom:15px;border-radius:6px;font-size:13px;line-height:1.6;">
+                    <strong>Người nhận:</strong> ${document.getElementById('wms-recipient-name').value || 'Khách Lẻ'} &nbsp;|&nbsp; <strong>SĐT:</strong> ${document.getElementById('wms-recipient-phone').value || '---'}<br>
+                    <strong>Địa chỉ nhận:</strong> ${document.getElementById('wms-address').value || '---'}<br>
+                    <strong>Đơn vị vận chuyển:</strong> ${document.getElementById('wms-delivery').value || 'Tự vận chuyển'} &nbsp;|&nbsp; <strong>SĐT xe:</strong> ${document.getElementById('wms-driver').value || '---'}<br>
+                    <strong>Ghi chú:</strong> ${document.getElementById('wms-shipping-note').value || 'Không có'}
+                </div>
+
+                <table style="width:100%;border-collapse:collapse;margin-bottom:25px;font-size:13px;">
+                    <thead>
+                        <tr style="background:#f1f5f9;">
+                            <th style="border:1px solid #000;padding:8px;width:35px;text-align:center;">STT</th>
+                            <th style="border:1px solid #000;padding:8px;text-align:left;">Tên Thiết Bị / Hàng Hóa</th>
+                            <th style="border:1px solid #000;padding:8px;width:60px;text-align:center;">Số Lượng</th>
+                            <th style="border:1px solid #000;padding:8px;width:60px;text-align:center;">ĐVT</th>
+                        </tr>
+                    </thead>
+                    <tbody>${itemsRows}</tbody>
+                </table>
+
+                <div style="display:flex;justify-content:space-between;text-align:center;margin-top:35px;font-size:13px;">
+                    <div><strong>NGƯỜI NHẬN HÀNG</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span></div>
+                    <div><strong>NGƯỜI GIAO HÀNG</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span></div>
+                    <div><strong>THỦ KHO XUẤT</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span></div>
+                </div>
+            </div>
+        `;
+
+        window.modWmsOut.executePrint(printHTML, "Phiếu Xuất Kho - " + o.order_code);
     },
 
     showList: () => {

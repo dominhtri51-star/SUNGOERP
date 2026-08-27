@@ -223,11 +223,40 @@ const roleBottomNavs = {
         { id: 'purchases', icon: 'fa-shopping-cart', label: 'Mua Hàng' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
+    'NHAN_VIEN_KHO': [
+        { id: 'inventory-dash', icon: 'fa-boxes', label: 'Sơ Đồ Kho' },
+        { id: 'warehouse-in', icon: 'fa-box-open', label: 'Lệnh Nhập' },
+        { id: 'warehouse-out', icon: 'fa-dolly', label: 'Lệnh Xuất' },
+        { id: 'return-orders', icon: 'fa-undo', label: 'Kho QC' },
+        { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
+    ],
     'WAREHOUSE': [
-        { id: 'warehouse-out', icon: 'fa-truck-loading', label: 'Xuất Kho' },
-        { id: 'warehouse-in', icon: 'fa-dolly', label: 'Nhập Kho' },
-        { id: 'procurement-inventory', icon: 'fa-warehouse', label: 'Tồn Kho' },
-        { id: '__more__', icon: 'fa-bars', label: 'Menu' }
+        { id: 'inventory-dash', icon: 'fa-boxes', label: 'Sơ Đồ Kho' },
+        { id: 'warehouse-in', icon: 'fa-box-open', label: 'Lệnh Nhập' },
+        { id: 'warehouse-out', icon: 'fa-dolly', label: 'Lệnh Xuất' },
+        { id: 'return-orders', icon: 'fa-undo', label: 'Kho QC' },
+        { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
+    ],
+    'THU_KHO': [
+        { id: 'inventory-dash', icon: 'fa-boxes', label: 'Sơ Đồ Kho' },
+        { id: 'warehouse-in', icon: 'fa-box-open', label: 'Lệnh Nhập' },
+        { id: 'warehouse-out', icon: 'fa-dolly', label: 'Lệnh Xuất' },
+        { id: 'return-orders', icon: 'fa-undo', label: 'Kho QC' },
+        { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
+    ],
+    'KHO': [
+        { id: 'inventory-dash', icon: 'fa-boxes', label: 'Sơ Đồ Kho' },
+        { id: 'warehouse-in', icon: 'fa-box-open', label: 'Lệnh Nhập' },
+        { id: 'warehouse-out', icon: 'fa-dolly', label: 'Lệnh Xuất' },
+        { id: 'return-orders', icon: 'fa-undo', label: 'Kho QC' },
+        { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
+    ],
+    'QUAN_LY_KHO': [
+        { id: 'inventory-dash', icon: 'fa-boxes', label: 'Sơ Đồ Kho' },
+        { id: 'warehouse-in', icon: 'fa-box-open', label: 'Lệnh Nhập' },
+        { id: 'warehouse-out', icon: 'fa-dolly', label: 'Lệnh Xuất' },
+        { id: 'return-orders', icon: 'fa-undo', label: 'Kho QC' },
+        { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
     ],
     'KE_TOAN': [
         { id: 'accounting-vault', icon: 'fa-vault', label: 'Két Sắt' },
@@ -459,8 +488,9 @@ window.renderMobileBottomNav = function(role, activeModuleId) {
     const nav = document.getElementById('mobile-bottom-nav');
     if (!nav) return;
     
-    const userRole = role === 'KY_THUAT' ? 'BAO_HANH' : role;
-    const navItems = roleBottomNavs[userRole] || roleBottomNavs['ADMIN'] || [];
+    const rawRole = (role || 'ADMIN').toUpperCase();
+    const userRole = (rawRole === 'KY_THUAT' || rawRole === 'TECH') ? 'BAO_HANH' : rawRole;
+    const navItems = roleBottomNavs[userRole] || roleBottomNavs[role] || roleBottomNavs['ADMIN'] || [];
     
     const hasActiveItem = navItems.some(i => i.id === activeModuleId);
     
