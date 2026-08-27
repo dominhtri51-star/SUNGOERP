@@ -628,6 +628,61 @@
 </div>
 
 <!-- ==================================================================== -->
+<!-- POPUP MODAL: XEM TRƯỚC VÀ IN ẤN TÀI LIỆU (TƯƠNG THÍCH 100% MOBILE & DESKTOP) -->
+<!-- ==================================================================== -->
+<div id="modal-order-print-preview" class="fixed inset-0 bg-slate-950/85 z-50 hidden flex-col items-center justify-center p-2 sm:p-4 backdrop-blur-md">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[94vh] sm:h-[90vh] flex flex-col overflow-hidden border border-slate-300 animate-in fade-in zoom-in-95">
+        
+        <!-- Header Bar -->
+        <div class="bg-slate-900 px-4 sm:px-6 py-3 text-white flex items-center justify-between border-b border-amber-500 shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-slate-950 font-black shadow-sm">
+                    <i class="fas fa-print text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-xs sm:text-sm uppercase text-white truncate max-w-[200px] sm:max-w-md" id="print-modal-title">
+                        Xem Trước Bản In
+                    </h3>
+                    <p class="text-[10px] text-slate-400 font-medium hidden sm:block">Xem trước chuẩn khổ in & xuất PDF / In trực tiếp</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="window.modOrders.triggerIframePrint()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 text-white font-black text-xs px-3.5 sm:px-5 py-2 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer active:scale-98">
+                    <i class="fas fa-print text-amber-300"></i> <span>IN NGAY / LƯU PDF</span>
+                </button>
+                <button type="button" onclick="window.modOrders.closePrintModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Body: Live Preview Container -->
+        <div class="flex-1 bg-slate-200/80 p-2 sm:p-6 overflow-y-auto pos-scroll flex justify-center">
+            <div id="print-modal-preview-paper" class="bg-white shadow-2xl rounded-2xl w-full max-w-[850px] p-4 sm:p-8 min-h-[500px] border border-slate-300 text-slate-900 transition-all">
+                <!-- Preview Document Content Injected Here -->
+            </div>
+        </div>
+
+        <!-- Footer Bar for Mobile -->
+        <div class="bg-slate-50 p-2.5 sm:p-3 border-t border-slate-200 flex items-center justify-between shrink-0">
+            <span class="text-[11px] text-slate-500 font-bold hidden sm:inline"><i class="fas fa-mobile-alt mr-1 text-amber-500"></i> Hỗ trợ in qua AirPrint (iOS) & Google Print (Android)</span>
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button type="button" onclick="window.modOrders.closePrintModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer">
+                    Đóng
+                </button>
+                <button type="button" onclick="window.modOrders.triggerIframePrint()" class="flex-1 sm:flex-initial px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-file-pdf"></i> <span>XUẤT PDF / IN</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- INVISIBLE PRINT IFRAME FOR DIRECT PRINTING -->
+<iframe id="order-print-iframe" style="position:fixed; right:-9999px; bottom:-9999px; width:1px; height:1px; border:0; opacity:0; pointer-events:none;"></iframe>
+
+
+<!-- ==================================================================== -->
 <!-- LOGIC JAVASCRIPT XỬ LÝ ĐƠN HÀNG (SUNGO ERP) -->
 <!-- ==================================================================== -->
 <script>
@@ -1125,9 +1180,19 @@ window.modOrders = {
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
-                    <span class="text-[10px] font-bold text-slate-400">Chạm để mở chi tiết & xử lý</span>
-                    <button class="px-2.5 py-1 bg-blue-600 text-white font-bold rounded-lg shadow-2xs text-[10px] flex items-center gap-1">
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100 gap-1.5" onclick="event.stopPropagation()">
+                    <div class="flex items-center gap-1 overflow-x-auto pos-scroll py-0.5">
+                        <button type="button" onclick="event.stopPropagation(); window.modOrders.quickPrintOrder(${o.id}, 'quote')" title="In Báo Giá / Hóa Đơn" class="px-2 py-1 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold text-[10px] rounded-lg shadow-2xs flex items-center gap-1 cursor-pointer">
+                            <i class="fas fa-print text-amber-300"></i> Báo Giá
+                        </button>
+                        <button type="button" onclick="event.stopPropagation(); window.modOrders.quickPrintOrder(${o.id}, 'ship')" title="In Tem Gửi Xe" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-[10px] rounded-lg shadow-2xs flex items-center gap-1 cursor-pointer">
+                            <i class="fas fa-box text-xs"></i> Phiếu Gửi
+                        </button>
+                        <button type="button" onclick="event.stopPropagation(); window.modOrders.quickPrintOrder(${o.id}, 'delivery')" title="In Xuất Kho" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-[10px] rounded-lg shadow-2xs flex items-center gap-1 cursor-pointer">
+                            <i class="fas fa-truck text-[10px]"></i> Xuất Kho
+                        </button>
+                    </div>
+                    <button type="button" onclick="window.modOrders.openDetail(${o.id})" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-2xs text-[10px] flex items-center gap-1 shrink-0 cursor-pointer">
                         <span>Chi Tiết</span> <i class="fas fa-chevron-right text-[8px]"></i>
                     </button>
                 </div>
@@ -1970,10 +2035,7 @@ window.modOrders = {
             </div>
             </body></html>`;
 
-        const printWin = window.open('', '', 'width=950,height=850');
-        printWin.document.write(printHTML);
-        printWin.document.close();
-        printWin.focus();
+        window.modOrders.executePrint(printHTML, (quoteTitle || 'Hóa Đơn / Báo Giá') + ' - ' + (o.order_code || ''));
     },
 
     validatePhone: (input) => {
@@ -2188,10 +2250,7 @@ window.modOrders = {
             '</div>' +
             '</body></html>';
 
-        const printWin = window.open('', '', 'width=600,height=800');
-        printWin.document.write(printHTML);
-        printWin.document.close();
-        printWin.focus();
+        window.modOrders.executePrint(printHTML, 'Phiếu Gửi Hàng Chành Xe - ' + (o.order_code || ''));
     },
 
     printDeliveryNote: async () => {
@@ -2263,10 +2322,84 @@ window.modOrders = {
             '<div class="sign-box"><strong>THỦ KHO XUẤT</strong><br><small>(Ký và ghi rõ họ tên)</small><br><br><br><br></div></div>' +
             '</body></html>';
 
-        const printWin = window.open('', '', 'width=950,height=850');
-        printWin.document.write(printHTML);
-        printWin.document.close();
-        printWin.focus();
+        window.modOrders.executePrint(printHTML, 'Phiếu Xuất Kho Kiêm Giao Hàng - ' + (o.order_code || ''));
+    },
+
+    // ====================================================================
+    // BỘ ĐIỀU KHIỂN IN ẤN ĐA NỀN TẢNG (UNIVERSAL IN-APP PRINT ENGINE)
+    // ====================================================================
+    executePrint: (printHTML, docTitle) => {
+        const modal = document.getElementById('modal-order-print-preview');
+        const titleEl = document.getElementById('print-modal-title');
+        const paperEl = document.getElementById('print-modal-preview-paper');
+        const iframe = document.getElementById('order-print-iframe');
+
+        if (titleEl) titleEl.innerText = docTitle || 'Xem Trước Bản In';
+        if (paperEl) paperEl.innerHTML = printHTML;
+
+        // Bỏ action bar khỏi khung xem trước vì đã có action bar của Modal
+        const previewActionBar = paperEl.querySelector('#erp-action-bar');
+        if (previewActionBar) previewActionBar.style.display = 'none';
+
+        // Ghi nội dung vào Iframe ẩn để sẵn sàng in
+        if (iframe) {
+            try {
+                const frameDoc = iframe.contentWindow.document;
+                frameDoc.open();
+                frameDoc.write(printHTML);
+                frameDoc.close();
+            } catch(e) { console.error('Iframe write error:', e); }
+        }
+
+        // Hiển thị modal xem trước
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    },
+
+    triggerIframePrint: () => {
+        const iframe = document.getElementById('order-print-iframe');
+        if (iframe && iframe.contentWindow) {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch(e) {
+                window.print();
+            }
+        } else {
+            window.print();
+        }
+    },
+
+    closePrintModal: () => {
+        const modal = document.getElementById('modal-order-print-preview');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    },
+
+    quickPrintOrder: async (orderId, type) => {
+        try {
+            const res = await fetch('/api/orders/' + orderId + '?t=' + Date.now());
+            const data = await res.json();
+            if (data.success && data.data) {
+                window.modOrders.currentData = data.data;
+                window.modOrders.currentItems = data.data.items || [];
+                if (type === 'quote') {
+                    window.modOrders.printQuotation();
+                } else if (type === 'ship') {
+                    window.modOrders.printShippingLabel();
+                } else if (type === 'delivery') {
+                    window.modOrders.printDeliveryNote();
+                }
+            } else {
+                alert('❌ Không tìm thấy dữ liệu đơn hàng!');
+            }
+        } catch(e) {
+            alert('❌ Lỗi kết nối khi tải bản in đơn hàng!');
+        }
     },
 
     showList: () => {
