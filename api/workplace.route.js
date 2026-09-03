@@ -130,8 +130,9 @@ router.get('/channels', async (req, res) => {
                    (SELECT COUNT(*) FROM workplace_channel_members cm WHERE cm.channel_id = c.id) as member_count,
                    EXISTS(SELECT 1 FROM workplace_channel_members cm WHERE cm.channel_id = c.id AND cm.user_id = $1) as is_member
             FROM workplace_channels c
-            WHERE c.type IN ('PUBLIC', 'ANNOUNCEMENT')
-               OR (c.type = 'GROUP' AND (EXISTS(SELECT 1 FROM workplace_channel_members cm WHERE cm.channel_id = c.id AND cm.user_id = $1) OR $2 = TRUE))
+            WHERE $2 = TRUE -- Admin luôn xem được tất cả các kênh để quản lý
+               OR (SELECT COUNT(*) FROM workplace_channel_members cm WHERE cm.channel_id = c.id) = 0 -- Mở cho toàn công ty nếu chưa giới hạn thành viên
+               OR EXISTS(SELECT 1 FROM workplace_channel_members cm WHERE cm.channel_id = c.id AND cm.user_id = $1) -- Hoặc user là thành viên được chỉ định
             ORDER BY 
                CASE WHEN c.type = 'ANNOUNCEMENT' THEN 1 WHEN c.type = 'PUBLIC' THEN 2 ELSE 3 END,
                c.id ASC
@@ -219,24 +220,39 @@ router.post('/channels', async (req, res) => {
 });
 
 /**
- * 3. GET /api/workplace/channels/:id/members (Lấy danh sách thành viên của một nhóm)
+ * 3. GET /api/workplace/channels/:id/members (Lấy danh sách thành viên của một kênh / nhóm)
  */
 router.get('/channels/:id/members', async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await pool.query(`
+        const chanRes = await pool.query(`SELECT id, name, slug, icon, type, is_announcement_only FROM workplace_channels WHERE id = $1`, [id]);
+        if (chanRes.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy kênh này!' });
+        }
+
+        const membersRes = await pool.query(`
+            SELECT user_id FROM workplace_channel_members WHERE channel_id = $1
+        `, [id]);
+        const memberIds = membersRes.rows.map(r => r.user_id);
+
+        const usersRes = await pool.query(`
             SELECT u.id, u.username, u.full_name, u.role, u.emp_id,
                    COALESCE(e.position, u.role) as position,
                    COALESCE(e.department_role, '') as department,
-                   cm.added_at
-            FROM workplace_channel_members cm
-            JOIN users u ON cm.user_id = u.id
+                   COALESCE(e.phone, '') as phone
+            FROM users u
             LEFT JOIN employees e ON UPPER(e.emp_code) = UPPER(u.emp_id)
-            WHERE cm.channel_id = $1
             ORDER BY u.full_name ASC
-        `, [id]);
+        `);
 
-        res.json({ success: true, data: result.rows });
+        res.json({
+            success: true,
+            data: {
+                channel: chanRes.rows[0],
+                member_ids: memberIds,
+                users: usersRes.rows
+            }
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -248,7 +264,7 @@ router.get('/channels/:id/members', async (req, res) => {
 router.put('/channels/:id/members', async (req, res) => {
     try {
         if (!req.user || !isLeaderOrAdmin(req.user.role)) {
-            return res.status(403).json({ success: false, error: 'Chỉ Ban Giám Đốc hoặc Quản trị viên mới được chỉnh sửa thành viên nhóm!' });
+            return res.status(403).json({ success: false, error: 'Chỉ Ban Giám Đốc hoặc Quản trị viên mới được quản lý thành viên nhóm!' });
         }
 
         const { id } = req.params;
@@ -258,14 +274,14 @@ router.put('/channels/:id/members', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Danh sách thành viên không hợp lệ!' });
         }
 
-        // Xóa các thành viên cũ không có trong danh sách mới
+        // Xóa phân công cũ
         await pool.query(`DELETE FROM workplace_channel_members WHERE channel_id = $1`, [id]);
 
-        // Luôn đảm bảo admin có trong nhóm
-        let finalMembers = [...member_ids];
-        if (!finalMembers.includes(req.user.id)) finalMembers.push(req.user.id);
+        // Nếu member_ids có phần tử -> gán thành viên; nếu rỗng -> mở cho toàn công ty
+        if (member_ids.length > 0) {
+            let finalMembers = [...member_ids];
+            if (!finalMembers.includes(req.user.id)) finalMembers.push(req.user.id);
 
-        if (finalMembers.length > 0) {
             const memberInserts = finalMembers.map(uid => `(${id}, ${parseInt(uid, 10)}, ${req.user.id})`).join(', ');
             await pool.query(`
                 INSERT INTO workplace_channel_members (channel_id, user_id, added_by)
@@ -274,7 +290,12 @@ router.put('/channels/:id/members', async (req, res) => {
             `);
         }
 
-        res.json({ success: true, message: 'Cập nhật danh sách thành viên nhóm thành công!' });
+        res.json({ 
+            success: true, 
+            message: member_ids.length === 0 
+                ? 'Đã mở nhóm này cho toàn bộ nhân viên công ty!' 
+                : `Đã cập nhật phân công ${member_ids.length} thành viên cho nhóm!` 
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -327,13 +348,20 @@ router.get('/messages', async (req, res) => {
                 return res.status(404).json({ success: false, error: 'Không tìm thấy kênh này!' });
             }
 
-            if (chanCheck.rows[0].type === 'GROUP' && !isAdmin) {
-                const memberCheck = await pool.query(
-                    "SELECT 1 FROM workplace_channel_members WHERE channel_id = $1 AND user_id = $2",
-                    [chanId, currentUserId]
+            if (!isAdmin) {
+                const memberCountRes = await pool.query(
+                    "SELECT COUNT(*) FROM workplace_channel_members WHERE channel_id = $1",
+                    [chanId]
                 );
-                if (memberCheck.rows.length === 0) {
-                    return res.status(403).json({ success: false, error: 'Bạn không thuộc danh sách thành viên của nhóm này!' });
+                const hasRestrictions = parseInt(memberCountRes.rows[0].count, 10) > 0;
+                if (hasRestrictions) {
+                    const memberCheck = await pool.query(
+                        "SELECT 1 FROM workplace_channel_members WHERE channel_id = $1 AND user_id = $2",
+                        [chanId, currentUserId]
+                    );
+                    if (memberCheck.rows.length === 0) {
+                        return res.status(403).json({ success: false, error: 'Bạn không thuộc danh sách thành viên của nhóm này!' });
+                    }
                 }
             }
 
@@ -421,13 +449,20 @@ router.post('/messages', async (req, res) => {
                         error: `⛔ Kênh "${chan.name}" là kênh phát thanh chỉ đạo. Chỉ có Ban Giám Đốc và Quản trị viên mới có quyền đăng thông báo!`
                     });
                 }
-                if (chan.type === 'GROUP' && !isAdmin) {
-                    const memberCheck = await pool.query(
-                        "SELECT 1 FROM workplace_channel_members WHERE channel_id = $1 AND user_id = $2",
-                        [channel_id, currentUserId]
+                if (!isAdmin) {
+                    const memberCountRes = await pool.query(
+                        "SELECT COUNT(*) FROM workplace_channel_members WHERE channel_id = $1",
+                        [channel_id]
                     );
-                    if (memberCheck.rows.length === 0) {
-                        return res.status(403).json({ success: false, error: 'Bạn không có quyền gửi tin nhắn vào nhóm này!' });
+                    const hasRestrictions = parseInt(memberCountRes.rows[0].count, 10) > 0;
+                    if (hasRestrictions) {
+                        const memberCheck = await pool.query(
+                            "SELECT 1 FROM workplace_channel_members WHERE channel_id = $1 AND user_id = $2",
+                            [channel_id, currentUserId]
+                        );
+                        if (memberCheck.rows.length === 0) {
+                            return res.status(403).json({ success: false, error: 'Bạn không có quyền gửi tin nhắn vào nhóm này!' });
+                        }
                     }
                 }
             }

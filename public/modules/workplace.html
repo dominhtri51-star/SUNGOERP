@@ -248,25 +248,66 @@
 <!-- MODAL: QUẢN LÝ THÀNH VIÊN NHÓM CỦA ADMIN                 -->
 <!-- ======================================================== -->
 <div id="wp-modal-manage-members" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
-        <div class="bg-slate-900 px-5 py-3.5 flex items-center justify-between text-white shrink-0">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-user-cog text-amber-400"></i>
-                <h3 class="font-black text-sm">Quản Lý Thành Viên Nhóm</h3>
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+        <div class="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4 flex items-center justify-between text-white shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <div>
+                    <h3 id="wp-manage-modal-title" class="font-black text-sm sm:text-base">Quản Lý Thành Viên Kênh</h3>
+                    <p class="text-[11px] text-slate-400 font-normal">Chỉ định nhân sự được xem & thảo luận trong kênh này</p>
+                </div>
             </div>
-            <button onclick="document.getElementById('wp-modal-manage-members').classList.add('hidden')" class="text-slate-400 hover:text-white">
+            <button onclick="document.getElementById('wp-modal-manage-members').classList.add('hidden')" class="text-slate-400 hover:text-white text-lg">
                 <i class="fas fa-times"></i>
             </button>
         </div>
+
         <div class="p-5 overflow-y-auto flex-1 space-y-3">
-            <p class="text-xs text-slate-500">Tích chọn để thêm hoặc bỏ tích để xóa thành viên khỏi nhóm:</p>
-            <div id="wp-manage-members-list" class="border border-slate-200 rounded-xl p-2.5 max-h-64 overflow-y-auto space-y-1 bg-slate-50">
-                <!-- Checkbox list -->
+            <!-- Banner hướng dẫn -->
+            <div id="wp-manage-modal-desc" class="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-900 space-y-1">
+                <p class="font-bold flex items-center gap-1.5"><i class="fas fa-info-circle text-amber-600"></i> Hướng dẫn phân quyền:</p>
+                <p class="text-[11px] text-amber-800">• <b>Bỏ chọn tất cả (0 thành viên)</b>: Kênh mở công khai cho toàn thể nhân viên công ty.</p>
+                <p class="text-[11px] text-amber-800">• <b>Tích chọn thành viên cụ thể</b>: Chỉ những nhân viên được chọn mới nhìn thấy và nhắn tin được trong kênh này.</p>
+            </div>
+
+            <!-- Nút chọn nhanh theo phòng ban -->
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700">Chọn Nhanh Theo Phòng Ban:</span>
+                    <span id="wp-manage-selected-count" class="text-xs font-bold text-amber-600">Đã chọn: 0 TV</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <button type="button" onclick="window.modWorkplace.selectManageRole(['SALE', 'SALE_ADMIN', 'SALES'])" class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg font-bold hover:bg-blue-100 transition border border-blue-200">+ Đội Sale</button>
+                    <button type="button" onclick="window.modWorkplace.selectManageRole(['NHAN_VIEN_KHO', 'WAREHOUSE', 'THU_KHO'])" class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-100 transition border border-emerald-200">+ Đội Kho</button>
+                    <button type="button" onclick="window.modWorkplace.selectManageRole(['KY_THUAT', 'TECH', 'BAO_HANH'])" class="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg font-bold hover:bg-purple-100 transition border border-purple-200">+ Đội Kỹ Thuật</button>
+                    <button type="button" onclick="window.modWorkplace.selectManageRole(['KE_TOAN'])" class="bg-rose-50 text-rose-700 px-2.5 py-1 rounded-lg font-bold hover:bg-rose-100 transition border border-rose-200">+ Đội Kế Toán</button>
+                    <button type="button" onclick="window.modWorkplace.selectAllManageMembers(true)" class="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold hover:bg-slate-200 transition">Tất Cả</button>
+                    <button type="button" onclick="window.modWorkplace.selectAllManageMembers(false)" class="text-red-500 hover:underline px-1.5 py-1 text-xs font-medium">Bỏ chọn hết</button>
+                </div>
+            </div>
+
+            <!-- Ô tìm kiếm nhân viên trong modal -->
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="wp-manage-search-input" oninput="window.modWorkplace.filterManageUsers(this.value)" placeholder="Tìm nhân viên theo tên hoặc vị trí..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-500 focus:bg-white transition">
+            </div>
+
+            <!-- Danh sách checkbox thành viên -->
+            <div id="wp-manage-members-list" class="border border-slate-200 rounded-2xl p-2.5 max-h-60 overflow-y-auto space-y-1 bg-slate-50">
+                <!-- Dynamic Checkbox list -->
             </div>
         </div>
-        <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex items-center justify-end gap-2">
-            <button onclick="document.getElementById('wp-modal-manage-members').classList.add('hidden')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Đóng</button>
-            <button onclick="window.modWorkplace.saveGroupMembers()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition shadow-xs">Lưu Thay Đổi</button>
+
+        <div class="bg-slate-50 px-6 py-3.5 border-t border-slate-100 flex items-center justify-between shrink-0">
+            <button type="button" onclick="window.modWorkplace.selectAllManageMembers(false)" class="text-xs text-slate-500 hover:text-slate-800">
+                <i class="fas fa-globe mr-1"></i> Mở cho toàn công ty
+            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="document.getElementById('wp-modal-manage-members').classList.add('hidden')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Đóng</button>
+                <button type="button" onclick="window.modWorkplace.saveGroupMembers()" id="wp-btn-save-manage-members" class="px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm">Lưu Phân Công Thành Viên</button>
+            </div>
         </div>
     </div>
 </div>
@@ -352,14 +393,22 @@ window.modWorkplace = {
             listPublicEl.innerHTML = publicChans.map(c => {
                 const isActive = this.activeType === 'CHANNEL' && this.activeId === c.id;
                 const isAnnounce = c.type === 'ANNOUNCEMENT';
+                const memberText = c.member_count > 0 ? `${c.member_count} tv` : 'Tất cả';
                 return `
-                    <button onclick="window.modWorkplace.selectChannel(${c.id})" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition ${isActive ? 'bg-amber-50 text-amber-700 font-black border border-amber-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">
-                        <div class="flex items-center gap-2.5 truncate">
-                            <span class="${isAnnounce ? 'text-amber-500' : 'text-slate-400'}"><i class="fas ${c.icon || 'fa-hashtag'}"></i></span>
-                            <span class="truncate">${c.name}</span>
+                    <div class="group/item flex items-center justify-between rounded-xl px-2 py-1.5 transition ${isActive ? 'bg-amber-50 text-amber-800 font-black border border-amber-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">
+                        <button onclick="window.modWorkplace.selectChannel(${c.id})" class="flex-1 text-left flex items-center gap-2 truncate py-1">
+                            <span class="${isAnnounce ? 'text-amber-500' : 'text-slate-400'}"><i class="fas ${c.icon || 'fa-hashtag'} text-xs"></i></span>
+                            <span class="truncate text-xs font-bold">${c.name}</span>
+                        </button>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ${c.member_count > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-400'}">${memberText}</span>
+                            ${this.isAdmin ? `
+                                <button onclick="event.stopPropagation(); window.modWorkplace.openManageMembersModal(${c.id})" class="opacity-0 group-hover/item:opacity-100 p-1 text-slate-400 hover:text-amber-600 hover:bg-white rounded-md transition" title="Quản lý thêm/bớt thành viên kênh ${c.name}">
+                                    <i class="fas fa-user-cog text-[11px]"></i>
+                                </button>
+                            ` : ''}
                         </div>
-                        ${c.total_messages > 0 ? `<span class="bg-slate-200/80 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">${c.total_messages}</span>` : ''}
-                    </button>
+                    </div>
                 `;
             }).join('');
         }
@@ -373,14 +422,22 @@ window.modWorkplace = {
             } else {
                 listGroupsEl.innerHTML = groupChans.map(c => {
                     const isActive = this.activeType === 'CHANNEL' && this.activeId === c.id;
+                    const memberText = c.member_count > 0 ? `${c.member_count} tv` : 'Tất cả';
                     return `
-                        <button onclick="window.modWorkplace.selectChannel(${c.id})" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition ${isActive ? 'bg-amber-50 text-amber-700 font-black border border-amber-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">
-                            <div class="flex items-center gap-2.5 truncate">
-                                <span class="text-orange-500"><i class="fas ${c.icon || 'fa-handshake'}"></i></span>
-                                <span class="truncate">${c.name}</span>
+                        <div class="group/item flex items-center justify-between rounded-xl px-2 py-1.5 transition ${isActive ? 'bg-amber-50 text-amber-800 font-black border border-amber-200 shadow-2xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">
+                            <button onclick="window.modWorkplace.selectChannel(${c.id})" class="flex-1 text-left flex items-center gap-2 truncate py-1">
+                                <span class="text-orange-500"><i class="fas ${c.icon || 'fa-handshake'} text-xs"></i></span>
+                                <span class="truncate text-xs font-bold">${c.name}</span>
+                            </button>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">${memberText}</span>
+                                ${this.isAdmin ? `
+                                    <button onclick="event.stopPropagation(); window.modWorkplace.openManageMembersModal(${c.id})" class="opacity-0 group-hover/item:opacity-100 p-1 text-slate-400 hover:text-amber-600 hover:bg-white rounded-md transition" title="Quản lý thành viên nhóm ${c.name}">
+                                        <i class="fas fa-user-cog text-[11px]"></i>
+                                    </button>
+                                ` : ''}
                             </div>
-                            <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">${c.member_count || 1} tv</span>
-                        </button>
+                        </div>
                     `;
                 }).join('');
             }
@@ -430,25 +487,29 @@ window.modWorkplace = {
         document.getElementById('wp-header-desc').innerText = this.activeChannel.description || 'Kênh trao đổi nội bộ';
         
         const badgeEl = document.getElementById('wp-header-badge');
+        const memberCount = this.activeChannel.member_count || 0;
+        const memberStatusText = memberCount > 0 ? `${memberCount} thành viên` : 'Toàn Công Ty';
+
         if (this.activeChannel.type === 'ANNOUNCEMENT') {
-            badgeEl.innerText = '📢 Thông Báo Chỉ Đạo';
+            badgeEl.innerText = `📢 Thông Báo Chỉ Đạo (${memberStatusText})`;
             badgeEl.className = 'bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full';
         } else if (this.activeChannel.type === 'GROUP') {
-            badgeEl.innerText = `🤝 Nhóm Phân Công (${this.activeChannel.member_count || 1} thành viên)`;
+            badgeEl.innerText = `🤝 Nhóm Phân Công (${memberStatusText})`;
             badgeEl.className = 'bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full';
         } else {
-            badgeEl.innerText = '💬 Phòng Ban';
+            badgeEl.innerText = `💬 Kênh Phòng Ban (${memberStatusText})`;
             badgeEl.className = 'bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full';
         }
 
         const iconEl = document.getElementById('wp-header-icon');
         iconEl.innerHTML = `<i class="fas ${this.activeChannel.icon || 'fa-hashtag'}"></i>`;
 
-        // Ẩn/Hiện nút quản lý thành viên cho nhóm
+        // Luôn hiển thị nút quản lý thành viên cho Admin trên MỌI KÊNH
         const btnManage = document.getElementById('wp-btn-manage-members');
         if (btnManage) {
-            if (this.activeChannel.type === 'GROUP' && this.isAdmin) {
+            if (this.isAdmin) {
                 btnManage.classList.remove('hidden');
+                btnManage.innerHTML = `<i class="fas fa-user-cog text-amber-600"></i> <span>Quản Lý Thành Viên (${memberStatusText})</span>`;
             } else {
                 btnManage.classList.add('hidden');
             }
@@ -995,42 +1056,131 @@ window.modWorkplace = {
     },
 
     // 15. MODAL: Quản Lý Thành Viên Nhóm (Admin)
-    openManageMembersModal: async function() {
-        if (!this.activeChannel || this.activeChannel.type !== 'GROUP') return;
+    openManageMembersModal: async function(channelId) {
+        const targetId = channelId || this.activeId;
+        if (!targetId) return;
+
+        const chan = this.channels.find(c => c.id === targetId) || this.activeChannel;
+        if (!chan) return;
+        this.managingChannelId = targetId;
+
+        const titleEl = document.getElementById('wp-manage-modal-title');
+        if (titleEl) titleEl.innerText = `Quản Lý Thành Viên: ${chan.name}`;
+
+        const searchInput = document.getElementById('wp-manage-search-input');
+        if (searchInput) searchInput.value = '';
 
         try {
-            const res = await fetch(`/api/workplace/channels/${this.activeChannel.id}/members`);
+            const res = await fetch(`/api/workplace/channels/${targetId}/members?t=` + Date.now());
             const json = await res.json();
-            const currentMemberIds = json.success ? json.data.map(m => m.id) : [];
+            
+            this.cachedManageMembers = (json.success && json.data) ? json.data.member_ids : [];
+            this.cachedManageUsers = (json.success && json.data && json.data.users) ? json.data.users : this.directUsers;
 
-            const listEl = document.getElementById('wp-manage-members-list');
-            listEl.innerHTML = this.directUsers.map(u => {
-                const isChecked = currentMemberIds.includes(u.id);
-                return `
-                    <label class="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-100 cursor-pointer transition">
-                        <input type="checkbox" name="wp_manage_member" value="${u.id}" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500">
-                        <div class="flex-1 text-xs">
-                            <span class="font-bold text-slate-800">${u.full_name || u.username}</span>
-                            <span class="text-[10px] text-slate-400 ml-1">(${u.position || u.role})</span>
-                        </div>
-                    </label>
-                `;
-            }).join('');
-
+            this.renderManageMembersList('', this.cachedManageMembers);
             document.getElementById('wp-modal-manage-members').classList.remove('hidden');
-        } catch(e) {}
+        } catch(e) {
+            console.error("Lỗi nạp thành viên:", e);
+        }
+    },
+
+    renderManageMembersList: function(filterText = '', checkedIds = null) {
+        const listEl = document.getElementById('wp-manage-members-list');
+        if (!listEl) return;
+
+        // Lưu lại trạng thái check hiện tại nếu không truyền checkedIds mới
+        if (!checkedIds) {
+            checkedIds = [];
+            document.querySelectorAll('input[name="wp_manage_member"]:checked').forEach(cb => {
+                checkedIds.push(parseInt(cb.value, 10));
+            });
+            this.cachedManageMembers = checkedIds;
+        }
+
+        const query = (filterText || '').toLowerCase().trim();
+        const users = (this.cachedManageUsers || this.directUsers).filter(u => {
+            if (!query) return true;
+            return (u.full_name && u.full_name.toLowerCase().includes(query)) ||
+                   (u.username && u.username.toLowerCase().includes(query)) ||
+                   (u.position && u.position.toLowerCase().includes(query)) ||
+                   (u.role && u.role.toLowerCase().includes(query));
+        });
+
+        if (users.length === 0) {
+            listEl.innerHTML = `<div class="text-xs text-slate-400 text-center py-4 italic">Không tìm thấy nhân viên phù hợp</div>`;
+            return;
+        }
+
+        listEl.innerHTML = users.map(u => {
+            const isChecked = checkedIds.includes(u.id);
+            const initials = (u.full_name || u.username || 'U').substring(0, 2).toUpperCase();
+            const roleBadge = u.role ? `<span class="text-[9px] px-1.5 py-0.5 rounded font-black uppercase ${u.role.includes('ADMIN') || u.role.includes('GIAM_DOC') ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}">${u.role}</span>` : '';
+            return `
+                <label class="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-slate-200 hover:bg-amber-50/50 hover:border-amber-200 cursor-pointer transition">
+                    <input type="checkbox" name="wp_manage_member" value="${u.id}" data-role="${u.role}" ${isChecked ? 'checked' : ''} onchange="window.modWorkplace.updateManageCount()" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500">
+                    <div class="w-7 h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                        ${initials}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5 truncate">
+                            <span class="font-bold text-slate-800 text-xs truncate">${u.full_name || u.username}</span>
+                            ${roleBadge}
+                        </div>
+                        <div class="text-[10px] text-slate-400 truncate">${u.position || u.role} ${u.phone ? '• ' + u.phone : ''}</div>
+                    </div>
+                </label>
+            `;
+        }).join('');
+
+        this.updateManageCount();
+    },
+
+    filterManageUsers: function(text) {
+        this.renderManageMembersList(text);
+    },
+
+    updateManageCount: function() {
+        const checkedCount = document.querySelectorAll('input[name="wp_manage_member"]:checked').length;
+        const countEl = document.getElementById('wp-manage-selected-count');
+        if (countEl) {
+            countEl.innerText = checkedCount > 0 ? `Đã chọn: ${checkedCount} TV` : 'Toàn Công Ty (Mở)';
+            countEl.className = checkedCount > 0 ? 'text-xs font-bold text-amber-600' : 'text-xs font-bold text-slate-400';
+        }
+    },
+
+    selectManageRole: function(targetRoles) {
+        const checkboxes = document.querySelectorAll('input[name="wp_manage_member"]');
+        checkboxes.forEach(cb => {
+            const role = cb.getAttribute('data-role');
+            if (targetRoles.includes(role)) {
+                cb.checked = true;
+            }
+        });
+        this.updateManageCount();
+    },
+
+    selectAllManageMembers: function(status) {
+        const checkboxes = document.querySelectorAll('input[name="wp_manage_member"]');
+        checkboxes.forEach(cb => { cb.checked = status; });
+        this.updateManageCount();
     },
 
     saveGroupMembers: async function() {
-        if (!this.activeChannel) return;
+        if (!this.managingChannelId) return;
 
         const selectedIds = [];
         document.querySelectorAll('input[name="wp_manage_member"]:checked').forEach(cb => {
             selectedIds.push(parseInt(cb.value, 10));
         });
 
+        const btnSave = document.getElementById('wp-btn-save-manage-members');
+        if (btnSave) {
+            btnSave.disabled = true;
+            btnSave.innerText = 'Đang lưu...';
+        }
+
         try {
-            const res = await fetch(`/api/workplace/channels/${this.activeChannel.id}/members`, {
+            const res = await fetch(`/api/workplace/channels/${this.managingChannelId}/members`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ member_ids: selectedIds })
@@ -1040,11 +1190,19 @@ window.modWorkplace = {
             if (json.success) {
                 document.getElementById('wp-modal-manage-members').classList.add('hidden');
                 await this.loadChannels();
-                this.selectChannel(this.activeChannel.id);
+                this.selectChannel(this.managingChannelId);
+                alert(`✅ ${json.message}`);
             } else {
-                alert(json.error);
+                alert('❌ ' + (json.error || 'Lỗi cập nhật thành viên!'));
             }
-        } catch(e) {}
+        } catch(e) {
+            alert('⚠️ Lỗi: ' + e.message);
+        } finally {
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.innerText = 'Lưu Phân Công Thành Viên';
+            }
+        }
     },
 
     // 16. Smart Polling (3.5s)
