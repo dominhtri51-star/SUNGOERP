@@ -70,6 +70,93 @@ function docSoThanhChu(so) {
     return chuoi.replace(/\s+/g, ' ');
 }
 
+// Helper: Tự động phân tích & trích xuất Thông số kỹ thuật và Chế độ Bảo hành từ Tên & Nội dung sản phẩm
+function detectProductSpecsAndWarranty(productName = '', description = '', category = '', sku = '') {
+    const rawText = `${productName} ${description} ${category} ${sku}`.trim();
+    const lowerText = rawText.toLowerCase();
+
+    let warranty = '';
+    let specs = '';
+
+    // 1. Nhận diện thời hạn bảo hành từ chuỗi
+    // Check pattern 12/30 hoặc 12/25 năm
+    if (/12\s*[\/-]\s*(?:25|30)\s*năm/i.test(rawText)) {
+        warranty = '12 năm vật lý, 25 - 30 năm hiệu suất trên 80%';
+    } else if (/(?:bảo\s*hành|bh)[:\s]*(\d+)\s*[\/-]\s*(\d+)\s*năm/i.test(rawText)) {
+        const m = rawText.match(/(?:bảo\s*hành|bh)[:\s]*(\d+)\s*[\/-]\s*(\d+)\s*năm/i);
+        warranty = `${m[1]} năm vật lý, ${m[2]} năm hiệu suất trên 80%`;
+    } else if (/(?:bảo\s*hành|bh)[:\s]*(\d+)\s*(năm|nam|year|years|y)/i.test(rawText)) {
+        const m = rawText.match(/(?:bảo\s*hành|bh)[:\s]*(\d+)\s*(năm|nam|year|years|y)/i);
+        const num = parseInt(m[1], 10);
+        warranty = num < 10 ? `0${num} năm chính hãng` : `${num} năm chính hãng`;
+    } else if (/(\d+)\s*(?:năm|nam)\s*(?:bảo\s*hành|bh)/i.test(rawText)) {
+        const m = rawText.match(/(\d+)\s*(?:năm|nam)\s*(?:bảo\s*hành|bh)/i);
+        const num = parseInt(m[1], 10);
+        warranty = num < 10 ? `0${num} năm chính hãng` : `${num} năm chính hãng`;
+    } else if (/(?:bảo\s*hành|bh)[:\s]*(\d+)\s*(tháng|thang|m|months|t\b)/i.test(rawText)) {
+        const m = rawText.match(/(?:bảo\s*hành|bh)[:\s]*(\d+)\s*(tháng|thang|m|months|t\b)/i);
+        const num = parseInt(m[1], 10);
+        if (num >= 12 && num % 12 === 0) {
+            const yr = num / 12;
+            warranty = yr < 10 ? `0${yr} năm (${num} tháng) chính hãng` : `${yr} năm chính hãng`;
+        } else {
+            warranty = `${num} tháng chính hãng`;
+        }
+    } else if (/1\s*đổi\s*1/i.test(rawText)) {
+        warranty = '01 đổi 01 trong 12 tháng đầu, bảo hành 05 năm';
+    }
+
+    // Nếu chưa nhận diện được số năm cụ thể, suy luận theo Danh mục / Tên thiết bị chuẩn ngành Solar
+    if (!warranty) {
+        if (lowerText.includes('pin') && (lowerText.includes('jinko') || lowerText.includes('longi') || lowerText.includes('canadian') || lowerText.includes('trina') || lowerText.includes('mono') || lowerText.includes('n-type') || lowerText.includes('topcon') || lowerText.includes('mặt trời') || lowerText.includes('solar') || lowerText.includes('panel') || lowerText.includes('620w') || lowerText.includes('550w') || lowerText.includes('580w'))) {
+            warranty = '12 năm vật lý (sản phẩm), 25 - 30 năm hiệu suất phát điện >80%';
+        } else if (lowerText.includes('inverter') || lowerText.includes('biến tần') || lowerText.includes('deye') || lowerText.includes('huawei') || lowerText.includes('sungrow') || lowerText.includes('sofar') || lowerText.includes('growatt') || lowerText.includes('hybrid') || lowerText.includes('on-grid') || lowerText.includes('off-grid')) {
+            warranty = '05 năm chính hãng theo tiêu chuẩn nhà sản xuất';
+        } else if (lowerText.includes('pin lưu trữ') || lowerText.includes('lithium') || lowerText.includes('lifepo4') || lowerText.includes('ebox') || lowerText.includes('apess') || lowerText.includes('ufo') || lowerText.includes('battery') || lowerText.includes('kwh')) {
+            warranty = '05 năm chính hãng (đảm bảo ≥6.000 chu kỳ nạp xả DOD 90%)';
+        } else if (lowerText.includes('bơm') || lowerText.includes('pump') || lowerText.includes('vfd')) {
+            warranty = '02 năm chính hãng';
+        } else if (lowerText.includes('tủ điện') || lowerText.includes('ats') || lowerText.includes('mcb') || lowerText.includes('mccb') || lowerText.includes('cáp') || lowerText.includes('rail') || lowerText.includes('kẹp') || lowerText.includes('khung')) {
+            warranty = '02 năm hệ thống cơ điện & lắp đặt kỹ thuật';
+        } else {
+            warranty = '01 - 02 năm chính hãng theo tiêu chuẩn của nhà sản xuất';
+        }
+    }
+
+    // 2. Nhận diện & Trích xuất thông số kỹ thuật (specs)
+    if (description && description.trim().length > 10) {
+        // Tinh lọc mô tả kỹ thuật
+        const lines = description.split('\n')
+            .map(l => l.trim().replace(/^[-•*]\s*/, ''))
+            .filter(l => l.length > 3 && !l.toLowerCase().startsWith('bảo hành') && !l.toLowerCase().startsWith('bh:'));
+        
+        if (lines.length > 0) {
+            specs = lines.slice(0, 3).join(', ');
+        }
+    }
+
+    if (!specs) {
+        // Tự động tổng hợp specs cơ bản dựa theo tên sản phẩm
+        if (lowerText.includes('deye') && lowerText.includes('hybrid')) {
+            specs = 'Chuẩn chống nước ngoài trời IP65, 2 MPPT, WiFi Dongle giám sát 24/7, chuyển mạch UPS <4ms';
+        } else if (lowerText.includes('ebox') || lowerText.includes('apess') || (lowerText.includes('lithium') && lowerText.includes('kwh'))) {
+            specs = 'Cell Pin LiFePO4 thế hệ mới, Smart BMS bảo vệ quá áp/quá dòng/quá nhiệt, giao tiếp CAN/RS485';
+        } else if (lowerText.includes('n-type') || lowerText.includes('topcon') || lowerText.includes('2 mặt kính') || lowerText.includes('jinko')) {
+            specs = 'Công nghệ N-Type TopCon 2 mặt kính, hiệu suất chuyển đổi >22.5%, chống suy hao PID';
+        } else if (lowerText.includes('bơm') || lowerText.includes('pump')) {
+            specs = 'Động cơ AC/DC không chổi than, tiết kiệm điện, chịu áp lực cao, chuẩn chống nước IP68';
+        } else if (lowerText.includes('kẹp') || lowerText.includes('rail') || lowerText.includes('nhôm')) {
+            specs = 'Hợp kim nhôm Anodized AL6005-T5 chống rỉ sét, bu lông Inox 304 chịu lực gió cấp 12';
+        } else if (lowerText.includes('tủ điện') || lowerText.includes('ats')) {
+            specs = 'Vỏ tủ sơn tĩnh điện chống nước IP65, tích hợp chống sét lan truyền SPD & cắt lọc sét';
+        } else {
+            specs = 'Tiêu chuẩn chất lượng chính hãng, có chứng chỉ CO/CQ và Test Report từ nhà sản xuất';
+        }
+    }
+
+    return { specs, warranty };
+}
+
 // 1. GET: Danh sách Hợp đồng & Thống kê KPI
 router.get('/', async (req, res) => {
     try {
@@ -410,6 +497,51 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// 2b. POST: TỰ ĐỘNG NHẬN DIỆN THÔNG SỐ & BẢO HÀNH CHO DANH SÁCH SẢN PHẨM
+router.post('/detect-specs-warranty', async (req, res) => {
+    try {
+        const { items } = req.body;
+        if (!Array.isArray(items)) {
+            return res.status(400).json({ success: false, error: 'Dữ liệu items không hợp lệ' });
+        }
+
+        const results = [];
+        for (const it of items) {
+            let desc = it.description || '';
+            let cat = it.category || '';
+            let sku = it.sku || '';
+
+            // Nếu có product_id mà thiếu mô tả/danh mục, tìm trong database
+            if (it.product_id && (!desc || !cat)) {
+                const pRes = await pool.query("SELECT description, category, sku FROM products WHERE id = $1", [it.product_id]);
+                if (pRes.rows.length > 0) {
+                    desc = desc || pRes.rows[0].description || '';
+                    cat = cat || pRes.rows[0].category || '';
+                    sku = sku || pRes.rows[0].sku || '';
+                }
+            } else if (it.product_name && (!desc || !cat)) {
+                const pRes = await pool.query("SELECT description, category, sku FROM products WHERE product_name ILIKE $1 LIMIT 1", [it.product_name.trim()]);
+                if (pRes.rows.length > 0) {
+                    desc = desc || pRes.rows[0].description || '';
+                    cat = cat || pRes.rows[0].category || '';
+                    sku = sku || pRes.rows[0].sku || '';
+                }
+            }
+
+            const detected = detectProductSpecsAndWarranty(it.product_name || '', desc, cat, sku);
+            results.push({
+                ...it,
+                specs: it.specs || detected.specs,
+                warranty: it.warranty || detected.warranty
+            });
+        }
+
+        res.json({ success: true, data: results });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 3. POST: TỰ ĐỘNG TẠO HỢP ĐỒNG MUA BÁN KHI CÓ ĐƠN HÀNG / LỆNH XUẤT HÀNG
 router.post('/from-order/:orderId', async (req, res) => {
     const client = await pool.connect();
@@ -437,6 +569,12 @@ router.post('/from-order/:orderId', async (req, res) => {
         }
 
         const o = orderRes.rows[0];
+
+        // Kiểm tra: Chỉ khi đơn hàng có lệnh xuất / đã xác nhận mới phát sinh hợp đồng mua bán
+        const invalidStatuses = ['CANCELLED', 'DRAFT', 'RETURNED'];
+        if (invalidStatuses.includes(o.status)) {
+            throw new Error(`Đơn hàng #${o.order_code} đang ở trạng thái "${o.status}". Chỉ khi đơn hàng có lệnh xuất kho hoặc đã xác nhận mới phát sinh Hợp đồng Mua bán!`);
+        }
 
         // Lấy thông tin pháp nhân xuất hóa đơn từ CRM Customers
         let custCompany = o.vat_company || '';
@@ -467,24 +605,35 @@ router.post('/from-order/:orderId', async (req, res) => {
         if (!custCompany) custCompany = o.customer_name || o.c_fullname || 'Khách Hàng Mua Hàng';
         if (!custAddress) custAddress = o.customer_address || o.c_address || '';
 
-        // Lấy danh sách sản phẩm trong đơn hàng
+        // Lấy danh sách sản phẩm trong đơn hàng kèm mô tả và danh mục
         const itemsRes = await client.query(`
-            SELECT oi.*, p.product_name, p.sku, p.unit
+            SELECT oi.*, 
+                   COALESCE(p.product_name, oi.product_name, 'Sản phẩm') as product_name,
+                   COALESCE(p.sku, oi.sku, '') as sku,
+                   COALESCE(p.unit, 'Bộ') as unit,
+                   p.description,
+                   p.category
             FROM order_items oi
-            JOIN products p ON oi.product_id = p.id
+            LEFT JOIN products p ON oi.product_id = p.id
             WHERE oi.order_id = $1
+            ORDER BY oi.id ASC
         `, [o.id]);
 
-        const items = itemsRes.rows.map((item, idx) => ({
-            stt: idx + 1,
-            product_id: item.product_id,
-            sku: item.sku || '',
-            product_name: item.product_name,
-            unit: item.unit || 'Bộ',
-            quantity: parseFloat(item.quantity || 1),
-            price: parseFloat(item.price || 0),
-            total_amount: parseFloat(item.quantity || 1) * parseFloat(item.price || 0)
-        }));
+        const items = itemsRes.rows.map((item, idx) => {
+            const detected = detectProductSpecsAndWarranty(item.product_name, item.description, item.category, item.sku);
+            return {
+                stt: idx + 1,
+                product_id: item.product_id,
+                sku: item.sku || '',
+                product_name: item.product_name,
+                unit: item.unit || 'Bộ',
+                quantity: parseFloat(item.quantity || 1),
+                price: parseFloat(item.price || 0),
+                total_amount: parseFloat(item.quantity || 1) * parseFloat(item.price || 0),
+                specs: detected.specs,
+                warranty: detected.warranty
+            };
+        });
 
         const totalValue = parseFloat(o.total_amount || 0);
         const totalValueText = docSoThanhChu(totalValue);
@@ -517,7 +666,9 @@ router.post('/from-order/:orderId', async (req, res) => {
             }
         ];
 
-        const warrantyTerms = `• Tấm Pin năng lượng mặt trời được bảo hành 12 năm và bảo hành hiệu suất năm thứ 25 là trên 83% (theo quy định của nhà sản xuất).\n• Bảo hành biến tần Inverter 05 năm theo quy định nhà sản xuất.\n• Bảo hành Pin lưu trữ Lithium 05 năm theo tiêu chuẩn hãng.`;
+        // Tự động tổng hợp chính sách bảo hành chi tiết từng sản phẩm
+        const warrantyBullets = items.map((it, idx) => `• ${idx + 1}. ${it.product_name}: Bảo hành ${it.warranty}${it.specs ? ` (${it.specs})` : ''}`).join('\n');
+        const warrantyTerms = `CHÍNH SÁCH BẢO HÀNH CHI TIẾT TỪNG THIẾT BỊ:\n${warrantyBullets || '• Bảo hành chính hãng theo tiêu chuẩn của nhà sản xuất.'}`;
 
         const insertRes = await client.query(`
             INSERT INTO contracts (
@@ -584,6 +735,18 @@ router.post('/', async (req, res) => {
         const totalVal = parseFloat(total_value || 0);
         const totalValText = docSoThanhChu(totalVal);
 
+        // Đảm bảo items_snapshot có đầy đủ specs và warranty
+        let finalItems = Array.isArray(items_snapshot) ? items_snapshot : [];
+        finalItems = finalItems.map((it, idx) => {
+            const detected = detectProductSpecsAndWarranty(it.product_name, it.description, it.category, it.sku);
+            return {
+                ...it,
+                stt: idx + 1,
+                specs: it.specs || detected.specs,
+                warranty: it.warranty || detected.warranty
+            };
+        });
+
         // Chuẩn bị payment terms mặc định theo loại
         let finalTerms = payment_terms || [];
         if (Array.isArray(finalTerms) && finalTerms.length === 0) {
@@ -606,6 +769,9 @@ router.post('/', async (req, res) => {
             }
         }
 
+        const safeEffDate = (effective_date && String(effective_date).trim()) ? String(effective_date).trim() : new Date().toISOString().slice(0, 10);
+        const safeExpDate = (expiry_date && String(expiry_date).trim()) ? String(expiry_date).trim() : (type === 'NGUYEN_TAC' ? `${currentYear}-12-31` : null);
+
         const insertRes = await pool.query(`
             INSERT INTO contracts (
                 contract_type, contract_code, order_id, order_code, 
@@ -627,9 +793,9 @@ router.post('/', async (req, res) => {
             customer_id || null, customer_name || '', customer_company || customer_name || '', customer_taxcode || '',
             customer_address || '', customer_phone || '', customer_representative || customer_name || '', customer_position || 'Giám Đốc',
             project_address || customer_address || '', totalVal, totalValText,
-            JSON.stringify(items_snapshot || []), JSON.stringify(finalTerms), warranty_terms || '',
-            effective_date || new Date().toISOString().slice(0, 10),
-            expiry_date || (type === 'NGUYEN_TAC' ? `${currentYear}-12-31` : null),
+            JSON.stringify(finalItems), JSON.stringify(finalTerms), warranty_terms || '',
+            safeEffDate,
+            safeExpDate,
             custom_clauses || ''
         ]);
 
@@ -643,53 +809,90 @@ router.post('/', async (req, res) => {
     }
 });
 
-// 5. PUT: CẬP NHẬT THÔNG TIN HỢP ĐỒNG (Chỉnh sửa điều khoản, sản phẩm, tiến độ)
+// 5. PUT: CẬP NHẬT THÔNG TIN HỢP ĐỒNG (Chỉnh sửa điều khoản, sản phẩm, thông số bảo hành, tiến độ)
 router.put('/:id', async (req, res) => {
     try {
         const {
+            contract_type, contract_code,
             customer_name, customer_company, customer_taxcode, customer_address,
             customer_phone, customer_representative, customer_position, project_address,
             total_value, items_snapshot, payment_terms, warranty_terms, custom_clauses,
-            effective_date, expiry_date
+            effective_date, expiry_date, reset_signature
         } = req.body;
 
         const totalVal = parseFloat(total_value || 0);
         const totalValText = docSoThanhChu(totalVal);
 
+        // Đảm bảo items_snapshot có specs & warranty
+        let finalItems = items_snapshot;
+        if (Array.isArray(finalItems)) {
+            finalItems = finalItems.map((it, idx) => {
+                const detected = detectProductSpecsAndWarranty(it.product_name, it.description, it.category, it.sku);
+                return {
+                    ...it,
+                    stt: idx + 1,
+                    specs: it.specs || detected.specs,
+                    warranty: it.warranty || detected.warranty
+                };
+            });
+        }
+
+        let resetSql = '';
+        if (reset_signature) {
+            resetSql = `,
+                e_signature_a = NULL,
+                e_signature_b = NULL,
+                digital_stamp_a = NULL,
+                digital_stamp_b = NULL,
+                contract_status = 'DRAFT'
+            `;
+        }
+
+        const safeEffDate = (effective_date && String(effective_date).trim()) ? String(effective_date).trim() : null;
+        const safeExpDate = (expiry_date && String(expiry_date).trim()) ? String(expiry_date).trim() : null;
+
         const updateRes = await pool.query(`
             UPDATE contracts SET
-                customer_name = COALESCE($1, customer_name),
-                customer_company = COALESCE($2, customer_company),
-                customer_taxcode = COALESCE($3, customer_taxcode),
-                customer_address = COALESCE($4, customer_address),
-                customer_phone = COALESCE($5, customer_phone),
-                customer_representative = COALESCE($6, customer_representative),
-                customer_position = COALESCE($7, customer_position),
-                project_address = COALESCE($8, project_address),
-                total_value = COALESCE($9, total_value),
-                total_value_text = $10,
-                items_snapshot = COALESCE($11, items_snapshot),
-                payment_terms = COALESCE($12, payment_terms),
-                warranty_terms = COALESCE($13, warranty_terms),
-                custom_clauses = COALESCE($14, custom_clauses),
-                effective_date = COALESCE($15, effective_date),
-                expiry_date = COALESCE($16, expiry_date),
+                contract_type = COALESCE($1, contract_type),
+                contract_code = COALESCE($2, contract_code),
+                customer_name = COALESCE($3, customer_name),
+                customer_company = COALESCE($4, customer_company),
+                customer_taxcode = COALESCE($5, customer_taxcode),
+                customer_address = COALESCE($6, customer_address),
+                customer_phone = COALESCE($7, customer_phone),
+                customer_representative = COALESCE($8, customer_representative),
+                customer_position = COALESCE($9, customer_position),
+                project_address = COALESCE($10, project_address),
+                total_value = COALESCE($11, total_value),
+                total_value_text = $12,
+                items_snapshot = COALESCE($13, items_snapshot),
+                payment_terms = COALESCE($14, payment_terms),
+                warranty_terms = COALESCE($15, warranty_terms),
+                custom_clauses = COALESCE($16, custom_clauses),
+                effective_date = CASE WHEN $17::text IS NOT NULL AND $17::text != '' THEN $17::date ELSE effective_date END,
+                expiry_date = CASE WHEN $18::text IS NOT NULL AND $18::text != '' THEN $18::date ELSE expiry_date END,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = $17
+                ${resetSql}
+            WHERE id = $19
             RETURNING *
         `, [
+            contract_type || null, contract_code || null,
             customer_name, customer_company, customer_taxcode, customer_address,
             customer_phone, customer_representative, customer_position, project_address,
             totalVal, totalValText,
-            items_snapshot ? JSON.stringify(items_snapshot) : null,
+            finalItems ? JSON.stringify(finalItems) : null,
             payment_terms ? JSON.stringify(payment_terms) : null,
             warranty_terms, custom_clauses,
-            effective_date, expiry_date,
+            safeEffDate, safeExpDate,
             req.params.id
         ]);
 
         if (updateRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy hợp đồng' });
-        res.json({ success: true, message: 'Đã cập nhật hợp đồng thành công!', data: updateRes.rows[0] });
+        res.json({
+            success: true,
+            message: reset_signature ? '✅ Đã cập nhật hợp đồng và đặt lại trạng thái để khách hàng ký lại!' : '✅ Đã cập nhật hợp đồng thành công!',
+            data: updateRes.rows[0]
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -1067,15 +1270,29 @@ router.delete('/:id/remove-signed-file', async (req, res) => {
     }
 });
 
-// 11. DELETE: XÓA HỢP ĐỒNG
+// 11. DELETE: XÓA HỢP ĐỒNG (ADMIN DỌN DẸP HỢP ĐỒNG RÁC)
 router.delete('/:id', async (req, res) => {
     try {
-        await pool.query(`DELETE FROM contracts WHERE id = $1`, [req.params.id]);
-        res.json({ success: true, message: 'Đã xóa hợp đồng' });
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ success: false, error: 'Mã hợp đồng không hợp lệ' });
+        }
+        await pool.query(`DELETE FROM contract_payments WHERE contract_id = $1`, [id]);
+        const result = await pool.query(`DELETE FROM contracts WHERE id = $1 RETURNING id, contract_code`, [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy hợp đồng hoặc đã bị xóa trước đó' });
+        }
+        res.json({ success: true, message: `✅ Đã xóa vĩnh viễn hợp đồng #${result.rows[0].contract_code || id}!` });
     } catch (err) {
+        console.error("DELETE contract error:", err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
+router.detectProductSpecsAndWarranty = detectProductSpecsAndWarranty;
+router.docSoThanhChu = docSoThanhChu;
+
 module.exports = router;
+
+
 
