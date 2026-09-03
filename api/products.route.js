@@ -21,6 +21,8 @@ const pool = require('../config/database');
 router.get('/', async (req, res) => {
     try {
         const isPos = req.query.pos === '1' || req.query.compact === '1';
+        const canViewCost = req.user && ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'KE_TOAN', 'THU_MUA'].includes(String(req.user.role || '').toUpperCase());
+
         let query = 'SELECT * FROM products ORDER BY id DESC';
         if (isPos) {
             query = `
@@ -32,7 +34,16 @@ router.get('/', async (req, res) => {
             `;
         }
         const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
+        let rows = result.rows;
+        // Bảo vệ bí mật kinh doanh: Chỉ cho phép Admin/Kế toán/Thu mua xem giá vốn nhập hàng
+        if (!canViewCost) {
+            rows = rows.map(r => {
+                const copy = { ...r };
+                delete copy.import_price;
+                return copy;
+            });
+        }
+        res.json({ success: true, data: rows });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 

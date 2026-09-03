@@ -3,9 +3,13 @@ const router = express.Router();
 const pool = require('../config/database');
 
 function isAuthorizedAdmin(req) {
-    const role = String(req.headers["x-user-role"] || req.query.role || (req.body && req.body.role) || "").toUpperCase().trim();
-    const adminRoles = ["ADMIN", "SUPER_ADMIN", "GIAM_DOC", "TONG_GIAM_DOC", "DIRECTOR"];
-    return adminRoles.includes(role);
+    // Bảo mật: Đọc role từ req.user đã được giải mã và xác thực qua JWT
+    if (req.user && req.user.role) {
+        const userRole = String(req.user.role).toUpperCase().trim();
+        const adminRoles = ["ADMIN", "SUPER_ADMIN", "GIAM_DOC", "TONG_GIAM_DOC", "DIRECTOR"];
+        return adminRoles.includes(userRole);
+    }
+    return false;
 }
 
 

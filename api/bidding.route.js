@@ -5,15 +5,77 @@ const router = express.Router();
 
 const dataDir = path.join(__dirname, "../data");
 const dbFile = path.join(dataDir, "bidding_projects.json");
+const legacyDbFile = path.join(dataDir, "projects.json");
 const teamsFile = path.join(dataDir, "contractor_teams.json");
+const bidsFile = path.join(dataDir, "project_bids.json");
 const handoverFile = path.join(dataDir, "bidding_handovers.json");
+
+const DEFAULT_TEAMS = [
+    {
+        id: 1,
+        code: "TEAM-01",
+        name: "Đội Kỹ Thuật Solar Fast",
+        type: "CONSTRUCTION",
+        leader: "Phạm Hoàng Nam",
+        phone: "0903112233",
+        email: "solarfast@gmail.com",
+        coverage_areas: "TP.HCM, Bình Dương, Đồng Nai, Long An",
+        member_count: 6,
+        rating_avg: 5.0,
+        total_projects_done: 18,
+        skills: "Thi công trọn gói Hybrid/On-grid mái tôn, mái ngói, mái bằng, đo tiếp địa < 4 Ohm, cài đặt App Inverter",
+        bank_info: "MB Bank - 0903112233 - Pham Hoang Nam",
+        status: "ACTIVE"
+    },
+    {
+        id: 2,
+        code: "TEAM-02",
+        name: "Đơn Vị Giám Sát EPC Pro",
+        type: "SUPERVISOR",
+        leader: "Nguyễn Văn Giám Sát",
+        phone: "0908889900",
+        email: "epcpro.supervision@gmail.com",
+        coverage_areas: "Toàn Quốc",
+        member_count: 4,
+        rating_avg: 5.0,
+        total_projects_done: 25,
+        skills: "Giám sát an toàn điện, đo kiểm Fluke, kiểm định chất lượng thi công EPC",
+        bank_info: "Techcombank - 190333444555 - Nguyen Van Giam Sat",
+        status: "ACTIVE"
+    },
+    {
+        id: 3,
+        code: "TEAM-03",
+        name: "Nhà Cung Cấp Pin & Inverter SunPower",
+        type: "SUPPLIER",
+        leader: "Trần Cung Ứng",
+        phone: "0912334455",
+        email: "sunpower.supplier@gmail.com",
+        coverage_areas: "Miền Nam & Miền Trung",
+        member_count: 10,
+        rating_avg: 4.9,
+        total_projects_done: 42,
+        skills: "Cung cấp sỉ tấm pin Canadian/Jinko/Longi, biến tần Deye/Solis/Growatt, phụ kiện nhôm",
+        bank_info: "Vietcombank - 007100998877 - Tran Cung Ung",
+        status: "ACTIVE"
+    }
+];
 
 // Đảm bảo các file lưu trữ tồn tại
 const initDB = () => {
     try {
         if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-        if (!fs.existsSync(teamsFile)) fs.writeFileSync(teamsFile, "[]", "utf8");
-        if (!fs.existsSync(dbFile)) fs.writeFileSync(dbFile, "[]", "utf8");
+        if (!fs.existsSync(teamsFile) || JSON.parse(fs.readFileSync(teamsFile, "utf8") || "[]").length === 0) {
+            fs.writeFileSync(teamsFile, JSON.stringify(DEFAULT_TEAMS, null, 2), "utf8");
+        }
+        if (!fs.existsSync(dbFile)) {
+            if (fs.existsSync(legacyDbFile)) {
+                fs.copyFileSync(legacyDbFile, dbFile);
+            } else {
+                fs.writeFileSync(dbFile, "[]", "utf8");
+            }
+        }
+        if (!fs.existsSync(bidsFile)) fs.writeFileSync(bidsFile, "[]", "utf8");
         if (!fs.existsSync(handoverFile)) fs.writeFileSync(handoverFile, "[]", "utf8");
     } catch(e) {
         console.error("Lỗi khởi tạo bidding DB files:", e);
@@ -31,12 +93,57 @@ function writeDB(file, data) {
     fs.writeFileSync(file, JSON.stringify(data, null, 2), "utf8");
 }
 
-// 1. GET /api/bidding/projects (Admin & Manager lấy toàn bộ dự án)
+// Helper: Phân quyền & bảo mật thông tin (Data Masking)
+function maskProjectForRole(p, role = 'ADMIN', teamId = null) {
+    if (!p) return null;
+    const isInternal = ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'QUAN_LY', 'SALE_ADMIN', 'KE_TOAN'].includes(role);
+    const isAwarded = teamId && (
+        Number(p.assigned_contractor_id) === Number(teamId) || 
+        Number(p.assigned_supervisor_id) === Number(teamId) || 
+        Number(p.assigned_supplier_id) === Number(teamId)
+    );
+
+    // Nếu là Admin nội bộ hoặc Nhà thầu đã được giao dự án -> Giữ nguyên thông tin đầy đủ
+    if (isInternal || isAwarded) {
+        return {
+            ...p,
+            is_unlocked: true
+        };
+    }
+
+    // Đối với các nhà thầu xem trên Sàn Đấu Thầu (Marketplace)
+    const masked = { ...p };
+    masked.is_unlocked = false;
+    masked.customer_phone = "🔒 [Chỉ mở khóa sau khi trúng thầu]";
+    masked.customer_contact_person = "🔒 [Ẩn khi mở thầu]";
+    masked.customer_name = p.customer_type === 'Doanh nghiệp' ? 'Khách Hàng Doanh Nghiệp' : 'Khách Hàng Nhà Dân';
+    
+    const safeLoc = [p.district, p.province_city].filter(Boolean).join(', ');
+    masked.address = safeLoc ? `Khu vực: ${safeLoc} (Số nhà cụ thể mở khóa khi trúng thầu)` : (p.province_city || 'TP. Hồ Chí Minh');
+    masked.gps_location = '';
+
+    // Đối với nhà thầu thi công hoặc giám sát: chỉ giữ số lượng & quy cách thiết bị để tính nhân công, ẩn giá vốn nội bộ
+    if (role === 'NHA_THAU_THI_CONG' || role === 'NHA_THAU_GIAM_SAT') {
+        masked.bom_items = (p.bom_items || []).map(b => ({
+            name: b.name,
+            qty: b.qty,
+            unit: b.unit,
+            note: b.note || ''
+        }));
+    }
+
+    return masked;
+}
+
+// 1. GET /api/bidding/projects (Admin & Quản Lý Dự Án - Lấy danh sách kèm số lượng hồ sơ thầu)
 router.get("/projects", (req, res) => {
     try {
         let projects = readDB(dbFile);
         const teams = readDB(teamsFile);
+        const bids = readDB(bidsFile);
         const handovers = readDB(handoverFile);
+        const role = (req.user && req.user.role) ? req.user.role : (req.headers['x-user-role'] || req.query.role || 'GUEST');
+        const teamId = req.query.team_id ? Number(req.query.team_id) : null;
 
         projects.sort((a, b) => Number(b.id) - Number(a.id));
 
@@ -45,14 +152,19 @@ router.get("/projects", (req, res) => {
             const sup = teams.find(t => Number(t.id) === Number(p.assigned_supervisor_id));
             const supp = teams.find(t => Number(t.id) === Number(p.assigned_supplier_id));
             const ho = handovers.find(h => Number(h.project_id) === Number(p.id));
+            const projectBids = bids.filter(b => Number(b.project_id) === Number(p.id));
 
-            return {
+            const item = {
                 ...p,
                 contractor_info: team || null,
                 supervisor_info: sup || null,
                 supplier_info: supp || null,
-                handover_data: ho || null
+                handover_data: ho || null,
+                bids_count: projectBids.length,
+                bids: ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'QUAN_LY'].includes(role) ? projectBids : undefined
             };
+
+            return maskProjectForRole(item, role, teamId);
         });
 
         res.json({ success: true, data: enriched });
@@ -61,22 +173,62 @@ router.get("/projects", (req, res) => {
     }
 });
 
-// 2. GET /api/bidding/my-projects (Dành riêng cho Nhà Thầu đăng nhập)
+// 2. GET /api/bidding/marketplace (Sàn Đấu Thầu - Dành cho các bên xem dự án mở thầu)
+router.get("/marketplace", (req, res) => {
+    try {
+        let projects = readDB(dbFile);
+        const teams = readDB(teamsFile);
+        const bids = readDB(bidsFile);
+        const role = req.headers['x-user-role'] || req.query.role || 'NHA_THAU_THI_CONG';
+        const teamId = req.query.team_id ? Number(req.query.team_id) : null;
+
+        // Lọc các dự án đang mở thầu hoặc dự án mới
+        let marketProjects = projects.filter(p => p.status === 'OPEN_BIDDING' || p.status === 'NEW' || !p.assigned_contractor_id);
+        marketProjects.sort((a, b) => Number(b.id) - Number(a.id));
+
+        const enriched = marketProjects.map(p => {
+            const projectBids = bids.filter(b => Number(b.project_id) === Number(p.id));
+            const myBid = teamId ? projectBids.find(b => Number(b.team_id) === Number(teamId)) : null;
+
+            const item = {
+                ...p,
+                bids_count: projectBids.length,
+                my_bid: myBid || null
+            };
+
+            return maskProjectForRole(item, role, teamId);
+        });
+
+        res.json({ success: true, data: enriched });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. GET /api/bidding/my-projects (Dành riêng cho Nhà Thầu đã trúng thầu / được giao việc)
 router.get("/my-projects", (req, res) => {
     try {
         let projects = readDB(dbFile);
         const handovers = readDB(handoverFile);
-        const teamId = req.query.team_id ? Number(req.query.team_id) : 1; // Default Team 1 for demo
+        const teams = readDB(teamsFile);
+        const teamId = req.query.team_id ? Number(req.query.team_id) : 1; // Mặc định Đội 1 nếu demo
 
-        // Lọc dự án được chỉ định cho nhà thầu này
-        const myProjects = projects.filter(p => Number(p.assigned_contractor_id) === teamId || Number(p.assigned_supervisor_id) === teamId);
+        // Lọc các dự án mà nhà thầu này là đội thi công, giám sát hoặc nhà cung cấp
+        const myProjects = projects.filter(p => 
+            Number(p.assigned_contractor_id) === teamId || 
+            Number(p.assigned_supervisor_id) === teamId ||
+            Number(p.assigned_supplier_id) === teamId
+        );
         myProjects.sort((a, b) => Number(b.id) - Number(a.id));
 
         const enriched = myProjects.map(p => {
             const ho = handovers.find(h => Number(h.project_id) === Number(p.id));
+            const team = teams.find(t => Number(t.id) === Number(p.assigned_contractor_id));
             return {
                 ...p,
-                handover_data: ho || null
+                contractor_info: team || null,
+                handover_data: ho || null,
+                is_unlocked: true // Đã trúng thầu thì mở khóa 100%
             };
         });
 
@@ -86,7 +238,7 @@ router.get("/my-projects", (req, res) => {
     }
 });
 
-// 3. GET /api/bidding/projects/:id
+// 4. GET /api/bidding/projects/:id (Chi tiết dự án)
 router.get("/projects/:id", (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -96,23 +248,32 @@ router.get("/projects/:id", (req, res) => {
 
         const teams = readDB(teamsFile);
         const handovers = readDB(handoverFile);
+        const bids = readDB(bidsFile);
+        const role = (req.user && req.user.role) ? req.user.role : (req.headers['x-user-role'] || req.query.role || 'GUEST');
+        const teamId = req.query.team_id ? Number(req.query.team_id) : null;
+
         const team = teams.find(t => Number(t.id) === Number(p.assigned_contractor_id));
         const ho = handovers.find(h => Number(h.project_id) === id);
+        const projectBids = bids.filter(b => Number(b.project_id) === id);
+
+        const enriched = {
+            ...p,
+            contractor_info: team || null,
+            handover_data: ho || null,
+            bids_count: projectBids.length,
+            bids: ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'QUAN_LY'].includes(role) ? projectBids : (teamId ? projectBids.filter(b => Number(b.team_id) === teamId) : [])
+        };
 
         res.json({
             success: true,
-            data: {
-                ...p,
-                contractor_info: team || null,
-                handover_data: ho || null
-            }
+            data: maskProjectForRole(enriched, role, teamId)
         });
     } catch(err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// 4. POST /api/bidding/projects (Công ty tạo dự án mới & chỉ định nhà thầu)
+// 5. POST /api/bidding/projects (Tạo / Đăng dự án mới)
 router.post("/projects", (req, res) => {
     try {
         const projects = readDB(dbFile);
@@ -121,12 +282,13 @@ router.post("/projects", (req, res) => {
         const newId = projects.length > 0 ? Math.max(...projects.map(d => Number(d.id) || 0)) + 1 : 1;
 
         const assignedContractorId = b.assigned_contractor_id ? Number(b.assigned_contractor_id) : null;
-        const contractorTeam = teams.find(t => t.id === assignedContractorId);
+        const contractorTeam = teams.find(t => Number(t.id) === assignedContractorId);
+        const status = b.status || (assignedContractorId ? "ASSIGNED" : "OPEN_BIDDING");
 
         const newProject = {
             id: newId,
             project_code: b.project_code || ("DA-2026-" + String(newId).padStart(3, "0")),
-            project_name: b.project_name || "Dự Án Solar Mới",
+            project_name: b.project_name || "Dự Án Solar EPC",
             customer_name: b.customer_name || "Khách Hàng",
             customer_phone: b.customer_phone || "",
             customer_contact_person: b.customer_contact_person || "",
@@ -146,6 +308,10 @@ router.post("/projects", (req, res) => {
             battery_brand: b.battery_brand || "",
             battery_qty: parseInt(b.battery_qty) || 0,
             roof_type: b.roof_type || "Mái tôn",
+            roof_direction: b.roof_direction || "Hướng Nam",
+            roof_pitch: b.roof_pitch || "15 độ",
+            floor_count: b.floor_count || "2 tầng",
+            ladder_access: b.ladder_access || "Lối thang bộ lên mái",
             labor_cost: parseFloat(b.labor_cost) || 0,
             assigned_contractor_id: assignedContractorId,
             assigned_contractor_name: contractorTeam ? contractorTeam.name : (b.assigned_contractor_name || "Chưa chỉ định"),
@@ -157,7 +323,9 @@ router.post("/projects", (req, res) => {
             expected_end_date: b.expected_end_date || "",
             sales_pic: b.sales_pic || "Admin",
             lead_engineer: b.lead_engineer || "Kỹ sư phụ trách",
+            site_notes: b.site_notes || "",
             construction_requirements: b.construction_requirements || "",
+            survey_photos: Array.isArray(b.survey_photos) ? b.survey_photos : [],
             bom_items: b.bom_items || [],
             work_scope: b.work_scope || [
                 "Vận chuyển thiết bị và tấm pin lên mái an toàn",
@@ -169,7 +337,7 @@ router.post("/projects", (req, res) => {
                 "Cài đặt App giám sát, kết nối Wifi và cấu hình CT bám tải",
                 "Dọn dẹp vệ sinh công trường và bàn giao"
             ],
-            status: assignedContractorId ? "ASSIGNED" : "NEW",
+            status: status,
             progress: 0,
             checkin_data: null,
             acceptance_documents: [],
@@ -181,30 +349,148 @@ router.post("/projects", (req, res) => {
 
         projects.push(newProject);
         writeDB(dbFile, projects);
-        res.status(201).json({ success: true, data: newProject, message: "🎉 Đã tạo dự án và chỉ định nhà thầu thành công!" });
+        res.status(201).json({ 
+            success: true, 
+            data: newProject, 
+            message: status === 'OPEN_BIDDING' ? "📢 Đã đăng dự án lên Sàn Đấu Thầu thành công!" : "🎉 Đã tạo dự án và chỉ định nhà thầu thành công!" 
+        });
     } catch(err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// 5. POST /api/bidding/projects/:id/assign (Chỉ định hoặc thay đổi nhà thầu cho dự án)
-router.post("/projects/:id/assign", (req, res) => {
+// 5.1 PUT /api/bidding/projects/:id (Cập nhật dự án, ảnh khảo sát và ghi chú)
+router.put("/projects/:id", (req, res) => {
     try {
         const projectId = Number(req.params.id);
-        const { contractor_id, supervisor_id, supplier_id, labor_cost } = req.body;
+        let projects = readDB(dbFile);
+        const pIndex = projects.findIndex(x => Number(x.id) === projectId);
+        if (pIndex === -1) return res.status(404).json({ success: false, error: "Không tìm thấy dự án" });
+
+        const b = req.body;
+        projects[pIndex] = {
+            ...projects[pIndex],
+            ...b,
+            id: projectId, // không đổi ID
+            survey_photos: Array.isArray(b.survey_photos) ? b.survey_photos : (projects[pIndex].survey_photos || []),
+            updated_at: new Date().toISOString()
+        };
+
+        writeDB(dbFile, projects);
+        res.json({ success: true, data: projects[pIndex], message: "✅ Đã cập nhật thông tin dự án thành công!" });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 6. POST /api/bidding/projects/:id/bids (Nhà thầu / Giám sát / Cung cấp nộp báo giá chào thầu)
+router.post("/projects/:id/bids", (req, res) => {
+    try {
+        const projectId = Number(req.params.id);
+        const projects = readDB(dbFile);
+        const p = projects.find(x => Number(x.id) === projectId);
+        if (!p) return res.status(404).json({ success: false, error: "Không tìm thấy dự án đấu thầu" });
+
+        const teams = readDB(teamsFile);
+        const bids = readDB(bidsFile);
+        const b = req.body;
+
+        const teamId = Number(b.team_id) || 1;
+        const team = teams.find(t => Number(t.id) === teamId);
+        const newBidId = bids.length > 0 ? Math.max(...bids.map(x => Number(x.id) || 0)) + 1 : 1;
+
+        const newBid = {
+            id: newBidId,
+            project_id: projectId,
+            project_code: p.project_code,
+            project_name: p.project_name,
+            team_id: teamId,
+            team_code: team ? team.code : ("TEAM-" + teamId),
+            team_name: team ? team.name : (b.team_name || "Nhà Thầu"),
+            team_leader: team ? team.leader : "",
+            team_phone: team ? team.phone : "",
+            team_rating: team ? team.rating_avg : 5.0,
+            bidder_type: b.bidder_type || (team ? team.type : "CONSTRUCTION"),
+            labor_price: parseFloat(b.labor_price) || 0,
+            extra_cost: parseFloat(b.extra_cost) || 0,
+            total_bid_amount: (parseFloat(b.labor_price) || 0) + (parseFloat(b.extra_cost) || 0),
+            team_size: parseInt(b.team_size) || 4,
+            estimated_days: parseFloat(b.estimated_days) || 2,
+            warranty_months: parseInt(b.warranty_months) || 24,
+            notes: b.notes || "",
+            status: "PENDING",
+            created_at: new Date().toISOString()
+        };
+
+        // Nếu nhà thầu đã gửi báo giá trước đó cho dự án này -> Cập nhật lại
+        const existingIdx = bids.findIndex(x => Number(x.project_id) === projectId && Number(x.team_id) === teamId);
+        if (existingIdx !== -1) {
+            bids[existingIdx] = { ...bids[existingIdx], ...newBid, id: bids[existingIdx].id };
+        } else {
+            bids.push(newBid);
+        }
+
+        writeDB(bidsFile, bids);
+        res.status(201).json({
+            success: true,
+            message: "🎉 Đã gửi hồ sơ báo giá đấu thầu thành công! Công ty sẽ duyệt và phản hồi.",
+            data: newBid
+        });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 7. GET /api/bidding/projects/:id/bids (Lấy danh sách các báo giá của dự án)
+router.get("/projects/:id/bids", (req, res) => {
+    try {
+        const projectId = Number(req.params.id);
+        const bids = readDB(bidsFile);
+        const role = (req.user && req.user.role) ? req.user.role : (req.headers['x-user-role'] || req.query.role || 'GUEST');
+        const teamId = req.query.team_id ? Number(req.query.team_id) : null;
+
+        let projectBids = bids.filter(b => Number(b.project_id) === projectId);
+        if (!['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'QUAN_LY'].includes(role) && teamId) {
+            projectBids = projectBids.filter(b => Number(b.team_id) === teamId);
+        }
+
+        res.json({ success: true, data: projectBids });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 8. POST /api/bidding/projects/:id/award (Admin duyệt trúng thầu & đóng thầu)
+router.post("/projects/:id/award", (req, res) => {
+    try {
+        const projectId = Number(req.params.id);
+        const { bid_id, contractor_id, supervisor_id, supplier_id, labor_cost, notes } = req.body;
 
         let projects = readDB(dbFile);
         let teams = readDB(teamsFile);
+        let bids = readDB(bidsFile);
 
         const pIndex = projects.findIndex(x => Number(x.id) === projectId);
         if (pIndex === -1) return res.status(404).json({ success: false, error: "Không tìm thấy dự án" });
 
-        const contractor = teams.find(t => Number(t.id) === Number(contractor_id));
-        const supervisor = teams.find(t => Number(t.id) === Number(supervisor_id));
-        const supplier = teams.find(t => Number(t.id) === Number(supplier_id));
+        let winningContractorId = contractor_id ? Number(contractor_id) : null;
+        let finalLaborCost = labor_cost !== undefined ? parseFloat(labor_cost) : projects[pIndex].labor_cost;
+
+        // Nếu duyệt qua bid_id
+        if (bid_id) {
+            const bid = bids.find(b => Number(b.id) === Number(bid_id) && Number(b.project_id) === projectId);
+            if (bid) {
+                winningContractorId = Number(bid.team_id);
+                finalLaborCost = Number(bid.total_bid_amount);
+            }
+        }
+
+        const contractor = teams.find(t => Number(t.id) === Number(winningContractorId));
+        const supervisor = supervisor_id ? teams.find(t => Number(t.id) === Number(supervisor_id)) : null;
+        const supplier = supplier_id ? teams.find(t => Number(t.id) === Number(supplier_id)) : null;
 
         if (contractor) {
-            projects[pIndex].assigned_contractor_id = Number(contractor_id);
+            projects[pIndex].assigned_contractor_id = Number(winningContractorId);
             projects[pIndex].assigned_contractor_name = contractor.name;
         }
         if (supervisor) {
@@ -215,17 +501,31 @@ router.post("/projects/:id/assign", (req, res) => {
             projects[pIndex].assigned_supplier_id = Number(supplier_id);
             projects[pIndex].assigned_supplier_name = supplier.name;
         }
-        if (labor_cost !== undefined) {
-            projects[pIndex].labor_cost = parseFloat(labor_cost);
-        }
-        if (projects[pIndex].status === "NEW") {
-            projects[pIndex].status = "ASSIGNED";
+        if (finalLaborCost) {
+            projects[pIndex].labor_cost = finalLaborCost;
         }
 
+        // Đóng thầu & chuyển sang trạng thái đã giao việc
+        projects[pIndex].status = "ASSIGNED";
+        if (notes) projects[pIndex].construction_requirements = (projects[pIndex].construction_requirements ? projects[pIndex].construction_requirements + '\n' : '') + notes;
+
+        // Cập nhật trạng thái các bids
+        bids.forEach(b => {
+            if (Number(b.project_id) === projectId) {
+                if (Number(b.team_id) === Number(winningContractorId)) {
+                    b.status = "ACCEPTED";
+                } else if (b.status === "PENDING") {
+                    b.status = "REJECTED";
+                }
+            }
+        });
+
         writeDB(dbFile, projects);
+        writeDB(bidsFile, bids);
+
         res.json({
             success: true,
-            message: "🎉 Đã chỉ định nhà thầu phụ trách cho dự án thành công!",
+            message: `🎉 Đã duyệt trúng thầu cho "${contractor ? contractor.name : 'Nhà Thầu'}" với giá ${finalLaborCost.toLocaleString('vi-VN')} đ! Đã đóng thầu và bắt đầu triển khai.`,
             data: projects[pIndex]
         });
     } catch(err) {
@@ -233,7 +533,7 @@ router.post("/projects/:id/assign", (req, res) => {
     }
 });
 
-// 6. POST /api/bidding/projects/:id/checkin (Nhà thầu check-in GPS)
+// 9. POST /api/bidding/projects/:id/checkin (Nhà thầu check-in GPS)
 router.post("/projects/:id/checkin", (req, res) => {
     try {
         const projectId = Number(req.params.id);
@@ -248,11 +548,11 @@ router.post("/projects/:id/checkin", (req, res) => {
             gps: gps || "10.8031, 106.7329",
             address: address || projects[pIndex].address,
             photo_url: photo_url || "",
-            note: note || "Đội thợ đã có mặt tại công trình."
+            note: note || "Đội thợ đã có mặt tại hiện trường thi công."
         };
 
         projects[pIndex].checkin_data = checkinRecord;
-        if (projects[pIndex].status === "ASSIGNED" || projects[pIndex].status === "NEW") {
+        if (projects[pIndex].status === "ASSIGNED" || projects[pIndex].status === "NEW" || projects[pIndex].status === "OPEN_BIDDING") {
             projects[pIndex].status = "IN_PROGRESS";
         }
         if (projects[pIndex].progress === 0) {
@@ -266,11 +566,11 @@ router.post("/projects/:id/checkin", (req, res) => {
     }
 });
 
-// 7. POST /api/bidding/projects/:id/progress (Nhà thầu cập nhật % tiến độ)
+// 10. POST /api/bidding/projects/:id/progress (Nhà thầu cập nhật % tiến độ)
 router.post("/projects/:id/progress", (req, res) => {
     try {
         const projectId = Number(req.params.id);
-        const { progress, status } = req.body;
+        const { progress, status, stage_note } = req.body;
 
         let projects = readDB(dbFile);
         const pIndex = projects.findIndex(x => Number(x.id) === projectId);
@@ -279,15 +579,18 @@ router.post("/projects/:id/progress", (req, res) => {
         if (progress !== undefined) projects[pIndex].progress = Math.min(100, Math.max(0, parseInt(progress)));
         if (status) projects[pIndex].status = status;
         if (projects[pIndex].progress >= 100) projects[pIndex].status = "UNDER_INSPECTION";
+        if (stage_note) {
+            projects[pIndex].stage_note = stage_note;
+        }
 
         writeDB(dbFile, projects);
-        res.json({ success: true, data: projects[pIndex] });
+        res.json({ success: true, data: projects[pIndex], message: "✅ Đã cập nhật tiến độ dự án!" });
     } catch(err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// 8. POST /api/bidding/projects/:id/handover (Lưu 6 ảnh & Thông tin App Inverter)
+// 11. POST /api/bidding/projects/:id/handover (Lưu 6 ảnh hiện trường & Thông tin App Inverter)
 router.post("/projects/:id/handover", (req, res) => {
     try {
         const projectId = Number(req.params.id);
@@ -315,14 +618,15 @@ router.post("/projects/:id/handover", (req, res) => {
         handovers.push(newHandover);
         writeDB(handoverFile, handovers);
 
-        // Cập nhật tiến độ dự án nếu có
-        if (b.progress !== undefined) {
-            let projects = readDB(dbFile);
-            const pIndex = projects.findIndex(x => Number(x.id) === projectId);
-            if (pIndex !== -1) {
-                projects[pIndex].progress = parseInt(b.progress);
-                writeDB(dbFile, projects);
+        // Cập nhật tiến độ dự án
+        let projects = readDB(dbFile);
+        const pIndex = projects.findIndex(x => Number(x.id) === projectId);
+        if (pIndex !== -1) {
+            if (b.progress !== undefined) projects[pIndex].progress = parseInt(b.progress);
+            if (projects[pIndex].progress >= 90 && projects[pIndex].status === "IN_PROGRESS") {
+                projects[pIndex].status = "UNDER_INSPECTION";
             }
+            writeDB(dbFile, projects);
         }
 
         res.json({ success: true, data: newHandover, message: "🎉 Đã lưu bộ 6 ảnh hiện trường và thông tin App Inverter thành công!" });
@@ -331,7 +635,7 @@ router.post("/projects/:id/handover", (req, res) => {
     }
 });
 
-// 9. POST /api/bidding/projects/:id/documents (Nhà thầu/Công ty tải lên tư liệu nghiệm thu bổ sung)
+// 12. POST /api/bidding/projects/:id/documents (Tải lên tư liệu nghiệm thu bổ sung)
 router.post("/projects/:id/documents", (req, res) => {
     try {
         const projectId = Number(req.params.id);
@@ -364,7 +668,7 @@ router.post("/projects/:id/documents", (req, res) => {
     }
 });
 
-// 10. POST /api/bidding/projects/:id/evaluate (Công ty / Giám Sát duyệt nghiệm thu, chấm điểm & tất toán)
+// 13. POST /api/bidding/projects/:id/evaluate (Duyệt nghiệm thu, chấm điểm & tất toán)
 router.post("/projects/:id/evaluate", (req, res) => {
     try {
         const projectId = Number(req.params.id);
@@ -422,7 +726,32 @@ router.post("/projects/:id/evaluate", (req, res) => {
     }
 });
 
-// GET & POST /api/bidding/teams (Danh bạ nhà thầu)
+// 14. DELETE /api/bidding/projects/:id (Admin xóa dự án rác)
+router.delete("/projects/:id", (req, res) => {
+    try {
+        const projectId = Number(req.params.id);
+        let projects = readDB(dbFile);
+        let bids = readDB(bidsFile);
+        let handovers = readDB(handoverFile);
+
+        const p = projects.find(x => Number(x.id) === projectId);
+        if (!p) return res.status(404).json({ success: false, error: "Không tìm thấy dự án" });
+
+        projects = projects.filter(x => Number(x.id) !== projectId);
+        bids = bids.filter(x => Number(x.project_id) !== projectId);
+        handovers = handovers.filter(x => Number(x.project_id) !== projectId);
+
+        writeDB(dbFile, projects);
+        writeDB(bidsFile, bids);
+        writeDB(handoverFile, handovers);
+
+        res.json({ success: true, message: `✅ Đã xóa dự án "${p.project_name || ('#' + projectId)}" và các chứng từ liên quan!` });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 15. GET & POST /api/bidding/teams (Danh bạ nhà thầu)
 router.get("/teams", (req, res) => {
     try {
         const teams = readDB(teamsFile);
@@ -458,7 +787,7 @@ router.post("/teams", (req, res) => {
 
         teams.push(newTeam);
         writeDB(teamsFile, teams);
-        res.status(201).json({ success: true, data: newTeam });
+        res.status(201).json({ success: true, data: newTeam, message: "✅ Đã lưu hồ sơ nhà thầu mới!" });
     } catch(err) {
         res.status(500).json({ success: false, error: err.message });
     }

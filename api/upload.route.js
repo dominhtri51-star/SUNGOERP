@@ -1,7 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const path = require('path');
 const googleDriveService = require('../services/googleDrive.service');
+
+const ALLOWED_EXTENSIONS = new Set([
+    'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp',
+    'pdf', 'xlsx', 'xls', 'csv', 'doc', 'docx', 'txt', 'zip'
+]);
+const BLOCKED_EXTENSIONS = new Set([
+    'html', 'htm', 'xhtml', 'svg', 'xml', 'exe', 'bat', 'cmd', 'sh', 'php', 'js', 'vbs', 'scr', 'msi', 'bin'
+]);
+
+function isSafeFile(originalname) {
+    if (!originalname) return false;
+    const parts = originalname.toLowerCase().split('.');
+    if (parts.length < 2) return false;
+    const ext = parts.pop();
+    if (BLOCKED_EXTENSIONS.has(ext)) return false;
+    return ALLOWED_EXTENSIONS.has(ext);
+}
 
 // Sử dụng MemoryStorage để nhận buffer trực tiếp và chuyển tới Google Drive / Local Storage Service
 const upload = multer({
@@ -42,7 +60,14 @@ router.post('/', uploadFlexible, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Chưa nhận được file upload!' });
         }
 
-        const subfolder = req.body.subfolder || 'general';
+        if (!isSafeFile(file.originalname)) {
+            return res.status(400).json({
+                success: false,
+                error: '⛔ Định dạng file không được phép tải lên! Hệ thống chỉ hỗ trợ ảnh (.jpg, .png, .webp) và tài liệu (.pdf, .xlsx, .docx).'
+            });
+        }
+
+        const subfolder = String(req.body.subfolder || 'general').replace(/[^a-zA-Z0-9_-]/g, '') || 'general';
         const result = await googleDriveService.uploadFile({
             buffer: file.buffer,
             originalname: file.originalname,
@@ -75,7 +100,15 @@ router.post('/multiple', upload.array('files', 10), async (req, res) => {
             return res.status(400).json({ success: false, error: 'Chưa nhận được file nào!' });
         }
 
-        const subfolder = req.body.subfolder || 'general';
+        const unsafeFile = req.files.find(f => !isSafeFile(f.originalname));
+        if (unsafeFile) {
+            return res.status(400).json({
+                success: false,
+                error: `⛔ File "${unsafeFile.originalname}" không được phép tải lên!`
+            });
+        }
+
+        const subfolder = String(req.body.subfolder || 'general').replace(/[^a-zA-Z0-9_-]/g, '') || 'general';
         const uploadPromises = req.files.map(file =>
             googleDriveService.uploadFile({
                 buffer: file.buffer,

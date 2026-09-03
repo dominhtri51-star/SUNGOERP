@@ -2,22 +2,38 @@ try { require('dotenv').config(); } catch (e) {}
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const app = express(); // Biến app được khởi tạo ở đây
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { authMiddleware } = require('./middlewares/auth.middleware');
+
+const app = express();
 
 // Tự động khởi tạo cấu trúc CSDL và tài khoản admin mặc định
 try { require('./config/initDb')(); } catch (e) { console.error('InitDB Error:', e); }
 
-app.get('/api/setup-db', async (req, res) => {
-    try {
-        await require('./config/initDb')();
-        res.json({ success: true, message: 'Khởi tạo toàn bộ CSDL và tài khoản admin/minhtri thành công!' });
-    } catch (e) {
-        res.status(500).json({ success: false, error: e.message });
-    }
-});
+// ==========================================
+// THIẾT LẬP BẢO MẬT HTTP HEADERS (HELMET)
+// ==========================================
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    frameguard: { action: 'sameorigin' }
+}));
 
 // ==========================================
-// MỞ KHÓA DUNG LƯỢNG 50MB (QUAN TRỌNG NHẤT)
+// GIỚI HẠN TẦN SUẤT ĐĂNG NHẬP (RATE LIMITING)
+// ==========================================
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: { success: false, error: '⚠️ Bạn đã thử đăng nhập quá nhiều lần! Vui lòng thử lại sau 15 phút.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+app.use('/api/users/login', loginLimiter);
+
+// ==========================================
+// MỞ KHÓA DUNG LƯỢNG VÀ TÀI NGUYÊN TĨNH
 // ==========================================
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -28,7 +44,12 @@ app.use(express.static('public', {
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
     }
-})); // Cổng mở giao diện (luôn tải mới nhất, chống kẹt cache)
+}));
+
+// ==========================================
+// BẢO MẬT XÁC THỰC TRUNG TÂM (JWT AUTH)
+// ==========================================
+app.use('/api', authMiddleware);
 
 // ==========================================
 // CƠ CHẾ AUTO-ROUTER (TỰ ĐỘNG NẠP API)
@@ -47,10 +68,21 @@ if (fs.existsSync(apiDir)) {
 // ==========================================
 // KẾT NỐI API THỦ CÔNG (Nếu không dùng Auto)
 // ==========================================
+try { app.use('/api/attendance', require('./api/attendance.route')); } catch(e) {}
 try { app.use('/api/om-schedules', require('./api/om.route')); } catch(e) {}
 try { app.use('/api/crm', require('./api/customers.route')); } catch(e){}
 try { app.use('/api/imports', require('./api/imports.route')); } catch(e){}
 try { app.use('/api/vault', require('./api/vault.route')); } catch(e){}
+
+// ==========================================
+// CỔNG DỊCH VỤ CÔNG KHAI (BẢO HÀNH & KÝ HĐ)
+// ==========================================
+app.get(['/warranty', '/baohanh', '/tra-cuu-bao-hanh', '/bao-hanh', '/warranty-portal'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'warranty.html'));
+});
+app.get(['/sign', '/ky-hop-dong'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'sign-contract.html'));
+});
 
 // ==========================================
 // CHỐNG SẬP GIAO DIỆN & TRÁNH LỖI LỒNG TRANG

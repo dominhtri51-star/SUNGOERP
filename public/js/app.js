@@ -1,3 +1,60 @@
+// ==========================================
+// BẢO MẬT: TỰ ĐỘNG ĐÍNH KÈM JWT TOKEN CHO MỌI API CALL
+// ==========================================
+(function() {
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+        options = options || {};
+        let token = localStorage.getItem('sungo_token');
+        if (!token) {
+            try {
+                const u = JSON.parse(localStorage.getItem('sungo_user') || '{}');
+                token = u.token || '';
+            } catch(e) {}
+        }
+
+        if (token && typeof url === 'string' && url.startsWith('/api/')) {
+            options.headers = options.headers || {};
+            if (options.headers instanceof Headers) {
+                if (!options.headers.has('Authorization')) {
+                    options.headers.set('Authorization', 'Bearer ' + token);
+                }
+            } else if (Array.isArray(options.headers)) {
+                const hasAuth = options.headers.some(([k]) => k.toLowerCase() === 'authorization');
+                if (!hasAuth) {
+                    options.headers.push(['Authorization', 'Bearer ' + token]);
+                }
+            } else {
+                if (!options.headers['Authorization'] && !options.headers['authorization']) {
+                    options.headers['Authorization'] = 'Bearer ' + token;
+                }
+            }
+        }
+        return originalFetch(url, options).then(res => {
+            if (res.status === 401 && !url.includes('/api/users/login')) {
+                console.warn('🔒 [Security] Phiên đăng nhập cần làm mới, chuyển hướng về trang đăng nhập...');
+                localStorage.removeItem('sungo_user');
+                localStorage.removeItem('sungo_token');
+                if (!window.location.pathname.endsWith('index.html') && !window.location.pathname.endsWith('/')) {
+                    window.location.href = '/index.html';
+                }
+            }
+            return res;
+        });
+    };
+})();
+
+// Hàm khử khuẩn chuỗi an toàn chống XSS
+window.escapeHtml = function(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
 const ALL_SYSTEM_GROUPS = [
     { 
         group: 'Tổng Quan & Hệ Thống', 
@@ -58,7 +115,7 @@ const ALL_SYSTEM_GROUPS = [
         items: [ 
             { id: 'project-contractors', icon: 'fa-project-diagram', title: 'Dự Án & Chỉ Định Thầu', desc: 'Quản lý tổng thầu & giao việc' }, 
             { id: 'contractor-teams', icon: 'fa-user-shield', title: 'Hồ Sơ Danh Bạ Nhà Thầu', desc: 'Danh bạ đội thi công, giám sát' }, 
-            { id: 'bidding-marketplace', icon: 'fa-gavel', title: 'Sàn Đấu Thầu Công Trình', desc: 'Đăng tin công trình, mời thầu' } 
+            { id: 'marketplace', icon: 'fa-gavel', title: 'Sàn Đấu Thầu (Marketplace)', desc: 'Đăng tin công trình, mời thầu' } 
         ] 
     },
     { 
@@ -66,8 +123,9 @@ const ALL_SYSTEM_GROUPS = [
         roles: ['ADMIN', 'KE_TOAN', 'HR'], 
         items: [ 
             { id: 'hr-employees', icon: 'fa-id-badge', title: 'Hồ Sơ Nhân Sự', desc: 'Hồ sơ nhân viên & hợp đồng' }, 
+            { id: 'attendance-manager', icon: 'fa-fingerprint', title: 'Chấm Công & Thưởng Phạt', desc: 'Quét vân tay, đi trễ, chuyên cần' }, 
             { id: 'debt-kpi', icon: 'fa-medal', title: 'KPI Thu Nợ & Thưởng Phạt', desc: 'Đánh giá KPI thu hồi công nợ' }, 
-            { id: 'payroll-manager', icon: 'fa-file-invoice-dollar', title: 'Bảng Lương & Chấm Công', desc: 'Bảng lương tháng & bảo hiểm' } 
+            { id: 'payroll-manager', icon: 'fa-file-invoice-dollar', title: 'Bảng Lương & Chi Trả', desc: 'Bảng lương tháng & bảo hiểm' } 
         ] 
     },
     { 
@@ -92,36 +150,172 @@ const ALL_SYSTEM_GROUPS = [
         ] 
     },
     {
-        group: 'Cổng Nghiệm Thu Nhà Thầu',
+        group: 'Cổng Đối Tác & Nhà Thầu EPC',
         roles: ['NHA_THAU_THI_CONG', 'THAU_THI_CONG', 'NHA_THAU_GIAM_SAT', 'GIAM_SAT', 'NHA_CUNG_CAP', 'SUPPLIER'],
         items: [
-            { id: 'contractor-portal', icon: 'fa-clipboard-check', title: 'Dự Án & Hồ Sơ Nghiệm Thu', desc: 'Gửi báo cáo tiến độ, hình ảnh thi công' },
+            { id: 'marketplace', icon: 'fa-gavel', title: 'Sàn Đấu Thầu (Marketplace)', desc: 'Xem dự án mở thầu & nộp báo giá' },
+            { id: 'contractor-portal', icon: 'fa-clipboard-check', title: 'Dự Án Nhận & Nghiệm Thu', desc: 'Gửi báo cáo tiến độ, hình ảnh thi công' },
             { id: 'contractor-my-profile', icon: 'fa-id-card', title: 'Hồ Sơ Năng Lực', desc: 'Hồ sơ năng lực nhà thầu' }
         ]
     }
 ];
 
 const DEFAULT_ROLE_PERMISSIONS = {
-    'ADMIN': ['*'],
-    'SUPER_ADMIN': ['*'],
-    'GIAM_DOC': ['*'],
-    'SALE_ADMIN': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'sale-boq-hybrid', 'sale-boq-ongrid', 'sale-boq-offgrid', 'sale-boq-pump', 'boq-list', 'admin-approve', 'inventory-dash', 'bidding-marketplace'],
-    'SALE': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'sale-boq-hybrid', 'sale-boq-ongrid', 'sale-boq-offgrid', 'sale-boq-pump', 'boq-list'],
-    'SALES': ['sale-crm', 'sale-orders', 'order-history', 'return-orders', 'sales-commissions', 'sale-boq', 'sale-boq-hybrid', 'sale-boq-ongrid', 'sale-boq-offgrid', 'sale-boq-pump', 'boq-list'],
-    'THU_MUA': ['suppliers', 'import-orders', 'purchases', 'procurement-inventory'],
-    'NHAN_VIEN_KHO': ['inventory-dash', 'warehouse-in', 'warehouse-out', 'return-orders'],
-    'WAREHOUSE': ['inventory-dash', 'warehouse-in', 'warehouse-out', 'return-orders'],
-    'KE_TOAN': ['accounting-vault', 'accounting-cashbook', 'accounting-cash', 'accounting-payments', 'contract-billing', 'accounting-vat', 'accounting-tax', 'business-health', 'hr-employees', 'sales-commissions', 'debt-kpi', 'payroll-manager', 'finance-loans', 'finance-capital'],
-    'KY_THUAT': ['project-list', 'om-schedule', 'warranty-list'],
-    'TECH': ['project-list', 'om-schedule', 'warranty-list'],
-    'BAO_HANH': ['project-list', 'om-schedule', 'warranty-list'],
-    'HR': ['hr-employees', 'payroll-manager', 'debt-kpi', 'sales-commissions'],
-    'NHA_THAU_THI_CONG': ['contractor-portal', 'contractor-my-profile'],
-    'THAU_THI_CONG': ['contractor-portal', 'contractor-my-profile'],
-    'NHA_THAU_GIAM_SAT': ['contractor-portal', 'contractor-my-profile'],
-    'GIAM_SAT': ['contractor-portal', 'contractor-my-profile'],
-    'NHA_CUNG_CAP': ['contractor-portal', 'contractor-my-profile'],
-    'SUPPLIER': ['contractor-portal', 'contractor-my-profile']
+    'ADMIN': { '*': 'EDIT' },
+    'SUPER_ADMIN': { '*': 'EDIT' },
+    'GIAM_DOC': { '*': 'EDIT' },
+    'SALE_ADMIN': {
+        'admin-products': 'EDIT',
+        'sale-crm': 'EDIT',
+        'sale-orders': 'EDIT',
+        'order-history': 'EDIT',
+        'return-orders': 'EDIT',
+        'sales-commissions': 'EDIT',
+        'sale-boq': 'EDIT',
+        'sale-boq-hybrid': 'EDIT',
+        'sale-boq-ongrid': 'EDIT',
+        'sale-boq-offgrid': 'EDIT',
+        'sale-boq-pump': 'EDIT',
+        'boq-list': 'EDIT',
+        'admin-approve': 'EDIT',
+        'inventory-dash': 'VIEW',
+        'marketplace': 'EDIT',
+        'bidding-marketplace': 'EDIT',
+        'project-contractors': 'EDIT'
+    },
+    'SALE': {
+        'admin-products': 'VIEW', // Nhân viên kinh doanh: Chỉ Xem sản phẩm (không sửa/xóa được)
+        'sale-crm': 'EDIT',
+        'sale-orders': 'EDIT',
+        'order-history': 'EDIT',
+        'return-orders': 'EDIT',
+        'sales-commissions': 'VIEW',
+        'sale-boq': 'EDIT',
+        'sale-boq-hybrid': 'EDIT',
+        'sale-boq-ongrid': 'EDIT',
+        'sale-boq-offgrid': 'EDIT',
+        'sale-boq-pump': 'EDIT',
+        'boq-list': 'EDIT',
+        'marketplace': 'EDIT',
+        'bidding-marketplace': 'EDIT'
+    },
+    'SALES': {
+        'admin-products': 'VIEW',
+        'sale-crm': 'EDIT',
+        'sale-orders': 'EDIT',
+        'order-history': 'EDIT',
+        'return-orders': 'EDIT',
+        'sales-commissions': 'VIEW',
+        'sale-boq': 'EDIT',
+        'sale-boq-hybrid': 'EDIT',
+        'sale-boq-ongrid': 'EDIT',
+        'sale-boq-offgrid': 'EDIT',
+        'sale-boq-pump': 'EDIT',
+        'boq-list': 'EDIT',
+        'marketplace': 'EDIT',
+        'bidding-marketplace': 'EDIT'
+    },
+    'THU_MUA': {
+        'admin-products': 'EDIT',
+        'suppliers': 'EDIT',
+        'import-orders': 'EDIT',
+        'purchases': 'EDIT',
+        'procurement-inventory': 'EDIT',
+        'marketplace': 'EDIT'
+    },
+    'NHAN_VIEN_KHO': {
+        'admin-products': 'VIEW',
+        'inventory-dash': 'EDIT',
+        'warehouse-in': 'EDIT',
+        'warehouse-out': 'EDIT',
+        'return-orders': 'EDIT'
+    },
+    'WAREHOUSE': {
+        'admin-products': 'VIEW',
+        'inventory-dash': 'EDIT',
+        'warehouse-in': 'EDIT',
+        'warehouse-out': 'EDIT',
+        'return-orders': 'EDIT'
+    },
+    'KE_TOAN': {
+        'admin-products': 'VIEW',
+        'accounting-vault': 'EDIT',
+        'accounting-cashbook': 'EDIT',
+        'accounting-cash': 'EDIT',
+        'accounting-payments': 'EDIT',
+        'contract-billing': 'EDIT',
+        'accounting-vat': 'EDIT',
+        'accounting-tax': 'EDIT',
+        'business-health': 'EDIT',
+        'hr-employees': 'EDIT',
+        'attendance-manager': 'EDIT',
+        'sales-commissions': 'EDIT',
+        'debt-kpi': 'EDIT',
+        'payroll-manager': 'EDIT',
+        'finance-loans': 'EDIT',
+        'finance-capital': 'EDIT'
+    },
+    'KY_THUAT': {
+        'admin-products': 'VIEW',
+        'project-list': 'EDIT',
+        'om-schedule': 'EDIT',
+        'warranty-list': 'EDIT'
+    },
+    'TECH': {
+        'admin-products': 'VIEW',
+        'project-list': 'EDIT',
+        'om-schedule': 'EDIT',
+        'warranty-list': 'EDIT'
+    },
+    'BAO_HANH': {
+        'admin-products': 'VIEW',
+        'project-list': 'EDIT',
+        'om-schedule': 'EDIT',
+        'warranty-list': 'EDIT'
+    },
+    'HR': {
+        'hr-employees': 'EDIT',
+        'attendance-manager': 'EDIT',
+        'payroll-manager': 'EDIT',
+        'debt-kpi': 'EDIT',
+        'sales-commissions': 'VIEW'
+    },
+    'NHA_THAU_THI_CONG': {
+        'marketplace': 'EDIT',
+        'bidding-marketplace': 'EDIT',
+        'contractor-portal': 'EDIT',
+        'contractor-my-profile': 'EDIT'
+    },
+    'THAU_THI_CONG': {
+        'marketplace': 'EDIT',
+        'bidding-marketplace': 'EDIT',
+        'contractor-portal': 'EDIT',
+        'contractor-my-profile': 'EDIT'
+    },
+    'NHA_THAU_GIAM_SAT': {
+        'marketplace': 'EDIT',
+        'bidding-marketplace': 'EDIT',
+        'contractor-portal': 'EDIT',
+        'contractor-my-profile': 'EDIT'
+    },
+    'GIAM_SAT': {
+        'marketplace': 'EDIT',
+        'bidding-marketplace': 'EDIT',
+        'contractor-portal': 'EDIT',
+        'contractor-my-profile': 'EDIT'
+    },
+    'NHA_CUNG_CAP': {
+        'marketplace': 'EDIT',
+        'bidding-marketplace': 'EDIT',
+        'contractor-portal': 'EDIT',
+        'contractor-my-profile': 'EDIT'
+    },
+    'SUPPLIER': {
+        'marketplace': 'EDIT',
+        'bidding-marketplace': 'EDIT',
+        'contractor-portal': 'EDIT',
+        'contractor-my-profile': 'EDIT'
+    }
 };
 
 window.ALL_SYSTEM_GROUPS = ALL_SYSTEM_GROUPS;
@@ -187,32 +381,38 @@ const roleBottomNavs = {
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'NHA_THAU_THI_CONG': [
-        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Giao' },
+        { id: 'marketplace', icon: 'fa-gavel', label: 'Sàn Thầu' },
+        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Nhận' },
         { id: 'contractor-my-profile', icon: 'fa-id-card', label: 'Hồ Sơ' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'THAU_THI_CONG': [
-        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Giao' },
+        { id: 'marketplace', icon: 'fa-gavel', label: 'Sàn Thầu' },
+        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Nhận' },
         { id: 'contractor-my-profile', icon: 'fa-id-card', label: 'Hồ Sơ' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'NHA_THAU_GIAM_SAT': [
-        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Giao' },
+        { id: 'marketplace', icon: 'fa-gavel', label: 'Sàn Thầu' },
+        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Nhận' },
         { id: 'contractor-my-profile', icon: 'fa-id-card', label: 'Hồ Sơ' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'GIAM_SAT': [
-        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Giao' },
+        { id: 'marketplace', icon: 'fa-gavel', label: 'Sàn Thầu' },
+        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Nhận' },
         { id: 'contractor-my-profile', icon: 'fa-id-card', label: 'Hồ Sơ' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'NHA_CUNG_CAP': [
-        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Giao' },
+        { id: 'marketplace', icon: 'fa-gavel', label: 'Sàn Thầu' },
+        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Nhận' },
         { id: 'contractor-my-profile', icon: 'fa-id-card', label: 'Hồ Sơ' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'SUPPLIER': [
-        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Giao' },
+        { id: 'marketplace', icon: 'fa-gavel', label: 'Sàn Thầu' },
+        { id: 'contractor-portal', icon: 'fa-clipboard-check', label: 'Dự Án Nhận' },
         { id: 'contractor-my-profile', icon: 'fa-id-card', label: 'Hồ Sơ' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
@@ -285,51 +485,6 @@ const roleBottomNavs = {
     ]
 };
 
-function getMenuForRole(role, customModules = [], dynamicRolePerms = null) { 
-    const isAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'GIAM_DOC';
-    if (isAdmin) return ALL_SYSTEM_GROUPS; 
-    
-    // CỔNG DÀNH RIÊNG CHO NHÀ THẦU NẾU CHƯA CÓ CẤU HÌNH ĐẶC BIỆT
-    const isContractor = role === 'NHA_THAU_THI_CONG' || role === 'THAU_THI_CONG' || role === 'NHA_THAU_GIAM_SAT' || role === 'GIAM_SAT' || role === 'NHA_CUNG_CAP' || role === 'SUPPLIER';
-
-    // Lấy danh sách quyền của role từ dynamicRolePerms (nếu có) hoặc DEFAULT_ROLE_PERMISSIONS
-    let rolePerms = [];
-    const permsMap = dynamicRolePerms || window.__rolePermissions || {};
-    
-    if (permsMap && permsMap[role] && Array.isArray(permsMap[role])) {
-        rolePerms = permsMap[role];
-    } else if (DEFAULT_ROLE_PERMISSIONS[role]) {
-        rolePerms = DEFAULT_ROLE_PERMISSIONS[role];
-    } else {
-        const uRole = (role === 'KY_THUAT' || role === 'TECH') ? 'KY_THUAT' : role;
-        rolePerms = DEFAULT_ROLE_PERMISSIONS[uRole] || [];
-    }
-
-    if (rolePerms.includes('*') || rolePerms.includes('all')) {
-        return ALL_SYSTEM_GROUPS;
-    }
-
-    // Gộp quyền của Role với custom_modules được cấp riêng cho nhân viên này
-    const extraMods = Array.isArray(customModules) ? customModules : [];
-    const allowedSet = new Set([...rolePerms, ...extraMods]);
-
-    // Lọc các nhóm menu theo danh sách được phép
-    const visibleGroups = [];
-    ALL_SYSTEM_GROUPS.forEach(group => {
-        const allowedItems = group.items.filter(item => allowedSet.has(item.id));
-        if (allowedItems.length > 0) {
-            visibleGroups.push({
-                group: group.group,
-                roles: group.roles,
-                items: allowedItems
-            });
-        }
-    });
-
-    return visibleGroups;
-}
-window.getMenuForRole = getMenuForRole;
-
 // Bản đồ liên kết phân hệ con và phân hệ cha (Sub-module to Parent mapping)
 const SUB_MODULE_MAP = {
     // 1. Phân hệ Báo Giá BOQ & các loại báo giá chi tiết
@@ -370,40 +525,100 @@ const SUB_MODULE_MAP = {
 };
 window.SUB_MODULE_MAP = SUB_MODULE_MAP;
 
-function isModuleAllowed(moduleId, user) {
-    if (!user) return false;
-    const role = (user.role || 'GUEST').toUpperCase();
-    if (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'GIAM_DOC') return true;
+function getModulePermission(moduleId, user = null) {
+    if (!user) {
+        try {
+            const uStr = localStorage.getItem('sungo_user');
+            user = uStr ? JSON.parse(uStr) : null;
+        } catch(e) {}
+    }
+    if (!user) return 'NONE';
+    const role = String(user.role || 'GUEST').toUpperCase().trim();
+    if (['SUPER_ADMIN', 'ADMIN', 'GIAM_DOC', 'GIÁM ĐỐC', 'QUẢN TRỊ VIÊN'].includes(role)) return 'EDIT';
 
     const parentModuleId = SUB_MODULE_MAP[moduleId] || null;
 
-    // 1. Kiểm tra quyền riêng được cấp cho nhân viên (custom_modules)
-    const customMods = user.custom_modules || [];
-    if (Array.isArray(customMods)) {
-        if (customMods.includes(moduleId) || (parentModuleId && customMods.includes(parentModuleId))) {
-            return true;
+    // 1. Kiểm tra quyền ghi đè riêng cho nhân viên (custom_modules hoặc custom_permissions)
+    const customMods = user.custom_modules || user.custom_permissions;
+    if (customMods) {
+        if (typeof customMods === 'object' && !Array.isArray(customMods)) {
+            if (customMods[moduleId]) return customMods[moduleId];
+            if (parentModuleId && customMods[parentModuleId]) return customMods[parentModuleId];
+        } else if (Array.isArray(customMods)) {
+            for (let m of customMods) {
+                if (m === `${moduleId}:NONE` || (parentModuleId && m === `${parentModuleId}:NONE`)) return 'NONE';
+                if (m === `${moduleId}:EDIT` || m === moduleId || (parentModuleId && (m === `${parentModuleId}:EDIT` || m === parentModuleId))) return 'EDIT';
+                if (m === `${moduleId}:VIEW` || (parentModuleId && m === `${parentModuleId}:VIEW`)) return 'VIEW';
+            }
         }
     }
 
     // 2. Kiểm tra quyền theo Vai trò (Role permissions)
     const permsMap = window.__rolePermissions || {};
     let rolePerms = permsMap[role] || permsMap[user.role];
-    if (!rolePerms || !Array.isArray(rolePerms)) {
-        rolePerms = DEFAULT_ROLE_PERMISSIONS[role] || DEFAULT_ROLE_PERMISSIONS[user.role] || [];
+    if (!rolePerms) {
+        const uRole = (role === 'KY_THUAT' || role === 'TECH' || role === 'BAO_HANH') ? 'KY_THUAT' : role;
+        rolePerms = DEFAULT_ROLE_PERMISSIONS[uRole] || DEFAULT_ROLE_PERMISSIONS[user.role] || {};
     }
 
-    if (rolePerms.includes('*') || rolePerms.includes('all')) return true;
+    if (Array.isArray(rolePerms)) {
+        if (rolePerms.includes('*') || rolePerms.includes('all')) return 'EDIT';
+        for (let m of rolePerms) {
+            if (m === `${moduleId}:EDIT` || m === moduleId || (parentModuleId && (m === `${parentModuleId}:EDIT` || m === parentModuleId))) return 'EDIT';
+            if (m === `${moduleId}:VIEW` || (parentModuleId && m === `${parentModuleId}:VIEW`)) return 'VIEW';
+        }
+    } else if (typeof rolePerms === 'object') {
+        if (rolePerms['*'] === 'EDIT' || rolePerms['*'] === 'VIEW') return rolePerms['*'];
+        if (rolePerms['*']) return 'EDIT';
+        if (rolePerms[moduleId]) return rolePerms[moduleId];
+        if (parentModuleId && rolePerms[parentModuleId]) return rolePerms[parentModuleId];
+    }
 
-    // Được phép nếu Role có quyền trực tiếp vào moduleId hoặc có quyền vào phân hệ cha
-    if (rolePerms.includes(moduleId)) return true;
-    if (parentModuleId && rolePerms.includes(parentModuleId)) return true;
+    return 'NONE';
+}
+window.getModulePermission = getModulePermission;
 
-    return false;
+function canEditModule(moduleId, user = null) {
+    return getModulePermission(moduleId, user) === 'EDIT';
+}
+window.canEditModule = canEditModule;
+
+function canViewModule(moduleId, user = null) {
+    return getModulePermission(moduleId, user) !== 'NONE';
+}
+window.canViewModule = canViewModule;
+
+function isModuleAllowed(moduleId, user = null) {
+    return canViewModule(moduleId, user);
 }
 window.isModuleAllowed = isModuleAllowed;
 
+function getMenuForRole(role, customModules = [], dynamicRolePerms = null) { 
+    const isAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'GIAM_DOC';
+    if (isAdmin) return ALL_SYSTEM_GROUPS; 
+    
+    const dummyUser = { role: role, custom_modules: customModules };
+
+    // Lọc các nhóm menu theo danh sách được phép
+    const visibleGroups = [];
+    ALL_SYSTEM_GROUPS.forEach(group => {
+        const allowedItems = group.items.filter(item => isModuleAllowed(item.id, dummyUser));
+        if (allowedItems.length > 0) {
+            visibleGroups.push({
+                group: group.group,
+                roles: group.roles,
+                items: allowedItems
+            });
+        }
+    });
+
+    return visibleGroups;
+}
+window.getMenuForRole = getMenuForRole;
+
 function logout() { 
     localStorage.removeItem('sungo_user'); 
+    localStorage.removeItem('sungo_token'); 
     window.location.href = '/index.html'; 
 }
 window.logout = logout;
@@ -426,7 +641,7 @@ window.openMobileSidebar = function() {
     const backdrop = document.getElementById('sidebar-backdrop');
     if (!sidebar || !backdrop) return;
     
-    sidebar.classList.remove('-translate-x-full');
+    sidebar.classList.remove('translate-x-full');
     backdrop.classList.remove('hidden');
     setTimeout(() => {
         backdrop.classList.add('opacity-100');
@@ -439,7 +654,7 @@ window.closeMobileSidebar = function() {
     const backdrop = document.getElementById('sidebar-backdrop');
     if (!sidebar || !backdrop) return;
     
-    sidebar.classList.add('-translate-x-full');
+    sidebar.classList.add('translate-x-full');
     backdrop.classList.remove('opacity-100');
     backdrop.classList.add('opacity-0');
     setTimeout(() => {
@@ -450,11 +665,77 @@ window.closeMobileSidebar = function() {
 window.toggleMobileSidebar = function(force) {
     const sidebar = document.getElementById('app-sidebar');
     if (!sidebar) return;
-    const isClosed = sidebar.classList.contains('-translate-x-full');
+    const isClosed = sidebar.classList.contains('translate-x-full');
     if (force === true || (force === undefined && isClosed)) {
         window.openMobileSidebar();
     } else {
         window.closeMobileSidebar();
+    }
+};
+
+// ==========================================
+// CÁC HÀM XỬ LÝ GIAO DIỆN DESKTOP SIDEBAR (COLLAPSIBLE RIGHT MENU)
+// ==========================================
+
+window.toggleDesktopSidebar = function(forceCollapse) {
+    const sidebar = document.getElementById('app-sidebar');
+    const toggleBtn = document.getElementById('desktop-sidebar-toggle');
+    const toggleIcon = document.getElementById('desktop-sidebar-toggle-icon');
+    const toggleText = document.getElementById('desktop-sidebar-toggle-text');
+    const floatingBtn = document.getElementById('desktop-floating-toggle');
+    if (!sidebar) return;
+
+    const isCollapsed = sidebar.classList.contains('desktop-collapsed');
+    const shouldCollapse = (forceCollapse !== undefined) ? forceCollapse : !isCollapsed;
+
+    if (shouldCollapse) {
+        sidebar.classList.add('desktop-collapsed');
+        localStorage.setItem('sungo_desktop_sidebar_collapsed', 'true');
+        
+        if (toggleBtn) toggleBtn.setAttribute('title', 'Mở Menu bên phải (Ctrl + B)');
+        if (toggleIcon) {
+            toggleIcon.className = 'fas fa-indent';
+        }
+        if (toggleText) toggleText.innerText = 'Hiện Menu';
+        if (floatingBtn) {
+            floatingBtn.classList.remove('hidden');
+            floatingBtn.classList.add('md:flex');
+        }
+    } else {
+        sidebar.classList.remove('desktop-collapsed');
+        localStorage.setItem('sungo_desktop_sidebar_collapsed', 'false');
+        
+        if (toggleBtn) toggleBtn.setAttribute('title', 'Thu gọn Menu bên phải (Ctrl + B)');
+        if (toggleIcon) {
+            toggleIcon.className = 'fas fa-outdent';
+        }
+        if (toggleText) toggleText.innerText = 'Thu Gọn';
+        if (floatingBtn) {
+            floatingBtn.classList.add('hidden');
+            floatingBtn.classList.remove('md:flex');
+        }
+    }
+};
+
+window.initDesktopSidebar = function() {
+    const savedState = localStorage.getItem('sungo_desktop_sidebar_collapsed');
+    if (savedState === 'true') {
+        window.toggleDesktopSidebar(true);
+    } else {
+        window.toggleDesktopSidebar(false);
+    }
+    
+    // Lắng nghe phím tắt Ctrl + B hoặc Cmd + B để Ẩn / Hiện Menu nhanh
+    if (!window.__sidebarShortcutBound) {
+        window.__sidebarShortcutBound = true;
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+                const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+                if (tag === 'input' || tag === 'textarea') return;
+                e.preventDefault();
+                window.toggleDesktopSidebar();
+            }
+        });
     }
 };
 
@@ -573,7 +854,7 @@ async function initApp() {
     if (userNameEl) userNameEl.innerText = currentUser.name;
     
     const userRoleEl = document.getElementById('user-role');
-    if (userRoleEl) userRoleEl.innerText = `${currentUser.role} | Mã NV: ${currentUser.empId || 'N/A'}`;
+    if (userRoleEl) userRoleEl.innerText = currentUser.role;
     
     const avatarBadgeEl = document.getElementById('user-avatar-badge');
     if (avatarBadgeEl) avatarBadgeEl.innerText = roleInitials;
@@ -590,9 +871,6 @@ async function initApp() {
 
     const sheetRole = document.getElementById('sheet-user-role');
     if (sheetRole) sheetRole.innerText = currentUser.role;
-
-    const sheetEmpId = document.getElementById('sheet-user-empid');
-    if (sheetEmpId) sheetEmpId.innerText = `Mã NV: ${currentUser.empId || 'UNKNOWN'}`;
     
     const userGroups = getMenuForRole(currentUser.role, currentUser.custom_modules, window.__rolePermissions);
     if (userGroups.length === 0) return logout();
@@ -613,6 +891,11 @@ async function initApp() {
     
     const sidebarEl = document.getElementById('sidebar-menu');
     if (sidebarEl) sidebarEl.innerHTML = menuHtml;
+    
+    // Khởi tạo trạng thái thu gọn/mở rộng thanh Menu Desktop
+    if (typeof window.initDesktopSidebar === 'function') {
+        window.initDesktopSidebar();
+    }
     
     const menuToLoad = targetMenu || firstMenu;
     if (menuToLoad) {
@@ -691,8 +974,12 @@ async function loadModule(moduleId, title) {
     }
 
     try {
-        contentDiv.innerHTML = `<div class="p-8 text-center text-slate-400 flex flex-col items-center justify-center space-y-3"><i class="fas fa-spinner fa-spin text-3xl text-amber-500"></i><p class="text-xs font-bold uppercase tracking-wider">Đang tải phân hệ...</p></div>`;
-        const res = await fetch(`/modules/${moduleId}.html?v=` + Date.now());
+        // Dọn dẹp các modal đã được đưa ra document.body từ module trước
+        document.querySelectorAll('.teleported-module-modal').forEach(el => el.remove());
+
+        let targetFile = moduleId;
+        if (targetFile === 'bidding-marketplace') targetFile = 'marketplace';
+        const res = await fetch(`/modules/${targetFile}.html?v=` + Date.now());
         if (!res.ok) throw new Error("Chưa có file");
         const html = await res.text();
         contentDiv.innerHTML = html;

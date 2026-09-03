@@ -151,6 +151,7 @@
     <script>
         // Xóa phiên đăng nhập cũ mỗi khi ra ngoài màn hình này
         localStorage.removeItem('sungo_user');
+        localStorage.removeItem('sungo_token');
 
         async function performLogin() {
             const user = document.getElementById('username').value;
@@ -182,6 +183,10 @@
 
                 if(data.success) {
                     const u = data.user;
+                    // Lưu JWT token an toàn
+                    if (data.token) {
+                        localStorage.setItem('sungo_token', data.token);
+                    }
                     // Đóng gói data để lưu vào localStorage đúng chuẩn hệ thống đang dùng
                     const sessionData = {
                         id: u.id,
@@ -189,7 +194,8 @@
                         name: u.full_name,
                         avatar: '👤',
                         empId: u.emp_id,
-                        custom_modules: u.custom_modules || []
+                        custom_modules: u.custom_modules || [],
+                        token: data.token || ''
                     };
                     localStorage.setItem('sungo_user', JSON.stringify(sessionData));
                     
