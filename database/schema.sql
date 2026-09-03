@@ -14,11 +14,6 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tài khoản admin mặc định (user: admin / pass: 123456)
-INSERT INTO users (emp_id, username, password, full_name, role) 
-VALUES ('EMP001', 'admin', '123456', 'Quản Trị Viên', 'ADMIN')
-ON CONFLICT (username) DO NOTHING;
-
 -- 2. BẢNG DANH MỤC SẢN PHẨM (CATEGORIES)
 CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,
@@ -323,6 +318,8 @@ CREATE TABLE IF NOT EXISTS employees (
     -- CẤU HÌNH HOA HỒNG & PHÂN CẤP QUẢN LÝ
     commission_rate_wholesale NUMERIC DEFAULT 5, -- % hoa hồng khách sỉ của nhân viên
     commission_rate_boq NUMERIC DEFAULT 10, -- % hoa hồng BOQ/EPC của nhân viên
+    commission_rate_manager_wholesale NUMERIC DEFAULT 2, -- % hoa hồng quản lý Trưởng phòng hưởng trên đơn sỉ của cấp dưới
+    commission_rate_manager_boq NUMERIC DEFAULT 3, -- % hoa hồng quản lý Trưởng phòng hưởng trên dự án BOQ của cấp dưới
     min_gross_profit_threshold NUMERIC DEFAULT 0, -- Mức Lợi Nhuận Gộp Tối Thiểu / Tháng để bắt đầu tính hoa hồng (bù lương cứng)
     department_role VARCHAR(50) DEFAULT 'STAFF', -- 'STAFF' (Nhân viên) hoặc 'MANAGER' (Trưởng phòng kinh doanh)
     manager_id INTEGER REFERENCES employees(id) ON DELETE SET NULL, -- Trưởng phòng quản lý trực tiếp
@@ -354,14 +351,16 @@ CREATE TABLE IF NOT EXISTS employee_insurances (
 CREATE TABLE IF NOT EXISTS sales_commissions (
     id SERIAL PRIMARY KEY,
     employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
-    ref_type VARCHAR(50) NOT NULL, -- 'ORDER' (Đơn hàng sỉ: 5% GP) hoặc 'CONTRACT' / 'BOQ' (Dự án: 10% GP)
+    subordinate_id INTEGER REFERENCES employees(id) ON DELETE SET NULL, -- Nhân viên cấp dưới trực tiếp tạo ra đơn/dự án (nếu là hoa hồng quản lý)
+    commission_type VARCHAR(50) DEFAULT 'DIRECT', -- 'DIRECT' (Hoa hồng trực tiếp của Sale) hoặc 'MANAGER_OVERRIDE' (Hoa hồng Trưởng phòng quản lý cấp dưới)
+    ref_type VARCHAR(50) NOT NULL, -- 'ORDER' (Đơn hàng sỉ: 5% GP), 'CONTRACT' / 'BOQ' (Dự án: 10% GP), 'ORDER_MANAGER', 'CONTRACT_MANAGER'
     ref_id VARCHAR(100) NOT NULL,
     ref_code VARCHAR(100) NOT NULL,
     customer_name VARCHAR(255),
     revenue_amount NUMERIC DEFAULT 0,
     cogs_amount NUMERIC DEFAULT 0,
     gross_profit NUMERIC DEFAULT 0,
-    commission_rate NUMERIC DEFAULT 5, -- 5% cho sỉ, 10% cho BOQ
+    commission_rate NUMERIC DEFAULT 5, -- 5% cho sỉ, 10% cho BOQ, 2-3% cho Quản lý
     commission_amount NUMERIC NOT NULL,
     paid_status VARCHAR(50) DEFAULT 'PENDING', -- PENDING (Chờ khách trả xong), ELIGIBLE (Đủ điều kiện chi), INCLUDED_PAYROLL (Đã vào bảng lương), PAID (Đã chi)
     payroll_period VARCHAR(7), -- '2026-08'
@@ -541,5 +540,225 @@ CREATE TABLE IF NOT EXISTS debt_kpi_evaluations (
     CONSTRAINT unq_debt_kpi_period_emp UNIQUE (period_key, employee_id)
 );
 
+-- ==========================================
+-- 31. BẢNG CẤU HÌNH CA LÀM VIỆC & CHÍNH SÁCH THƯỞNG PHẠT CHẤM CÔNG (ATTENDANCE_POLICIES)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS attendance_policies (
+    id SERIAL PRIMARY KEY,
+    policy_name VARCHAR(100) DEFAULT 'Quy chuẩn Công Ty',
+    work_start_time VARCHAR(10) DEFAULT '08:00',
+    work_end_time VARCHAR(10) DEFAULT '17:30',
+    lunch_start_time VARCHAR(10) DEFAULT '12:00',
+    lunch_end_time VARCHAR(10) DEFAULT '13:30',
+    standard_daily_hours NUMERIC DEFAULT 8.0,
+    grace_period_minutes INTEGER DEFAULT 5, -- Đến trước 08:05 không tính trễ
+    free_late_count INTEGER DEFAULT 3, -- Miễn phạt 3 lần trễ nhẹ đầu tiên trong tháng
+    
+    -- Thưởng chuyên cần & đúng giờ
+    bonus_attendance_amount NUMERIC DEFAULT 500000, -- Thưởng chuyên cần tháng (đủ công, ko trễ)
+    bonus_perfect_punctuality NUMERIC DEFAULT 300000, -- Thưởng đúng giờ tuyệt đối
+    ot_rate_multiplier NUMERIC DEFAULT 1.5, -- Hệ số lương làm thêm giờ
+    
+    -- Phạt đi trễ theo bậc (VNĐ / lần)
+    penalty_late_tier1 NUMERIC DEFAULT 20000, -- Trễ 5-15p (vượt số lần miễn)
+    penalty_late_tier2 NUMERIC DEFAULT 50000, -- Trễ 15-30p
+    penalty_late_tier3 NUMERIC DEFAULT 100000, -- Trễ 30-60p
+    penalty_late_tier4 NUMERIC DEFAULT 200000, -- Trễ > 60p
+    penalty_accumulated_late_5 NUMERIC DEFAULT 200000, -- Phạt thêm nếu trễ >= 5 lần/tháng
+    
+    -- Phạt về sớm theo bậc (VNĐ / lần)
+    penalty_early_tier1 NUMERIC DEFAULT 20000, -- Về sớm 5-15p
+    penalty_early_tier2 NUMERIC DEFAULT 50000, -- Về sớm 15-30p
+    penalty_early_tier3 NUMERIC DEFAULT 100000, -- Về sớm 30-60p
+    penalty_early_tier4 NUMERIC DEFAULT 200000, -- Về sớm > 60p
+    
+    -- Phạt nghỉ không phép & kỷ luật
+    penalty_unauthorized_absent NUMERIC DEFAULT 200000, -- Phạt nghỉ không báo trước
+    notes TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
+-- ==========================================
+-- 32. BẢNG NHẬT KÝ QUÉT VÂN TAY / MẶT TỪ MÁY CHẤM CÔNG (ATTENDANCE_LOGS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS attendance_logs (
+    id SERIAL PRIMARY KEY,
+    employee_id INTEGER REFERENCES employees(id) ON DELETE SET NULL,
+    emp_code VARCHAR(50),
+    scan_time TIMESTAMP NOT NULL,
+    scan_type VARCHAR(50) DEFAULT 'AUTO', -- CHECK_IN, CHECK_OUT, AUTO
+    source VARCHAR(50) DEFAULT 'DEVICE_IMPORT', -- DEVICE_IMPORT, EXCEL_IMPORT, API_DEVICE, WEB_ONLINE, MANUAL_ADJUST
+    device_id VARCHAR(50),
+    device_name VARCHAR(100),
+    raw_data JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 33. BẢNG CHẤM CÔNG CHI TIẾT TỪNG NGÀY (ATTENDANCE_DAILY)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS attendance_daily (
+    id SERIAL PRIMARY KEY,
+    employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+    work_date DATE NOT NULL,
+    first_check_in TIMESTAMP,
+    last_check_out TIMESTAMP,
+    working_hours NUMERIC DEFAULT 0,
+    late_minutes INTEGER DEFAULT 0,
+    early_minutes INTEGER DEFAULT 0,
+    ot_hours NUMERIC DEFAULT 0,
+    working_day_value NUMERIC DEFAULT 1.0, -- 1.0 (đủ công), 0.5 (nửa công), 0 (nghỉ)
+    leave_type VARCHAR(50) DEFAULT 'NONE', -- NONE, PAID_LEAVE (phép năm), UNPAID_LEAVE (nghỉ ko phép), SICK_LEAVE (nghỉ ốm)
+    status VARCHAR(50) DEFAULT 'ON_TIME', -- ON_TIME, LATE, EARLY_OUT, ABSENT, LEAVE, HOLIDAY, ADJUSTED
+    penalty_amount NUMERIC DEFAULT 0,
+    notes TEXT,
+    adjustment_reason TEXT,
+    adjusted_by VARCHAR(100),
+    adjusted_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unq_attendance_emp_date UNIQUE (employee_id, work_date)
+);
+
+-- ==========================================
+-- 34. BẢNG TỔNG HỢP CÔNG THÁNG KẾT NỐI BẢNG LƯƠNG (ATTENDANCE_MONTHLY_SUMMARY)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS attendance_monthly_summary (
+    id SERIAL PRIMARY KEY,
+    period_key VARCHAR(7) NOT NULL, -- '2026-08'
+    employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+    standard_working_days NUMERIC DEFAULT 26,
+    total_actual_days NUMERIC DEFAULT 0,
+    total_paid_leave_days NUMERIC DEFAULT 0,
+    total_unpaid_leave_days NUMERIC DEFAULT 0,
+    total_late_count INTEGER DEFAULT 0,
+    total_late_minutes INTEGER DEFAULT 0,
+    total_early_count INTEGER DEFAULT 0,
+    total_ot_hours NUMERIC DEFAULT 0,
+    is_attendance_bonus_awarded BOOLEAN DEFAULT FALSE,
+    attendance_bonus_amount NUMERIC DEFAULT 0,
+    total_attendance_penalty NUMERIC DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'CALCULATED', -- CALCULATED, SYNCED_PAYROLL
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unq_attendance_monthly_period_emp UNIQUE (period_key, employee_id)
+);
+
+-- ==========================================
+-- 35. BẢNG NHÀ CUNG CẤP & CÔNG NỢ PHẢI TRẢ (SUPPLIERS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS suppliers (
+    id SERIAL PRIMARY KEY,
+    supplier_code VARCHAR(100) UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    email VARCHAR(100),
+    tax_code VARCHAR(50),
+    address TEXT,
+    note TEXT,
+    advance_pct NUMERIC DEFAULT 0,
+    remain_pct NUMERIC DEFAULT 100,
+    debt_days INTEGER DEFAULT 0,
+    credit_limit NUMERIC DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 36. BẢNG ĐƠN HÀNG NHẬP KHẨU QUỐC TẾ (IMPORTS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS imports (
+    id SERIAL PRIMARY KEY,
+    po_code VARCHAR(100) UNIQUE NOT NULL,
+    supplier_name VARCHAR(255),
+    note TEXT,
+    status VARCHAR(50) DEFAULT 'Chờ Thanh Toán',
+    items JSONB DEFAULT '[]'::jsonb,
+    docs JSONB DEFAULT '{}'::jsonb,
+    total_value NUMERIC DEFAULT 0,
+    currency VARCHAR(20) DEFAULT 'USD',
+    exchange_rate NUMERIC DEFAULT 25400,
+    eta_date TIMESTAMP,
+    tracking_number VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 37. BẢNG ĐƠN MUA HÀNG TRONG NƯỚC & ĐỐI SOÁT WMS (PURCHASES)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS purchases (
+    id SERIAL PRIMARY KEY,
+    po_code VARCHAR(100) UNIQUE NOT NULL,
+    supplier_id INTEGER,
+    supplier_name VARCHAR(255),
+    note TEXT,
+    status VARCHAR(50) DEFAULT 'Chờ Duyệt',
+    items JSONB DEFAULT '[]'::jsonb,
+    docs JSONB DEFAULT '{}'::jsonb,
+    total_amount NUMERIC DEFAULT 0,
+    receive_date TIMESTAMP,
+    delivery_note TEXT,
+    vehicle_info TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 38. BẢNG BÁO GIÁ BOQ DỰ ÁN (QUOTATIONS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS quotations (
+    id SERIAL PRIMARY KEY,
+    quotation_code VARCHAR(100) UNIQUE NOT NULL,
+    store_id INTEGER DEFAULT 1,
+    brand_name VARCHAR(100),
+    project_name VARCHAR(255),
+    customer_name VARCHAR(255),
+    phone VARCHAR(50),
+    sale_name VARCHAR(100),
+    created_by VARCHAR(100),
+    emp_id VARCHAR(50),
+    system_type VARCHAR(50),
+    monthly_bill NUMERIC DEFAULT 0,
+    system_kwp NUMERIC DEFAULT 0,
+    total_amount NUMERIC DEFAULT 0,
+    total_cost NUMERIC DEFAULT 0,
+    profit_margin NUMERIC DEFAULT 0,
+    is_below_floor BOOLEAN DEFAULT FALSE,
+    payback_years NUMERIC DEFAULT 0,
+    npv_amount NUMERIC DEFAULT 0,
+    roe_percent NUMERIC DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'QUOTING',
+    items JSONB DEFAULT '[]'::jsonb,
+    labor_items JSONB DEFAULT '[]'::jsonb,
+    admin_notes TEXT,
+    approved_by VARCHAR(100),
+    approved_at TIMESTAMP,
+    reject_reason TEXT,
+    rejected_by VARCHAR(100),
+    rejected_at TIMESTAMP,
+    converted_order_code VARCHAR(100),
+    converted_order_id INTEGER,
+    converted_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- 39. BẢNG PHIẾU CHI & ỦY NHIỆM CHI NHÀ CUNG CẤP (SUPPLIER_PAYMENTS)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS supplier_payments (
+    id SERIAL PRIMARY KEY,
+    payment_code VARCHAR(100) UNIQUE NOT NULL,
+    supplier_id INTEGER,
+    supplier_name VARCHAR(255),
+    amount NUMERIC DEFAULT 0,
+    payment_method VARCHAR(100) DEFAULT 'Chuyển Khoản (UNC)',
+    bank_account VARCHAR(100),
+    bank_name VARCHAR(100),
+    account_holder VARCHAR(255),
+    note TEXT,
+    status VARCHAR(50) DEFAULT 'Chờ Duyệt',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 

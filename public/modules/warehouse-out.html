@@ -1,4 +1,4 @@
-<div class="h-full flex flex-col bg-slate-50 relative overflow-hidden text-sm" id="wms-out-container">
+<div class="min-h-full flex flex-col bg-slate-50 relative text-sm pb-12" id="wms-out-container">
     <style>
         #wms-out-container { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
         .wms-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
@@ -26,17 +26,17 @@
 
         <!-- THANH LỌC TRẠNG THÁI WMS OUTBOUND -->
         <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5" id="wms-filter-container">
+            <button onclick="window.modWmsOut.toggleStatus('PROCESSING')" id="w-st-PROCESSING" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+                ⏳ Chờ Xử Lý (<span id="w-cnt-proc">0</span>)
+            </button>
             <button onclick="window.modWmsOut.toggleStatus('SHIPPING_CMD')" id="w-st-SHIPPING_CMD" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-orange-500 bg-orange-600 text-white whitespace-nowrap cursor-pointer shadow-2xs">
                 🚛 Lệnh Xuất (<span id="w-cnt-cmd">0</span>)
             </button>
-            <button onclick="window.modWmsOut.toggleStatus('PACKED')" id="w-st-PACKED" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-indigo-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
-                📦 Sẵn Sàng Giao (<span id="w-cnt-packed">0</span>)
+            <button onclick="window.modWmsOut.toggleStatus('PACKED')" id="w-st-PACKED" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+                📦 Sẵn Sàng (<span id="w-cnt-packed">0</span>)
             </button>
-            <button onclick="window.modWmsOut.toggleStatus('SHIPPED')" id="w-st-SHIPPED" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-emerald-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
+            <button onclick="window.modWmsOut.toggleStatus('SHIPPED')" id="w-st-SHIPPED" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
                 ✅ Đã Giao (<span id="w-cnt-shipped">0</span>)
-            </button>
-            <button onclick="window.modWmsOut.toggleStatus('PROCESSING')" id="w-st-PROCESSING" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-blue-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
-                ⏳ Chờ Xử Lý (<span id="w-cnt-proc">0</span>)
             </button>
         </div>
 
@@ -81,7 +81,7 @@
     <div id="wms-detail" class="absolute inset-0 bg-slate-50 z-20 flex flex-col hidden overflow-hidden transition-all duration-300 transform translate-x-full">
         
         <!-- HEADER TOP ACTION BAR -->
-        <div class="bg-white border-b border-slate-200 p-3 sm:p-4 flex justify-between items-center shadow-2xs shrink-0 gap-2 flex-wrap sm:flex-nowrap">
+        <div class="bg-white border-b border-slate-200 px-3 sm:px-4 pb-3 sm:pb-4 pt-safe flex justify-between items-center shadow-2xs shrink-0 gap-2 flex-wrap sm:flex-nowrap">
             <button onclick="window.modWmsOut.showList()" class="text-slate-600 hover:text-orange-600 font-bold text-xs flex items-center gap-1.5 bg-slate-100 active:bg-slate-200 px-3 py-1.5 sm:py-2 rounded-xl transition cursor-pointer shrink-0">
                 <i class="fas fa-arrow-left"></i> <span>Quay Lại</span>
             </button>
@@ -250,30 +250,30 @@ window.modWmsOut = {
 
     updateStatusCounts: () => {
         const all = window.modWmsOut.allOrders;
+        const cntProc = all.filter(o => o.status === 'PROCESSING').length;
         const cntCmd = all.filter(o => o.status === 'SHIPPING_CMD').length;
         const cntPacked = all.filter(o => o.status === 'PACKED').length;
         const cntShipped = all.filter(o => o.status === 'SHIPPED').length;
-        const cntProc = all.filter(o => o.status === 'PROCESSING').length;
 
+        const elProc = document.getElementById('w-cnt-proc');
         const elCmd = document.getElementById('w-cnt-cmd');
         const elPacked = document.getElementById('w-cnt-packed');
         const elShipped = document.getElementById('w-cnt-shipped');
-        const elProc = document.getElementById('w-cnt-proc');
 
+        if (elProc) elProc.innerText = cntProc;
         if (elCmd) elCmd.innerText = cntCmd;
         if (elPacked) elPacked.innerText = cntPacked;
         if (elShipped) elShipped.innerText = cntShipped;
-        if (elProc) elProc.innerText = cntProc;
     },
 
     toggleStatus: (st) => {
         window.modWmsOut.activeStatuses = [st];
         
         const configs = {
+            'PROCESSING': { id: 'w-st-PROCESSING', active: 'border-blue-500 bg-blue-600 text-white font-black' },
             'SHIPPING_CMD': { id: 'w-st-SHIPPING_CMD', active: 'border-orange-500 bg-orange-600 text-white font-black' },
             'PACKED': { id: 'w-st-PACKED', active: 'border-indigo-500 bg-indigo-600 text-white font-black' },
-            'SHIPPED': { id: 'w-st-SHIPPED', active: 'border-emerald-500 bg-emerald-600 text-white font-black' },
-            'PROCESSING': { id: 'w-st-PROCESSING', active: 'border-blue-500 bg-blue-600 text-white font-black' }
+            'SHIPPED': { id: 'w-st-SHIPPED', active: 'border-emerald-500 bg-emerald-600 text-white font-black' }
         };
 
         Object.keys(configs).forEach(k => {
@@ -320,9 +320,9 @@ window.modWmsOut = {
         if (tbody) {
             tbody.innerHTML = filtered.map(o => {
                 let stBadge = '';
-                if (o.status === 'PROCESSING') stBadge = '<span class="px-2.5 py-1 bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">⚙️ Chờ xuất hàng</span>';
+                if (o.status === 'PROCESSING') stBadge = '<span class="px-2.5 py-1 bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">⏳ Chờ xử lý</span>';
                 else if (o.status === 'SHIPPING_CMD') stBadge = '<span class="px-2.5 py-1 bg-orange-100 text-orange-800 border border-orange-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">🚛 Lệnh xuất</span>';
-                else if (o.status === 'PACKED') stBadge = '<span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 border border-indigo-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">📦 Sẵn sàng giao</span>';
+                else if (o.status === 'PACKED') stBadge = '<span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 border border-indigo-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">📦 Sẵn sàng</span>';
                 else if (o.status === 'SHIPPED') stBadge = '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">✅ Đã giao</span>';
                 
                 let itemsHtml = '<span class="text-[10px] text-slate-400 italic">Không có SP</span>';
@@ -354,7 +354,7 @@ window.modWmsOut = {
         if (mobileContainer) {
             mobileContainer.innerHTML = filtered.map(o => {
                 let stBadge = '';
-                if (o.status === 'PROCESSING') stBadge = '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">⚙️ Chờ xuất</span>';
+                if (o.status === 'PROCESSING') stBadge = '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">⏳ Chờ xử lý</span>';
                 else if (o.status === 'SHIPPING_CMD') stBadge = '<span class="px-2 py-0.5 bg-orange-100 text-orange-800 border border-orange-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">🚛 Lệnh xuất</span>';
                 else if (o.status === 'PACKED') stBadge = '<span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 border border-indigo-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">📦 Sẵn sàng</span>';
                 else if (o.status === 'SHIPPED') stBadge = '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">✅ Đã giao</span>';
@@ -402,7 +402,7 @@ window.modWmsOut = {
     },
 
     fastUpdateStatus: async (id, nextStatus) => {
-        if (nextStatus === 'PACKED' && !confirm("📦 Xác nhận ĐÃ SOẠN XONG hàng? (Trạng thái chuyển sang Sẵn sàng giao)")) return;
+        if (nextStatus === 'PACKED' && !confirm("📦 Xác nhận ĐÃ SOẠN XONG hàng? (Trạng thái chuyển sang Sẵn sàng)")) return;
         if (nextStatus === 'SHIPPED' && !confirm("✅ Xác nhận ĐÃ GIAO HÀNG cho khách/chành xe?")) return;
 
         try {
@@ -601,6 +601,11 @@ window.modWmsOut = {
     closePrintModal: () => {
         const modal = document.getElementById('modal-wms-print-preview');
         if (modal) modal.classList.add('hidden');
+        const container = document.getElementById('wms-print-preview-container');
+        if (container) container.innerHTML = '';
+        document.body.style.maxWidth = '';
+        document.body.style.margin = '';
+        document.body.style.border = '';
     },
 
     triggerIframePrint: () => {

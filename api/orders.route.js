@@ -632,13 +632,34 @@ router.put('/:id/status', async (req, res) => {
     }
 });
 
+// Tự động nâng cấp bảng order_docs nếu thiếu cột
+(async () => {
+    try {
+        await pool.query(`
+            ALTER TABLE order_docs ADD COLUMN IF NOT EXISTS doc_type VARCHAR(100);
+            ALTER TABLE order_docs ADD COLUMN IF NOT EXISTS file_url TEXT;
+            ALTER TABLE order_docs ADD COLUMN IF NOT EXISTS doc_name VARCHAR(255);
+            ALTER TABLE order_docs ADD COLUMN IF NOT EXISTS doc_url TEXT;
+        `);
+    } catch(e) {}
+})();
+
 // API TẢI TÀI LIỆU
 router.post('/:id/docs', async (req, res) => { 
     try {
-        const { file_name, file_data } = req.body;
-        await pool.query("INSERT INTO order_docs (order_id, doc_type, file_url) VALUES ($1, $2, $3)", [req.params.id, file_name, file_data]);
+        const { file_name, file_data, doc_name, doc_url, doc_type } = req.body;
+        const name = file_name || doc_name || 'Tài liệu';
+        const url = file_data || doc_url || '';
+        const type = doc_type || file_name || 'DOCUMENT';
+        await pool.query(
+            "INSERT INTO order_docs (order_id, doc_type, file_url, doc_name, doc_url) VALUES ($1, $2, $3, $4, $5)", 
+            [req.params.id, type, url, name, url]
+        );
         res.json({ success: true });
-    } catch(e) { res.status(500).json({ success: false, error: e.message }); }
+    } catch(e) { 
+        console.error("Lỗi tải tài liệu đơn hàng:", e.message);
+        res.status(500).json({ success: false, error: e.message }); 
+    }
 });
 
 router.delete('/:id/docs/:docId', async (req, res) => {
