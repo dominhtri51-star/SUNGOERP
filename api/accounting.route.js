@@ -58,10 +58,10 @@ const initTable = async () => {
 };
 initTable();
 
-// 1. GET: Lấy thống kê Sổ Quỹ & Danh sách Giao Dịch Thu/Chi
+// 1. GET: Lấy thống kê Sổ Quỹ & Danh sách Giao Dịch Thu/Chi (Hỗ trợ lọc ngày & Siêu tốc chống nghẽn mạng)
 router.get('/cash', async (req, res) => {
     try {
-        const { type, category, tax_status, source_fund, search } = req.query;
+        const { type, category, tax_status, source_fund, search, date_from, date_to, limit } = req.query;
         let query = "SELECT * FROM cash_transactions";
         const params = [];
         const conditions = [];
@@ -86,15 +86,29 @@ router.get('/cash', async (req, res) => {
             params.push(`%${search.trim()}%`);
             conditions.push(`(code ILIKE $${params.length} OR target_name ILIKE $${params.length} OR notes ILIKE $${params.length} OR category ILIKE $${params.length} OR order_code ILIKE $${params.length})`);
         }
+        if (date_from && date_to) {
+            params.push(date_from + ' 00:00:00');
+            params.push(date_to + ' 23:59:59');
+            conditions.push(`created_at >= $${params.length - 1}::timestamp AND created_at <= $${params.length}::timestamp`);
+        } else if (date_from) {
+            params.push(date_from + ' 00:00:00');
+            conditions.push(`created_at >= $${params.length}::timestamp`);
+        } else if (date_to) {
+            params.push(date_to + ' 23:59:59');
+            conditions.push(`created_at <= $${params.length}::timestamp`);
+        }
 
         if (conditions.length > 0) {
             query += " WHERE " + conditions.join(" AND ");
         }
-        query += " ORDER BY id DESC LIMIT 300";
+        
+        const maxLimit = limit ? Math.min(1000, parseInt(limit)) : 1000;
+        params.push(maxLimit);
+        query += ` ORDER BY created_at DESC, id DESC LIMIT $${params.length}`;
 
         const transRes = await pool.query(query, params);
         
-        // Tính tổng Quỹ Tiền Mặt & Phân loại Thuế
+        // 1. Tính tổng Quỹ Tiền Mặt LŨY KẾ (Toàn bộ thời gian - Chuẩn mực số dư kế toán)
         const sumRes = await pool.query(`
             SELECT 
                 COALESCE(SUM(CASE WHEN type = 'THU' THEN amount ELSE 0 END), 0) as total_thu,
@@ -117,6 +131,40 @@ router.get('/cash', async (req, res) => {
         const totalChi = parseFloat(sumRes.rows[0].total_chi || 0);
         const currentCash = totalThu - totalChi;
 
+        // 2. Tính Tổng Thu và Chi TRONG KỲ LỌC (nếu có chọn khoảng ngày)
+        let periodThu = totalThu;
+        let periodChi = totalChi;
+        let periodB4 = parseFloat(sumRes.rows[0].chi_tax_invalid || 0);
+        let periodValidTax = parseFloat(sumRes.rows[0].chi_tax_valid || 0);
+
+        if (date_from || date_to) {
+            let periodParams = [];
+            let periodWhere = [];
+            if (date_from && date_to) {
+                periodParams.push(date_from + ' 00:00:00', date_to + ' 23:59:59');
+                periodWhere.push(`created_at >= $1::timestamp AND created_at <= $2::timestamp`);
+            } else if (date_from) {
+                periodParams.push(date_from + ' 00:00:00');
+                periodWhere.push(`created_at >= $1::timestamp`);
+            } else if (date_to) {
+                periodParams.push(date_to + ' 23:59:59');
+                periodWhere.push(`created_at <= $1::timestamp`);
+            }
+            const pRes = await pool.query(`
+                SELECT 
+                    COALESCE(SUM(CASE WHEN type = 'THU' THEN amount ELSE 0 END), 0) as p_thu,
+                    COALESCE(SUM(CASE WHEN type = 'CHI' THEN amount ELSE 0 END), 0) as p_chi,
+                    COALESCE(SUM(CASE WHEN type = 'CHI' AND (tax_status = 'KHONG_HOA_DON' OR tax_status IS NULL) THEN amount ELSE 0 END), 0) as p_b4,
+                    COALESCE(SUM(CASE WHEN type = 'CHI' AND tax_status IN ('CO_HOA_DON', 'BANG_KE_01', 'KHOAN_VIEC_08') THEN amount ELSE 0 END), 0) as p_valid
+                FROM cash_transactions
+                WHERE ${periodWhere.join(' AND ')}
+            `, periodParams);
+            periodThu = parseFloat(pRes.rows[0].p_thu || 0);
+            periodChi = parseFloat(pRes.rows[0].p_chi || 0);
+            periodB4 = parseFloat(pRes.rows[0].p_b4 || 0);
+            periodValidTax = parseFloat(pRes.rows[0].p_valid || 0);
+        }
+
         // Tự động tính Nợ Phải Thu Khách Hàng (TK 131 từ Orders: Tổng tiền - Đã thanh toán)
         let totalReceivable = 0;
         try {
@@ -130,6 +178,11 @@ router.get('/cash', async (req, res) => {
                 total_cash: currentCash,
                 total_thu: totalThu,
                 total_chi: totalChi,
+                period_thu: periodThu,
+                period_chi: periodChi,
+                period_b4: periodB4,
+                period_valid_tax: periodValidTax,
+                is_filtered_date: !!(date_from || date_to),
                 total_receivable: totalReceivable,
                 thu_cash: parseFloat(sumRes.rows[0].thu_cash || 0),
                 thu_bank: parseFloat(sumRes.rows[0].thu_bank || 0),
@@ -200,6 +253,39 @@ router.post('/cash', async (req, res) => {
         }
 
         res.json({ success: true, code, message: `Đã lập ${type === 'THU' ? 'Phiếu Thu' : 'Phiếu Chi'} #${code} thành công!` });
+    } catch(e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// Xóa một phiếu giao dịch khỏi Sổ Quỹ (cash_transactions)
+router.delete('/cash/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const txRes = await pool.query("SELECT * FROM cash_transactions WHERE id = $1", [id]);
+        if (txRes.rows.length === 0) {
+            return res.json({ success: true, message: 'Giao dịch không tồn tại hoặc đã được xóa trước đó' });
+        }
+        const tx = txRes.rows[0];
+
+        // 1. Xóa giao dịch khỏi cash_transactions
+        await pool.query("DELETE FROM cash_transactions WHERE id = $1", [id]);
+
+        // 2. Nếu phiếu thu/chi liên quan tới customer_id, đồng bộ lại công nợ
+        if (tx.customer_id) {
+            try {
+                await pool.query(`
+                    UPDATE customers 
+                    SET current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                    WHERE id = $1
+                `, [tx.customer_id]);
+            } catch(e) {}
+        }
+
+        res.json({ 
+            success: true, 
+            message: `Đã xóa phiếu giao dịch [${tx.code}] (${tx.type === 'THU' ? 'Phiếu Thu' : 'Phiếu Chi'}) khỏi Sổ Quỹ!` 
+        });
     } catch(e) {
         res.status(500).json({ success: false, error: e.message });
     }
@@ -366,9 +452,9 @@ router.get('/debt-statement', async (req, res) => {
                 SELECT oi.id, oi.product_id, 
                        COALESCE(NULLIF(oi.product_name, ''), p.product_name, 'Sản phẩm / Thiết bị') as product_name,
                        COALESCE(p.unit, 'Bộ') as unit,
-                       COALESCE(oi.quantity, oi.qty, 1) as quantity,
+                       COALESCE(oi.quantity, 1) as quantity,
                        COALESCE(oi.price, 0) as price,
-                       COALESCE(oi.total, (COALESCE(oi.quantity, oi.qty, 1) * COALESCE(oi.price, 0))) as total
+                       COALESCE(oi.total, (COALESCE(oi.quantity, 1) * COALESCE(oi.price, 0))) as total
                 FROM order_items oi
                 LEFT JOIN products p ON oi.product_id = p.id
                 WHERE oi.order_id = $1

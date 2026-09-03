@@ -1,4 +1,4 @@
-<div class="h-full flex flex-col space-y-4 font-sans">
+<div class="min-h-full flex flex-col space-y-4 font-sans pb-12">
     
     <!-- HEADER & ACTION BAR -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
@@ -97,7 +97,7 @@
         <!-- ========================================================= -->
         <!-- TAB 1: DANH SÁCH KHÁCH HÀNG NỢ (TK 131) -->
         <!-- ========================================================= -->
-        <div id="tab-content-DEBT_LIST" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3 overflow-hidden">
+        <div id="tab-content-DEBT_LIST" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
                 <div class="flex items-center gap-2">
                     <span class="font-bold text-slate-700">Lọc Tuổi Nợ:</span>
@@ -130,12 +130,25 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG & NÚT XEM THÊM (MỖI LẦN 10 KHÁCH HÀNG) -->
+            <div id="ar-load-more-bar" class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs shrink-0">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <i class="fas fa-users text-blue-500"></i>
+                    <span>Đang hiển thị <strong class="text-slate-900 text-sm font-black" id="ar-lbl-displayed">0</strong> / <strong class="text-blue-600 text-sm font-black" id="ar-lbl-total">0</strong> khách nợ</span>
+                </div>
+                <div id="ar-load-more-btn-wrap" class="w-full sm:w-auto">
+                    <button type="button" onclick="window.modCash.loadMoreDebts()" id="btn-ar-load-more" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                        <i class="fas fa-arrow-down"></i> <span>Xem Thêm 10 Khách Nợ Tiếp Theo</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- ========================================================= -->
         <!-- TAB 2: LỊCH SỬ THU TIỀN NỢ KHÁCH HÀNG -->
         <!-- ========================================================= -->
-        <div id="tab-content-COLLECT_HISTORY" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3 overflow-hidden hidden">
+        <div id="tab-content-COLLECT_HISTORY" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3 hidden">
             <div class="overflow-y-auto border border-slate-200 rounded-xl flex-1">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead class="bg-slate-100 text-slate-700 sticky top-0 uppercase font-bold text-[10px] shadow-sm z-10">
@@ -151,6 +164,19 @@
                         <tr><td colspan="5" class="p-8 text-center text-slate-400">Đang tải lịch sử thu tiền...</td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG & NÚT XEM THÊM LỊCH SỬ THU TIỀN (MỖI LẦN 10 PHIẾU) -->
+            <div id="ar-history-load-more-bar" class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs shrink-0">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <i class="fas fa-history text-emerald-500"></i>
+                    <span>Đang hiển thị <strong class="text-slate-900 text-sm font-black" id="ar-hist-lbl-displayed">0</strong> / <strong class="text-emerald-600 text-sm font-black" id="ar-hist-lbl-total">0</strong> phiếu thu</span>
+                </div>
+                <div id="ar-history-load-more-btn-wrap" class="w-full sm:w-auto">
+                    <button type="button" onclick="window.modCash.loadMoreHistory()" id="btn-ar-hist-load-more" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                        <i class="fas fa-arrow-down"></i> <span>Xem Thêm 10 Phiếu Tiếp Theo</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -375,11 +401,19 @@
 <script>
 window.modCash = {
     debts: [],
+    filteredDebts: [],
     history: [],
+    filteredHistory: [],
+    pageSize: 10,
+    displayedDebtsCount: 10,
+    displayedHistoryCount: 10,
     currentStatementData: null,
     currentStatementCust: null,
 
     init: async () => {
+        window.modCash.pageSize = 10;
+        window.modCash.displayedDebtsCount = 10;
+        window.modCash.displayedHistoryCount = 10;
         await window.modCash.loadAll();
     },
 
@@ -406,7 +440,7 @@ window.modCash = {
         try {
             const [resAging, resCash] = await Promise.all([
                 fetch('/api/accounting/receivables-aging'),
-                fetch('/api/accounting/cash?type=THU')
+                fetch('/api/accounting/cash?type=THU&limit=500')
             ]);
             const [dataAging, dataCash] = await Promise.all([resAging.json(), resCash.json()]);
 
@@ -429,7 +463,9 @@ window.modCash = {
 
             if (dataCash.success) {
                 window.modCash.history = dataCash.transactions || [];
-                window.modCash.renderHistoryTable(window.modCash.history);
+                window.modCash.filteredHistory = window.modCash.history;
+                window.modCash.displayedHistoryCount = window.modCash.pageSize;
+                window.modCash.renderCurrentHistorySlice();
             }
         } catch (e) {
             console.error("Lỗi nạp dữ liệu công nợ:", e);
@@ -437,10 +473,68 @@ window.modCash = {
         }
     },
 
-    renderAgingTable: (list) => {
+    loadMoreDebts: () => {
+        window.modCash.displayedDebtsCount += window.modCash.pageSize;
+        window.modCash.renderCurrentDebtsSlice();
+    },
+
+    renderCurrentDebtsSlice: () => {
+        const total = (window.modCash.filteredDebts || []).length;
+        const count = Math.min(window.modCash.displayedDebtsCount, total);
+        const slice = (window.modCash.filteredDebts || []).slice(0, count);
+        window.modCash.renderAgingTable(slice, total, count);
+    },
+
+    loadMoreHistory: () => {
+        window.modCash.displayedHistoryCount += window.modCash.pageSize;
+        window.modCash.renderCurrentHistorySlice();
+    },
+
+    renderCurrentHistorySlice: () => {
+        const total = (window.modCash.filteredHistory || []).length;
+        const count = Math.min(window.modCash.displayedHistoryCount, total);
+        const slice = (window.modCash.filteredHistory || []).slice(0, count);
+        window.modCash.renderHistoryTable(slice, total, count);
+    },
+
+    renderAgingTable: (list, totalCount, currentCount) => {
         const tbody = document.getElementById('tbl-debt-aging-body');
-        if (!list || list.length === 0) {
+        const total = (typeof totalCount === 'number') ? totalCount : (list ? list.length : 0);
+        const displayed = (typeof currentCount === 'number') ? currentCount : (list ? list.length : 0);
+
+        const loadMoreBar = document.getElementById('ar-load-more-bar');
+        const lblDisplayed = document.getElementById('ar-lbl-displayed');
+        const lblTotal = document.getElementById('ar-lbl-total');
+        const loadMoreWrap = document.getElementById('ar-load-more-btn-wrap');
+
+        if (lblDisplayed) lblDisplayed.innerText = displayed;
+        if (lblTotal) lblTotal.innerText = total;
+
+        if (!list || list.length === 0 || total === 0) {
+            if (loadMoreBar) loadMoreBar.classList.add('hidden');
             return tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-400 font-medium">Không có khách hàng nào còn công nợ phù hợp với bộ lọc.</td></tr>';
+        }
+
+        if (loadMoreBar) loadMoreBar.classList.remove('hidden');
+
+        if (displayed >= total) {
+            if (loadMoreWrap) {
+                loadMoreWrap.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
+                        <i class="fas fa-check-circle text-emerald-500"></i> Đã hiển thị tất cả ${total} khách nợ
+                    </span>
+                `;
+            }
+        } else {
+            const remain = total - displayed;
+            const nextStep = Math.min(window.modCash.pageSize, remain);
+            if (loadMoreWrap) {
+                loadMoreWrap.innerHTML = `
+                    <button type="button" onclick="window.modCash.loadMoreDebts()" id="btn-ar-load-more" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                        <i class="fas fa-arrow-down"></i> <span>Xem Thêm ${nextStep} Khách Nợ Tiếp Theo</span>
+                    </button>
+                `;
+            }
         }
 
         tbody.innerHTML = list.map((d, idx) => {
@@ -466,7 +560,7 @@ window.modCash = {
                     <td class="py-1.5 px-2 text-right font-black text-rose-700">${new Intl.NumberFormat('vi-VN').format(o.remaining)} đ</td>
                     <td class="py-1.5 px-2 text-center font-bold text-slate-700">${o.days_overdue} ngày</td>
                     <td class="py-1.5 px-2 text-right">
-                        <button onclick="window.modCash.quickCollectOrder('${safeName}', ${d.customer_id || 0}, ${o.id}, '${o.order_code}', ${o.remaining})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded text-[10px] shadow-xs">
+                        <button onclick="window.modCash.quickCollectOrder('${safeName}', ${d.customer_id || 0}, ${o.id}, '${o.order_code}', ${o.remaining})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded text-[10px] shadow-xs cursor-pointer">
                             Thu Đơn Này
                         </button>
                     </td>
@@ -483,7 +577,7 @@ window.modCash = {
                         <p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-phone text-slate-400 mr-1"></i>${d.customer_phone || 'Chưa có SĐT'}</p>
                     </td>
                     <td class="p-3 text-center">
-                        <button onclick="window.modCash.toggleOrdersDetail(${idx})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 transition">
+                        <button onclick="window.modCash.toggleOrdersDetail(${idx})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 transition cursor-pointer">
                             <span>${d.unpaid_orders_count} đơn nợ</span>
                             <i class="fas fa-chevron-down text-[9px]" id="icon-toggle-${idx}"></i>
                         </button>
@@ -495,10 +589,10 @@ window.modCash = {
                     <td class="p-3 text-center">${statusBadge}</td>
                     <td class="p-3 text-right">
                         <div class="inline-flex items-center gap-1">
-                            <button onclick="window.modCash.openDebtStatementModal('${safeName}', ${d.customer_id || 0})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 font-bold px-2.5 py-1.5 rounded-lg text-xs shadow-xs transition inline-flex items-center gap-1">
+                            <button onclick="window.modCash.openDebtStatementModal('${safeName}', ${d.customer_id || 0})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 font-bold px-2.5 py-1.5 rounded-lg text-xs shadow-xs transition inline-flex items-center gap-1 cursor-pointer">
                                 <i class="fas fa-file-invoice"></i> Đối Chiếu
                             </button>
-                            <button onclick="window.modCash.quickCollect('${safeName}', ${d.customer_id || 0}, ${d.remaining_debt})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-2.5 py-1.5 rounded-lg text-xs shadow-sm transition inline-flex items-center gap-1">
+                            <button onclick="window.modCash.quickCollect('${safeName}', ${d.customer_id || 0}, ${d.remaining_debt})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-2.5 py-1.5 rounded-lg text-xs shadow-sm transition inline-flex items-center gap-1 cursor-pointer">
                                 <i class="fas fa-hand-holding-dollar"></i> Thu Nợ
                             </button>
                         </div>
@@ -547,10 +641,44 @@ window.modCash = {
         }
     },
 
-    renderHistoryTable: (list) => {
+    renderHistoryTable: (list, totalCount, currentCount) => {
         const tbody = document.getElementById('tbl-collect-history-body');
-        if (!list || list.length === 0) {
+        const total = (typeof totalCount === 'number') ? totalCount : (list ? list.length : 0);
+        const displayed = (typeof currentCount === 'number') ? currentCount : (list ? list.length : 0);
+
+        const loadMoreBar = document.getElementById('ar-history-load-more-bar');
+        const lblDisplayed = document.getElementById('ar-hist-lbl-displayed');
+        const lblTotal = document.getElementById('ar-hist-lbl-total');
+        const loadMoreWrap = document.getElementById('ar-history-load-more-btn-wrap');
+
+        if (lblDisplayed) lblDisplayed.innerText = displayed;
+        if (lblTotal) lblTotal.innerText = total;
+
+        if (!list || list.length === 0 || total === 0) {
+            if (loadMoreBar) loadMoreBar.classList.add('hidden');
             return tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">Chưa có lịch sử thu tiền nào.</td></tr>';
+        }
+
+        if (loadMoreBar) loadMoreBar.classList.remove('hidden');
+
+        if (displayed >= total) {
+            if (loadMoreWrap) {
+                loadMoreWrap.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
+                        <i class="fas fa-check-circle text-emerald-500"></i> Đã hiển thị tất cả ${total} phiếu thu
+                    </span>
+                `;
+            }
+        } else {
+            const remain = total - displayed;
+            const nextStep = Math.min(window.modCash.pageSize, remain);
+            if (loadMoreWrap) {
+                loadMoreWrap.innerHTML = `
+                    <button type="button" onclick="window.modCash.loadMoreHistory()" id="btn-ar-hist-load-more" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                        <i class="fas fa-arrow-down"></i> <span>Xem Thêm ${nextStep} Phiếu Tiếp Theo</span>
+                    </button>
+                `;
+            }
         }
 
         tbody.innerHTML = list.map(h => `
@@ -571,7 +699,7 @@ window.modCash = {
         const statusFilter = document.getElementById('ar-filter-status')?.value || 'ALL';
         const q = (document.getElementById('ar-search-input')?.value || '').toLowerCase().trim();
 
-        let filtered = window.modCash.debts;
+        let filtered = window.modCash.debts || [];
         if (statusFilter !== 'ALL') {
             filtered = filtered.filter(x => x.aging_status === statusFilter);
         }
@@ -583,7 +711,9 @@ window.modCash = {
                 (x.latest_order_code && x.latest_order_code.toLowerCase().includes(q))
             );
         }
-        window.modCash.renderAgingTable(filtered);
+        window.modCash.filteredDebts = filtered;
+        window.modCash.displayedDebtsCount = window.modCash.pageSize; // Reset to 10
+        window.modCash.renderCurrentDebtsSlice();
     },
 
     populateCustomerDatalist: () => {

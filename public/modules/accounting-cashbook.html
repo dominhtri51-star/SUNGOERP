@@ -1,4 +1,4 @@
-<div class="h-full flex flex-col space-y-4 font-sans">
+<div class="min-h-full flex flex-col space-y-4 font-sans pb-12">
     
     <!-- HEADER & ACTION BAR -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
@@ -100,16 +100,46 @@
         <!-- ========================================================= -->
         <!-- TAB 1: SỔ QUỸ TẤT CẢ GIAO DỊCH THU / CHI -->
         <!-- ========================================================= -->
-        <div id="cb-tab-content-ALL_TX" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3 overflow-hidden">
-            <!-- Filter Bar đa chiều -->
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2.5 shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
-                <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="window.modCashbook.filterType('ALL')" id="cb-btn-filter-ALL" class="px-3 py-1.5 rounded-lg font-bold bg-slate-800 text-white shadow-sm transition">Tất Cả</button>
-                    <button onclick="window.modCashbook.filterType('THU')" id="cb-btn-filter-THU" class="px-3 py-1.5 rounded-lg font-bold bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 transition"><i class="fas fa-arrow-down mr-1"></i> Thu</button>
-                    <button onclick="window.modCashbook.filterType('CHI')" id="cb-btn-filter-CHI" class="px-3 py-1.5 rounded-lg font-bold bg-white text-rose-700 border border-rose-300 hover:bg-rose-50 transition"><i class="fas fa-arrow-up mr-1"></i> Chi</button>
+        <div id="cb-tab-content-ALL_TX" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3">
+            <!-- Filter Bar đa chiều & Mốc thời gian chống nghẽn mạng -->
+            <div class="flex flex-col gap-2.5 shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Nút lọc nhanh theo mốc thời gian (Mặc định: Hôm nay) -->
+                        <div class="flex items-center gap-0.5 bg-slate-200/80 p-0.5 rounded-lg text-[11px] font-bold text-slate-600 shrink-0">
+                            <button type="button" onclick="window.modCashbook.setDatePreset('ALL')" id="cb-preset-date-ALL" class="px-2 py-1 rounded-md text-slate-600 hover:text-slate-900 transition">Tất Cả</button>
+                            <button type="button" onclick="window.modCashbook.setDatePreset('TODAY')" id="cb-preset-date-TODAY" class="px-2 py-1 rounded-md bg-white text-slate-900 shadow-2xs transition font-black">Hôm Nay</button>
+                            <button type="button" onclick="window.modCashbook.setDatePreset('7DAYS')" id="cb-preset-date-7DAYS" class="px-2 py-1 rounded-md text-slate-600 hover:text-slate-900 transition">7 Ngày</button>
+                            <button type="button" onclick="window.modCashbook.setDatePreset('MONTH')" id="cb-preset-date-MONTH" class="px-2 py-1 rounded-md text-slate-600 hover:text-slate-900 transition">Tháng Này</button>
+                        </div>
 
+                        <!-- Cặp chọn ngày Từ - Đến -->
+                        <div class="flex items-center gap-1 bg-white border border-slate-300 rounded-lg px-2 py-1 shrink-0 text-xs">
+                            <input type="date" id="cb-date-from" onchange="window.modCashbook.onCustomDateChange()" title="Từ ngày" class="text-[11px] font-bold outline-none text-blue-700 bg-transparent cursor-pointer w-24 sm:w-28">
+                            <span class="text-slate-400 font-bold text-[10px]">-</span>
+                            <input type="date" id="cb-date-to" onchange="window.modCashbook.onCustomDateChange()" title="Đến ngày" class="text-[11px] font-bold outline-none text-blue-700 bg-transparent cursor-pointer w-24 sm:w-28">
+                            <button type="button" onclick="window.modCashbook.clearDateFilter()" id="cb-btn-clear-date" class="text-slate-300 hover:text-red-500 text-xs px-0.5 transition cursor-pointer hidden" title="Xóa khoảng ngày">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </div>
+
+                        <!-- Lọc Thu / Chi -->
+                        <div class="flex items-center gap-1">
+                            <button onclick="window.modCashbook.filterType('ALL')" id="cb-btn-filter-ALL" class="px-2.5 py-1.5 rounded-lg font-bold bg-slate-800 text-white shadow-sm transition">Tất Cả</button>
+                            <button onclick="window.modCashbook.filterType('THU')" id="cb-btn-filter-THU" class="px-2.5 py-1.5 rounded-lg font-bold bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 transition"><i class="fas fa-arrow-down mr-1"></i> Thu</button>
+                            <button onclick="window.modCashbook.filterType('CHI')" id="cb-btn-filter-CHI" class="px-2.5 py-1.5 rounded-lg font-bold bg-white text-rose-700 border border-rose-300 hover:bg-rose-50 transition"><i class="fas fa-arrow-up mr-1"></i> Chi</button>
+                        </div>
+                    </div>
+
+                    <div class="w-full sm:w-auto">
+                        <input type="text" id="cb-search-input" oninput="window.modCashbook.applyFilters()" placeholder="🔍 Tìm mã phiếu, đối tượng, diễn giải..." class="border border-slate-300 bg-white p-1.5 rounded-lg text-xs font-medium outline-none focus:border-amber-500 w-full sm:w-64">
+                    </div>
+                </div>
+
+                <!-- Dòng thứ 2: Các bộ lọc nghiệp vụ -->
+                <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200/60">
                     <!-- Lọc Danh mục chi phí -->
-                    <select id="cb-filter-cat" onchange="window.modCashbook.applyFilters()" class="border border-slate-300 bg-white px-2.5 py-1.5 rounded-lg font-bold text-slate-700 outline-none focus:border-amber-500">
+                    <select id="cb-filter-cat" onchange="window.modCashbook.applyFilters()" class="border border-slate-300 bg-white px-2 py-1 rounded-lg font-bold text-slate-700 outline-none focus:border-amber-500 text-[11px]">
                         <option value="ALL">-- Tất Cả Danh Mục --</option>
                         <option value="Chi phí Giao hàng & Vận chuyển">📦 Giao hàng & Logistics</option>
                         <option value="Chi phí Thuê Mặt bằng, Kho, Văn phòng">🏢 Thuê Mặt Bằng / Kho / VP</option>
@@ -122,7 +152,7 @@
                     </select>
 
                     <!-- Lọc Trạng thái Thuế -->
-                    <select id="cb-filter-tax" onchange="window.modCashbook.applyFilters()" class="border border-slate-300 bg-white px-2.5 py-1.5 rounded-lg font-bold text-slate-700 outline-none focus:border-amber-500">
+                    <select id="cb-filter-tax" onchange="window.modCashbook.applyFilters()" class="border border-slate-300 bg-white px-2 py-1 rounded-lg font-bold text-slate-700 outline-none focus:border-amber-500 text-[11px]">
                         <option value="ALL">-- Tất Cả Trạng Thái Thuế --</option>
                         <option value="CO_HOA_DON">🟢 Có Hóa Đơn VAT (Khấu trừ)</option>
                         <option value="BANG_KE_01">🟣 Bảng Kê 01/TNDN (Được trừ)</option>
@@ -131,17 +161,13 @@
                     </select>
 
                     <!-- Lọc Nguồn Tiền -->
-                    <select id="cb-filter-fund" onchange="window.modCashbook.applyFilters()" class="border border-slate-300 bg-white px-2.5 py-1.5 rounded-lg font-bold text-slate-700 outline-none focus:border-amber-500">
+                    <select id="cb-filter-fund" onchange="window.modCashbook.applyFilters()" class="border border-slate-300 bg-white px-2 py-1 rounded-lg font-bold text-slate-700 outline-none focus:border-amber-500 text-[11px]">
                         <option value="ALL">-- Tất Cả Nguồn Tiền --</option>
                         <option value="TK_CONG_TY">🏦 Tài Khoản Công Ty</option>
                         <option value="TIEN_MAT_QUY">💵 Quỹ Tiền Mặt</option>
                         <option value="TAM_UNG_NV">👤 Tạm Ứng Nhân Viên</option>
                         <option value="CHU_SO_HUU_CHI">👑 Chủ Sở Hữu Chi Hộ</option>
                     </select>
-                </div>
-
-                <div class="w-full lg:w-auto">
-                    <input type="text" id="cb-search-input" oninput="window.modCashbook.applyFilters()" placeholder="Tìm mã phiếu, đối tượng, diễn giải..." class="border border-slate-300 bg-white p-1.5 rounded-lg text-xs font-medium outline-none focus:border-amber-500 w-full lg:w-64">
                 </div>
             </div>
 
@@ -156,12 +182,26 @@
                             <th class="p-3 border-b">Đối Tượng Nhận / Nộp</th>
                             <th class="p-3 border-b text-right">Số Tiền (VNĐ)</th>
                             <th class="p-3 border-b">Diễn Giải & Đính Kèm</th>
+                            <th class="p-3 border-b text-center">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="cb-table-body" class="divide-y divide-slate-100 text-slate-700 font-medium">
-                        <tr><td colspan="7" class="p-8 text-center text-slate-400">Đang tải dữ liệu sổ quỹ...</td></tr>
+                        <tr><td colspan="8" class="p-8 text-center text-slate-400">Đang nạp dữ liệu sổ quỹ siêu tốc...</td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG & NÚT XEM THÊM (MỖI LẦN 10 PHIẾU) -->
+            <div id="cb-load-more-bar" class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs shrink-0">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <i class="fas fa-list-ol text-amber-500"></i>
+                    <span>Đang hiển thị <strong class="text-slate-900 text-sm font-black" id="cb-lbl-displayed">0</strong> / <strong class="text-amber-600 text-sm font-black" id="cb-lbl-total">0</strong> phiếu thu chi</span>
+                </div>
+                <div id="cb-load-more-btn-wrap" class="w-full sm:w-auto">
+                    <button type="button" onclick="window.modCashbook.loadMore()" id="btn-cb-load-more" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-slate-950 font-black rounded-lg text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-md">
+                        <i class="fas fa-arrow-down"></i> <span>Xem Thêm 10 Phiếu Tiếp Theo</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -297,9 +337,43 @@
 <script>
 window.modCashbook = {
     transactions: [],
+    filteredTransactions: [],
     currentFilterType: 'ALL',
+    pageSize: 10,
+    displayedCount: 10,
+    currentDatePreset: 'TODAY',
 
     init: async () => {
+        window.modCashbook.pageSize = 10;
+        window.modCashbook.displayedCount = 10;
+        window.modCashbook.currentDatePreset = 'TODAY';
+
+        // Mặc định: Chọn ngày Hôm Nay
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${y}-${m}-${d}`;
+
+        const df = document.getElementById('cb-date-from');
+        const dt = document.getElementById('cb-date-to');
+        const clearBtn = document.getElementById('cb-btn-clear-date');
+
+        if (df) df.value = todayStr;
+        if (dt) dt.value = todayStr;
+        if (clearBtn) clearBtn.classList.remove('hidden');
+
+        ['ALL', 'TODAY', '7DAYS', 'MONTH'].forEach(p => {
+            const btn = document.getElementById('cb-preset-date-' + p);
+            if (btn) {
+                if (p === 'TODAY') {
+                    btn.className = "px-2 py-1 rounded-md bg-white text-slate-900 shadow-2xs transition font-black";
+                } else {
+                    btn.className = "px-2 py-1 rounded-md text-slate-600 hover:text-slate-900 transition";
+                }
+            }
+        });
+
         await window.modCashbook.loadData();
     },
 
@@ -321,36 +395,186 @@ window.modCashbook = {
         }
     },
 
+    setDatePreset: (preset) => {
+        window.modCashbook.currentDatePreset = preset;
+        ['ALL', 'TODAY', '7DAYS', 'MONTH'].forEach(p => {
+            const btn = document.getElementById('cb-preset-date-' + p);
+            if (btn) {
+                if (p === preset) {
+                    btn.className = "px-2 py-1 rounded-md bg-white text-slate-900 shadow-2xs transition font-black";
+                } else {
+                    btn.className = "px-2 py-1 rounded-md text-slate-600 hover:text-slate-900 transition";
+                }
+            }
+        });
+
+        const df = document.getElementById('cb-date-from');
+        const dt = document.getElementById('cb-date-to');
+        const clearBtn = document.getElementById('cb-btn-clear-date');
+
+        const now = new Date();
+        const fmtDate = (d) => {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        };
+
+        if (preset === 'ALL') {
+            if (df) df.value = '';
+            if (dt) dt.value = '';
+            if (clearBtn) clearBtn.classList.add('hidden');
+        } else if (preset === 'TODAY') {
+            const todayStr = fmtDate(now);
+            if (df) df.value = todayStr;
+            if (dt) dt.value = todayStr;
+            if (clearBtn) clearBtn.classList.remove('hidden');
+        } else if (preset === '7DAYS') {
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            if (df) df.value = fmtDate(sevenDaysAgo);
+            if (dt) dt.value = fmtDate(now);
+            if (clearBtn) clearBtn.classList.remove('hidden');
+        } else if (preset === 'MONTH') {
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            if (df) df.value = fmtDate(firstDay);
+            if (dt) dt.value = fmtDate(now);
+            if (clearBtn) clearBtn.classList.remove('hidden');
+        }
+
+        window.modCashbook.loadData();
+    },
+
+    onCustomDateChange: () => {
+        const df = document.getElementById('cb-date-from')?.value;
+        const dt = document.getElementById('cb-date-to')?.value;
+        const clearBtn = document.getElementById('cb-btn-clear-date');
+
+        if (df || dt) {
+            if (clearBtn) clearBtn.classList.remove('hidden');
+            ['ALL', 'TODAY', '7DAYS', 'MONTH'].forEach(p => {
+                const btn = document.getElementById('cb-preset-date-' + p);
+                if (btn) btn.className = "px-2 py-1 rounded-md text-slate-600 hover:text-slate-900 transition";
+            });
+        } else {
+            if (clearBtn) clearBtn.classList.add('hidden');
+            const btnAll = document.getElementById('cb-preset-date-ALL');
+            if (btnAll) btnAll.className = "px-2 py-1 rounded-md bg-white text-slate-900 shadow-2xs transition font-black";
+        }
+
+        window.modCashbook.loadData();
+    },
+
+    clearDateFilter: () => {
+        window.modCashbook.setDatePreset('ALL');
+    },
+
     loadData: async () => {
         const tbody = document.getElementById('cb-table-body');
         try {
-            const res = await fetch('/api/accounting/cash');
+            const df = document.getElementById('cb-date-from')?.value || '';
+            const dt = document.getElementById('cb-date-to')?.value || '';
+            let url = '/api/accounting/cash?t=' + Date.now();
+            if (df && dt) {
+                url += '&date_from=' + encodeURIComponent(df) + '&date_to=' + encodeURIComponent(dt);
+            } else if (df) {
+                url += '&date_from=' + encodeURIComponent(df);
+            } else if (dt) {
+                url += '&date_to=' + encodeURIComponent(dt);
+            }
+
+            const res = await fetch(url);
             const data = await res.json();
             
             if (data.success) {
                 const s = data.summary;
                 const fmt = (v) => new Intl.NumberFormat('vi-VN').format(v || 0);
 
+                // Cập nhật số dư Lũy kế & Trong kỳ
                 document.getElementById('cb-total-cash').innerText = fmt(s.total_cash) + ' đ';
-                document.getElementById('cb-total-thu').innerText = fmt(s.total_thu) + ' đ';
-                document.getElementById('cb-total-chi').innerText = fmt(s.total_chi) + ' đ';
-                document.getElementById('cb-total-b4').innerText = fmt(s.chi_tax_invalid) + ' đ';
+                document.getElementById('cb-total-thu').innerText = fmt(s.period_thu !== undefined ? s.period_thu : s.total_thu) + ' đ';
+                document.getElementById('cb-total-chi').innerText = fmt(s.period_chi !== undefined ? s.period_chi : s.total_chi) + ' đ';
+                document.getElementById('cb-total-b4').innerText = fmt(s.period_b4 !== undefined ? s.period_b4 : s.chi_tax_invalid) + ' đ';
                 document.getElementById('cb-cash-breakdown').innerText = `TM: ${fmt(s.thu_cash - s.chi_cash)} đ | NH: ${fmt(s.thu_bank - s.chi_bank)} đ`;
-                document.getElementById('cb-tax-breakdown').innerText = `Có HĐ: ${fmt(s.chi_tax_valid)} đ | K.HĐ: ${fmt(s.chi_tax_invalid)} đ`;
+                document.getElementById('cb-tax-breakdown').innerText = `Có HĐ: ${fmt(s.period_valid_tax !== undefined ? s.period_valid_tax : s.chi_tax_valid)} đ | K.HĐ: ${fmt(s.period_b4 !== undefined ? s.period_b4 : s.chi_tax_invalid)} đ`;
 
                 window.modCashbook.transactions = data.transactions || [];
                 window.modCashbook.applyFilters();
                 window.modCashbook.renderNonInvoiceTable(window.modCashbook.transactions);
             }
         } catch(e) {
-            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Lỗi kết nối API Sổ Quỹ!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-500 font-bold">Lỗi kết nối API Sổ Quỹ!</td></tr>';
         }
     },
 
-    renderTable: (list) => {
+    loadMore: () => {
+        window.modCashbook.displayedCount += window.modCashbook.pageSize;
+        window.modCashbook.renderCurrentSlice();
+    },
+
+    renderCurrentSlice: () => {
+        const total = (window.modCashbook.filteredTransactions || []).length;
+        const count = Math.min(window.modCashbook.displayedCount, total);
+        const slice = (window.modCashbook.filteredTransactions || []).slice(0, count);
+        window.modCashbook.renderTable(slice, total, count);
+    },
+
+    renderTable: (list, totalCount, currentCount) => {
         const tbody = document.getElementById('cb-table-body');
-        if (!list || list.length === 0) {
-            return tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">Chưa có giao dịch thu / chi nào phù hợp với bộ lọc.</td></tr>';
+        const total = (typeof totalCount === 'number') ? totalCount : (list ? list.length : 0);
+        const displayed = (typeof currentCount === 'number') ? currentCount : (list ? list.length : 0);
+
+        const loadMoreBar = document.getElementById('cb-load-more-bar');
+        const lblDisplayed = document.getElementById('cb-lbl-displayed');
+        const lblTotal = document.getElementById('cb-lbl-total');
+        const loadMoreWrap = document.getElementById('cb-load-more-btn-wrap');
+
+        if (lblDisplayed) lblDisplayed.innerText = displayed;
+        if (lblTotal) lblTotal.innerText = total;
+
+        if (!list || list.length === 0 || total === 0) {
+            if (loadMoreBar) loadMoreBar.classList.add('hidden');
+            const isToday = window.modCashbook.currentDatePreset === 'TODAY';
+            return tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="p-8 text-center text-slate-400 font-medium">
+                        <i class="fas fa-inbox text-3xl mb-2 text-slate-300 block"></i>
+                        <p class="text-xs font-bold text-slate-600 mb-2">
+                            ${isToday ? 'Hôm nay chưa phát sinh giao dịch thu / chi nào mới.' : 'Chưa có giao dịch thu / chi nào phù hợp với bộ lọc.'}
+                        </p>
+                        ${isToday ? `
+                            <div class="flex flex-wrap justify-center gap-2 mt-3">
+                                <button type="button" onclick="window.modCashbook.setDatePreset('7DAYS')" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold rounded-lg text-xs transition cursor-pointer shadow-2xs">
+                                    <i class="fas fa-calendar-week mr-1"></i> Xem 7 Ngày Gần Nhất
+                                </button>
+                                <button type="button" onclick="window.modCashbook.setDatePreset('ALL')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-white font-bold rounded-lg text-xs transition cursor-pointer shadow-2xs">
+                                    <i class="fas fa-history mr-1"></i> Xem Tất Cả Sổ Quỹ
+                                </button>
+                            </div>
+                        ` : ''}
+                    </td>
+                </tr>`;
+        }
+
+        if (loadMoreBar) loadMoreBar.classList.remove('hidden');
+
+        if (displayed >= total) {
+            if (loadMoreWrap) {
+                loadMoreWrap.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
+                        <i class="fas fa-check-circle text-emerald-500"></i> Đã hiển thị tất cả ${total} phiếu thu chi
+                    </span>
+                `;
+            }
+        } else {
+            const remain = total - displayed;
+            const nextStep = Math.min(window.modCashbook.pageSize, remain);
+            if (loadMoreWrap) {
+                loadMoreWrap.innerHTML = `
+                    <button type="button" onclick="window.modCashbook.loadMore()" id="btn-cb-load-more" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-slate-950 font-black rounded-lg text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-md">
+                        <i class="fas fa-arrow-down"></i> <span>Xem Thêm ${nextStep} Phiếu Tiếp Theo</span>
+                    </button>
+                `;
+            }
         }
 
         tbody.innerHTML = list.map(t => {
@@ -411,6 +635,11 @@ window.modCashbook = {
                     <td class="p-3 text-xs text-slate-600 max-w-[200px]">
                         <p class="truncate" title="${t.notes || ''}">${t.notes || '---'}</p>
                         ${proofHtml}
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="window.modCashbook.deleteTransaction(${t.id}, '${t.code}')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer" title="Xóa phiếu này khỏi Sổ Quỹ">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </td>
                 </tr>
             `;
@@ -475,7 +704,7 @@ window.modCashbook = {
         const fundFilter = document.getElementById('cb-filter-fund')?.value || 'ALL';
         const q = (document.getElementById('cb-search-input')?.value || '').toLowerCase().trim();
 
-        let filtered = window.modCashbook.transactions;
+        let filtered = window.modCashbook.transactions || [];
 
         if (window.modCashbook.currentFilterType !== 'ALL') {
             filtered = filtered.filter(x => x.type === window.modCashbook.currentFilterType);
@@ -502,7 +731,9 @@ window.modCashbook = {
             );
         }
 
-        window.modCashbook.renderTable(filtered);
+        window.modCashbook.filteredTransactions = filtered;
+        window.modCashbook.displayedCount = window.modCashbook.pageSize; // Reset về 10 phiếu khi đổi bộ lọc
+        window.modCashbook.renderCurrentSlice();
     },
 
     openModal: (type) => {
@@ -607,6 +838,38 @@ window.modCashbook = {
         link.href = URL.createObjectURL(blob);
         link.download = `So_Quy_Tien_Mat_Va_Quan_Tri_Chi_Phi_${new Date().toISOString().slice(0, 10)}.csv`;
         link.click();
+    },
+
+    isAdmin: () => {
+        try {
+            const uStr = localStorage.getItem('sungo_user') || localStorage.getItem('currentUser') || sessionStorage.getItem('sungo_user') || sessionStorage.getItem('currentUser');
+            const u = uStr ? JSON.parse(uStr) : (window.currentUser || { role: 'GUEST' });
+            const roleUpper = (u && u.role) ? String(u.role).toUpperCase().trim() : '';
+            return ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'GIÁM ĐỐC', 'KE_TOAN', 'KẾ TOÁN', 'SALE_ADMIN', 'QUẢN TRỊ VIÊN'].includes(roleUpper);
+        } catch(e) { return false; }
+    },
+
+    deleteTransaction: async (id, code) => {
+        if (!window.modCashbook.isAdmin()) {
+            return alert('Chỉ Quản trị viên (Admin / Giám Đốc / Kế Toán) mới có quyền xóa phiếu Sổ Quỹ!');
+        }
+
+        if (!confirm(`⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN phiếu giao dịch [${code}] khỏi Sổ Quỹ?\n\nThao tác này không thể hoàn tác.`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/accounting/cash/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                alert('Đã xóa phiếu giao dịch thành công!');
+                await window.modCashbook.loadData();
+            } else {
+                alert('Lỗi: ' + (data.error || 'Không thể xóa'));
+            }
+        } catch (e) {
+            alert('Lỗi kết nối máy chủ: ' + e.message);
+        }
     }
 };
 
