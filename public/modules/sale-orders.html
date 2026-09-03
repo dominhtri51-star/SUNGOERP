@@ -67,7 +67,7 @@
 }
 </style>
 
-<div class="h-full flex flex-col gap-1.5 sm:gap-2.5 text-slate-800 select-none pb-1 relative" id="pos-root-container">
+<div class="min-h-full flex flex-col gap-1.5 sm:gap-2.5 text-slate-800 select-none pb-1 relative" id="pos-root-container">
     
     <!-- BANNER CHẾ ĐỘ SỬA ĐƠN HÀNG (KHI MỞ TỪ QUẢN LÝ ĐƠN HÀNG) -->
     <div id="pos-editing-banner" class="hidden bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-slate-950 px-3 py-2 rounded-xl flex items-center justify-between font-bold text-xs shadow-sm shrink-0 border border-amber-400 animate-in slide-in-from-top-1">
@@ -384,8 +384,8 @@ window.modPos = {
         
         try {
             const [resP, resC, resCats] = await Promise.all([
-                fetch('/api/products?t=' + Date.now()).then(r => r.json()),
-                fetch('/api/customers?t=' + Date.now()).then(r => r.json()),
+                fetch('/api/products?pos=1&t=' + Date.now()).then(r => r.json()),
+                fetch('/api/customers?compact=1&t=' + Date.now()).then(r => r.json()),
                 fetch('/api/categories?t=' + Date.now()).then(r => r.json()).catch(() => ({ success: false }))
             ]);
 

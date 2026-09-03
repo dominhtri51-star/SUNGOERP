@@ -20,7 +20,18 @@ const pool = require('../config/database');
 
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM products ORDER BY id DESC');
+        const isPos = req.query.pos === '1' || req.query.compact === '1';
+        let query = 'SELECT * FROM products ORDER BY id DESC';
+        if (isPos) {
+            query = `
+                SELECT id, sku, product_name, category, category_id, 
+                       retail_price, price_2, price_3, price_4, price_5, price_6, 
+                       stock_qty, virtual_stock, unit, image_url, description
+                FROM products 
+                ORDER BY id DESC
+            `;
+        }
+        const result = await pool.query(query);
         res.json({ success: true, data: result.rows });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });

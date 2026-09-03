@@ -15,10 +15,11 @@ const parseSafeNum = (val) => {
     return parseFloat(str) || 0;
 };
 
-// GET: LẤY DANH SÁCH ĐƠN HÀNG (Sạch biến rác, Kèm Customer Tier & Nhân viên bán hàng)
+// GET: LẤY DANH SÁCH ĐƠN HÀNG (Sạch biến rác, Kèm Customer Tier & Nhân viên bán hàng, Hỗ trợ lọc ngày & Siêu tốc)
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query(`
+        const { date_from, date_to, limit, status } = req.query;
+        let query = `
             SELECT o.*, 
                    COALESCE(NULLIF(o.customer_name, ''), c.full_name, 'Khách Lẻ') as customer_name,
                    COALESCE(NULLIF(o.customer_phone, ''), c.phone, '') as customer_phone,
@@ -28,20 +29,49 @@ router.get('/', async (req, res) => {
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.id 
             LEFT JOIN employees e ON o.employee_id = e.id
-            ORDER BY o.id DESC LIMIT 500
-        `);
+        `;
+        const params = [];
+        const whereClauses = [];
+
+        if (date_from && date_to) {
+            params.push(date_from + ' 00:00:00');
+            params.push(date_to + ' 23:59:59');
+            whereClauses.push(`o.created_at >= $${params.length - 1}::timestamp AND o.created_at <= $${params.length}::timestamp`);
+        } else if (date_from) {
+            params.push(date_from + ' 00:00:00');
+            whereClauses.push(`o.created_at >= $${params.length}::timestamp`);
+        } else if (date_to) {
+            params.push(date_to + ' 23:59:59');
+            whereClauses.push(`o.created_at <= $${params.length}::timestamp`);
+        }
+
+        if (status && status !== 'ALL') {
+            params.push(status);
+            whereClauses.push(`o.status = $${params.length}`);
+        }
+
+        if (whereClauses.length > 0) {
+            query += ' WHERE ' + whereClauses.join(' AND ');
+        }
+
+        const maxLimit = limit ? Math.min(1000, parseInt(limit)) : 1000;
+        params.push(maxLimit);
+        query += ` ORDER BY o.created_at DESC, o.id DESC LIMIT $${params.length}`;
+
+        const result = await pool.query(query, params);
         const orders = result.rows;
         if (orders.length > 0) {
             const orderIds = orders.map(o => o.id);
+            // Tối ưu hóa: Chỉ lấy các cột cần thiết cho hiển thị tóm tắt danh sách, giảm tải mạng
             const itemsRes = await pool.query(`
-                SELECT oi.id, oi.order_id, COALESCE(oi.product_name, p.product_name, 'Thiết bị') as product_name, COALESCE(oi.sku, p.sku, 'N/A') as sku, oi.price, COALESCE(oi.quantity, oi.qty, 1) as quantity, oi.product_id, COALESCE(p.import_price, 0) as import_price, oi.serial_number 
+                SELECT oi.id, oi.order_id, COALESCE(oi.product_name, p.product_name, 'Thiết bị') as product_name, COALESCE(oi.sku, p.sku, 'N/A') as sku, oi.price, COALESCE(oi.quantity, 1) as quantity, oi.product_id
                 FROM order_items oi 
                 LEFT JOIN products p ON oi.product_id = p.id 
                 WHERE oi.order_id = ANY($1)
             `, [orderIds]);
             orders.forEach(o => { o.items = itemsRes.rows.filter(i => i.order_id === o.id); });
         }
-        res.json({ success: true, data: orders });
+        res.json({ success: true, data: orders, count: orders.length });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
@@ -135,18 +165,23 @@ router.post('/', async (req, res) => {
             }
         }
 
-        // Tính toán doanh số, giá vốn và lợi nhuận
+        // Tính toán doanh số, giá vốn và lợi nhuận (Batch query siêu tốc)
         let subtotal = 0;
         let cogs = 0;
-        if (items && Array.isArray(items)) {
+        if (items && Array.isArray(items) && items.length > 0) {
+            const missingIds = items
+                .filter(i => !parseSafeNum(i.import_price) && i.product_id)
+                .map(i => parseInt(i.product_id));
+            const impMap = {};
+            if (missingIds.length > 0) {
+                const pRes = await client.query("SELECT id, import_price FROM products WHERE id = ANY($1::int[])", [missingIds]);
+                pRes.rows.forEach(r => { impMap[r.id] = parseSafeNum(r.import_price); });
+            }
+
             for (let item of items) {
                 const qty = parseSafeNum(item.quantity) || 1;
                 const price = parseSafeNum(item.price);
-                let impPrice = parseSafeNum(item.import_price);
-                if (!impPrice && item.product_id) {
-                    const pRes = await client.query("SELECT import_price FROM products WHERE id = $1", [item.product_id]);
-                    if (pRes.rows.length > 0) impPrice = parseSafeNum(pRes.rows[0].import_price);
-                }
+                const impPrice = parseSafeNum(item.import_price) || impMap[item.product_id] || 0;
                 subtotal += qty * price;
                 cogs += qty * impPrice;
             }
@@ -211,27 +246,44 @@ router.post('/', async (req, res) => {
         ]);
         const orderId = orderRes.rows[0].id;
         
-        // Ghi danh sách sản phẩm & Trừ kho
-        if (items && Array.isArray(items)) {
+        // Ghi danh sách sản phẩm (Batch Insert) & Trừ kho song song (Siêu tốc)
+        if (items && Array.isArray(items) && items.length > 0) {
+            const itemValues = [];
+            const itemParams = [];
+            let pIdx = 1;
             for (let item of items) {
                 const qty = parseFloat(item.quantity) || 1;
                 const price = parseFloat(item.price) || 0;
                 const itemTotal = qty * price;
-                await client.query(
-                    "INSERT INTO order_items (order_id, product_id, quantity, price, total) VALUES ($1, $2, $3, $4, $5)", 
-                    [orderId, item.product_id, qty, price, itemTotal]
-                );
-                await client.query("UPDATE products SET stock_qty = GREATEST(0, stock_qty - $1) WHERE id = $2", [qty, item.product_id]);
+                itemValues.push(`($${pIdx}, $${pIdx+1}, $${pIdx+2}, $${pIdx+3}, $${pIdx+4})`);
+                itemParams.push(orderId, item.product_id, qty, price, itemTotal);
+                pIdx += 5;
             }
+            await client.query(
+                `INSERT INTO order_items (order_id, product_id, quantity, price, total) VALUES ${itemValues.join(', ')}`,
+                itemParams
+            );
+
+            // Trừ kho song song
+            await Promise.all(items.filter(i => i.product_id).map(item => {
+                const qty = parseFloat(item.quantity) || 1;
+                return client.query("UPDATE products SET stock_qty = GREATEST(0, stock_qty - $1) WHERE id = $2", [qty, item.product_id]);
+            }));
         }
 
-        // TỰ ĐỘNG ĐỒNG BỘ CÔNG NỢ & DOANH SỐ VỀ CRM NGAY KHI TẠO ĐƠN
+        // TỰ ĐỘNG ĐỒNG BỘ CÔNG NỢ & DOANH SỐ VỀ CRM NGAY KHI TẠO ĐƠN (Gộp 1 query)
         if (customer_id) {
             await client.query(`
                 UPDATE customers 
                 SET 
-                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
-                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                    current_debt = agg.debt,
+                    total_sales = agg.sales
+                FROM (
+                    SELECT COALESCE(SUM(total_amount - paid_amount), 0) as debt,
+                           COALESCE(SUM(total_amount), 0) as sales
+                    FROM orders 
+                    WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                ) agg
                 WHERE id = $1
             `, [customer_id]);
         }
@@ -289,7 +341,7 @@ router.put('/:id', async (req, res) => {
         const { 
             delivery_company, driver_name, license_plate, notes, paid_amount, status, payment_method, 
             items, cancel_reason, refund_amount,
-            customer_name, customer_phone, customer_address,
+            customer_id, customer_name, customer_phone, customer_address,
             shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note,
             discount_amount, points_discount, cost_fund_source, sync_accounting
         } = req.body;
@@ -312,8 +364,10 @@ router.put('/:id', async (req, res) => {
         const fundSource = cost_fund_source || oldOrder.cost_fund_source || 'TIEN_MAT_QUY';
         const shouldSync = sync_accounting !== undefined ? Boolean(sync_accounting) : true;
 
+        const finalCustomerId = customer_id !== undefined ? (customer_id ? parseInt(customer_id, 10) : null) : (oldOrder.customer_id || null);
         const finalCustomerName = customer_name ? customer_name.trim() : (oldOrder.customer_name || 'Khách Lẻ');
         const finalCustomerPhone = customer_phone !== undefined ? customer_phone.trim() : (oldOrder.customer_phone || '');
+        const finalCustomerAddress = customer_address !== undefined ? customer_address.trim() : (oldOrder.customer_address || '');
         const finalDeliveryCompany = delivery_company !== undefined ? delivery_company : (oldOrder.delivery_company || '');
         const finalDriverName = driver_name !== undefined ? driver_name : (oldOrder.driver_name || '');
         const finalLicensePlate = license_plate !== undefined ? license_plate : (oldOrder.license_plate || '');
@@ -400,16 +454,16 @@ router.put('/:id', async (req, res) => {
 
         await client.query(`
             UPDATE orders 
-            SET customer_name=$1, customer_phone=$2,
-                delivery_company=$3, driver_name=$4, license_plate=$5, notes=$6, 
-                paid_amount=$7, status=$8, payment_method=$9, 
-                subtotal_amount=$10, total_amount=$11,
-                shipping_fee=$12, station_fee=$13, packaging_fee=$14, handling_fee=$15, other_fee=$16, other_fee_note=$17,
-                discount_amount=$18, points_discount=$19, cost_of_goods=$20, gross_profit=$21, net_profit=$22,
-                cost_fund_source=$23, sync_accounting=$24
-            WHERE id=$25
+            SET customer_id=$1, customer_name=$2, customer_phone=$3, customer_address=$4,
+                delivery_company=$5, driver_name=$6, license_plate=$7, notes=$8, 
+                paid_amount=$9, status=$10, payment_method=$11, 
+                subtotal_amount=$12, total_amount=$13,
+                shipping_fee=$14, station_fee=$15, packaging_fee=$16, handling_fee=$17, other_fee=$18, other_fee_note=$19,
+                discount_amount=$20, points_discount=$21, cost_of_goods=$22, gross_profit=$23, net_profit=$24,
+                cost_fund_source=$25, sync_accounting=$26
+            WHERE id=$27
         `, [
-            finalCustomerName, finalCustomerPhone,
+            finalCustomerId, finalCustomerName, finalCustomerPhone, finalCustomerAddress,
             finalDeliveryCompany, finalDriverName, finalLicensePlate, finalNotes, 
             finalPaidAmount, finalStatus, finalPaymentMethod, 
             newSubtotal, newTotalAmount,
@@ -420,7 +474,10 @@ router.put('/:id', async (req, res) => {
         ]);
         
         // ĐỒNG BỘ SANG SỔ QUỸ KẾ TOÁN (cash_transactions)
-        if (shouldSync) {
+        if (finalStatus === 'CANCELLED') {
+            // Nếu đơn hàng bị HỦY -> Tự động xóa sạch mọi giao dịch/chi phí phát sinh của đơn hàng trong Sổ Quỹ
+            await client.query("DELETE FROM cash_transactions WHERE order_id = $1 OR order_code = $2 OR notes LIKE $3", [parseInt(req.params.id, 10), orderCode, '%' + orderCode + '%']);
+        } else if (shouldSync) {
             await client.query("DELETE FROM cash_transactions WHERE order_id = $1 AND cost_type IS NOT NULL", [parseInt(req.params.id, 10)]);
 
             const pMethod = (fundSource === 'TIEN_MAT_QUY' || fundSource === 'Tiền Mặt') ? 'Tiền Mặt' : 'Chuyển Khoản';
@@ -503,15 +560,22 @@ router.put('/:id', async (req, res) => {
             }
         }
 
-        // ĐỒNG BỘ CÔNG NỢ & DOANH SỐ VỀ CRM
-        if (custId) {
+        // ĐỒNG BỘ CÔNG NỢ & DOANH SỐ VỀ CRM (CẢ KHÁCH HÀNG CŨ & MỚI NẾU CÓ THAY ĐỔI)
+        const customersToSync = Array.from(new Set([custId, finalCustomerId].filter(Boolean)));
+        for (const cid of customersToSync) {
             await client.query(`
                 UPDATE customers 
                 SET 
-                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
-                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                    current_debt = agg.debt,
+                    total_sales = agg.sales
+                FROM (
+                    SELECT COALESCE(SUM(total_amount - paid_amount), 0) as debt,
+                           COALESCE(SUM(total_amount), 0) as sales
+                    FROM orders 
+                    WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                ) agg
                 WHERE id = $1
-            `, [custId]);
+            `, [cid]);
         }
 
         await client.query('COMMIT');
@@ -536,15 +600,22 @@ router.put('/:id', async (req, res) => {
 router.put('/:id/status', async (req, res) => {
     try {
         const { status } = req.body;
+        const orderId = req.params.id;
         
         // 1. Cập nhật trạng thái đơn hàng
-        await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [status, req.params.id]);
+        await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [status, orderId]);
         
-        // 2. Lấy customer_id để đồng bộ
-        const orderInfo = await pool.query("SELECT customer_id FROM orders WHERE id = $1", [req.params.id]);
+        // 2. Lấy customer_id & order_code để đồng bộ
+        const orderInfo = await pool.query("SELECT customer_id, order_code FROM orders WHERE id = $1", [orderId]);
         const custId = orderInfo.rows[0] ? orderInfo.rows[0].customer_id : null;
+        const orderCode = orderInfo.rows[0] ? orderInfo.rows[0].order_code : null;
+
+        // 3. Nếu đơn hàng bị HỦY -> Tự động xóa sạch mọi giao dịch/chi phí phát sinh của đơn trong Sổ Quỹ
+        if (status === 'CANCELLED') {
+            await pool.query("DELETE FROM cash_transactions WHERE order_id = $1 OR order_code = $2 OR notes LIKE $3", [orderId, orderCode, '%' + orderCode + '%']);
+        }
         
-        // 3. Đồng bộ Công Nợ & Doanh Số về bảng customers
+        // 4. Đồng bộ Công Nợ & Doanh Số về bảng customers
         if (custId) {
             await pool.query(`
                 UPDATE customers 
@@ -555,7 +626,7 @@ router.put('/:id/status', async (req, res) => {
             `, [custId]);
         }
         
-        res.json({ success: true });
+        res.json({ success: true, message: 'Đã cập nhật trạng thái đơn hàng và đồng bộ Sổ Quỹ & Công Nợ' });
     } catch(e) { 
         res.status(500).json({ success: false, error: e.message }); 
     }
@@ -924,14 +995,113 @@ setInterval(async () => {
     } catch(e) {}
 }, 60 * 60 * 1000); // Rà soát đều đặn mỗi tiếng một lần
 
+// [BULK ACTION] XÓA HÀNG LOẠT ĐƠN HÀNG (DÀNH CHO ADMIN)
+router.post('/bulk-delete', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { order_ids, password } = req.body;
+        if (!order_ids || !Array.isArray(order_ids) || order_ids.length === 0) {
+            return res.status(400).json({ success: false, error: 'Vui lòng chọn ít nhất 1 đơn hàng để xóa!' });
+        }
+
+        const ADMIN_PASSWORD = 'sungo123';
+
+        // Lấy danh sách các đơn hàng cần xóa
+        const ordersRes = await client.query(
+            'SELECT id, order_code, status, customer_id FROM orders WHERE id = ANY($1::int[])',
+            [order_ids]
+        );
+
+        if (ordersRes.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng nào trong danh sách chọn!' });
+        }
+
+        const orders = ordersRes.rows;
+        const nonPendingOrders = orders.filter(o => o.status !== 'PENDING' && o.status !== 'NEW' && o.status !== 'CANCELLED');
+
+        // Nếu có đơn không phải PENDING/NEW/CANCELLED -> Cần mật khẩu Admin
+        if (nonPendingOrders.length > 0 && password !== ADMIN_PASSWORD) {
+            return res.status(403).json({
+                success: false,
+                error: `Trong ${order_ids.length} đơn chọn có ${nonPendingOrders.length} đơn đã xử lý. Cần mật khẩu Admin (sungo123) để tiêu hủy!`
+            });
+        }
+
+        await client.query('BEGIN');
+
+        const deletedIds = [];
+        const customerIdsToSync = new Set();
+
+        for (const ord of orders) {
+            const orderId = ord.id;
+            const orderCode = ord.order_code;
+            const status = ord.status;
+            if (ord.customer_id) customerIdsToSync.add(ord.customer_id);
+
+            // 1. Phục hồi kho nếu đơn đã xuất kho
+            if (['PACKED', 'SHIPPING_CMD', 'SHIPPED', 'COMPLETED'].includes(status)) {
+                const itemsRes = await client.query('SELECT product_id, quantity FROM order_items WHERE order_id = $1', [orderId]);
+                for (let item of itemsRes.rows) {
+                    if (item.product_id) {
+                        await client.query('UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2', [item.quantity, item.product_id]);
+                    }
+                }
+            }
+
+            // 2. Dọn sạch Sổ Quỹ (cash_transactions)
+            try {
+                await client.query('DELETE FROM cash_transactions WHERE order_id = $1 OR order_code = $2 OR notes LIKE $3', [orderId, orderCode, '%' + orderCode + '%']);
+            } catch(e) {}
+
+            // 3. Dọn sạch chứng từ, chi tiết đơn, đổi trả
+            try { await client.query('DELETE FROM order_docs WHERE order_id = $1', [orderId]); } catch(e) {}
+            try { await client.query('DELETE FROM order_items WHERE order_id = $1', [orderId]); } catch(e) {}
+            try { await client.query('DELETE FROM return_items WHERE return_order_id IN (SELECT id FROM return_orders WHERE order_id = $1)', [orderId]); } catch(e) {}
+            try { await client.query('DELETE FROM return_orders WHERE order_id = $1', [orderId]); } catch(e) {}
+
+            // 4. Xóa đơn hàng
+            await client.query('DELETE FROM orders WHERE id = $1', [orderId]);
+            deletedIds.push(orderId);
+        }
+
+        // 5. Đồng bộ lại công nợ & doanh số cho các khách hàng liên quan
+        for (const custId of customerIdsToSync) {
+            await client.query(`
+                UPDATE customers 
+                SET 
+                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
+                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                WHERE id = $1
+            `, [custId]);
+        }
+
+        await client.query('COMMIT');
+
+        res.json({
+            success: true,
+            deleted_count: deletedIds.length,
+            message: `Đã xóa vĩnh viễn thành công ${deletedIds.length} đơn hàng!`
+        });
+    } catch(err) {
+        await client.query('ROLLBACK');
+        console.error('[Bulk Delete Orders Error]', err);
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
 // [BẢO MẬT KÉP] XÓA ĐƠN HÀNG VĨNH VIỄN
 router.delete('/:id/force', async (req, res) => {
     try {
         const orderId = req.params.id;
-        const orderRes = await pool.query('SELECT status FROM orders WHERE id = $1', [orderId]);
+        const orderRes = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
         if (orderRes.rows.length === 0) return res.json({ success: false, error: 'Không tìm thấy đơn hàng!' });
         
-        const status = orderRes.rows[0].status;
+        const ord = orderRes.rows[0];
+        const status = ord.status;
+        const custId = ord.customer_id;
+        const orderCode = ord.order_code;
         const { password } = req.body;
         const ADMIN_PASSWORD = 'sungo123'; 
 
@@ -952,13 +1122,30 @@ router.delete('/:id/force', async (req, res) => {
             }
         }
 
-        // Tiêu hủy sạch sẽ toàn bộ chứng cứ
-        await pool.query('DELETE FROM order_docs WHERE order_id = $1', [orderId]);
-        await pool.query('DELETE FROM order_items WHERE order_id = $1', [orderId]);
-        await pool.query('DELETE FROM order_timeline WHERE order_id = $1', [orderId]);
+        // 1. Tự động dọn dẹp sạch sẽ các phiếu thu/chi liên quan đến đơn trong Sổ Quỹ (cash_transactions)
+        try {
+            await pool.query('DELETE FROM cash_transactions WHERE order_id = $1 OR order_code = $2 OR notes LIKE $3', [orderId, orderCode, '%' + orderCode + '%']);
+        } catch(e) {}
+
+        // 2. Tiêu hủy sạch sẽ toàn bộ chứng từ, danh mục hàng và đơn hàng
+        try { await pool.query('DELETE FROM order_docs WHERE order_id = $1', [orderId]); } catch(e) {}
+        try { await pool.query('DELETE FROM order_items WHERE order_id = $1', [orderId]); } catch(e) {}
+        try { await pool.query('DELETE FROM return_items WHERE return_order_id IN (SELECT id FROM return_orders WHERE order_id = $1)', [orderId]); } catch(e) {}
+        try { await pool.query('DELETE FROM return_orders WHERE order_id = $1', [orderId]); } catch(e) {}
         await pool.query('DELETE FROM orders WHERE id = $1', [orderId]);
 
-        res.json({ success: true, message: 'Đã xóa sạch sẽ!' });
+        // 3. Đồng bộ lại Công Nợ & Doanh Số về CRM Khách Hàng
+        if (custId) {
+            await pool.query(`
+                UPDATE customers 
+                SET 
+                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
+                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                WHERE id = $1
+            `, [custId]);
+        }
+
+        res.json({ success: true, message: 'Đã xóa vĩnh viễn đơn hàng và dọn dẹp sạch sẽ Sổ Quỹ & Công Nợ liên quan!' });
     } catch (e) {
         res.json({ success: false, error: e.message });
     }
@@ -1066,6 +1253,208 @@ router.post('/:id/attach-file', async (req, res) => {
         res.json({ success: true, files: files });
     } catch (err) {
         res.json({ success: false, error: err.message });
+    }
+});
+
+// ====================================================================
+// CỔNG KÝ BÁO GIÁ ĐIỆN TỬ TRỰC TUYẾN (PUBLIC QUOTE SIGNING PORTAL)
+// ====================================================================
+
+// 1. GET: LẤY DỮ LIỆU BÁO GIÁ ĐƠN HÀNG CÔNG KHAI (KHÔNG YÊU CẦU ĐĂNG NHẬP)
+router.get('/public-quote/:idOrToken', async (req, res) => {
+    try {
+        const { idOrToken } = req.params;
+        if (!idOrToken) return res.status(400).json({ success: false, error: 'Thiếu mã đơn hàng hoặc mã định danh' });
+
+        let orderRes;
+        const isNumeric = /^\d+$/.test(idOrToken);
+
+        if (isNumeric) {
+            orderRes = await pool.query(`
+                SELECT o.*, 
+                       c.full_name as customer_name_joined, 
+                       c.phone as customer_phone, 
+                       c.address as customer_address, 
+                       c.tier as customer_tier,
+                       e.full_name as salesperson_name,
+                       e.emp_code as salesperson_code,
+                       e.phone as salesperson_phone
+                FROM orders o 
+                LEFT JOIN customers c ON o.customer_id = c.id 
+                LEFT JOIN employees e ON o.employee_id = e.id
+                WHERE o.id = $1 OR o.quote_sign_token = $2 OR UPPER(o.order_code) = UPPER($2)
+                LIMIT 1
+            `, [parseInt(idOrToken), idOrToken]);
+        } else {
+            orderRes = await pool.query(`
+                SELECT o.*, 
+                       c.full_name as customer_name_joined, 
+                       c.phone as customer_phone, 
+                       c.address as customer_address, 
+                       c.tier as customer_tier,
+                       e.full_name as salesperson_name,
+                       e.emp_code as salesperson_code,
+                       e.phone as salesperson_phone
+                FROM orders o 
+                LEFT JOIN customers c ON o.customer_id = c.id 
+                LEFT JOIN employees e ON o.employee_id = e.id
+                WHERE o.quote_sign_token = $1 OR UPPER(o.order_code) = UPPER($1)
+                LIMIT 1
+            `, [idOrToken]);
+        }
+
+        if (orderRes.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy thông tin báo giá đơn hàng này' });
+        }
+
+        const order = orderRes.rows[0];
+
+        // Tạo token ký nếu chưa có
+        if (!order.quote_sign_token) {
+            const genToken = 'QST-' + order.id + '-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            await pool.query('UPDATE orders SET quote_sign_token = $1 WHERE id = $2', [genToken, order.id]);
+            order.quote_sign_token = genToken;
+        }
+
+        // Lấy danh sách sản phẩm trong đơn hàng
+        const itemsRes = await pool.query(`
+            SELECT oi.id, oi.order_id, 
+                   COALESCE(oi.product_name, p.product_name, 'Thiết bị') as product_name, 
+                   COALESCE(oi.sku, p.sku, 'N/A') as sku, 
+                   COALESCE(p.unit, 'Bộ') as unit,
+                   oi.price, 
+                   COALESCE(oi.quantity, 1) as quantity, 
+                   oi.product_id, 
+                   oi.serial_number 
+            FROM order_items oi 
+            LEFT JOIN products p ON oi.product_id = p.id 
+            WHERE oi.order_id = $1
+            ORDER BY oi.id ASC
+        `, [order.id]);
+
+        order.items = itemsRes.rows;
+
+        // Lấy cấu hình hệ thống (Tên công ty, hotline, logo, tài khoản VietQR, ghi chú)
+        let settings = {};
+        try {
+            const setRes = await pool.query("SELECT setting_key, setting_value FROM system_settings");
+            if (setRes.rows && setRes.rows.length > 0) {
+                setRes.rows.forEach(r => {
+                    try { settings[r.setting_key] = JSON.parse(r.setting_value); }
+                    catch(e) { settings[r.setting_key] = r.setting_value; }
+                });
+            }
+        } catch(e) {
+            console.error("Lỗi tải settings cho public-quote:", e.message);
+        }
+
+        res.json({
+            success: true,
+            data: {
+                order: order,
+                settings: settings
+            }
+        });
+    } catch (err) {
+        console.error("Lỗi lấy thông tin public quote:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. POST: KÝ TAY ĐIỆN TỬ CHO BÁO GIÁ ĐƠN HÀNG (KHÁCH HÀNG HOẶC NHÂN VIÊN KD)
+router.post('/public-quote/:idOrToken/sign', async (req, res) => {
+    try {
+        const { idOrToken } = req.params;
+        const { party, signature_base64, signer_name } = req.body; // party: 'CUSTOMER' | 'SALES'
+
+        if (!signature_base64 || typeof signature_base64 !== 'string' || !signature_base64.startsWith('data:image')) {
+            return res.status(400).json({ success: false, error: 'Dữ liệu chữ ký không hợp lệ!' });
+        }
+
+        let orderRes;
+        const isNumeric = /^\d+$/.test(idOrToken);
+
+        if (isNumeric) {
+            orderRes = await pool.query(`
+                SELECT id, order_code, customer_name, quote_sign_token FROM orders 
+                WHERE id = $1 OR quote_sign_token = $2 OR UPPER(order_code) = UPPER($2) LIMIT 1
+            `, [parseInt(idOrToken), idOrToken]);
+        } else {
+            orderRes = await pool.query(`
+                SELECT id, order_code, customer_name, quote_sign_token FROM orders 
+                WHERE quote_sign_token = $1 OR UPPER(order_code) = UPPER($1) LIMIT 1
+            `, [idOrToken]);
+        }
+
+        if (orderRes.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+        }
+
+        const order = orderRes.rows[0];
+        const now = new Date();
+
+        if (party === 'SALES') {
+            await pool.query(`
+                UPDATE orders 
+                SET sales_signature = $1,
+                    sales_signed_at = $2,
+                    sales_signed_name = $3
+                WHERE id = $4
+            `, [signature_base64, now, signer_name || 'Đại diện SUNGO', order.id]);
+        } else {
+            // Mặc định là Khách Hàng (CUSTOMER)
+            await pool.query(`
+                UPDATE orders 
+                SET customer_signature = $1,
+                    customer_signed_at = $2,
+                    customer_signed_name = $3
+                WHERE id = $4
+            `, [signature_base64, now, signer_name || order.customer_name || 'Khách Hàng', order.id]);
+        }
+
+        res.json({
+            success: true,
+            message: party === 'SALES' ? '✅ Đại diện bán hàng đã ký thành công!' : '✅ Khách hàng đã ký xác nhận báo giá thành công!',
+            party: party,
+            signed_at: now
+        });
+    } catch (err) {
+        console.error("Lỗi ký báo giá:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. POST: ĐẶT LẠI CHỮ KÝ BÁO GIÁ ĐƠN HÀNG (KHI CẦN KÝ LẠI)
+router.post('/:id/reset-quote-signature', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { party } = req.body; // 'CUSTOMER' | 'SALES' | 'ALL'
+
+        if (party === 'CUSTOMER') {
+            await pool.query(`
+                UPDATE orders 
+                SET customer_signature = NULL, customer_signed_at = NULL, customer_signed_name = NULL 
+                WHERE id = $1
+            `, [id]);
+        } else if (party === 'SALES') {
+            await pool.query(`
+                UPDATE orders 
+                SET sales_signature = NULL, sales_signed_at = NULL, sales_signed_name = NULL 
+                WHERE id = $1
+            `, [id]);
+        } else {
+            // ALL
+            await pool.query(`
+                UPDATE orders 
+                SET customer_signature = NULL, customer_signed_at = NULL, customer_signed_name = NULL,
+                    sales_signature = NULL, sales_signed_at = NULL, sales_signed_name = NULL 
+                WHERE id = $1
+            `, [id]);
+        }
+
+        res.json({ success: true, message: '✅ Đã đặt lại chữ ký báo giá thành công!' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

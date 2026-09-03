@@ -2,14 +2,33 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 
-// Đảm bảo Unique Index trên bảng customers để hỗ trợ Bulk Upsert & Tra cứu siêu tốc
+function isAuthorizedAdmin(req) {
+    const role = String(req.headers["x-user-role"] || req.query.role || (req.body && req.body.role) || "").toUpperCase().trim();
+    const adminRoles = ["ADMIN", "SUPER_ADMIN", "GIAM_DOC", "TONG_GIAM_DOC", "DIRECTOR"];
+    return adminRoles.includes(role);
+}
+
+
+// Tự động khởi tạo & đồng bộ cấu trúc bảng customers & customer_logs
 (async () => {
     try {
         await pool.query(`
             CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_code ON customers (customer_code);
+            CREATE TABLE IF NOT EXISTS customer_logs (
+                id SERIAL PRIMARY KEY,
+                customer_id INT,
+                note TEXT,
+                status VARCHAR(50) DEFAULT 'NOTE',
+                handler VARCHAR(255),
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+            ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'NOTE';
+            ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS handler VARCHAR(255);
+            ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
         `);
     } catch (e) {
-        console.warn('Init customers unique index warning:', e.message);
+        console.warn("Init customers & customer_logs schema warning:", e.message);
     }
 })();
 
@@ -149,8 +168,9 @@ router.get('/search', async (req, res) => {
                    phone, address, customer_code, nickname, 
                    vat_company, vat_taxcode, vat_address, vat_email, 
                    reward_points, 
-                   COALESCE((SELECT SUM(total_amount - paid_amount) FROM orders WHERE customer_id = customers.id AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as current_debt,
-                   COALESCE((SELECT SUM(total_amount) FROM orders WHERE customer_id = customers.id AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as total_sales,
+                   COALESCE(customers.current_debt, 0) as current_debt,
+                   COALESCE(customers.payable_debt, 0) as payable_debt,
+                   COALESCE(customers.total_sales, customers.total_spent, 0) as total_sales,
                    COALESCE(debt_limit, 0) as debt_limit,
                    COALESCE(tier, vip_level, 1) as customer_tier,
                    COALESCE(tier, vip_level, 1) as vip_level,
@@ -169,6 +189,24 @@ router.get('/search', async (req, res) => {
 // LẤY DANH SÁCH KHÁCH HÀNG (KÈM CHỈ SỐ QUÀ TẶNG & TRI ÂN & HẠN MỨC NỢ)
 router.get('/', async (req, res) => {
     try {
+        const isCompact = req.query.compact === '1' || req.query.pos === '1';
+        if (isCompact) {
+            const { rows } = await pool.query(`
+                SELECT id, customer_code, 
+                       COALESCE(NULLIF(name, ''), full_name, 'Khách Lẻ') as name, 
+                       COALESCE(NULLIF(full_name, ''), name, 'Khách Lẻ') as full_name, 
+                       phone, address, nickname,
+                       COALESCE(current_debt, 0) as current_debt,
+                       COALESCE(debt_limit, 0) as debt_limit,
+                       COALESCE(tier, vip_level, 1) as customer_tier,
+                       COALESCE(tier, vip_level, 1) as tier,
+                       COALESCE(tier, vip_level, 1) as vip_level
+                FROM customers
+                ORDER BY id DESC
+            `);
+            return res.json({ success: true, data: rows });
+        }
+
         const { rows } = await pool.query(`
             SELECT c.id, 
                    COALESCE(NULLIF(c.name, ''), c.full_name, 'Khách Lẻ') as name, 
@@ -176,8 +214,9 @@ router.get('/', async (req, res) => {
                    c.phone, c.address, c.customer_code, c.nickname, 
                    c.vat_company, c.vat_taxcode, c.vat_address, c.vat_email, 
                    c.reward_points, 
-                   COALESCE((SELECT SUM(total_amount - paid_amount) FROM orders WHERE customer_id = c.id AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as current_debt,
-                   COALESCE((SELECT SUM(total_amount) FROM orders WHERE customer_id = c.id AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as total_sales,
+                   COALESCE(c.current_debt, 0) as current_debt,
+                   COALESCE(c.payable_debt, 0) as payable_debt,
+                   COALESCE(c.total_sales, c.total_spent, 0) as total_sales,
                    COALESCE(c.debt_limit, 0) as debt_limit,
                    COALESCE(c.tier, c.vip_level, 1) as customer_tier,
                    COALESCE(c.tier, c.vip_level, 1) as vip_level,
@@ -273,6 +312,9 @@ router.put('/:id/profile', async (req, res) => {
 // CẬP NHẬT HẠNG & HẠN MỨC CÔNG NỢ & ĐIỂM (CÔNG NỢ TỒN ĐỌNG TỰ ĐỘNG ĐỒNG BỘ TỪ ĐƠN HÀNG, KHÔNG SỬA TAY)
 router.put('/:id/tier', async (req, res) => {
     try {
+        if (!isAuthorizedAdmin(req)) {
+            return res.status(403).json({ success: false, error: "⛔ TỪ CHỐI TRUY CẬP: Chỉ Quản trị viên (Admin) hoặc Giám đốc mới có quyền điều chỉnh phân hạng và hạn mức tín dụng!" });
+        }
         const { id } = req.params;
         const { tier, points, debt_limit } = req.body;
         const tierVal = parseInt(tier) || 1;
@@ -295,12 +337,160 @@ router.put('/:id/tier', async (req, res) => {
     }
 });
 
-// XÓA KHÁCH HÀNG
+// XÓA HÀNG LOẠT KHÁCH HÀNG (CHỈ ÁP DỤNG CHO HẠNG 1 & KHÔNG CÓ SĐT & KHÔNG CÓ VAT)
+router.post('/bulk-delete', async (req, res) => {
+    try {
+        if (!isAuthorizedAdmin(req)) {
+            return res.status(403).json({ success: false, error: "⛔ TỪ CHỐI TRUY CẬP: Chỉ tài khoản Quản trị viên (Admin) mới có quyền thực hiện xóa khách hàng!" });
+        }
+        const { ids } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, error: 'Chưa chọn khách hàng nào để xóa!' });
+        }
+
+        const numericIds = ids.map(x => Number(x)).filter(x => !isNaN(x) && x > 0);
+        if (numericIds.length === 0) {
+            return res.status(400).json({ success: false, error: 'Danh sách ID không hợp lệ!' });
+        }
+
+        // Lấy thông tin các khách hàng được chọn để kiểm tra điều kiện an toàn
+        const { rows } = await pool.query(`
+            SELECT id, name, phone, COALESCE(tier, vip_level, 1) as tier, vat_company, vat_taxcode,
+                   (SELECT COUNT(id) FROM orders WHERE customer_id = customers.id) as orders_count
+            FROM customers
+            WHERE id = ANY($1::int[])
+        `, [numericIds]);
+
+        const deletable = [];
+        const protectedList = [];
+
+        for (const c of rows) {
+            const hasPhone = c.phone && c.phone.trim() !== '' && c.phone.trim() !== '---';
+            const hasVat = (c.vat_company && c.vat_company.trim() !== '') || (c.vat_taxcode && c.vat_taxcode.trim() !== '');
+            const isTier1 = Number(c.tier) === 1;
+            const hasOrders = Number(c.orders_count) > 0;
+
+            // ĐIỀU KIỆN: Hạng 1 VÀ Không có SĐT VÀ Không có VAT VÀ Chưa có đơn hàng
+            if (isTier1 && !hasPhone && !hasVat && !hasOrders) {
+                deletable.push(c.id);
+            } else {
+                let reason = [];
+                if (!isTier1) reason.push(`Hạng ${c.tier}`);
+                if (hasPhone) reason.push(`SĐT: ${c.phone}`);
+                if (hasVat) reason.push(`Có VAT`);
+                if (hasOrders) reason.push(`Đã có đơn hàng`);
+                protectedList.push({ id: c.id, name: c.name, reason: reason.join(', ') });
+            }
+        }
+
+        if (deletable.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: `Không có khách hàng nào đủ điều kiện xóa! Toàn bộ ${protectedList.length} khách được chọn đều được bảo vệ (do có SĐT, có VAT, có đơn hàng hoặc thuộc Hạng 2-6).`,
+                protected_count: protectedList.length,
+                protected_items: protectedList
+            });
+        }
+
+        // Thực hiện xóa các khách hàng rác hợp lệ
+        await pool.query('DELETE FROM customer_logs WHERE customer_id = ANY($1::int[])', [deletable]);
+        await pool.query('DELETE FROM customer_gifts WHERE customer_id = ANY($1::int[])', [deletable]);
+        await pool.query('DELETE FROM customers WHERE id = ANY($1::int[])', [deletable]);
+
+        res.json({
+            success: true,
+            deleted_count: deletable.length,
+            protected_count: protectedList.length,
+            message: `🗑️ Đã xóa thành công ${deletable.length} khách hàng rác (Hạng 1, không SĐT, không VAT). Đã bảo vệ ${protectedList.length} khách hàng có dữ liệu quan trọng!`,
+            protected_items: protectedList
+        });
+
+    } catch (e) {
+        console.error("BULK DELETE ERROR:", e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// NÂNG HẠNG HÀNG LOẠT (BULK TIER UPGRADE)
+router.post('/bulk-tier', async (req, res) => {
+    try {
+        const { ids, tier } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, error: 'Chưa chọn khách hàng nào!' });
+        }
+        const tierVal = parseInt(tier);
+        if (isNaN(tierVal) || tierVal < 1 || tierVal > 6) {
+            return res.status(400).json({ success: false, error: 'Phân hạng không hợp lệ (1-6)!' });
+        }
+
+        const numericIds = ids.map(x => Number(x)).filter(x => !isNaN(x) && x > 0);
+        await pool.query(`
+            UPDATE customers 
+            SET tier = $1, vip_level = $1 
+            WHERE id = ANY($2::int[])
+        `, [tierVal, numericIds]);
+
+        const tierNames = {
+            1: "Khách Lẻ",
+            2: "Chốt Sale",
+            3: "Đại Lý",
+            4: "Sỉ C1",
+            5: "Sỉ VIP",
+            6: "NPP (Nhà Phân Phối)"
+        };
+
+        res.json({
+            success: true,
+            updated_count: numericIds.length,
+            tier: tierVal,
+            tier_name: tierNames[tierVal],
+            message: `⭐ Đã chuyển thành công ${numericIds.length} khách hàng sang "Hạng ${tierVal}: ${tierNames[tierVal]}"!`
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// THÊM NHẬT KÝ CHĂM SÓC HÀNG LOẠT (BULK ADD CARE LOG)
+router.post('/bulk-log', async (req, res) => {
+    try {
+        const { ids, note } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, error: 'Chưa chọn khách hàng nào!' });
+        }
+        if (!note || !note.trim()) {
+            return res.status(400).json({ success: false, error: 'Nội dung ghi chú không được để trống!' });
+        }
+
+        const numericIds = ids.map(x => Number(x)).filter(x => !isNaN(x) && x > 0);
+        const finalNote = note.trim();
+
+        await pool.query(`
+            INSERT INTO customer_logs (customer_id, note)
+            SELECT unnest($1::int[]), $2
+        `, [numericIds, finalNote]);
+
+        res.json({
+            success: true,
+            count: numericIds.length,
+            message: `📝 Đã lưu nhật ký chăm sóc thành công cho ${numericIds.length} khách hàng!`
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// XÓA KHÁCH HÀNG ĐƠN LẺ
 router.delete('/:id', async (req, res) => {
     try {
+        if (!isAuthorizedAdmin(req)) {
+            return res.status(403).json({ success: false, error: "⛔ TỪ CHỐI TRUY CẬP: Chỉ tài khoản Quản trị viên (Admin) mới có quyền thực hiện xóa khách hàng!" });
+        }
         const { id } = req.params;
+        await pool.query('DELETE FROM customer_logs WHERE customer_id = $1', [id]);
+        await pool.query('DELETE FROM customer_gifts WHERE customer_id = $1', [id]);
         await pool.query('DELETE FROM customers WHERE id = $1', [id]);
-        res.json({ success: true });
+        res.json({ success: true, message: 'Đã xóa khách hàng!' });
     } catch (e) {
         res.json({ success: false, error: e.message });
     }
@@ -415,28 +605,121 @@ router.get('/:id/transactions', async (req, res) => {
     }
 });
 
-// NHẬT KÝ CHĂM SÓC KHÁCH HÀNG (LOGS)
+// NHẬT KÝ CHĂM SÓC KHÁCH HÀNG & THEO DÕI SỰ CỐ BẢO HÀNH (LOGS)
 router.get('/:id/logs', async (req, res) => {
     try {
         const { rows } = await pool.query(
-            'SELECT id, customer_id, note, created_at FROM customer_logs WHERE customer_id = $1 ORDER BY created_at DESC',
+            "SELECT id, customer_id, note, COALESCE(status, 'NOTE') as status, handler, created_at, updated_at FROM customer_logs WHERE customer_id = $1 ORDER BY created_at DESC, id DESC",
             [req.params.id]
         );
         res.json({ success: true, data: rows });
     } catch (e) {
+        if (e.message && (e.message.includes('column "status"') || e.message.includes('customer_logs'))) {
+            try {
+                await pool.query(`
+                    CREATE TABLE IF NOT EXISTS customer_logs (
+                        id SERIAL PRIMARY KEY,
+                        customer_id INT,
+                        note TEXT,
+                        status VARCHAR(50) DEFAULT 'NOTE',
+                        handler VARCHAR(255),
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    );
+                    ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'NOTE';
+                    ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS handler VARCHAR(255);
+                    ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+                `);
+                const retry = await pool.query(
+                    "SELECT id, customer_id, note, COALESCE(status, 'NOTE') as status, handler, created_at, updated_at FROM customer_logs WHERE customer_id = $1 ORDER BY created_at DESC, id DESC",
+                    [req.params.id]
+                );
+                return res.json({ success: true, data: retry.rows });
+            } catch(e2) {}
+        }
         res.json({ success: false, error: e.message, data: [] });
     }
 });
 
 router.post('/:id/logs', async (req, res) => {
     try {
-        const { note } = req.body;
-        if (!note || !note.trim()) return res.json({ success: false, error: 'Ghi chú không được để trống' });
-        await pool.query(
-            'INSERT INTO customer_logs (customer_id, note) VALUES ($1, $2)',
-            [req.params.id, note.trim()]
-        );
-        res.json({ success: true });
+        const { note, status, handler } = req.body;
+        if (!note || !note.trim()) return res.json({ success: false, error: "Nội dung ghi chú không được để trống" });
+        const finalStatus = (status || "NOTE").toUpperCase();
+        const finalHandler = (handler || "").trim();
+
+        try {
+            const { rows } = await pool.query(
+                "INSERT INTO customer_logs (customer_id, note, status, handler) VALUES ($1, $2, $3, $4) RETURNING *",
+                [req.params.id, note.trim(), finalStatus, finalHandler]
+            );
+            return res.json({ success: true, data: rows[0], message: "Đã lưu nhật ký thành công!" });
+        } catch (dbErr) {
+            if (dbErr.message && (dbErr.message.includes('column "status"') || dbErr.message.includes('customer_logs'))) {
+                await pool.query(`
+                    CREATE TABLE IF NOT EXISTS customer_logs (
+                        id SERIAL PRIMARY KEY,
+                        customer_id INT,
+                        note TEXT,
+                        status VARCHAR(50) DEFAULT 'NOTE',
+                        handler VARCHAR(255),
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    );
+                    ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'NOTE';
+                    ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS handler VARCHAR(255);
+                    ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+                `);
+                const retry = await pool.query(
+                    "INSERT INTO customer_logs (customer_id, note, status, handler) VALUES ($1, $2, $3, $4) RETURNING *",
+                    [req.params.id, note.trim(), finalStatus, finalHandler]
+                );
+                return res.json({ success: true, data: retry.rows[0], message: "Đã lưu nhật ký thành công!" });
+            }
+            throw dbErr;
+        }
+    } catch (e) {
+        res.json({ success: false, error: e.message });
+    }
+});
+
+router.put('/:id/logs/:logId/status', async (req, res) => {
+    try {
+        const { id, logId } = req.params;
+        const { status, handler } = req.body;
+        const finalStatus = (status || "RESOLVED").toUpperCase();
+
+        try {
+            await pool.query(
+                "UPDATE customer_logs SET status = $1, handler = CASE WHEN $2 <> '' THEN $2 ELSE handler END, updated_at = NOW() WHERE id = $3 AND customer_id = $4",
+                [finalStatus, handler || "", logId, id]
+            );
+            return res.json({ success: true, status: finalStatus, message: "Đã cập nhật trạng thái nhật ký!" });
+        } catch(dbErr) {
+            if (dbErr.message && dbErr.message.includes('column "status"')) {
+                await pool.query(`
+                    ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'NOTE';
+                    ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS handler VARCHAR(255);
+                    ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+                `);
+                await pool.query(
+                    "UPDATE customer_logs SET status = $1, handler = CASE WHEN $2 <> '' THEN $2 ELSE handler END, updated_at = NOW() WHERE id = $3 AND customer_id = $4",
+                    [finalStatus, handler || "", logId, id]
+                );
+                return res.json({ success: true, status: finalStatus, message: "Đã cập nhật trạng thái nhật ký!" });
+            }
+            throw dbErr;
+        }
+    } catch (e) {
+        res.json({ success: false, error: e.message });
+    }
+});
+
+router.delete('/:id/logs/:logId', async (req, res) => {
+    try {
+        const { id, logId } = req.params;
+        await pool.query("DELETE FROM customer_logs WHERE id = $1 AND customer_id = $2", [logId, id]);
+        res.json({ success: true, message: "Đã xóa nhật ký!" });
     } catch (e) {
         res.json({ success: false, error: e.message });
     }
