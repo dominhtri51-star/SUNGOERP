@@ -57,6 +57,13 @@ window.escapeHtml = function(str) {
 
 const ALL_SYSTEM_GROUPS = [
     { 
+        group: 'Truyền Thông & Workplace Nội Bộ', 
+        roles: ['*'], 
+        items: [ 
+            { id: 'workplace', icon: 'fa-comments', title: 'Workplace & Trao Đổi', desc: 'Kênh phòng ban, nhóm phối hợp & chat 1-1' } 
+        ] 
+    },
+    { 
         group: 'Tổng Quan & Hệ Thống', 
         roles: ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC'], 
         items: [ 
@@ -535,6 +542,7 @@ function getModulePermission(moduleId, user = null) {
     if (!user) return 'NONE';
     const role = String(user.role || 'GUEST').toUpperCase().trim();
     if (['SUPER_ADMIN', 'ADMIN', 'GIAM_DOC', 'GIÁM ĐỐC', 'QUẢN TRỊ VIÊN'].includes(role)) return 'EDIT';
+    if (moduleId === 'workplace') return 'EDIT';
 
     const parentModuleId = SUB_MODULE_MAP[moduleId] || null;
 
@@ -942,6 +950,11 @@ async function loadModule(moduleId, title) {
     
     // Cuộn mượt lên đầu trang
     contentDiv.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Dừng polling của Workplace nếu chuyển sang module khác
+    if (window.modWorkplace && typeof window.modWorkplace.stopPolling === 'function' && moduleId !== 'workplace') {
+        window.modWorkplace.stopPolling();
+    }
     
     // KIỂM TRA QUYỀN TRUY CẬP (RBAC FIREWALL)
     if (currentUser && !isModuleAllowed(moduleId, currentUser)) {

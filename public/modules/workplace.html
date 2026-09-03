@@ -1,0 +1,1076 @@
+<div id="workplace-container" class="h-[calc(100vh-5rem)] flex flex-col bg-slate-100 -m-4 sm:-m-6 lg:-m-8">
+    <!-- Header Topbar của Workplace -->
+    <div class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-xs shrink-0 z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white text-lg shadow-sm">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-lg font-black text-slate-800 tracking-tight">SUNGO WORKPLACE</h1>
+                    <span class="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Nội Bộ Bảo Mật
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 font-medium">Không gian trao đổi công việc, điều hành & cộng tác liên phòng ban</p>
+            </div>
+        </div>
+
+        <!-- Các nút hành động trên Header -->
+        <div class="flex items-center gap-2">
+            <button id="wp-btn-create-group" onclick="window.modWorkplace.openCreateGroupModal()" class="hidden bg-amber-500 hover:bg-amber-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 shadow-xs transition transform active:scale-95">
+                <i class="fas fa-plus-circle"></i> <span>Tạo Nhóm Phối Hợp Mới</span>
+            </button>
+            <button onclick="window.modWorkplace.refresh()" title="Làm mới cuộc trò chuyện" class="w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Khung làm việc chính: 2 Cột (Sidebar Kênh & Khung Chat) -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- CỘT TRÁI: DANH SÁCH KÊNH & CUỘC TRÒ CHUYỆN -->
+        <div class="w-80 sm:w-88 md:w-96 bg-white border-r border-slate-200 flex flex-col shrink-0">
+            <!-- Ô tìm kiếm kênh & đồng nghiệp -->
+            <div class="p-3 border-b border-slate-100">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="wp-sidebar-search" oninput="window.modWorkplace.filterSidebar(this.value)" placeholder="Tìm kênh hoặc đồng nghiệp..." class="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-500 focus:bg-white transition">
+                </div>
+            </div>
+
+            <!-- Danh sách cuộn -->
+            <div class="flex-1 overflow-y-auto divide-y divide-slate-100" id="wp-sidebar-list">
+                
+                <!-- 1. KÊNH CÔNG TY & PHÒNG BAN -->
+                <div class="p-3">
+                    <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 px-1">
+                        <span>📢 Kênh Toàn Công Ty</span>
+                        <span id="wp-count-public" class="text-slate-400">6</span>
+                    </div>
+                    <div id="wp-list-public" class="space-y-1">
+                        <!-- Render dynamic -->
+                    </div>
+                </div>
+
+                <!-- 2. NHÓM PHỐI HỢP DO ADMIN PHÂN CÔNG (SALE + KHO...) -->
+                <div class="p-3">
+                    <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 px-1">
+                        <span class="flex items-center gap-1.5 text-amber-600">
+                            <i class="fas fa-handshake"></i> Nhóm Phối Hợp Liên Phòng
+                        </span>
+                        <button id="wp-btn-add-group-inline" onclick="window.modWorkplace.openCreateGroupModal()" class="hidden text-amber-600 hover:text-amber-700 text-xs font-bold" title="Thêm nhóm mới">
+                            <i class="fas fa-plus"></i> Tạo
+                        </button>
+                    </div>
+                    <div id="wp-list-groups" class="space-y-1">
+                        <!-- Render dynamic -->
+                    </div>
+                </div>
+
+                <!-- 3. NHẮN TIN RIÊNG 1-1 VỚI ĐỒNG NGHIỆP -->
+                <div class="p-3">
+                    <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 px-1">
+                        <span>💬 Nhắn Tin Riêng 1-1</span>
+                        <span id="wp-count-direct" class="text-slate-400">0</span>
+                    </div>
+                    <div id="wp-list-direct" class="space-y-1">
+                        <!-- Render dynamic -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: KHUNG TRÒ CHUYỆN CHÍNH (MAIN CHAT FEED) -->
+        <div class="flex-1 flex flex-col bg-slate-50 overflow-hidden relative">
+            
+            <!-- Header của cuộc trò chuyện hiện tại -->
+            <div id="wp-chat-header" class="bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between shrink-0 shadow-2xs">
+                <div class="flex items-center gap-3">
+                    <div id="wp-header-icon" class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-base font-bold shadow-2xs">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 id="wp-header-title" class="text-sm sm:text-base font-black text-slate-800">Thông Báo Toàn Công Ty</h2>
+                            <span id="wp-header-badge" class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Chỉ đạo</span>
+                        </div>
+                        <p id="wp-header-desc" class="text-xs text-slate-500 line-clamp-1 max-w-md sm:max-w-xl">Kênh phát hành các thông báo chỉ đạo, chính sách và quyết định từ Ban Giám Đốc</p>
+                    </div>
+                </div>
+
+                <!-- Nút thao tác quản lý nhóm nếu là Admin -->
+                <div id="wp-header-actions" class="flex items-center gap-2">
+                    <button id="wp-btn-manage-members" onclick="window.modWorkplace.openManageMembersModal()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 transition flex items-center gap-1.5">
+                        <i class="fas fa-user-cog"></i> <span>Quản Lý Thành Viên</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Banner Ghim Thông Báo Quan Trọng (Pinned Announcement) -->
+            <div id="wp-pinned-banner" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 px-5 py-2.5 flex items-start justify-between shrink-0 transition">
+                <div class="flex items-start gap-2.5">
+                    <span class="text-amber-600 mt-0.5 text-sm"><i class="fas fa-thumbtack"></i></span>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] font-black uppercase text-amber-700 tracking-wider">Thông Báo Đang Ghim</span>
+                            <span id="wp-pinned-author" class="text-[11px] text-slate-500 font-medium">Bởi Ban Giám Đốc</span>
+                        </div>
+                        <p id="wp-pinned-content" class="text-xs font-medium text-slate-800 line-clamp-2 mt-0.5"></p>
+                    </div>
+                </div>
+                <button id="wp-btn-unpin-banner" onclick="window.modWorkplace.unpinCurrent()" class="hidden text-slate-400 hover:text-amber-700 text-xs p-1" title="Bỏ ghim">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Vùng cuộn danh sách tin nhắn -->
+            <div id="wp-message-stream" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                <!-- Tin nhắn được chèn động ở đây -->
+                <div class="text-center py-10 text-slate-400 text-xs">
+                    <i class="fas fa-spinner fa-spin text-xl mb-2 text-amber-500"></i>
+                    <p>Đang tải cuộc trò chuyện...</p>
+                </div>
+            </div>
+
+            <!-- Vùng xem trước file / ảnh đang chuẩn bị gửi -->
+            <div id="wp-attachments-preview" class="hidden bg-slate-100 border-t border-slate-200 px-4 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
+                <!-- Preview items inserted dynamic -->
+            </div>
+
+            <!-- Thanh soạn thảo và gửi tin nhắn (Footer Input) -->
+            <div class="bg-white border-t border-slate-200 p-3 sm:p-4 shrink-0">
+                <form id="wp-message-form" onsubmit="window.modWorkplace.handleSendMessage(event)" class="flex items-end gap-2">
+                    
+                    <!-- Nút đính kèm ảnh & tài liệu -->
+                    <input type="file" id="wp-file-input" onchange="window.modWorkplace.handleFileSelected(event)" class="hidden" multiple accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.zip">
+                    <button type="button" onclick="document.getElementById('wp-file-input').click()" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm transition shrink-0" title="Đính kèm ảnh hoặc tài liệu">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+
+                    <!-- Khung nhập nội dung tin nhắn -->
+                    <div class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl p-2 focus-within:border-amber-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-100 transition">
+                        <textarea id="wp-message-input" rows="1" onkeydown="window.modWorkplace.handleKeydown(event)" placeholder="Nhập tin nhắn trao đổi... (Bấm Enter để gửi, Shift+Enter để xuống dòng)" class="w-full bg-transparent text-xs sm:text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-hidden max-h-32 leading-relaxed"></textarea>
+                    </div>
+
+                    <!-- Nút gửi tin nhắn -->
+                    <button type="submit" id="wp-btn-send" class="w-11 h-10 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center text-sm shadow-sm transition transform active:scale-95 shrink-0" title="Gửi tin nhắn (Enter)">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+                
+                <div id="wp-announcement-lock-notice" class="hidden text-center py-2 text-xs font-bold text-amber-700 bg-amber-50 rounded-xl border border-amber-200">
+                    <i class="fas fa-lock mr-1.5"></i> Kênh Thông Báo chỉ dành riêng cho Ban Giám Đốc và Quản Trị Viên đăng tin.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: TẠO NHÓM PHỐI HỢP MỚI THEO PHÂN CÔNG CỦA ADMIN   -->
+<!-- ======================================================== -->
+<div id="wp-modal-create-group" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+        
+        <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 flex items-center justify-between text-white shrink-0">
+            <div class="flex items-center gap-2.5">
+                <i class="fas fa-handshake text-xl"></i>
+                <h3 class="font-black text-base">Tạo Nhóm Phối Hợp Mới</h3>
+            </div>
+            <button onclick="window.modWorkplace.closeCreateGroupModal()" class="text-white/80 hover:text-white text-lg">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="wp-form-create-group" onsubmit="window.modWorkplace.submitCreateGroup(event)" class="p-6 overflow-y-auto space-y-4 flex-1">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Tên Nhóm Phối Hợp <span class="text-red-500">*</span></label>
+                <input type="text" id="wp-new-group-name" required placeholder="Ví dụ: Sale 🤝 Kho Vận (Xử Lý Hàng Gấp)" class="w-full text-xs sm:text-sm px-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 focus:outline-hidden">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Biểu Tượng (Icon)</label>
+                    <select id="wp-new-group-icon" class="w-full text-xs px-3 py-2.5 border border-slate-300 rounded-xl focus:border-amber-500 focus:outline-hidden">
+                        <option value="fa-handshake">🤝 Phối Hợp / Bắt Tay</option>
+                        <option value="fa-boxes">📦 Kho Hàng & Vận Chuyển</option>
+                        <option value="fa-bolt">⚡ Năng Lượng / Kỹ Thuật</option>
+                        <option value="fa-fire">🔥 Gấp / Ưu Tiên Hỏa Tốc</option>
+                        <option value="fa-briefcase">💼 Dự Án / Bán Hàng</option>
+                        <option value="fa-users">👥 Nhóm Làm Việc Chung</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Loại Nhóm</label>
+                    <input type="text" readonly value="🔒 Nhóm Phân Công Kín" class="w-full text-xs px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 font-bold">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Mục Đích / Mô Tả Hoạt Động</label>
+                <textarea id="wp-new-group-desc" rows="2" placeholder="Nhóm trao đổi tức thời giữa phòng Kinh Doanh và Thủ Kho để kiểm tồn và xuất hàng..." class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded-xl focus:border-amber-500 focus:outline-hidden resize-none"></textarea>
+            </div>
+
+            <!-- Danh sách thành viên được phân công -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-bold text-slate-700">Chỉ Định Thành Viên Tham Gia <span class="text-red-500">*</span></label>
+                    <!-- Nút chọn nhanh theo phòng -->
+                    <div class="flex items-center gap-1.5 text-[11px]">
+                        <button type="button" onclick="window.modWorkplace.selectRoleMembers(['SALE', 'SALE_ADMIN', 'SALES'])" class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-bold hover:bg-blue-100">+ Đội Sale</button>
+                        <button type="button" onclick="window.modWorkplace.selectRoleMembers(['NHAN_VIEN_KHO', 'WAREHOUSE'])" class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-bold hover:bg-emerald-100">+ Đội Kho</button>
+                        <button type="button" onclick="window.modWorkplace.selectAllMembers(true)" class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-bold hover:bg-slate-200">Tất Cả</button>
+                        <button type="button" onclick="window.modWorkplace.selectAllMembers(false)" class="text-red-500 hover:underline">Bỏ chọn</button>
+                    </div>
+                </div>
+
+                <div class="border border-slate-200 rounded-xl p-3 max-h-48 overflow-y-auto space-y-1.5 bg-slate-50" id="wp-new-group-members-list">
+                    <!-- Checkbox danh sách nhân viên -->
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1 italic"><i class="fas fa-shield-alt"></i> Chỉ những nhân viên được tích chọn mới nhìn thấy và nhắn tin được trong nhóm này.</p>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="window.modWorkplace.closeCreateGroupModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Hủy Bỏ</button>
+                <button type="submit" id="wp-btn-submit-group" class="px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition">Tạo Nhóm Phối Hợp</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: QUẢN LÝ THÀNH VIÊN NHÓM CỦA ADMIN                 -->
+<!-- ======================================================== -->
+<div id="wp-modal-manage-members" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+        <div class="bg-slate-900 px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-user-cog text-amber-400"></i>
+                <h3 class="font-black text-sm">Quản Lý Thành Viên Nhóm</h3>
+            </div>
+            <button onclick="document.getElementById('wp-modal-manage-members').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-5 overflow-y-auto flex-1 space-y-3">
+            <p class="text-xs text-slate-500">Tích chọn để thêm hoặc bỏ tích để xóa thành viên khỏi nhóm:</p>
+            <div id="wp-manage-members-list" class="border border-slate-200 rounded-xl p-2.5 max-h-64 overflow-y-auto space-y-1 bg-slate-50">
+                <!-- Checkbox list -->
+            </div>
+        </div>
+        <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="document.getElementById('wp-modal-manage-members').classList.add('hidden')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Đóng</button>
+            <button onclick="window.modWorkplace.saveGroupMembers()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition shadow-xs">Lưu Thay Đổi</button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: XEM PHÓNG TO HÌNH ẢNH                             -->
+<!-- ======================================================== -->
+<div id="wp-modal-image-zoom" onclick="this.classList.add('hidden')" class="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 hidden cursor-zoom-out">
+    <img id="wp-zoomed-image" src="" class="max-w-full max-h-[90vh] rounded-xl shadow-2xl object-contain">
+</div>
+
+<!-- ======================================================== -->
+<!-- JAVASCRIPT LOGIC PHÂN HỆ SUNGO WORKPLACE                -->
+<!-- ======================================================== -->
+<script>
+window.modWorkplace = {
+    channels: [],
+    directUsers: [],
+    activeType: 'CHANNEL', // 'CHANNEL' | 'DIRECT'
+    activeId: null, // channel_id hoặc direct_user_id
+    activeChannel: null,
+    activeUser: null,
+    messages: [],
+    pollingTimer: null,
+    stagedAttachments: [],
+    currentUser: null,
+    isAdmin: false,
+
+    // 1. Khởi tạo phân hệ
+    init: async function() {
+        try {
+            const userStr = localStorage.getItem('sungo_user');
+            if (userStr) {
+                this.currentUser = JSON.parse(userStr);
+                const role = String(this.currentUser.role || '').toUpperCase();
+                this.isAdmin = ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'DIRECTOR', 'TONG_GIAM_DOC'].includes(role);
+            }
+        } catch(e) {}
+
+        // Hiển thị nút tạo nhóm nếu là Admin
+        const btnCreateGroup = document.getElementById('wp-btn-create-group');
+        const btnAddInline = document.getElementById('wp-btn-add-group-inline');
+        if (this.isAdmin) {
+            if (btnCreateGroup) btnCreateGroup.classList.remove('hidden');
+            if (btnAddInline) btnAddInline.classList.remove('hidden');
+        }
+
+        await this.loadChannels();
+
+        // Mặc định mở kênh Thông Báo Toàn Công Ty (#thong-bao)
+        const defaultChan = this.channels.find(c => c.slug === 'thong-bao') || this.channels[0];
+        if (defaultChan) {
+            this.selectChannel(defaultChan.id);
+        }
+
+        // Bắt đầu chu kỳ polling tin nhắn mới mỗi 3.5s
+        this.startPolling();
+    },
+
+    // 2. Tải danh sách kênh & danh bạ người dùng
+    loadChannels: async function() {
+        try {
+            const res = await fetch('/api/workplace/channels?t=' + Date.now());
+            const json = await res.json();
+            if (json.success && json.data) {
+                this.channels = json.data.channels || [];
+                this.directUsers = json.data.direct_users || [];
+                this.renderSidebar();
+            }
+        } catch(e) {
+            console.error("Lỗi nạp kênh Workplace:", e);
+        }
+    },
+
+    // 3. Render danh sách bên cột trái (Sidebar)
+    renderSidebar: function(filterText = '') {
+        const query = filterText.toLowerCase().trim();
+
+        // 1. Kênh toàn công ty
+        const publicChans = this.channels.filter(c => c.type !== 'GROUP' && (!query || c.name.toLowerCase().includes(query)));
+        const listPublicEl = document.getElementById('wp-list-public');
+        if (listPublicEl) {
+            listPublicEl.innerHTML = publicChans.map(c => {
+                const isActive = this.activeType === 'CHANNEL' && this.activeId === c.id;
+                const isAnnounce = c.type === 'ANNOUNCEMENT';
+                return `
+                    <button onclick="window.modWorkplace.selectChannel(${c.id})" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition ${isActive ? 'bg-amber-50 text-amber-700 font-black border border-amber-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">
+                        <div class="flex items-center gap-2.5 truncate">
+                            <span class="${isAnnounce ? 'text-amber-500' : 'text-slate-400'}"><i class="fas ${c.icon || 'fa-hashtag'}"></i></span>
+                            <span class="truncate">${c.name}</span>
+                        </div>
+                        ${c.total_messages > 0 ? `<span class="bg-slate-200/80 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">${c.total_messages}</span>` : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // 2. Nhóm phối hợp liên phòng (Sale + Kho)
+        const groupChans = this.channels.filter(c => c.type === 'GROUP' && (!query || c.name.toLowerCase().includes(query)));
+        const listGroupsEl = document.getElementById('wp-list-groups');
+        if (listGroupsEl) {
+            if (groupChans.length === 0) {
+                listGroupsEl.innerHTML = `<div class="text-[11px] text-slate-400 py-2 px-1 italic">Chưa có nhóm phối hợp nào</div>`;
+            } else {
+                listGroupsEl.innerHTML = groupChans.map(c => {
+                    const isActive = this.activeType === 'CHANNEL' && this.activeId === c.id;
+                    return `
+                        <button onclick="window.modWorkplace.selectChannel(${c.id})" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition ${isActive ? 'bg-amber-50 text-amber-700 font-black border border-amber-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">
+                            <div class="flex items-center gap-2.5 truncate">
+                                <span class="text-orange-500"><i class="fas ${c.icon || 'fa-handshake'}"></i></span>
+                                <span class="truncate">${c.name}</span>
+                            </div>
+                            <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">${c.member_count || 1} tv</span>
+                        </button>
+                    `;
+                }).join('');
+            }
+        }
+
+        // 3. Nhắn tin riêng 1-1
+        const directUsers = this.directUsers.filter(u => !query || u.full_name.toLowerCase().includes(query) || (u.position && u.position.toLowerCase().includes(query)));
+        const listDirectEl = document.getElementById('wp-list-direct');
+        const countDirectEl = document.getElementById('wp-count-direct');
+        if (countDirectEl) countDirectEl.innerText = this.directUsers.length;
+
+        if (listDirectEl) {
+            listDirectEl.innerHTML = directUsers.map(u => {
+                const isActive = this.activeType === 'DIRECT' && this.activeId === u.id;
+                const initials = (u.full_name || u.username || 'U').substring(0, 2).toUpperCase();
+                return `
+                    <button onclick="window.modWorkplace.selectDirectUser(${u.id})" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2.5 transition ${isActive ? 'bg-amber-50 text-amber-700 font-black border border-amber-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">
+                        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-slate-700 to-slate-800 text-white flex items-center justify-center text-[10px] font-black shrink-0 relative">
+                            ${initials}
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 border-2 border-white absolute -bottom-0.5 -right-0.5"></span>
+                        </div>
+                        <div class="flex-1 truncate">
+                            <div class="truncate text-slate-800 font-bold">${u.full_name || u.username}</div>
+                            <div class="text-[10px] text-slate-400 font-normal truncate">${u.position || u.role}</div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+    },
+
+    filterSidebar: function(text) {
+        this.renderSidebar(text);
+    },
+
+    // 4. Chọn kênh hoặc nhóm
+    selectChannel: async function(channelId) {
+        this.activeType = 'CHANNEL';
+        this.activeId = channelId;
+        this.activeChannel = this.channels.find(c => c.id === channelId);
+        this.activeUser = null;
+
+        if (!this.activeChannel) return;
+
+        // Cập nhật Header
+        document.getElementById('wp-header-title').innerText = this.activeChannel.name;
+        document.getElementById('wp-header-desc').innerText = this.activeChannel.description || 'Kênh trao đổi nội bộ';
+        
+        const badgeEl = document.getElementById('wp-header-badge');
+        if (this.activeChannel.type === 'ANNOUNCEMENT') {
+            badgeEl.innerText = '📢 Thông Báo Chỉ Đạo';
+            badgeEl.className = 'bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full';
+        } else if (this.activeChannel.type === 'GROUP') {
+            badgeEl.innerText = `🤝 Nhóm Phân Công (${this.activeChannel.member_count || 1} thành viên)`;
+            badgeEl.className = 'bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full';
+        } else {
+            badgeEl.innerText = '💬 Phòng Ban';
+            badgeEl.className = 'bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full';
+        }
+
+        const iconEl = document.getElementById('wp-header-icon');
+        iconEl.innerHTML = `<i class="fas ${this.activeChannel.icon || 'fa-hashtag'}"></i>`;
+
+        // Ẩn/Hiện nút quản lý thành viên cho nhóm
+        const btnManage = document.getElementById('wp-btn-manage-members');
+        if (btnManage) {
+            if (this.activeChannel.type === 'GROUP' && this.isAdmin) {
+                btnManage.classList.remove('hidden');
+            } else {
+                btnManage.classList.add('hidden');
+            }
+        }
+
+        // Kiểm tra khóa chat nếu là kênh Announcement
+        const formEl = document.getElementById('wp-message-form');
+        const lockNoticeEl = document.getElementById('wp-announcement-lock-notice');
+        if (this.activeChannel.is_announcement_only && !this.isAdmin) {
+            if (formEl) formEl.classList.add('hidden');
+            if (lockNoticeEl) lockNoticeEl.classList.remove('hidden');
+        } else {
+            if (formEl) formEl.classList.remove('hidden');
+            if (lockNoticeEl) lockNoticeEl.classList.add('hidden');
+        }
+
+        this.renderSidebar();
+        await this.loadMessages();
+    },
+
+    // 5. Chọn nhắn tin riêng 1-1
+    selectDirectUser: async function(userId) {
+        this.activeType = 'DIRECT';
+        this.activeId = userId;
+        this.activeUser = this.directUsers.find(u => u.id === userId);
+        this.activeChannel = null;
+
+        if (!this.activeUser) return;
+
+        // Cập nhật Header
+        document.getElementById('wp-header-title').innerText = this.activeUser.full_name || this.activeUser.username;
+        document.getElementById('wp-header-desc').innerText = `Chức vụ: ${this.activeUser.position || this.activeUser.role} • SĐT: ${this.activeUser.phone || 'Nội bộ'}`;
+        
+        const badgeEl = document.getElementById('wp-header-badge');
+        badgeEl.innerText = '🔒 Trò Chuyện Riêng Tư 1-1';
+        badgeEl.className = 'bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full';
+
+        const iconEl = document.getElementById('wp-header-icon');
+        const initials = (this.activeUser.full_name || 'U').substring(0, 2).toUpperCase();
+        iconEl.innerHTML = `<span class="text-xs font-black">${initials}</span>`;
+
+        const btnManage = document.getElementById('wp-btn-manage-members');
+        if (btnManage) btnManage.classList.add('hidden');
+
+        const formEl = document.getElementById('wp-message-form');
+        const lockNoticeEl = document.getElementById('wp-announcement-lock-notice');
+        if (formEl) formEl.classList.remove('hidden');
+        if (lockNoticeEl) lockNoticeEl.classList.add('hidden');
+
+        // Bỏ ghim banner trong chat 1-1
+        document.getElementById('wp-pinned-banner').classList.add('hidden');
+
+        this.renderSidebar();
+        await this.loadMessages();
+    },
+
+    // 6. Tải danh sách tin nhắn
+    loadMessages: async function() {
+        if (!this.activeId) return;
+
+        try {
+            let url = '/api/workplace/messages?t=' + Date.now();
+            if (this.activeType === 'CHANNEL') {
+                url += `&channel_id=${this.activeId}`;
+            } else {
+                url += `&direct_user_id=${this.activeId}`;
+            }
+
+            const res = await fetch(url);
+            const json = await res.json();
+
+            if (json.success && json.data) {
+                this.messages = json.data.messages || [];
+                this.renderMessages();
+
+                // Render Pinned Banner nếu có
+                const bannerEl = document.getElementById('wp-pinned-banner');
+                if (json.data.pinned && this.activeType === 'CHANNEL') {
+                    document.getElementById('wp-pinned-author').innerText = `Bởi ${json.data.pinned.sender_name}`;
+                    document.getElementById('wp-pinned-content').innerText = json.data.pinned.content;
+                    bannerEl.classList.remove('hidden');
+
+                    const btnUnpin = document.getElementById('wp-btn-unpin-banner');
+                    if (btnUnpin) {
+                        if (this.isAdmin) btnUnpin.classList.remove('hidden');
+                        else btnUnpin.classList.add('hidden');
+                    }
+                } else {
+                    bannerEl.classList.add('hidden');
+                }
+            }
+        } catch(e) {
+            console.error("Lỗi nạp tin nhắn:", e);
+        }
+    },
+
+    // 7. Render danh sách tin nhắn ra màn hình
+    renderMessages: function() {
+        const container = document.getElementById('wp-message-stream');
+        if (!container) return;
+
+        if (this.messages.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-16 text-slate-400">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-300 text-2xl mx-auto mb-3">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-500">Chưa có tin nhắn nào ở đây</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Hãy bắt đầu trao đổi hoặc chia sẻ thông tin đầu tiên!</p>
+                </div>
+            `;
+            return;
+        }
+
+        const currentUserId = this.currentUser ? this.currentUser.id : -1;
+        let html = '';
+
+        this.messages.forEach(msg => {
+            const isMe = msg.sender_id === currentUserId;
+            const initials = (msg.sender_name || 'U').substring(0, 2).toUpperCase();
+            const timeStr = this.formatTime(msg.created_at);
+
+            // Parse attachments
+            let attachments = [];
+            if (msg.attachments) {
+                try {
+                    attachments = typeof msg.attachments === 'string' ? JSON.parse(msg.attachments) : msg.attachments;
+                } catch(e) { attachments = []; }
+            }
+
+            // Parse reactions
+            let reactions = {};
+            if (msg.reactions) {
+                try {
+                    reactions = typeof msg.reactions === 'string' ? JSON.parse(msg.reactions) : msg.reactions;
+                } catch(e) { reactions = {}; }
+            }
+
+            // HTML của reactions
+            let reactionPills = '';
+            for (const [emoji, users] of Object.entries(reactions)) {
+                if (Array.isArray(users) && users.length > 0) {
+                    const hasMe = users.some(u => (typeof u === 'object' ? u.id === currentUserId : u === currentUserId));
+                    reactionPills += `
+                        <button onclick="window.modWorkplace.toggleReaction(${msg.id}, '${emoji}')" class="text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 transition ${hasMe ? 'bg-amber-100 border-amber-300 text-amber-800 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}">
+                            <span>${emoji}</span> <span class="text-[10px] font-black">${users.length}</span>
+                        </button>
+                    `;
+                }
+            }
+
+            // HTML của attachments
+            let attachmentHtml = '';
+            if (attachments.length > 0) {
+                attachmentHtml = '<div class="mt-2 space-y-1.5">';
+                attachments.forEach(att => {
+                    const isImg = att.type && att.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(att.name || att.url);
+                    if (isImg) {
+                        attachmentHtml += `
+                            <div class="max-w-xs rounded-xl overflow-hidden border border-slate-200 shadow-2xs group relative cursor-pointer" onclick="window.modWorkplace.zoomImage('${att.url}')">
+                                <img src="${att.url}" class="w-full max-h-56 object-cover transition transform group-hover:scale-102">
+                                <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition">
+                                    <i class="fas fa-search-plus mr-1"></i> Phóng to
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        attachmentHtml += `
+                            <a href="${att.url}" download="${att.name}" class="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:border-amber-400 hover:text-amber-700 text-xs transition shadow-2xs max-w-xs">
+                                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold shrink-0">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="flex-1 truncate">
+                                    <div class="font-bold truncate text-xs">${att.name || 'Tài liệu đính kèm'}</div>
+                                    <div class="text-[10px] text-slate-400">Bấm để tải về an toàn</div>
+                                </div>
+                                <i class="fas fa-download text-slate-400"></i>
+                            </a>
+                        `;
+                    }
+                });
+                attachmentHtml += '</div>';
+            }
+
+            // Role label
+            const roleBadge = msg.sender_role ? `<span class="text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${msg.sender_role.includes('ADMIN') || msg.sender_role.includes('GIAM_DOC') ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}">${msg.sender_role}</span>` : '';
+
+            if (isMe) {
+                // Tin nhắn của CHÍNH MÌNH (Bên Phải)
+                html += `
+                    <div class="flex flex-col items-end group">
+                        <div class="flex items-end gap-2 max-w-[85%] sm:max-w-[75%]">
+                            <!-- Nút reaction & xóa hover -->
+                            <div class="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs mb-1">
+                                <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1">👍</button>
+                                <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1">❤️</button>
+                                <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-1" title="Thu hồi tin nhắn"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                            
+                            <!-- Bong bóng tin nhắn -->
+                            <div class="bg-amber-500 text-white rounded-2xl rounded-tr-xs p-3 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words">
+                                ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-200 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Đã Ghim</div>` : ''}
+                                <div>${this.formatContent(msg.content)}</div>
+                                ${attachmentHtml}
+                            </div>
+                        </div>
+
+                        <!-- Reactions & thời gian -->
+                        <div class="flex items-center gap-1.5 mt-1 mr-1">
+                            ${reactionPills}
+                            <span class="text-[10px] text-slate-400">${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Tin nhắn của ĐỒNG NGHIỆP (Bên Trái)
+                html += `
+                    <div class="flex flex-col items-start group">
+                        <div class="flex items-start gap-2.5 max-w-[85%] sm:max-w-[75%]">
+                            <!-- Avatar -->
+                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-xs font-black shrink-0 shadow-2xs mt-0.5">
+                                ${initials}
+                            </div>
+
+                            <!-- Thân tin nhắn -->
+                            <div>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <span class="text-xs font-black text-slate-800">${msg.sender_name}</span>
+                                    ${roleBadge}
+                                    <span class="text-[10px] text-slate-400 ml-1">${timeStr}</span>
+                                </div>
+
+                                <!-- Bong bóng tin nhắn -->
+                                <div class="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-3 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words">
+                                    ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-600 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Thông Báo Ghim</div>` : ''}
+                                    <div>${this.formatContent(msg.content)}</div>
+                                    ${attachmentHtml}
+                                </div>
+
+                                <!-- Reactions & Thanh thả biểu cảm nhanh -->
+                                <div class="flex items-center gap-1.5 mt-1">
+                                    ${reactionPills}
+                                    <div class="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs ml-1">
+                                        <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-0.5">👍</button>
+                                        <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-0.5">❤️</button>
+                                        <button onclick="window.modWorkplace.quickReaction(${msg.id}, '🔥')" class="hover:text-orange-500 p-0.5">🔥</button>
+                                        <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👏')" class="hover:text-emerald-500 p-0.5">👏</button>
+                                        ${this.isAdmin && this.activeType === 'CHANNEL' ? `
+                                            <button onclick="window.modWorkplace.togglePinMessage(${msg.id})" class="hover:text-amber-600 p-0.5 ml-1" title="Ghim thông báo"><i class="fas fa-thumbtack"></i></button>
+                                            <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-0.5" title="Xóa tin nhắn"><i class="fas fa-trash-alt"></i></button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        container.innerHTML = html;
+        // Tự động cuộn xuống đáy tin nhắn mới nhất
+        container.scrollTop = container.scrollHeight;
+    },
+
+    formatContent: function(content) {
+        if (!content) return '';
+        // Escape HTML và format xuống dòng
+        const escaped = window.escapeHtml ? window.escapeHtml(content) : content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return escaped.replace(/\n/g, '<br>');
+    },
+
+    formatTime: function(timestamp) {
+        if (!timestamp) return '';
+        const d = new Date(timestamp);
+        const hours = String(d.getHours()).padStart(2, '0');
+        const mins = String(d.getMinutes()).padStart(2, '0');
+        const date = `${d.getDate()}/${d.getMonth() + 1}`;
+        return `${hours}:${mins} • ${date}`;
+    },
+
+    // 8. Xử lý sự kiện bàn phím (Enter để gửi, Shift+Enter xuống dòng)
+    handleKeydown: function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.handleSendMessage(e);
+        }
+    },
+
+    // 9. Gửi tin nhắn mới
+    handleSendMessage: async function(e) {
+        if (e) e.preventDefault();
+        const inputEl = document.getElementById('wp-message-input');
+        const content = inputEl.value.trim();
+
+        if (!content && this.stagedAttachments.length === 0) return;
+
+        const btnSend = document.getElementById('wp-btn-send');
+        btnSend.disabled = true;
+        btnSend.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+            const payload = {
+                channel_id: this.activeType === 'CHANNEL' ? this.activeId : null,
+                direct_user_id: this.activeType === 'DIRECT' ? this.activeId : null,
+                content: content,
+                attachments: this.stagedAttachments
+            };
+
+            const res = await fetch('/api/workplace/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                inputEl.value = '';
+                this.stagedAttachments = [];
+                this.renderAttachmentPreview();
+                await this.loadMessages();
+            } else {
+                alert('❌ ' + (json.error || 'Không thể gửi tin nhắn!'));
+            }
+        } catch(err) {
+            alert('⚠️ Lỗi gửi tin nhắn: ' + err.message);
+        } finally {
+            btnSend.disabled = false;
+            btnSend.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        }
+    },
+
+    // 10. Chọn và upload file đính kèm
+    handleFileSelected: async function(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('subfolder', 'workplace');
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                if (json.success) {
+                    this.stagedAttachments.push({
+                        url: json.url,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type
+                    });
+                } else {
+                    alert('Lỗi tải file: ' + json.error);
+                }
+            } catch(err) {
+                console.error("Lỗi upload:", err);
+            }
+        }
+
+        e.target.value = '';
+        this.renderAttachmentPreview();
+    },
+
+    renderAttachmentPreview: function() {
+        const previewEl = document.getElementById('wp-attachments-preview');
+        if (this.stagedAttachments.length === 0) {
+            previewEl.classList.add('hidden');
+            previewEl.innerHTML = '';
+            return;
+        }
+
+        previewEl.classList.remove('hidden');
+        previewEl.innerHTML = this.stagedAttachments.map((att, idx) => `
+            <div class="flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-slate-200 text-xs shadow-2xs shrink-0">
+                <span class="truncate max-w-[150px] font-medium text-slate-700">${att.name}</span>
+                <button type="button" onclick="window.modWorkplace.removeStagedAttachment(${idx})" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `).join('');
+    },
+
+    removeStagedAttachment: function(idx) {
+        this.stagedAttachments.splice(idx, 1);
+        this.renderAttachmentPreview();
+    },
+
+    // 11. Thả cảm xúc
+    quickReaction: async function(msgId, emoji) {
+        await this.toggleReaction(msgId, emoji);
+    },
+
+    toggleReaction: async function(msgId, emoji) {
+        try {
+            const res = await fetch(`/api/workplace/messages/${msgId}/reactions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ emoji })
+            });
+            const json = await res.json();
+            if (json.success) {
+                // Cập nhật phản hồi trên local messages
+                const msg = this.messages.find(m => m.id === msgId);
+                if (msg) {
+                    msg.reactions = json.reactions;
+                    this.renderMessages();
+                }
+            }
+        } catch(e) {}
+    },
+
+    // 12. Ghim / Bỏ ghim bài viết
+    togglePinMessage: async function(msgId) {
+        try {
+            const res = await fetch(`/api/workplace/messages/${msgId}/pin`, {
+                method: 'PUT'
+            });
+            const json = await res.json();
+            if (json.success) {
+                await this.loadMessages();
+            } else {
+                alert(json.error);
+            }
+        } catch(e) {}
+    },
+
+    unpinCurrent: async function() {
+        const pinned = this.messages.find(m => m.is_pinned);
+        if (pinned) {
+            await this.togglePinMessage(pinned.id);
+        }
+    },
+
+    // 13. Thu hồi / Xóa tin nhắn
+    deleteMessage: async function(msgId) {
+        if (!confirm("Sếp có chắc chắn muốn thu hồi tin nhắn này không?")) return;
+        try {
+            const res = await fetch(`/api/workplace/messages/${msgId}`, { method: 'DELETE' });
+            const json = await res.json();
+            if (json.success) {
+                this.messages = this.messages.filter(m => m.id !== msgId);
+                this.renderMessages();
+            } else {
+                alert(json.error);
+            }
+        } catch(e) {}
+    },
+
+    zoomImage: function(src) {
+        document.getElementById('wp-zoomed-image').src = src;
+        document.getElementById('wp-modal-image-zoom').classList.remove('hidden');
+    },
+
+    // 14. MODAL: Tạo Nhóm Phối Hợp Mới (Admin)
+    openCreateGroupModal: function() {
+        const modal = document.getElementById('wp-modal-create-group');
+        const container = document.getElementById('wp-new-group-members-list');
+        
+        // Render danh sách checkbox toàn bộ nhân viên
+        container.innerHTML = this.directUsers.map(u => `
+            <label class="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-100 cursor-pointer transition">
+                <input type="checkbox" name="wp_group_member" value="${u.id}" data-role="${u.role}" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500">
+                <div class="flex-1 text-xs">
+                    <span class="font-bold text-slate-800">${u.full_name || u.username}</span>
+                    <span class="text-[10px] text-slate-400 ml-1">(${u.position || u.role})</span>
+                </div>
+            </label>
+        `).join('');
+
+        modal.classList.remove('hidden');
+    },
+
+    closeCreateGroupModal: function() {
+        document.getElementById('wp-modal-create-group').classList.add('hidden');
+    },
+
+    selectRoleMembers: function(targetRoles) {
+        const checkboxes = document.querySelectorAll('input[name="wp_group_member"]');
+        checkboxes.forEach(cb => {
+            const role = cb.getAttribute('data-role');
+            if (targetRoles.includes(role)) {
+                cb.checked = true;
+            }
+        });
+    },
+
+    selectAllMembers: function(status) {
+        const checkboxes = document.querySelectorAll('input[name="wp_group_member"]');
+        checkboxes.forEach(cb => { cb.checked = status; });
+    },
+
+    submitCreateGroup: async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('wp-new-group-name').value.trim();
+        const desc = document.getElementById('wp-new-group-desc').value.trim();
+        const icon = document.getElementById('wp-new-group-icon').value;
+
+        const selectedMembers = [];
+        document.querySelectorAll('input[name="wp_group_member"]:checked').forEach(cb => {
+            selectedMembers.push(parseInt(cb.value, 10));
+        });
+
+        if (selectedMembers.length === 0) {
+            alert('⚠️ Vui lòng chọn ít nhất 1 nhân viên tham gia nhóm!');
+            return;
+        }
+
+        const btnSubmit = document.getElementById('wp-btn-submit-group');
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = 'Đang tạo nhóm...';
+
+        try {
+            const res = await fetch('/api/workplace/channels', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    description: desc,
+                    icon,
+                    type: 'GROUP',
+                    member_ids: selectedMembers
+                })
+            });
+
+            const json = await res.json();
+            if (json.success && json.data) {
+                this.closeCreateGroupModal();
+                await this.loadChannels();
+                this.selectChannel(json.data.id);
+            } else {
+                alert('❌ Lỗi: ' + json.error);
+            }
+        } catch(err) {
+            alert('⚠️ Lỗi kết nối: ' + err.message);
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = 'Tạo Nhóm Phối Hợp';
+        }
+    },
+
+    // 15. MODAL: Quản Lý Thành Viên Nhóm (Admin)
+    openManageMembersModal: async function() {
+        if (!this.activeChannel || this.activeChannel.type !== 'GROUP') return;
+
+        try {
+            const res = await fetch(`/api/workplace/channels/${this.activeChannel.id}/members`);
+            const json = await res.json();
+            const currentMemberIds = json.success ? json.data.map(m => m.id) : [];
+
+            const listEl = document.getElementById('wp-manage-members-list');
+            listEl.innerHTML = this.directUsers.map(u => {
+                const isChecked = currentMemberIds.includes(u.id);
+                return `
+                    <label class="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-100 cursor-pointer transition">
+                        <input type="checkbox" name="wp_manage_member" value="${u.id}" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500">
+                        <div class="flex-1 text-xs">
+                            <span class="font-bold text-slate-800">${u.full_name || u.username}</span>
+                            <span class="text-[10px] text-slate-400 ml-1">(${u.position || u.role})</span>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+
+            document.getElementById('wp-modal-manage-members').classList.remove('hidden');
+        } catch(e) {}
+    },
+
+    saveGroupMembers: async function() {
+        if (!this.activeChannel) return;
+
+        const selectedIds = [];
+        document.querySelectorAll('input[name="wp_manage_member"]:checked').forEach(cb => {
+            selectedIds.push(parseInt(cb.value, 10));
+        });
+
+        try {
+            const res = await fetch(`/api/workplace/channels/${this.activeChannel.id}/members`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ member_ids: selectedIds })
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                document.getElementById('wp-modal-manage-members').classList.add('hidden');
+                await this.loadChannels();
+                this.selectChannel(this.activeChannel.id);
+            } else {
+                alert(json.error);
+            }
+        } catch(e) {}
+    },
+
+    // 16. Smart Polling (3.5s)
+    startPolling: function() {
+        this.stopPolling();
+        this.pollingTimer = setInterval(() => {
+            // Chỉ nạp tin nhắn nếu tab đang hiển thị
+            if (document.visibilityState === 'visible' && this.activeId) {
+                this.loadMessages();
+            }
+        }, 3500);
+    },
+
+    stopPolling: function() {
+        if (this.pollingTimer) {
+            clearInterval(this.pollingTimer);
+            this.pollingTimer = null;
+        }
+    },
+
+    refresh: async function() {
+        await this.loadChannels();
+        await this.loadMessages();
+    }
+};
+
+// Tự động khởi động khi module được nạp
+window.modWorkplace.init();
+</script>
