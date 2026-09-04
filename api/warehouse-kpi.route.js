@@ -48,6 +48,69 @@ router.put('/policy', async (req, res) => {
             notes !== undefined ? notes : null
         ]);
 
+        // Tự động đồng bộ lại tiền hoa hồng kho vào bảng lương DRAFT hiện hành (nếu có)
+        try {
+            const currentPeriod = new Date().toISOString().slice(0, 7);
+            const draftPayroll = await pool.query("SELECT id FROM payrolls WHERE period_key = $1 AND status = 'DRAFT' LIMIT 1", [currentPeriod]);
+            if (draftPayroll.rows.length > 0) {
+                const payrollId = draftPayroll.rows[0].id;
+                const pol = result.rows[0];
+                const rate = parseFloat(pol.rate_per_order) || 0;
+                const pct = parseFloat(pol.profit_percent) || 0;
+                const minThresh = parseInt(pol.min_orders_threshold, 10) || 0;
+
+                const startDate = `${currentPeriod}-01 00:00:00`;
+                const parts = currentPeriod.split('-');
+                const lastDay = new Date(parseInt(parts[0]), parseInt(parts[1]), 0).getDate();
+                const endDate = `${currentPeriod}-${String(lastDay).padStart(2, '0')} 23:59:59`;
+
+                const items = await pool.query("SELECT id, employee_id, total_commission, warehouse_commission, gross_income, net_salary FROM payroll_items WHERE payroll_id = $1", [payrollId]);
+                for (const item of items.rows) {
+                    const ordRes = await pool.query(`
+                        SELECT COUNT(id) AS dispatched_count,
+                               COALESCE(SUM(COALESCE(NULLIF(regexp_replace(gross_profit::text, '[^0-9.-]', '', 'g'), '')::numeric, 0)), 0) AS total_gross_profit
+                        FROM orders
+                        WHERE dispatched_by = $1
+                          AND status IN ('SHIPPED', 'COMPLETED')
+                          AND COALESCE(dispatched_at, created_at) >= $2
+                          AND COALESCE(dispatched_at, created_at) <= $3
+                    `, [item.employee_id, startDate, endDate]);
+
+                    const count = parseInt(ordRes.rows[0]?.dispatched_count, 10) || 0;
+                    const gp = Math.max(0, parseFloat(ordRes.rows[0]?.total_gross_profit) || 0);
+
+                    if (count > 0 || parseFloat(item.warehouse_commission) > 0) {
+                        const eligibleCount = Math.max(0, count - minThresh);
+                        const fixedComm = eligibleCount * rate;
+                        const profitComm = Math.round(gp * (pct / 100));
+                        const newWhComm = fixedComm + profitComm;
+
+                        const oldWhComm = parseFloat(item.warehouse_commission) || 0;
+                        const diff = newWhComm - oldWhComm;
+
+                        await pool.query(`
+                            UPDATE payroll_items SET
+                                warehouse_commission = $1,
+                                total_commission = total_commission + $2,
+                                gross_income = gross_income + $2,
+                                net_salary = net_salary + $2
+                            WHERE id = $3
+                        `, [newWhComm, diff, item.id]);
+                    }
+                }
+
+                await pool.query(`
+                    UPDATE payrolls SET
+                        total_commission = (SELECT COALESCE(SUM(total_commission), 0) FROM payroll_items WHERE payroll_id = $1),
+                        total_gross_salary = (SELECT COALESCE(SUM(gross_income), 0) FROM payroll_items WHERE payroll_id = $1),
+                        total_net_salary = (SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items WHERE payroll_id = $1)
+                    WHERE id = $1
+                `, [payrollId]);
+            }
+        } catch (syncErr) {
+            console.warn("⚠️ Tự động đồng bộ bảng lương DRAFT khi đổi chính sách KPI thất bại:", syncErr.message);
+        }
+
         res.json({
             success: true,
             message: '✅ Đã cập nhật chính sách KPI hoa hồng xuất kho thành công!',

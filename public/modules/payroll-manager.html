@@ -314,10 +314,17 @@ window.modPayroll = {
                         <td class="p-3 text-center font-bold text-blue-600">${item.actual_working_days}/26</td>
                         <td class="p-3 text-right font-medium text-slate-600">${(parseFloat(item.base_salary) || 0).toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right font-bold text-slate-800">${(parseFloat(item.salary_by_days) || 0).toLocaleString('vi-VN')} đ</td>
-                        <td class="p-3 text-right text-slate-600">${allowances.toLocaleString('vi-VN')} đ</td>
-                        <td class="p-3 text-right font-black text-amber-600">
-                            ${(parseFloat(item.total_commission) || 0).toLocaleString('vi-VN')} đ
-                            ${whComm > 0 ? `<div class="text-[10px] text-purple-700 font-bold font-mono mt-0.5"><i class="fas fa-boxes-packing mr-0.5"></i>Kho: +${whComm.toLocaleString('vi-VN')}đ</div>` : ''}
+                        <td class="p-3 text-right">
+                            ${whComm > 0 && salesComm > 0 ? `
+                                <div class="font-black text-amber-600">${totalComm.toLocaleString('vi-VN')} đ</div>
+                                <div class="text-[10px] text-amber-600 font-medium">💼 Sale: +${salesComm.toLocaleString('vi-VN')}đ</div>
+                                <div class="text-[10px] text-purple-700 font-bold font-mono"><i class="fas fa-boxes-packing mr-0.5"></i>Kho: +${whComm.toLocaleString('vi-VN')}đ</div>
+                            ` : whComm > 0 ? `
+                                <div class="font-black text-purple-700">+${whComm.toLocaleString('vi-VN')} đ</div>
+                                <div class="text-[10px] text-purple-600 font-bold font-mono"><i class="fas fa-boxes-packing mr-0.5"></i>KPI Xuất kho</div>
+                            ` : `
+                                <div class="font-black text-amber-600">${totalComm.toLocaleString('vi-VN')} đ</div>
+                            `}
                         </td>
                         <td class="p-3 text-right font-medium ${bonusPenalty >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${bonusPenalty >= 0 ? '+' : ''}${bonusPenalty.toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right font-black text-blue-700">${(parseFloat(item.gross_income) || 0).toLocaleString('vi-VN')} đ</td>
@@ -341,7 +348,9 @@ window.modPayroll = {
         if (mobContainer) {
             mobContainer.innerHTML = window.modPayroll.items.map(item => {
                 const allowances = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
-                const comm = parseFloat(item.total_commission) || 0;
+                const whComm = parseFloat(item.warehouse_commission) || 0;
+                const totalComm = parseFloat(item.total_commission) || 0;
+                const salesComm = Math.max(0, totalComm - whComm);
                 return `
                 <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
                     <div class="flex items-center justify-between gap-2">
@@ -363,8 +372,16 @@ window.modPayroll = {
                         </div>
                         <div class="text-right">
                             <span class="text-slate-400 block text-[10px]">Hoa hồng:</span>
-                            <b class="text-amber-600">${comm.toLocaleString('vi-VN')} đ</b>
-                            ${parseFloat(item.warehouse_commission) > 0 ? `<span class="text-[10px] text-purple-700 font-bold block"><i class="fas fa-boxes-packing mr-0.5"></i>Kho: +${(parseFloat(item.warehouse_commission) || 0).toLocaleString('vi-VN')}đ</span>` : ''}
+                            ${whComm > 0 && salesComm > 0 ? `
+                                <b class="text-amber-600">${totalComm.toLocaleString('vi-VN')} đ</b>
+                                <span class="text-[9px] text-amber-600 block">Sale: +${salesComm.toLocaleString('vi-VN')}đ</span>
+                                <span class="text-[9px] text-purple-700 font-bold block"><i class="fas fa-boxes-packing mr-0.5"></i>Kho: +${whComm.toLocaleString('vi-VN')}đ</span>
+                            ` : whComm > 0 ? `
+                                <b class="text-purple-700">+${whComm.toLocaleString('vi-VN')} đ</b>
+                                <span class="text-[9px] text-purple-600 font-bold block"><i class="fas fa-boxes-packing mr-0.5"></i>KPI Xuất kho</span>
+                            ` : `
+                                <b class="text-amber-600">${totalComm.toLocaleString('vi-VN')} đ</b>
+                            `}
                         </div>
                         <div>
                             <span class="text-slate-400 block text-[10px]">Trừ BH (10.5%):</span>
