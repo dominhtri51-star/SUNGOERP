@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cổng Ký Báo Giá & Đơn Hàng Trực Tuyến - SUNGO ERP</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0f172a;
+        }
+        .quote-paper {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #0f172a;
+            line-height: 1.5;
+        }
+        @media print {
+            body { background: white !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .quote-paper {
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 10mm 12mm !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 8mm;
+            }
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col antialiased selection:bg-amber-500 selection:text-white">
+
+    <!-- Top Sticky Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur border-b border-slate-800 shadow-xl no-print">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-amber-500/20 shrink-0">
+                    S
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="font-black text-xs sm:text-sm uppercase tracking-wide text-white">CỔNG KÝ BÁO GIÁ ĐIỆN TỬ</h1>
+                        <span id="header-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Đang tải...
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 font-mono" id="header-order-code">MÃ ĐƠN: ---</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons for Customer & Staff -->
+            <div class="flex flex-wrap items-center gap-2" id="quote-action-bar">
+                <button onclick="openSignModal('CUSTOMER')" class="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 active:from-orange-700 text-white font-black py-2 px-3.5 rounded-xl text-xs transition shadow-md flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-pen-nib text-amber-200"></i> <span>Khách Hàng Ký</span>
+                </button>
+                <button onclick="openSignModal('SALES')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow border border-slate-700 flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-user-tie text-blue-400"></i> <span>NVKD Ký</span>
+                </button>
+                <button onclick="copyShareableLink()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-3 rounded-xl text-xs transition border border-slate-700 flex items-center gap-1.5 cursor-pointer" title="Sao chép link gửi Zalo">
+                    <i class="fas fa-link text-emerald-400"></i> <span class="hidden sm:inline">Sao Chép Link</span>
+                </button>
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black py-2 px-3.5 rounded-xl text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-print"></i> <span>In / Tải PDF</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 lg:p-8 flex flex-col items-center">
+        
+        <!-- Loading State -->
+        <div id="loading-spinner" class="flex flex-col items-center justify-center p-20 text-slate-400 space-y-3">
+            <i class="fas fa-spinner fa-spin text-4xl text-amber-500"></i>
+            <p class="text-xs font-bold uppercase tracking-wider">Đang tải tài liệu báo giá...</p>
+        </div>
+
+        <!-- A4 Printable Quotation Sheet -->
+        <div id="public-quote-sheet" class="quote-paper bg-white w-full max-w-[850px] min-h-[1050px] p-6 sm:p-12 shadow-2xl rounded-2xl border border-slate-200 text-slate-900 text-xs sm:text-sm leading-relaxed relative hidden">
+            <!-- Dynamic Content Will Be Rendered Here -->
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500 no-print">
+        <p>© 2026 SUNGO SOLAR ERP • Nền tảng Năng Lượng Mặt Trời & Báo Giá Thông Minh</p>
+    </footer>
+
+    <!-- ==================================================================== -->
+    <!-- MODAL: KÝ TAY CẢM ỨNG (SIGNATURE PAD MODAL) -->
+    <!-- ==================================================================== -->
+    <div id="signature-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            
+            <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-signature text-amber-400 text-lg"></i>
+                    <div>
+                        <h3 class="font-black text-sm text-slate-100" id="sign-modal-title">Ký Xác Nhận Báo Giá</h3>
+                        <p class="text-[10px] text-slate-400" id="sign-modal-subtitle">Dùng ngón tay hoặc bút cảm ứng để ký tên</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSignModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer transition">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-1">
+                        Họ & Tên Người Ký: <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="signer-name-input" placeholder="Nhập họ và tên người ký..." class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 rounded-xl outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 text-slate-800 shadow-2xs">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                            <span>Khung Vẽ Chữ Ký:</span>
+                        </label>
+                        <button type="button" onclick="clearSignaturePad()" class="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer">
+                            <i class="fas fa-eraser"></i> <span>Xóa Chữ Ký</span>
+                        </button>
+                    </div>
+                    
+                    <div class="border-2 border-dashed border-amber-300 rounded-2xl bg-amber-50/30 overflow-hidden relative shadow-inner">
+                        <canvas id="signature-canvas" width="460" height="200" class="w-full h-[180px] bg-transparent cursor-crosshair"></canvas>
+                        <div id="canvas-placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-400 text-xs font-medium">
+                            <i class="fas fa-pen mr-1.5 text-amber-500/60"></i> Ký tên vào đây (Dùng ngón tay hoặc chuột)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                <button type="button" onclick="closeSignModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl cursor-pointer">
+                    Hủy
+                </button>
+                <button type="button" onclick="submitSignature()" id="btn-save-sign" class="px-5 py-2 text-xs font-black text-white bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-check"></i> <span>Xác Nhận & Lưu Chữ Ký</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="quote-toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs font-bold flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300">
+        <i class="fas fa-check-circle text-emerald-400 text-base" id="toast-icon"></i>
+        <span id="toast-msg">Thông báo</span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        let currentOrderData = null;
+        let currentSettings = {};
+        let activeSignParty = 'CUSTOMER'; // 'CUSTOMER' | 'SALES'
+
+        // Lấy Token / Mã Đơn từ URL Query hoặc Hash
+        function getOrderTokenFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('token') || urlParams.get('code') || urlParams.get('order') || urlParams.get('id') || window.location.hash.replace('#', '');
+        }
+
+        // Tải dữ liệu Báo Giá
+        async function loadPublicQuote() {
+            const token = getOrderTokenFromUrl();
+            if (!token) {
+                document.getElementById('loading-spinner').innerHTML = `
+                    <div class="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl text-center max-w-md">
+                        <i class="fas fa-exclamation-triangle text-3xl mb-2 text-red-500"></i>
+                        <h3 class="font-black text-sm">Thiếu thông tin liên kết báo giá</h3>
+                        <p class="text-xs mt-1 text-slate-500">Vui lòng kiểm tra lại đường dẫn hoặc liên hệ nhân viên tư vấn.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/orders/public-quote/${encodeURIComponent(token)}?t=` + Date.now());
+                const json = await res.json();
+                if (!json.success || !json.data) {
+                    throw new Error(json.error || 'Không tìm thấy thông tin báo giá');
+                }
+
+                currentOrderData = json.data.order;
+                currentSettings = json.data.settings || {};
+
+                renderQuoteDocument();
+            } catch (err) {
+                document.getElementById('loading-spinner').innerHTML = `
+                    <div class="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl text-center max-w-md">
+                        <i class="fas fa-file-circle-xmark text-3xl mb-2 text-red-500"></i>
+                        <h3 class="font-black text-sm">Không thể tải báo giá</h3>
+                        <p class="text-xs mt-1 text-slate-500">${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render Toàn Bộ Trang Báo Giá Chuẩn Doanh Nghiệp
+        function renderQuoteDocument() {
+            const o = currentOrderData;
+            const sys = currentSettings;
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+
+            // Cập nhật Header
+            document.getElementById('header-order-code').innerText = 'MÃ ĐƠN: ' + o.order_code;
+            
+            const hasCustSig = !!o.customer_signature;
+            const hasSalesSig = !!o.sales_signature;
+            
+            const badgeEl = document.getElementById('header-status-badge');
+            if (hasCustSig && hasSalesSig) {
+                badgeEl.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                badgeEl.innerHTML = '<i class="fas fa-check-double mr-1"></i> Đã Ký Đầy Đủ 2 Bên';
+            } else if (hasCustSig) {
+                badgeEl.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/30";
+                badgeEl.innerHTML = '<i class="fas fa-user-check mr-1"></i> Khách Đã Ký';
+            } else if (hasSalesSig) {
+                badgeEl.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30";
+                badgeEl.innerHTML = '<i class="fas fa-pen mr-1"></i> NVKD Đã Ký';
+            } else {
+                badgeEl.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/30";
+                badgeEl.innerHTML = '<i class="fas fa-clock mr-1"></i> Chờ Ký Xác Nhận';
+            }
+
+            // Thông tin công ty
+            const storeName = sys.quote_store_name || sys.store_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+            const storeTax = sys.quote_store_tax || sys.store_tax || '0315614349';
+            const storePhone = sys.quote_store_phone || sys.store_phone || '0855.959.656';
+            const storeAddr = sys.quote_store_address || sys.store_address || 'Tp. Hồ Chí Minh, Việt Nam';
+            const storeLogo = sys.quote_store_logo || sys.store_logo || '';
+            const primaryColor = sys.quote_primary_color || '#f59e0b';
+            const quoteTitle = sys.quote_title || 'HÓA ĐƠN BÁN HÀNG KIÊM BÁO GIÁ THIẾT BỊ';
+
+            // Tính tiền
+            let subtotalVal = 0;
+            (o.items || []).forEach(i => {
+                const q = parseFloat(i.quantity) || 1;
+                const p = parseFloat(i.price) || 0;
+                subtotalVal += q * p;
+            });
+            const discVal = (parseFloat(o.discount_amount) || 0) + (parseFloat(o.points_discount) || 0);
+            const currentTotal = parseFloat(o.total_amount) || (subtotalVal - discVal);
+            const currentPaid = parseFloat(o.paid_amount) || 0;
+            const currentDebt = Math.max(0, currentTotal - currentPaid);
+
+            const d = o.created_at ? new Date(o.created_at) : new Date();
+            const dateString = `Ngày ${String(d.getDate()).padStart(2,'0')} tháng ${String(d.getMonth()+1).padStart(2,'0')} năm ${d.getFullYear()}`;
+
+            // QR Code VietQR
+            const bankName = sys.quote_bank_name || sys.bank_name || 'Techcombank';
+            const bankCode = sys.quote_bank_code || 'TCB';
+            const bankAcc = sys.quote_bank_account_number || sys.bank_account_number || '';
+            const bankHolder = sys.quote_bank_account_holder || sys.bank_account_holder || storeName;
+            const showQr = sys.quote_show_qr !== false;
+            const transferContent = 'TT ' + o.order_code + ' - ' + (o.customer_name || 'Khach Le');
+
+            let qrImgHtml = '';
+            if (showQr && bankAcc) {
+                const qrAmount = currentDebt > 0 ? currentDebt : currentTotal;
+                const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAcc}-compact2.png?amount=${qrAmount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(bankHolder)}`;
+                qrImgHtml = `
+                <div class="text-center pl-3 sm:pl-4 border-l border-dashed border-slate-300 ml-3 sm:ml-4 shrink-0">
+                    <img src="${qrUrl}" class="w-24 h-24 sm:w-28 sm:h-28 object-contain rounded-xl border border-slate-200 bg-white shadow-2xs" alt="VietQR">
+                    <span class="text-[9px] sm:text-[10px] font-black text-emerald-700 block mt-1">Quét VietQR 24/7</span>
+                </div>`;
+            }
+
+            // Danh sách hàng hóa
+            const itemsRows = (o.items || []).map((i, idx) => {
+                const q = parseFloat(i.quantity) || 1;
+                const p = parseFloat(i.price) || 0;
+                const serialText = (i.serial_number && i.serial_number.trim()) ? `<div class="text-[10px] text-slate-400 font-mono mt-0.5">Serial: ${i.serial_number.trim()}</div>` : '';
+                return `
+                <tr class="border-b border-slate-100 hover:bg-slate-50/50">
+                    <td class="text-center py-2.5 px-2 font-bold text-slate-400">${idx + 1}</td>
+                    <td class="py-2.5 px-3">
+                        <strong class="text-slate-900 font-bold">${i.product_name || 'Sản phẩm'}</strong>
+                        <div class="text-[11px] text-slate-400 font-mono">SKU: ${i.sku || 'N/A'}</div>
+                        ${serialText}
+                    </td>
+                    <td class="text-center py-2.5 px-2 text-slate-600">${i.unit || 'Bộ'}</td>
+                    <td class="text-center py-2.5 px-2 font-black text-slate-900">${q}</td>
+                    <td class="text-right py-2.5 px-3 font-semibold text-slate-700">${fmt(p)} đ</td>
+                    <td class="text-right py-2.5 px-3 font-black text-slate-900">${fmt(q * p)} đ</td>
+                </tr>`;
+            }).join('');
+
+            // Chữ ký bên Khách Hàng (Party A)
+            let custSigBox = '';
+            if (hasCustSig) {
+                const signDate = o.customer_signed_at ? new Date(o.customer_signed_at).toLocaleString('vi-VN') : 'Đã xác nhận';
+                custSigBox = `
+                <div class="flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 shadow-2xs space-y-1.5 min-h-[140px]">
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <i class="fas fa-check-circle"></i> ĐÃ KÝ ĐIỆN TỬ
+                    </span>
+                    <img src="${o.customer_signature}" class="max-h-20 object-contain my-1" alt="Chữ ký khách hàng">
+                    <strong class="text-xs font-black text-slate-900 uppercase">${o.customer_signed_name || o.customer_name || 'Khách Hàng'}</strong>
+                    <span class="text-[10px] text-slate-400">${signDate}</span>
+                    <button onclick="openSignModal('CUSTOMER')" class="text-[10px] font-bold text-amber-700 hover:underline pt-1 no-print cursor-pointer">
+                        <i class="fas fa-edit"></i> Ký lại
+                    </button>
+                </div>`;
+            } else {
+                custSigBox = `
+                <div class="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-300 hover:border-amber-400 transition min-h-[140px] space-y-2">
+                    <span class="text-[11px] text-slate-400 font-medium">Chưa có chữ ký</span>
+                    <button onclick="openSignModal('CUSTOMER')" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer no-print">
+                        <i class="fas fa-pen-nib"></i> <span>Ký Xác Nhận Ngay</span>
+                    </button>
+                </div>`;
+            }
+
+            // Chữ ký bên Đại diện bán hàng (Party B)
+            let salesSigBox = '';
+            if (hasSalesSig) {
+                const signDate = o.sales_signed_at ? new Date(o.sales_signed_at).toLocaleString('vi-VN') : 'Đã xác nhận';
+                salesSigBox = `
+                <div class="flex flex-col items-center justify-center p-3 rounded-2xl bg-blue-50/60 border border-blue-200/80 shadow-2xs space-y-1.5 min-h-[140px]">
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-blue-100 text-blue-800 border border-blue-300">
+                        <i class="fas fa-check-circle"></i> ĐẠI DIỆN SUNGO
+                    </span>
+                    <img src="${o.sales_signature}" class="max-h-20 object-contain my-1" alt="Chữ ký NVKD">
+                    <strong class="text-xs font-black text-slate-900 uppercase">${o.sales_signed_name || o.salesperson_name || 'Đại Diện Bán Hàng'}</strong>
+                    <span class="text-[10px] text-slate-400">${signDate}</span>
+                    <button onclick="openSignModal('SALES')" class="text-[10px] font-bold text-blue-700 hover:underline pt-1 no-print cursor-pointer">
+                        <i class="fas fa-edit"></i> Ký lại
+                    </button>
+                </div>`;
+            } else {
+                salesSigBox = `
+                <div class="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-300 hover:border-blue-400 transition min-h-[140px] space-y-2">
+                    <span class="text-[11px] text-slate-400 font-medium">Chưa có chữ ký đại diện</span>
+                    <button onclick="openSignModal('SALES')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer no-print">
+                        <i class="fas fa-signature"></i> <span>NVKD Ký Tên</span>
+                    </button>
+                </div>`;
+            }
+
+            const sheetHtml = `
+                <!-- BRAND HEADER -->
+                <div class="flex justify-between items-start pb-4 border-b-2 border-amber-500 gap-4">
+                    <div class="logo-area">
+                        ${storeLogo 
+                            ? `<img src="${storeLogo}" class="max-h-16 max-w-[200px] object-contain mb-1" alt="Logo">` 
+                            : `<h1 class="text-xl sm:text-2xl font-black text-amber-500 tracking-tight uppercase">${storeName}</h1>`
+                        }
+                    </div>
+                    <div class="text-right text-[11px] sm:text-xs text-slate-600 leading-snug max-w-[60%]">
+                        <strong class="text-slate-900 text-xs sm:text-sm uppercase block">${storeName}</strong>
+                        <span>MST: <b>${storeTax}</b></span> • <span>Hotline: <b>${storePhone}</b></span><br>
+                        <span>Địa chỉ: ${storeAddr}</span>
+                    </div>
+                </div>
+
+                <!-- TITLE BOX -->
+                <div class="text-center my-5">
+                    <h2 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight uppercase">${quoteTitle}</h2>
+                    <p class="text-xs text-slate-500 mt-1">Mã Đơn: <strong class="text-blue-600 font-mono">${o.order_code}</strong> • ${dateString}</p>
+                </div>
+
+                <!-- CUSTOMER BOX -->
+                <div class="bg-slate-50 rounded-2xl p-3.5 sm:p-4 border border-slate-200 mb-5 text-xs grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <span class="text-slate-400">Khách hàng:</span> <strong class="text-slate-900 text-sm ml-1">${o.customer_name_joined || o.customer_name || 'Khách Lẻ'}</strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-400">Số điện thoại:</span> <strong class="text-slate-900 font-mono ml-1">${o.customer_phone || o.phone || '---'}</strong>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <span class="text-slate-400">Địa chỉ:</span> <span class="text-slate-800 ml-1">${o.customer_address || o.address || '---'}</span>
+                    </div>
+                </div>
+
+                <!-- TABLE ITEMS -->
+                <div class="border border-slate-200 rounded-2xl overflow-hidden mb-5">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-slate-800 text-white font-bold uppercase text-[10px]">
+                            <tr>
+                                <th class="py-2.5 px-2 text-center w-10">STT</th>
+                                <th class="py-2.5 px-3">Sản Phẩm / Thiết Bị</th>
+                                <th class="py-2.5 px-2 text-center w-14">ĐVT</th>
+                                <th class="py-2.5 px-2 text-center w-12">SL</th>
+                                <th class="py-2.5 px-3 text-right w-28">Đơn Giá</th>
+                                <th class="py-2.5 px-3 text-right w-32">Thành Tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            ${itemsRows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAYMENT & TOTALS SUMMARY -->
+                <div class="flex flex-col sm:flex-row justify-between items-stretch gap-4 mb-6">
+                    <div class="flex-1 p-3.5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 flex justify-between items-center text-xs">
+                        <div class="space-y-1">
+                            <strong class="text-slate-900 block">${sys.quote_bank_title || 'Thanh toán tiền mặt hoặc chuyển khoản:'}</strong>
+                            <p class="text-slate-600">Ngân hàng: <b>${bankName}</b></p>
+                            ${bankAcc ? `<p class="text-slate-600">Số TK: <b class="font-mono text-blue-700">${bankAcc}</b></p>` : ''}
+                            <p class="text-slate-600">Chủ TK: <b>${bankHolder}</b></p>
+                            <p class="text-rose-600 text-[11px] font-bold">Nội dung: <em>${transferContent}</em></p>
+                        </div>
+                        ${qrImgHtml}
+                    </div>
+
+                    <div class="w-full sm:w-72 bg-slate-900 text-white p-4 rounded-2xl shadow-md space-y-2 text-xs">
+                        <div class="flex justify-between text-slate-300">
+                            <span>Tiền hàng gốc:</span>
+                            <span class="font-bold">${fmt(subtotalVal)} đ</span>
+                        </div>
+                        ${discVal > 0 ? `
+                        <div class="flex justify-between text-amber-400">
+                            <span>Chiết khấu / Giảm:</span>
+                            <span class="font-bold">-${fmt(discVal)} đ</span>
+                        </div>` : ''}
+                        <div class="flex justify-between text-sm font-black border-t border-slate-800 pt-1.5 text-white">
+                            <span>Tổng thanh toán:</span>
+                            <span>${fmt(currentTotal)} đ</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400 text-[11px]">
+                            <span>Đã thanh toán:</span>
+                            <span>${fmt(currentPaid)} đ</span>
+                        </div>
+                        <div class="flex justify-between text-sm font-black text-rose-400 border-t border-slate-700 pt-1.5">
+                            <span>CÒN PHẢI THU:</span>
+                            <span>${fmt(currentDebt)} đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOTES -->
+                ${sys.quote_notes ? `
+                <div class="p-3 bg-amber-50/60 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 italic mb-6">
+                    <strong>Ghi chú & Điều khoản:</strong> ${sys.quote_notes}
+                </div>` : ''}
+
+                <!-- SIGNATURE SECTION (2 CỘT ĐỐI XỨNG) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-4 border-t border-slate-200">
+                    <div class="space-y-2 text-center">
+                        <h4 class="font-black text-xs sm:text-sm uppercase text-slate-800 tracking-wide">
+                            ĐẠI DIỆN KHÁCH HÀNG
+                        </h4>
+                        <p class="text-[10px] text-slate-400">(Ký và ghi rõ họ tên)</p>
+                        ${custSigBox}
+                    </div>
+
+                    <div class="space-y-2 text-center">
+                        <h4 class="font-black text-xs sm:text-sm uppercase text-slate-800 tracking-wide">
+                            ĐẠI DIỆN BÁN HÀNG (SUNGO)
+                        </h4>
+                        <p class="text-[10px] text-slate-400">(Ký và ghi rõ họ tên)</p>
+                        ${salesSigBox}
+                    </div>
+                </div>
+            `;
+
+            const sheetEl = document.getElementById('public-quote-sheet');
+            sheetEl.innerHTML = sheetHtml;
+            sheetEl.classList.remove('hidden');
+            document.getElementById('loading-spinner').classList.add('hidden');
+        }
+
+        // ==========================================
+        // CANVAS SIGNATURE PAD LOGIC
+        // ==========================================
+        let canvas, ctx, isDrawing = false;
+
+        function initSignatureCanvas() {
+            canvas = document.getElementById('signature-canvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+
+            // Set Resolution
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * 2;
+            canvas.height = rect.height * 2;
+            ctx.scale(2, 2);
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#0f172a';
+
+            // Event Listeners for Mouse & Touch
+            function getPos(e) {
+                const r = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - r.left, y: clientY - r.top };
+            }
+
+            function startDraw(e) {
+                isDrawing = true;
+                const p = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                document.getElementById('canvas-placeholder').classList.add('hidden');
+                if (e.cancelable) e.preventDefault();
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+                const p = getPos(e);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+                if (e.cancelable) e.preventDefault();
+            }
+
+            function stopDraw() {
+                isDrawing = false;
+            }
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            window.addEventListener('mouseup', stopDraw);
+
+            canvas.addEventListener('touchstart', startDraw, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', stopDraw);
+        }
+
+        function openSignModal(party) {
+            activeSignParty = party;
+            const modal = document.getElementById('signature-modal');
+            const title = document.getElementById('sign-modal-title');
+            const subtitle = document.getElementById('sign-modal-subtitle');
+            const nameInput = document.getElementById('signer-name-input');
+
+            if (party === 'SALES') {
+                title.innerText = "Đại Diện Bán Hàng Ký Tên (SUNGO)";
+                subtitle.innerText = "Xác nhận báo giá và điều khoản cam kết cung cấp";
+                nameInput.value = currentOrderData?.sales_signed_name || currentOrderData?.salesperson_name || "Đại Diện SUNGO";
+            } else {
+                title.innerText = "Khách Hàng Ký Xác Nhận Báo Giá";
+                subtitle.innerText = "Ký xác nhận đồng ý thông tin báo giá và phương thức giao dịch";
+                nameInput.value = currentOrderData?.customer_signed_name || currentOrderData?.customer_name_joined || currentOrderData?.customer_name || "";
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                initSignatureCanvas();
+                clearSignaturePad();
+            }, 100);
+        }
+
+        function closeSignModal() {
+            document.getElementById('signature-modal').classList.add('hidden');
+        }
+
+        function clearSignaturePad() {
+            if (!canvas || !ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('canvas-placeholder').classList.remove('hidden');
+        }
+
+        function isCanvasBlank(c) {
+            const blank = document.createElement('canvas');
+            blank.width = c.width;
+            blank.height = c.height;
+            return c.toDataURL() === blank.toDataURL();
+        }
+
+        async function submitSignature() {
+            if (!canvas || isCanvasBlank(canvas)) {
+                return alert("⚠️ Vui lòng ký tên vào khung vẽ trước khi bấm xác nhận!");
+            }
+
+            const signerName = document.getElementById('signer-name-input').value.trim();
+            if (!signerName) {
+                return alert("⚠️ Vui lòng nhập họ và tên người ký!");
+            }
+
+            const sigBase64 = canvas.toDataURL('image/png');
+            const token = getOrderTokenFromUrl();
+
+            const btn = document.getElementById('btn-save-sign');
+            const oldText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang lưu...';
+            btn.classList.add('pointer-events-none', 'opacity-50');
+
+            try {
+                const res = await fetch(`/api/orders/public-quote/${encodeURIComponent(token)}/sign`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        party: activeSignParty,
+                        signature_base64: sigBase64,
+                        signer_name: signerName
+                    })
+                });
+
+                const json = await res.json();
+                if (json.success) {
+                    showToast(json.message || "✅ Đã lưu chữ ký thành công!");
+                    closeSignModal();
+                    loadPublicQuote(); // Tải lại tài liệu
+                } else {
+                    alert("❌ Lỗi: " + (json.error || "Không thể lưu chữ ký"));
+                }
+            } catch (e) {
+                alert("Lỗi kết nối mạng: " + e.message);
+            } finally {
+                btn.innerHTML = oldText;
+                btn.classList.remove('pointer-events-none', 'opacity-50');
+            }
+        }
+
+        function copyShareableLink() {
+            const currentUrl = window.location.href;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    showToast("📋 Đã sao chép link ký báo giá! Hãy gửi qua Zalo cho khách hàng.");
+                });
+            } else {
+                prompt("Sao chép liên kết ký báo giá dưới đây:", currentUrl);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('quote-toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        // Tự động khởi chạy khi tải trang
+        window.addEventListener('DOMContentLoaded', loadPublicQuote);
+    </script>
+</body>
+</html>

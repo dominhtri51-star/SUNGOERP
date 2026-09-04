@@ -1,15 +1,20 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
+# Thiết lập môi trường sản xuất
+ENV NODE_ENV=production
+ENV PORT=8080
+
 COPY package*.json ./
-RUN npm install --production
+RUN npm ci --only=production || npm install --production
 
 COPY . .
 
-# Đảm bảo thư mục upload tồn tại
+# Đảm bảo các thư mục upload và data tồn tại
 RUN mkdir -p public/uploads data
 
-EXPOSE 3000
+EXPOSE 8080
 
 CMD ["node", "server.js"]
+

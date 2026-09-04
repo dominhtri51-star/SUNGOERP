@@ -437,21 +437,47 @@ async function aggregateAllVaultDocuments() {
     } catch (e) {}
 
     // -------------------------------------------------------------
+    // -------------------------------------------------------------
     // 4. KHOANG: BÁO GIÁ & HỢP ĐỒNG KINH TẾ (QUOTATIONS & CONTRACTS)
     // -------------------------------------------------------------
-    const quotationsData = readJsonFile(quotationsFile);
+    
+    // 4A. Báo giá dự án BOQ: CHỈ LƯU TRỮ VÀO KÉT SẮT KHI ĐÃ ĐƯỢC CHỐT / DUYỆT (APPROVED, WON, SIGNED, CONFIRMED)
+    let quotationsData = [];
+    try {
+        if (pool && typeof pool.query === 'function') {
+            const qDbRes = await pool.query("SELECT * FROM quotations WHERE status IN ('APPROVED', 'WON', 'SIGNED', 'CONFIRMED', 'DA_CHOT') OR converted_order_code IS NOT NULL ORDER BY id DESC");
+            if (qDbRes.rows.length > 0) quotationsData = qDbRes.rows;
+        }
+    } catch(e) {}
+    if (quotationsData.length === 0) {
+        quotationsData = readJsonFile(quotationsFile).filter(q => ['APPROVED', 'WON', 'SIGNED', 'CONFIRMED', 'DA_CHOT'].includes(q.status) || !!q.converted_order_code);
+    }
+
     quotationsData.forEach(q => {
         const pTag = getPeriodTag(q.created_at);
         const qTag = getQuarterTag(q.created_at);
         const isLocked = lockedPeriods.has(pTag) || lockedPeriods.has(qTag);
 
         const totalAmt = parseFloat(q.total_amount || q.total_value || 0);
+        const docList = [];
+        if (q.pdf_url) {
+            docList.push({ name: 'Bản in Báo giá PDF', url: q.pdf_url, type: 'pdf', tag: 'BOQ_PDF' });
+        }
+        if (q.quotation_code) {
+            docList.push({
+                name: 'Liên Kết Báo Giá Dự Án BOQ',
+                url: `/dashboard.html#sale-boq-hybrid`,
+                type: 'link',
+                tag: 'BOQ_LINK'
+            });
+        }
+
         allDocs.push({
             id: `QUO-${q.quotation_id || q.id}`,
             vault_code: `VLT-BG-${String(q.quotation_id || q.id).padStart(5, '0')}`,
             category: 'CONTRACT_BOQ',
             category_label: 'Báo Giá & Hợp Đồng',
-            sub_category: 'Báo Giá Dự Án (BOQ)',
+            sub_category: 'Báo Giá Dự Án (BOQ Đã Chốt)',
             code: q.quotation_code,
             title: `Báo giá BOQ: ${q.project_name || q.quotation_code}`,
             date: (q.created_at || new Date().toISOString()).split('T')[0],
@@ -461,11 +487,11 @@ async function aggregateAllVaultDocuments() {
             partner_tax_code: '',
             amount: totalAmt,
             profit_margin: q.profit_margin || 0,
-            status: q.status || 'QUOTING',
-            docs: q.pdf_url ? [{ name: 'Bản in Báo giá PDF', url: q.pdf_url, type: 'pdf' }] : [],
-            docs_count: q.pdf_url ? 1 : 0,
+            status: q.status || 'WON',
+            docs: docList,
+            docs_count: docList.length,
             items_summary: (q.items || []).map(i => `${i.product_name || i.name || 'Thiết bị'} x${i.quantity || i.qty || 1}`).join('; '),
-            compliance_status: q.status === 'APPROVED' || q.status === 'WON' ? 'VALID' : 'PENDING',
+            compliance_status: 'VALID',
             risk_notes: q.profit_margin < 15 ? ['Biên lợi nhuận dưới mức sàn tiêu chuẩn 15%'] : [],
             is_locked: isLocked,
             source_module: 'QUOTATIONS',
@@ -473,7 +499,99 @@ async function aggregateAllVaultDocuments() {
         });
     });
 
-    // Hợp đồng kinh tế (bảng contracts trong PostgreSQL)
+    // 4B. Báo giá đơn hàng & Báo giá đã ký điện tử: CHỈ LƯU KHI CÓ CHỮ KÝ HOẶC ĐÃ XÁC NHẬN / XUẤT HÀNG
+    try {
+        const orderQuotesRes = await pool.query(`
+            SELECT o.*, 
+                   c.full_name as c_name, c.vat_company, c.vat_taxcode, c.vat_address,
+                   e.full_name as salesperson_name
+            FROM orders o 
+            LEFT JOIN customers c ON o.customer_id = c.id 
+            LEFT JOIN employees e ON o.employee_id = e.id
+            WHERE (o.status IN ('CONFIRMED', 'DELIVERED', 'SHIPPED', 'COMPLETED', 'PAID', 'Đã Hoàn Tất') 
+               OR o.customer_signature IS NOT NULL 
+               OR o.sales_signature IS NOT NULL)
+              AND o.status NOT IN ('CANCELLED', 'DRAFT', 'RETURNED')
+            ORDER BY o.id DESC LIMIT 300
+        `);
+
+        for (let ord of orderQuotesRes.rows) {
+            const pTag = getPeriodTag(ord.created_at);
+            const qTag = getQuarterTag(ord.created_at);
+            const isLocked = lockedPeriods.has(pTag) || lockedPeriods.has(qTag);
+
+            const docList = [];
+            const hasCustSig = !!ord.customer_signature;
+            const hasSalesSig = !!ord.sales_signature;
+            const isSigned = hasCustSig || hasSalesSig;
+
+            if (hasCustSig) {
+                docList.push({
+                    id: `CUST-SIG-${ord.id}`,
+                    name: `Chữ ký Khách Hàng (${ord.customer_signed_name || ord.customer_name || 'Khách Hàng'})`,
+                    url: ord.customer_signature,
+                    type: 'image',
+                    tag: 'CUSTOMER_E_SIGNATURE'
+                });
+            }
+
+            if (hasSalesSig) {
+                docList.push({
+                    id: `SALES-SIG-${ord.id}`,
+                    name: `Chữ ký Đại Diện SUNGO (${ord.sales_signed_name || ord.salesperson_name || 'NVKD'})`,
+                    url: ord.sales_signature,
+                    type: 'image',
+                    tag: 'COMPANY_E_SIGNATURE'
+                });
+            }
+
+            // Cổng link ký báo giá trực tuyến
+            const signToken = ord.quote_sign_token || ord.order_code || ord.id;
+            docList.push({
+                id: `QUOTE-LINK-${ord.id}`,
+                name: 'Cổng Ký Báo Giá Điện Tử Trực Tuyến',
+                url: `/sign-quote.html?token=${encodeURIComponent(signToken)}`,
+                type: 'link',
+                tag: 'QUOTE_PORTAL_LINK'
+            });
+
+            const totalAmt = parseFloat(ord.total_amount || 0);
+            const riskNotes = [];
+            if (!isSigned) {
+                riskNotes.push('Báo giá đơn hàng chưa có chữ ký xác nhận của khách hàng hoặc NVKD');
+            }
+
+            allDocs.push({
+                id: `ORD-QUOTE-${ord.id}`,
+                vault_code: `VLT-BG-ORD-${String(ord.id).padStart(5, '0')}`,
+                category: 'CONTRACT_BOQ',
+                category_label: 'Báo Giá & Hợp Đồng',
+                sub_category: isSigned ? 'Báo Giá Đơn Hàng Đã Ký' : 'Báo Giá Bán Hàng (Chờ Ký)',
+                code: ord.order_code,
+                title: `Báo Giá Đơn Hàng #${ord.order_code} - ${ord.customer_name || ord.c_name || 'Khách Lẻ'}`,
+                date: (ord.created_at ? new Date(ord.created_at).toISOString() : new Date().toISOString()).split('T')[0],
+                period_tag: pTag,
+                quarter_tag: qTag,
+                partner_name: ord.customer_name || ord.c_name || 'Khách Hàng',
+                partner_tax_code: ord.vat_taxcode || '',
+                amount: totalAmt,
+                paid_amount: parseFloat(ord.paid_amount || 0),
+                status: isSigned ? 'SIGNED' : 'QUOTING',
+                has_signature: isSigned,
+                docs: docList,
+                docs_count: docList.length,
+                compliance_status: isSigned ? 'VALID' : 'WARNING',
+                risk_notes: riskNotes,
+                is_locked: isLocked,
+                source_module: 'ORDERS_QUOTATION',
+                ref_id: ord.order_code
+            });
+        }
+    } catch (e) {
+        console.error('Error loading order quotations in vault:', e.message);
+    }
+
+    // 4C. Hợp đồng kinh tế (bảng contracts trong PostgreSQL)
     try {
         const contractRes = await pool.query("SELECT * FROM contracts ORDER BY id DESC");
         for (let c of contractRes.rows) {
@@ -485,6 +603,64 @@ async function aggregateAllVaultDocuments() {
             const payments = payRes.rows;
 
             const docList = [];
+
+            // 1. Chữ ký điện tử bên A (Khách hàng)
+            if (c.e_signature_a) {
+                docList.push({
+                    id: `SIG-A-${c.id}`,
+                    name: `Chữ ký điện tử Khách Hàng (Bên A - ${c.customer_representative || c.customer_name})`,
+                    url: c.e_signature_a,
+                    type: 'image',
+                    tag: 'CUSTOMER_E_SIGNATURE'
+                });
+            }
+
+            // 2. Chữ ký điện tử bên B (SUNGO)
+            if (c.e_signature_b) {
+                docList.push({
+                    id: `SIG-B-${c.id}`,
+                    name: 'Chữ ký điện tử Đại Diện SUNGO (Bên B)',
+                    url: c.e_signature_b,
+                    type: 'image',
+                    tag: 'COMPANY_E_SIGNATURE'
+                });
+            }
+
+            // 3. Con dấu số doanh nghiệp (CA)
+            if (c.digital_stamp_b && typeof c.digital_stamp_b === 'object') {
+                docList.push({
+                    id: `STAMP-B-${c.id}`,
+                    name: `Con dấu số Doanh Nghiệp CA (${c.digital_stamp_b.subject_cn || 'SUNGO'})`,
+                    url: '',
+                    type: 'ca_cert',
+                    tag: 'DIGITAL_CERT'
+                });
+            }
+
+            // 4. File PDF / Scan gốc có chữ ký & đóng dấu đính kèm
+            if (c.signed_file_url) {
+                docList.push({
+                    id: `FILE-${c.id}`,
+                    name: c.signed_file_name || 'Bản Scan Hợp Đồng Đã Ký & Đóng Dấu',
+                    url: c.signed_file_url,
+                    type: 'pdf',
+                    tag: 'SIGNED_CONTRACT_SCAN'
+                });
+            }
+
+            // 5. Đường link xem và ký hợp đồng trực tuyến
+            const signToken = c.signing_token || c.contract_code;
+            if (signToken) {
+                docList.push({
+                    id: `LINK-${c.id}`,
+                    name: 'Cổng Ký Hợp Đồng Trực Tuyến (Online Portal)',
+                    url: `/sign-contract.html?token=${encodeURIComponent(signToken)}`,
+                    type: 'link',
+                    tag: 'SIGN_PORTAL_LINK'
+                });
+            }
+
+            // 6. Chứng từ thanh toán ngân hàng (UNC)
             payments.forEach((p, pIdx) => {
                 if (p.proof_url) {
                     docList.push({
@@ -499,9 +675,13 @@ async function aggregateAllVaultDocuments() {
 
             const totalVal = parseFloat(c.total_value || 0);
             const paidVal = parseFloat(c.paid_amount || 0);
+            const isSigned = (c.contract_status === 'SIGNED' || c.contract_status === 'APPROVED' || !!c.e_signature_a || !!c.e_signature_b || !!c.signed_file_url);
 
             const riskNotes = [];
-            if (paidVal > 0 && docList.length === 0) {
+            if (!isSigned) {
+                riskNotes.push('Hợp đồng chưa có chữ ký xác nhận của khách hàng hoặc đại diện');
+            }
+            if (paidVal > 0 && payments.filter(p => p.proof_url).length === 0) {
                 riskNotes.push('Hợp đồng đã nhận thanh toán nhưng thiếu ủy nhiệm chi hoặc chứng từ báo có ngân hàng');
             }
 
@@ -510,27 +690,31 @@ async function aggregateAllVaultDocuments() {
                 vault_code: `VLT-HD-${String(c.id).padStart(5, '0')}`,
                 category: 'CONTRACT_BOQ',
                 category_label: 'Báo Giá & Hợp Đồng',
-                sub_category: 'Hợp Đồng Kinh Tế EPC',
+                sub_category: isSigned ? 'Hợp Đồng Kinh Tế Đã Ký (EPC)' : 'Hợp Đồng Kinh Tế (Chờ Ký)',
                 code: c.contract_code,
                 title: `Hợp Đồng Kinh Tế: #${c.contract_code} - ${c.customer_name}`,
                 date: (c.created_at ? new Date(c.created_at).toISOString() : new Date().toISOString()).split('T')[0],
                 period_tag: pTag,
                 quarter_tag: qTag,
                 partner_name: c.customer_name,
-                partner_tax_code: '',
+                partner_tax_code: c.customer_tax_code || '',
                 amount: totalVal,
                 paid_amount: paidVal,
+                contract_status: c.contract_status || (isSigned ? 'SIGNED' : 'DRAFT'),
                 payment_status: c.payment_status || 'Chờ Đặt Cọc',
+                has_signature: isSigned,
                 docs: docList,
                 docs_count: docList.length,
-                compliance_status: riskNotes.length === 0 ? 'VALID' : 'WARNING',
+                compliance_status: (isSigned && riskNotes.length === 0) ? 'VALID' : (isSigned ? 'WARNING' : 'MISSING_DOCS'),
                 risk_notes: riskNotes,
                 is_locked: isLocked,
                 source_module: 'CONTRACTS',
                 ref_id: c.contract_code
             });
         }
-    } catch (e) {}
+    } catch (e) {
+        console.error('Error loading contracts in vault:', e.message);
+    }
 
     // -------------------------------------------------------------
     // 5. KHOANG: HÓA ĐƠN GTGT & DÒNG TIỀN (INVOICES & CASHBOOKS)

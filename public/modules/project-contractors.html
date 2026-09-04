@@ -1,260 +1,383 @@
-<div class="h-full flex flex-col space-y-4 overflow-hidden">
+<div class="w-full min-h-full flex flex-col space-y-4 pb-28 md:pb-6">
   
   <!-- Header -->
-  <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-5 text-white shadow-lg shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+  <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-4 sm:p-5 text-white shadow-lg shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
     <div>
       <div class="flex items-center gap-2">
-        <span class="px-2.5 py-0.5 bg-blue-500/20 text-blue-300 font-bold rounded text-xs border border-blue-400/30">QUẢN TRỊ CÔNG TY</span>
-        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs font-bold rounded">Chỉ định thầu trực tiếp</span>
+        <span class="px-2.5 py-0.5 bg-blue-500/20 text-blue-300 font-black rounded-lg text-[10px] border border-blue-400/30 uppercase tracking-wider">QUẢN TRỊ CÔNG TY</span>
+        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold rounded-lg">EPC Project Management</span>
       </div>
-      <h1 class="text-xl font-black text-white mt-1 flex items-center gap-2">
-        <i class="fas fa-project-diagram text-amber-400"></i> Quản Lý Dự Án & Chỉ Định Nhà Thầu
+      <h1 class="text-base sm:text-xl font-black text-white mt-1 flex items-center gap-2">
+        <i class="fas fa-project-diagram text-amber-400"></i> Quản Lý Dự Án & Chỉ Định / Duyệt Thầu
       </h1>
-      <p class="text-xs text-slate-300 mt-0.5">Tạo dự án, chỉ định trực tiếp đội thi công, đơn vị giám sát, nhà cung cấp và duyệt hồ sơ nghiệm thu.</p>
+      <p class="text-xs text-slate-300 mt-0.5">Tạo dự án (từ BOQ chốt), đăng mở thầu, so sánh báo giá, chỉ định đội thầu hợp lý & theo dõi nghiệm thu.</p>
     </div>
 
     <!-- Actions -->
-    <div class="flex items-center gap-2.5">
-      <button onclick="window.modProjContractors.openCreateModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
-        <i class="fas fa-plus-circle"></i> Tạo Dự Án & Chỉ Định Thầu
+    <div class="flex flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
+      <button type="button" onclick="window.modProjContractors.openCreateModal()" class="flex-1 md:flex-initial px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+        <i class="fas fa-plus-circle"></i> Tạo & Đăng Dự Án
       </button>
-      <button onclick="loadModule('contractor-teams', 'Hồ Sơ Danh Bạ Nhà Thầu')" class="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs backdrop-blur-sm transition flex items-center gap-1.5 border border-white/10 whitespace-nowrap">
-        <i class="fas fa-user-shield"></i> Danh Bạ Nhà Thầu
+      <button type="button" onclick="loadModule('marketplace', 'Sàn Đấu Thầu (Marketplace)')" class="flex-1 md:flex-initial px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold rounded-xl text-xs backdrop-blur-sm transition flex items-center justify-center gap-1.5 border border-amber-400/30 cursor-pointer whitespace-nowrap">
+        <i class="fas fa-gavel"></i> Sàn Đấu Thầu
+      </button>
+      <button type="button" onclick="loadModule('contractor-teams', 'Hồ Sơ Danh Bạ Nhà Thầu')" class="flex-1 md:flex-initial px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs backdrop-blur-sm transition flex items-center justify-center gap-1.5 border border-white/10 cursor-pointer whitespace-nowrap">
+        <i class="fas fa-user-shield"></i> Danh Bạ
       </button>
     </div>
   </div>
 
   <!-- KPI Stats -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
-      <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shrink-0">
+  <div class="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3 shrink-0">
+    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shrink-0">
         <i class="fas fa-tasks"></i>
       </div>
       <div>
-        <p class="text-[11px] font-bold text-slate-400 uppercase">Tổng Số Dự Án</p>
-        <h3 class="text-lg font-black text-slate-800" id="pc-kpi-total">0</h3>
+        <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng Dự Án</p>
+        <h3 class="text-base sm:text-lg font-black text-slate-800" id="pc-kpi-total">0</h3>
       </div>
     </div>
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
-      <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black shrink-0">
+    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black shrink-0">
+        <i class="fas fa-bullhorn"></i>
+      </div>
+      <div>
+        <p class="text-[10px] font-bold text-slate-400 uppercase">Đang Mở Thầu</p>
+        <h3 class="text-base sm:text-lg font-black text-amber-600" id="pc-kpi-bidding">0</h3>
+      </div>
+    </div>
+    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-black shrink-0">
         <i class="fas fa-hard-hat"></i>
       </div>
       <div>
-        <p class="text-[11px] font-bold text-slate-400 uppercase">Đang Thi Công</p>
-        <h3 class="text-lg font-black text-amber-600" id="pc-kpi-progress">0</h3>
+        <p class="text-[10px] font-bold text-slate-400 uppercase">Đang Triển Khai</p>
+        <h3 class="text-base sm:text-lg font-black text-indigo-600" id="pc-kpi-progress">0</h3>
       </div>
     </div>
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
-      <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-black shrink-0">
+    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-black shrink-0">
         <i class="fas fa-clipboard-check"></i>
       </div>
       <div>
-        <p class="text-[11px] font-bold text-slate-400 uppercase">Chờ Nghiệm Thu</p>
-        <h3 class="text-lg font-black text-purple-600" id="pc-kpi-inspect">0</h3>
+        <p class="text-[10px] font-bold text-slate-400 uppercase">Chờ Nghiệm Thu</p>
+        <h3 class="text-base sm:text-lg font-black text-purple-600" id="pc-kpi-inspect">0</h3>
       </div>
     </div>
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
-      <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-black shrink-0">
+    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs flex items-center gap-3 col-span-2 lg:col-span-1">
+      <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-black shrink-0">
         <i class="fas fa-check-double"></i>
       </div>
       <div>
-        <p class="text-[11px] font-bold text-slate-400 uppercase">Đã Quyết Toán</p>
-        <h3 class="text-lg font-black text-emerald-600" id="pc-kpi-done">0</h3>
+        <p class="text-[10px] font-bold text-slate-400 uppercase">Đã Hoàn Tất</p>
+        <h3 class="text-base sm:text-lg font-black text-emerald-600" id="pc-kpi-done">0</h3>
       </div>
     </div>
   </div>
 
   <!-- Search & Filters -->
-  <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-3 shrink-0">
-    <div class="flex items-center gap-2 w-full md:w-auto">
-      <div class="relative flex-1 md:w-72">
-        <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-        <input type="text" id="pc-search-input" oninput="window.modProjContractors.filter()" placeholder="Tìm tên DA, mã DA, khách hàng..." class="w-full pl-9 pr-3.5 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-blue-500 font-medium">
+  <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row justify-between items-center gap-3 shrink-0">
+    <div class="flex flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
+      <div class="relative flex-1 min-w-[200px] md:w-72">
+        <i class="fas fa-search absolute left-3.5 top-2.5 text-slate-400 text-xs"></i>
+        <input type="text" id="pc-search-input" oninput="window.modProjContractors.filter()" placeholder="Tìm tên DA, mã DA, khách hàng, tỉnh thành..." class="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-blue-500 font-medium">
       </div>
-      <select id="pc-filter-status" onchange="window.modProjContractors.filter()" class="text-xs border border-slate-200 rounded-xl px-3 py-2 outline-none font-bold bg-slate-50 text-slate-700">
+      <select id="pc-filter-status" onchange="window.modProjContractors.filter()" class="text-xs border border-slate-200 rounded-xl px-2.5 py-1.5 sm:py-2 outline-none font-bold bg-slate-50 text-slate-700">
         <option value="">Tất cả trạng thái</option>
-        <option value="ASSIGNED">Đã chỉ định thầu</option>
-        <option value="IN_PROGRESS">Đang thi công</option>
-        <option value="UNDER_INSPECTION">Chờ nghiệm thu</option>
-        <option value="COMPLETED">Đã hoàn thành</option>
+        <option value="OPEN_BIDDING">📢 Đang mở thầu</option>
+        <option value="ASSIGNED">🔵 Đã chỉ định thầu</option>
+        <option value="IN_PROGRESS">🟠 Đang thi công</option>
+        <option value="UNDER_INSPECTION">🟣 Chờ nghiệm thu</option>
+        <option value="COMPLETED">🟢 Đã hoàn thành</option>
       </select>
-      <select id="pc-filter-contractor" onchange="window.modProjContractors.filter()" class="text-xs border border-slate-200 rounded-xl px-3 py-2 outline-none font-bold bg-slate-50 text-slate-700">
+      <select id="pc-filter-contractor" onchange="window.modProjContractors.filter()" class="text-xs border border-slate-200 rounded-xl px-2.5 py-1.5 sm:py-2 outline-none font-bold bg-slate-50 text-slate-700">
         <option value="">Tất cả nhà thầu</option>
-        <!-- Dynamic contractor options -->
       </select>
     </div>
   </div>
 
-  <!-- Project Table Container -->
-  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex-1 overflow-hidden flex flex-col">
-    <div class="overflow-y-auto flex-1">
-      <table class="w-full text-left text-xs">
-        <thead class="bg-slate-100 font-black text-slate-600 uppercase border-b sticky top-0 z-10">
-          <tr>
-            <th class="p-3.5">Mã & Dự Án</th>
-            <th class="p-3.5">Khách Hàng / Địa Chỉ</th>
-            <th class="p-3.5">Cấu Hình Solar</th>
-            <th class="p-3.5">Nhà Thầu Được Chỉ Định</th>
-            <th class="p-3.5 text-center">Tiến Độ</th>
-            <th class="p-3.5 text-center">Nghiệm Thu & Tư Liệu</th>
-            <th class="p-3.5 text-center">Trạng Thái</th>
-            <th class="p-3.5 text-center">Thao Tác</th>
-          </tr>
-        </thead>
-        <tbody id="pc-table-body" class="divide-y divide-slate-100">
-          <!-- Render rows -->
-        </tbody>
-      </table>
-    </div>
+  <!-- 1. Desktop Project Table -->
+  <div class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-x-auto">
+    <table class="w-full text-left text-xs whitespace-nowrap">
+      <thead class="bg-slate-100 font-black text-slate-600 uppercase border-b sticky top-0 z-10">
+        <tr>
+          <th class="p-3 pl-4">Mã & Dự Án</th>
+          <th class="p-3">Khách Hàng & Vị Trí</th>
+          <th class="p-3">Cấu Hình Kỹ Thuật</th>
+          <th class="p-3">Khảo Sát & Ảnh</th>
+          <th class="p-3">Đơn Vị Phụ Trách / Báo Giá</th>
+          <th class="p-3 text-center">Tiến Độ</th>
+          <th class="p-3 text-center">Trạng Thái</th>
+          <th class="p-3 pr-4 text-center">Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody id="pc-table-body" class="divide-y divide-slate-100">
+        <!-- Render rows -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 2. Mobile Smart Cards -->
+  <div id="pc-mobile-cards" class="md:hidden space-y-2.5 pb-8">
+    <!-- Rendered by JS -->
   </div>
 
   <!-- Project Detail & Acceptance View (Drawer/Card) -->
-  <div id="pc-detail-view" class="hidden bg-white rounded-2xl border border-slate-200 shadow-xl p-6 space-y-6 shrink-0 max-h-[75vh] overflow-y-auto">
+  <div id="pc-detail-view" class="hidden bg-white rounded-2xl border border-slate-200 shadow-xl p-4 sm:p-6 space-y-4 sm:space-y-6 shrink-0 max-h-[85vh] overflow-y-auto">
     <!-- Dynamic Detail Content -->
   </div>
 
 </div>
 
-<!-- ==================== MODAL: TẠO DỰ ÁN & CHỈ ĐỊNH NHÀ THẦU ==================== -->
-<div id="modal-pc-create" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5">
-    <div class="flex justify-between items-center border-b pb-3">
-      <div>
-        <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
-          <i class="fas fa-project-diagram text-blue-600"></i> Khởi Tạo Dự Án & Chỉ Định Nhà Thầu
-        </h3>
-        <p class="text-xs text-slate-500">Nhập thông tin công trình và phân công trực tiếp đơn vị thi công phụ trách.</p>
+<!-- ==================== MODAL: TẠO & ĐĂNG DỰ ÁN EPC ==================== -->
+<div id="modal-pc-create" onclick="if(event.target === this) window.modProjContractors.closeCreateModal()" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+  <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center border-b px-5 py-4 bg-slate-900 text-white shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white text-base shadow">
+          <i class="fas fa-project-diagram"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-black text-white flex items-center gap-2">
+            Khởi Tạo & Đăng Dự Án EPC
+          </h3>
+          <p class="text-[11px] text-slate-300">Đăng mở thầu công khai lên Sàn hoặc chỉ định trực tiếp cho Nhà Thầu thi công.</p>
+        </div>
       </div>
-      <button onclick="window.modProjContractors.closeCreateModal()" class="w-8 h-8 rounded-full bg-slate-100 font-bold flex items-center justify-center text-sm">&times;</button>
+      <button type="button" onclick="window.modProjContractors.closeCreateModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 text-white font-bold flex items-center justify-center text-sm transition cursor-pointer" title="Đóng">&times;</button>
     </div>
 
-    <form onsubmit="window.modProjContractors.submitCreate(event)" class="space-y-4 text-xs">
+    <!-- Modal Body (Scrollable) -->
+    <div class="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1 text-xs">
       
-      <!-- 1. Thông tin công trình -->
-      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-        <h4 class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-          <i class="fas fa-info-circle text-blue-600"></i> 1. Thông Tin Công Trình & Khách Hàng
-        </h4>
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Tên Dự Án / Công Trình *</label>
-          <input type="text" id="np-title" required placeholder="VD: Hệ Solar Hybrid 12 kWp - Biệt Thự Thảo Điền" class="w-full px-3 py-2 border rounded-xl font-bold outline-none focus:border-blue-500">
+      <!-- Box Nạp Nhanh Từ Báo Giá BOQ -->
+      <div class="bg-gradient-to-br from-amber-50 to-orange-50/70 p-4 rounded-2xl border border-amber-200 shadow-2xs space-y-2.5">
+        <div class="flex items-center justify-between">
+          <label class="font-black text-amber-950 uppercase tracking-wider text-xs flex items-center gap-2">
+            <i class="fas fa-bolt text-amber-500 text-base"></i> Nạp Dữ Liệu Nhanh Từ Báo Giá / BOQ Đã Chốt
+          </label>
+          <span class="px-2 py-0.5 bg-amber-200 text-amber-900 rounded-lg text-[10px] font-bold">Auto Fill</span>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Tên Khách Hàng *</label>
-            <input type="text" id="np-customer" required placeholder="Trần Quốc Tuấn" class="w-full px-3 py-2 border rounded-xl outline-none">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Số Điện Thoại Liên Hệ *</label>
-            <input type="text" id="np-phone" required placeholder="0903.888.999" class="w-full px-3 py-2 border rounded-xl font-mono outline-none">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Loại Khách Hàng</label>
-            <select id="np-cust-type" class="w-full px-3 py-2 border rounded-xl font-bold bg-white outline-none">
-              <option value="Nhà dân">Nhà dân (Residential)</option>
-              <option value="Nhà xưởng">Nhà xưởng (C&I)</option>
-              <option value="Farm">Trang trại (Farm)</option>
-              <option value="Doanh nghiệp">Doanh nghiệp</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Tỉnh / Thành Phố</label>
-            <input type="text" id="np-province" value="TP. Hồ Chí Minh" class="w-full px-3 py-2 border rounded-xl outline-none">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Quận / Huyện</label>
-            <input type="text" id="np-district" placeholder="TP. Thủ Đức" class="w-full px-3 py-2 border rounded-xl outline-none">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Địa Chỉ Chi Tiết</label>
-            <input type="text" id="np-address" placeholder="Số 45 Đường số 12, P. Thảo Điền..." class="w-full px-3 py-2 border rounded-xl outline-none">
-          </div>
-        </div>
+        <select id="np-boq-select" onchange="window.modProjContractors.importFromBOQ(this.value)" class="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl font-bold text-amber-900 text-xs outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer shadow-2xs">
+          <option value="">-- Chọn Báo Giá BOQ Đã Chốt Từ Hệ Thống --</option>
+        </select>
+        <p class="text-[11px] text-amber-800">Hệ thống sẽ tự động điền: Tên dự án, khách hàng, SĐT, địa chỉ, công suất kWp, inverter, pin lưu trữ và bóc tách vật tư BOQ.</p>
       </div>
 
-      <!-- 2. Cấu hình Solar -->
-      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-        <h4 class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-          <i class="fas fa-solar-panel text-amber-500"></i> 2. Cấu Hình Kỹ Thuật Hệ Solar
-        </h4>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Loại Hệ Thống</label>
-            <select id="np-sys-type" class="w-full px-3 py-2 border rounded-xl font-bold bg-white outline-none">
-              <option value="Hybrid">Hybrid Lưu Trữ</option>
-              <option value="Hòa Lưới">Hòa Lưới (On-Grid)</option>
-              <option value="Độc Lập">Độc Lập (Off-Grid)</option>
-              <option value="Bơm Năng Lượng">Bơm Năng Lượng</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Công Suất Pin (kWp) *</label>
-            <input type="number" step="any" id="np-kwp" required placeholder="12.0" class="w-full px-3 py-2 border rounded-xl font-black text-amber-600 outline-none">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Pin Lưu Trữ Lithium (kWh)</label>
-            <input type="number" step="any" id="np-kwh" placeholder="16.0" class="w-full px-3 py-2 border rounded-xl font-bold outline-none">
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Inverter Biến Tần</label>
-            <input type="text" id="np-inverter" placeholder="Deye 12kW Hybrid 3 Pha" class="w-full px-3 py-2 border rounded-xl outline-none">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Kiểu Mái Thi Công</label>
-            <select id="np-roof" class="w-full px-3 py-2 border rounded-xl font-bold bg-white outline-none">
-              <option value="Mái ngói Thái/Nhật">Mái ngói Thái / Nhật</option>
-              <option value="Mái tôn">Mái tôn phẳng</option>
-              <option value="Mái tôn Seamlock">Mái tôn Seamlock xưởng</option>
-              <option value="Khung giàn cao sân thượng">Khung giàn cao sân thượng</option>
-              <option value="Mái bằng">Mái bằng bê tông</option>
-            </select>
+      <form id="form-create-proj" onsubmit="window.modProjContractors.submitCreate(event)" class="space-y-5">
+        
+        <!-- 1. HÌNH THỨC TRIỂN KHAI -->
+        <div class="bg-slate-900 text-white p-4 sm:p-5 rounded-2xl space-y-3">
+          <label class="block font-black text-amber-300 uppercase tracking-wider text-xs flex items-center gap-2">
+            <i class="fas fa-bullhorn"></i> 1. Hình Thức Triển Khai & Đấu Thầu *
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="flex items-start gap-3 p-3.5 rounded-xl bg-white/10 border border-white/20 cursor-pointer hover:bg-white/20 transition">
+              <input type="radio" name="project_mode" value="OPEN_BIDDING" checked onchange="window.modProjContractors.onToggleProjectMode(this.value)" class="mt-0.5 accent-amber-400">
+              <div>
+                <strong class="text-white block text-xs font-black">📢 Đăng Mở Thầu Lên Sàn (Marketplace)</strong>
+                <span class="text-[11px] text-slate-300 mt-0.5 block leading-snug">Ẩn SĐT/địa chỉ chi tiết. Cho các nhà thầu thi công & nhà cung cấp vào xem và nộp báo giá cạnh tranh.</span>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 p-3.5 rounded-xl bg-white/10 border border-white/20 cursor-pointer hover:bg-white/20 transition">
+              <input type="radio" name="project_mode" value="ASSIGNED" onchange="window.modProjContractors.onToggleProjectMode(this.value)" class="mt-0.5 accent-blue-400">
+              <div>
+                <strong class="text-white block text-xs font-black">🤝 Chỉ Định Trực Tiếp Cho Nhà Thầu</strong>
+                <span class="text-[11px] text-slate-300 mt-0.5 block leading-snug">Giao ngay cho đội thầu quen thuộc. Mở khóa toàn bộ SĐT & vị trí thi công cho đội được chọn.</span>
+              </div>
+            </label>
           </div>
         </div>
-      </div>
 
-      <!-- 3. CHỈ ĐỊNH NHÀ THẦU & CHI PHÍ -->
-      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border-2 border-blue-200 space-y-3">
-        <h4 class="font-black text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
-          <i class="fas fa-handshake text-blue-600"></i> 3. Chỉ Định Trực Tiếp Nhà Thầu & Đơn Giá Nhân Công
-        </h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- 2. THÔNG TIN CÔNG TRÌNH & KHÁCH HÀNG -->
+        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3.5">
+          <h4 class="font-black text-slate-800 uppercase tracking-wider text-xs flex items-center gap-2">
+            <i class="fas fa-user-circle text-blue-600"></i> 2. Thông Tin Công Trình & Khách Hàng
+          </h4>
           <div>
-            <label class="block font-bold text-blue-900 mb-1">Chỉ Định Đội Thi Công Phụ Trách *</label>
-            <select id="np-contractor" required class="w-full px-3 py-2 border rounded-xl font-bold bg-white outline-none text-slate-800">
-              <!-- Contractor options -->
-            </select>
+            <label class="block font-bold text-slate-700 mb-1">Tên Dự Án / Công Trình *</label>
+            <input type="text" id="np-title" required placeholder="VD: Hệ Solar Hybrid 12 kWp - Biệt Thự Thảo Điền" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-800 outline-none focus:border-blue-500 bg-white">
           </div>
-          <div>
-            <label class="block font-bold text-blue-900 mb-1">Chi Phí Nhân Công Chỉ Định (VNĐ) *</label>
-            <input type="number" id="np-labor-cost" required placeholder="9500000" class="w-full px-3 py-2 border rounded-xl font-black text-emerald-700 outline-none">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Tên Khách Hàng *</label>
+              <input type="text" id="np-customer" required placeholder="Trần Quốc Tuấn" class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:border-blue-500 bg-white">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Số Điện Thoại Liên Hệ *</label>
+              <input type="text" id="np-phone" required placeholder="0903.888.999" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono outline-none focus:border-blue-500 bg-white">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Loại Khách Hàng</label>
+              <select id="np-cust-type" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold bg-white outline-none focus:border-blue-500">
+                <option value="Nhà dân">Nhà dân (Residential)</option>
+                <option value="Nhà xưởng">Nhà xưởng (C&I)</option>
+                <option value="Farm">Trang trại (Farm)</option>
+                <option value="Doanh nghiệp">Doanh nghiệp</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Tỉnh / Thành Phố *</label>
+              <input type="text" id="np-province" value="TP. Hồ Chí Minh" required class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:border-blue-500 bg-white">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Quận / Huyện *</label>
+              <input type="text" id="np-district" placeholder="TP. Thủ Đức" required class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:border-blue-500 bg-white">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Địa Chỉ Chi Tiết (Số nhà, tên đường)</label>
+              <input type="text" id="np-address" placeholder="Số 45 Đường số 12, P. Thảo Điền..." class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:border-blue-500 bg-white">
+            </div>
           </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-blue-900 mb-1">Đơn Vị Giám Sát Kỹ Thuật</label>
-            <select id="np-supervisor" class="w-full px-3 py-2 border rounded-xl font-bold bg-white outline-none text-slate-800">
-              <!-- Supervisor options -->
-            </select>
+
+        <!-- 3. CẤU HÌNH KỸ THUẬT SOLAR & KHẢO SÁT MÁI -->
+        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3.5">
+          <h4 class="font-black text-slate-800 uppercase tracking-wider text-xs flex items-center gap-2">
+            <i class="fas fa-solar-panel text-amber-500"></i> 3. Cấu Hình Kỹ Thuật Solar & Khảo Sát Mái
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Loại Hệ Thống</label>
+              <select id="np-sys-type" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold bg-white outline-none focus:border-blue-500">
+                <option value="Hybrid">Hybrid Lưu Trữ</option>
+                <option value="Hòa Lưới">Hòa Lưới (On-Grid)</option>
+                <option value="Độc Lập">Độc Lập (Off-Grid)</option>
+                <option value="Bơm Năng Lượng">Bơm Năng Lượng</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Công Suất Pin (kWp) *</label>
+              <input type="number" step="any" id="np-kwp" required placeholder="12.0" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-black text-amber-600 outline-none focus:border-blue-500 bg-white">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Pin Lưu Trữ Lithium (kWh)</label>
+              <input type="number" step="any" id="np-kwh" placeholder="16.0" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold outline-none focus:border-blue-500 bg-white">
+            </div>
           </div>
-          <div>
-            <label class="block font-bold text-blue-900 mb-1">Nhà Cung Cấp Thiết Bị & Pin</label>
-            <select id="np-supplier" class="w-full px-3 py-2 border rounded-xl font-bold bg-white outline-none text-slate-800">
-              <!-- Supplier options -->
-            </select>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Inverter Biến Tần</label>
+              <input type="text" id="np-inverter" placeholder="Deye 12kW Hybrid 3 Pha" class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:border-blue-500 bg-white">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Kiểu Mái Thi Công</label>
+              <select id="np-roof" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold bg-white outline-none focus:border-blue-500">
+                <option value="Mái tôn phẳng">Mái tôn phẳng</option>
+                <option value="Mái tôn Seamlock">Mái tôn Seamlock xưởng</option>
+                <option value="Mái ngói Thái/Nhật">Mái ngói Thái / Nhật</option>
+                <option value="Khung giàn cao sân thượng">Khung giàn cao sân thượng</option>
+                <option value="Mái bằng bê tông">Mái bằng bê tông</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Hướng Dốc & Số Tầng</label>
+              <input type="text" id="np-roof-dir" placeholder="Hướng Nam, Nhà 3 tầng (~12m)" class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:border-blue-500 bg-white">
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="flex justify-end gap-2.5 pt-3 border-t">
-        <button type="button" onclick="window.modProjContractors.closeCreateModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Hủy</button>
-        <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md">Tạo Dự Án & Phân Công</button>
-      </div>
+        <!-- 4. 📸 HÌNH ẢNH KHẢO SÁT HIỆN TRƯỜNG & MÁI NHÀ (SITE PHOTOS) -->
+        <div class="bg-indigo-50/50 p-4 sm:p-5 rounded-2xl border-2 border-indigo-200 space-y-3.5">
+          <div class="flex justify-between items-center">
+            <div>
+              <h4 class="font-black text-indigo-950 uppercase tracking-wider text-xs flex items-center gap-2">
+                <i class="fas fa-camera text-indigo-600 text-base"></i> 4. Hình Ảnh Khảo Sát Hiện Trường & Mái Nhà (Cho Đội Thợ Xem)
+              </h4>
+              <p class="text-[11px] text-indigo-700 mt-0.5">Tải lên ảnh mái nhà, vị trí đặt Inverter, tủ điện, lối đi dây và mặt tiền để nhà thầu nắm rõ hiện trạng.</p>
+            </div>
+            <label class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fas fa-upload"></i> Chọn Ảnh Tải Lên
+              <input type="file" id="np-file-input" multiple accept="image/*" onchange="window.modProjContractors.handlePhotoUpload(event)" class="hidden">
+            </label>
+          </div>
 
-    </form>
+          <!-- Preview Grid -->
+          <div id="np-photos-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="col-span-2 sm:col-span-4 border-2 border-dashed border-indigo-300 rounded-2xl p-6 text-center text-indigo-600/70 hover:bg-indigo-50 transition cursor-pointer" onclick="document.getElementById('np-file-input').click()">
+              <i class="fas fa-cloud-upload-alt text-2xl mb-1 text-indigo-500"></i>
+              <p class="font-bold text-xs">Chưa có ảnh khảo sát nào. Bấm vào đây để tải lên ảnh hiện trường.</p>
+              <span class="text-[10px] text-indigo-400">Hỗ trợ định dạng JPG, PNG, WEBP (chụp trực tiếp từ điện thoại hoặc tải file)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. 📝 GHI CHÚ KHẢO SÁT HIỆN TRƯỜNG & YÊU CẦU THI CÔNG -->
+        <div class="bg-emerald-50/50 p-4 sm:p-5 rounded-2xl border-2 border-emerald-200 space-y-3.5">
+          <h4 class="font-black text-emerald-950 uppercase tracking-wider text-xs flex items-center gap-2">
+            <i class="fas fa-clipboard-list text-emerald-600 text-base"></i> 5. Ghi Chú Khảo Sát Hiện Trường & Yêu Cầu Cho Đội Thợ
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-emerald-900 mb-1">Ghi Chú Khảo Sát Hiện Trường</label>
+              <textarea id="np-site-notes" rows="3" placeholder="VD: Mái ngói dốc 20 độ có giếng trời lên mái. Vị trí Inverter & Tủ điện đặt ở ban công tầng 3 có mái che. Dây DC kéo xuống 18m..." class="w-full px-3 py-2 border border-emerald-300 rounded-xl outline-none focus:border-emerald-500 bg-white text-xs"></textarea>
+            </div>
+            <div>
+              <label class="block font-bold text-emerald-900 mb-1">Yêu Cầu Kỹ Thuật & An Toàn</label>
+              <textarea id="np-tech-req" rows="3" placeholder="VD: Bắt buộc trang bị dây an toàn toàn thân khi lên mái, luồn ống ruột gà PVC chống cháy, đo tiếp địa < 4 Ohm và cài đặt App Inverter..." class="w-full px-3 py-2 border border-emerald-300 rounded-xl outline-none focus:border-emerald-500 bg-white text-xs"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. DỰ TOÁN NHÂN CÔNG & CHỈ ĐỊNH NHÀ THẦU -->
+        <div class="bg-blue-50/60 p-4 sm:p-5 rounded-2xl border-2 border-blue-200 space-y-3.5">
+          <h4 class="font-black text-blue-950 uppercase tracking-wider text-xs flex items-center gap-2">
+            <i class="fas fa-handshake text-blue-600"></i> 6. Đơn Giá Nhân Công Gợi Ý / Chỉ Định Nhà Thầu
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-blue-950 mb-1">Giá Nhân Công Thi Công Dự Kiến (VNĐ) *</label>
+              <input type="number" id="np-labor-cost" required placeholder="9500000" class="w-full px-3 py-2 border border-blue-300 rounded-xl font-black text-emerald-700 text-sm outline-none focus:border-blue-500 bg-white">
+              <p class="text-[10px] text-blue-700 mt-1">Đơn giá này sẽ làm căn cứ gợi ý trên sàn đấu thầu.</p>
+            </div>
+            <div id="np-contractor-wrap" class="hidden">
+              <label class="block font-bold text-blue-950 mb-1">Chỉ Định Đội Thi Công Trực Tiếp</label>
+              <select id="np-contractor" class="w-full px-3 py-2 border border-blue-300 rounded-xl font-bold bg-white outline-none text-slate-800 focus:border-blue-500">
+                <!-- Contractor options -->
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-blue-950 mb-1">Đơn Vị Giám Sát Kỹ Thuật</label>
+              <select id="np-supervisor" class="w-full px-3 py-2 border border-blue-300 rounded-xl font-bold bg-white outline-none text-slate-800 focus:border-blue-500">
+                <!-- Supervisor options -->
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-blue-950 mb-1">Nhà Cung Cấp Thiết Bị & Pin</label>
+              <select id="np-supplier" class="w-full px-3 py-2 border border-blue-300 rounded-xl font-bold bg-white outline-none text-slate-800 focus:border-blue-500">
+                <!-- Supplier options -->
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. DANH MỤC BOQ / BOM ITEMS -->
+        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-2.5">
+          <label class="block font-bold text-slate-800 uppercase tracking-wider text-xs flex items-center gap-2">
+            <i class="fas fa-boxes text-blue-600"></i> 7. Bảng Danh Mục Vật Tư / BOQ Thiết Bị (BOM)
+          </label>
+          <textarea id="np-bom-text" rows="3" placeholder="Tấm pin Canadian 550W (SL: 22 tấm), Inverter Deye 12kW (SL: 1 cái), Battery 16kWh (SL: 1 bộ), Tủ điện Solar AC/DC (SL: 1 tủ)..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs outline-none bg-white font-mono focus:border-blue-500"></textarea>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex justify-end gap-2.5 pt-4 border-t sticky bottom-0 bg-white py-2">
+          <button type="button" onclick="window.modProjContractors.closeCreateModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold rounded-xl transition cursor-pointer">
+            <i class="fas fa-times mr-1"></i> Hủy Bỏ
+          </button>
+          <button type="submit" class="px-7 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer">
+            <i class="fas fa-paper-plane"></i> Đăng / Khởi Tạo Dự Án Ngay
+          </button>
+        </div>
+
+      </form>
+    </div>
   </div>
 </div>
 
@@ -262,16 +385,19 @@
 window.modProjContractors = {
   projects: [],
   teams: [],
+  boqList: [],
   currentProject: null,
+  surveyPhotos: [],
 
   init: async () => {
     await window.modProjContractors.loadTeams();
+    await window.modProjContractors.loadBOQs();
     await window.modProjContractors.loadProjects();
   },
 
   loadProjects: async () => {
     try {
-      const res = await fetch("/api/bidding/projects?t=" + Date.now());
+      const res = await fetch("/api/bidding/projects?role=ADMIN&t=" + Date.now());
       const json = await res.json();
       if (json.success) {
         window.modProjContractors.projects = json.data || [];
@@ -292,9 +418,60 @@ window.modProjContractors = {
     } catch(e) { console.error(e); }
   },
 
+  loadBOQs: async () => {
+    try {
+      const res = await fetch("/api/quotations?t=" + Date.now());
+      const json = await res.json();
+      if (json.success) {
+        window.modProjContractors.boqList = json.data || [];
+        const sel = document.getElementById("np-boq-select");
+        if (sel) {
+          sel.innerHTML = "<option value=''>-- Chọn Báo Giá BOQ Đã Chốt Từ Hệ Thống --</option>" +
+            window.modProjContractors.boqList.map(q => "<option value='" + q.id + "'>[" + (q.quotation_code || q.code || ("BOQ-" + q.id)) + "] " + (q.customer_name || "Khách") + " - " + (q.project_name || "Dự án") + " (" + (q.capacity_kwp || 0) + " kWp)</option>").join("");
+        }
+      }
+    } catch(e) {}
+  },
+
+  importFromBOQ: (id) => {
+    if (!id) return;
+    const boq = window.modProjContractors.boqList.find(x => x.id == id);
+    if (!boq) return;
+
+    document.getElementById("np-title").value = boq.project_name || ("Hệ Solar " + (boq.capacity_kwp || "") + " kWp - " + (boq.customer_name || ""));
+    document.getElementById("np-customer").value = boq.customer_name || "";
+    document.getElementById("np-phone").value = boq.customer_phone || "";
+    document.getElementById("np-address").value = boq.address || "";
+    if (boq.province_city) document.getElementById("np-province").value = boq.province_city;
+    if (boq.district) document.getElementById("np-district").value = boq.district;
+    if (boq.capacity_kwp) document.getElementById("np-kwp").value = boq.capacity_kwp;
+    if (boq.battery_kwh) document.getElementById("np-kwh").value = boq.battery_kwh;
+    if (boq.inverter_brand) document.getElementById("np-inverter").value = boq.inverter_brand;
+    if (boq.roof_type) document.getElementById("np-roof").value = boq.roof_type;
+    if (boq.system_type) document.getElementById("np-sys-type").value = boq.system_type;
+
+    // Build BOM text
+    if (boq.items && Array.isArray(boq.items)) {
+      const text = boq.items.map(it => (it.product_name || it.name || "Thiết bị") + " (SL: " + (it.quantity || it.qty || 1) + " " + (it.unit || "bộ") + ")").join(", ");
+      document.getElementById("np-bom-text").value = text;
+    }
+  },
+
+  onToggleProjectMode: (mode) => {
+    const wrap = document.getElementById("np-contractor-wrap");
+    if (wrap) {
+      if (mode === "ASSIGNED") {
+        wrap.classList.remove("hidden");
+      } else {
+        wrap.classList.add("hidden");
+      }
+    }
+  },
+
   renderKPIs: () => {
     const list = window.modProjContractors.projects;
     document.getElementById("pc-kpi-total").innerText = list.length;
+    document.getElementById("pc-kpi-bidding").innerText = list.filter(x => x.status === "OPEN_BIDDING" || x.status === "NEW").length;
     document.getElementById("pc-kpi-progress").innerText = list.filter(x => x.status === "IN_PROGRESS" || x.status === "ASSIGNED").length;
     document.getElementById("pc-kpi-inspect").innerText = list.filter(x => x.status === "UNDER_INSPECTION" || (x.progress >= 90 && x.status !== "COMPLETED")).length;
     document.getElementById("pc-kpi-done").innerText = list.filter(x => x.status === "COMPLETED").length;
@@ -302,19 +479,72 @@ window.modProjContractors = {
 
   populateTeamSelects: () => {
     const teams = window.modProjContractors.teams;
-    const contractorOpts = teams.filter(t => t.type === "CONSTRUCTION" || !t.type).map(t => `<option value="${t.id}">${t.name} (Đội trưởng: ${t.leader} - ${t.phone})</option>`).join("");
-    const supervisorOpts = teams.filter(t => t.type === "SUPERVISOR").map(t => `<option value="${t.id}">${t.name}</option>`).join("");
-    const supplierOpts = teams.filter(t => t.type === "SUPPLIER").map(t => `<option value="${t.id}">${t.name}</option>`).join("");
+    const contractorOpts = teams.filter(t => t.type === "CONSTRUCTION" || !t.type).map(t => "<option value='" + t.id + "'>" + t.name + " (Đội trưởng: " + t.leader + " - " + t.phone + ")</option>").join("");
+    const supervisorOpts = teams.filter(t => t.type === "SUPERVISOR").map(t => "<option value='" + t.id + "'>" + t.name + "</option>").join("");
+    const supplierOpts = teams.filter(t => t.type === "SUPPLIER").map(t => "<option value='" + t.id + "'>" + t.name + "</option>").join("");
 
     const selCont = document.getElementById("np-contractor");
     const selSup = document.getElementById("np-supervisor");
     const selSupp = document.getElementById("np-supplier");
     const filterCont = document.getElementById("pc-filter-contractor");
 
-    if (selCont) selCont.innerHTML = contractorOpts;
+    if (selCont) selCont.innerHTML = "<option value=''>-- Chọn Đội Thi Công --</option>" + contractorOpts;
     if (selSup) selSup.innerHTML = supervisorOpts || contractorOpts;
     if (selSupp) selSupp.innerHTML = supplierOpts || contractorOpts;
-    if (filterCont) filterCont.innerHTML = `<option value="">Tất cả nhà thầu</option>` + contractorOpts;
+    if (filterCont) filterCont.innerHTML = "<option value=''>Tất cả nhà thầu</option>" + contractorOpts;
+  },
+
+  triggerPhotoInput: () => {
+    const inp = document.getElementById("np-file-input");
+    if (inp) inp.click();
+  },
+  handlePhotoUpload: async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    for (const f of files) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        window.modProjContractors.surveyPhotos.push({
+          url: ev.target.result,
+          name: f.name,
+          caption: "Ảnh hiện trường / Mái nhà"
+        });
+        window.modProjContractors.renderPhotoPreviews();
+      };
+      reader.readAsDataURL(f);
+    }
+  },
+
+  removePhoto: (idx) => {
+    window.modProjContractors.surveyPhotos.splice(idx, 1);
+    window.modProjContractors.renderPhotoPreviews();
+  },
+
+  renderPhotoPreviews: () => {
+    const container = document.getElementById("np-photos-container");
+    if (!container) return;
+
+    if (window.modProjContractors.surveyPhotos.length === 0) {
+      container.innerHTML = "<div class='col-span-2 sm:col-span-4 border-2 border-dashed border-indigo-300 rounded-2xl p-6 text-center text-indigo-600/70 hover:bg-indigo-50 transition cursor-pointer' onclick='window.modProjContractors.triggerPhotoInput()'>" +
+        "<i class='fas fa-cloud-upload-alt text-2xl mb-1 text-indigo-500'></i>" +
+        "<p class='font-bold text-xs'>Chưa có ảnh khảo sát nào. Bấm vào đây để tải lên ảnh hiện trường.</p>" +
+        "<span class='text-[10px] text-indigo-400'>Hỗ trợ định dạng JPG, PNG, WEBP</span>" +
+      "</div>";
+      return;
+    }
+
+    container.innerHTML = window.modProjContractors.surveyPhotos.map((p, idx) => (
+      "<div class='relative group rounded-xl overflow-hidden border border-indigo-200 bg-white shadow-2xs aspect-video flex flex-col justify-between'>" +
+        "<img src='" + p.url + "' class='w-full h-full object-cover'>" +
+        "<div class='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition p-2 flex flex-col justify-between'>" +
+          "<div class='flex justify-end'>" +
+            "<button type='button' onclick='window.modProjContractors.removePhoto(" + idx + ")' class='w-6 h-6 rounded-full bg-rose-600 text-white font-bold flex items-center justify-center text-xs shadow'>&times;</button>" +
+          "</div>" +
+          "<span class='text-[10px] text-white font-bold bg-black/60 px-1.5 py-0.5 rounded truncate'>" + (p.name || ("Ảnh " + (idx+1))) + "</span>" +
+        "</div>" +
+      "</div>"
+    )).join("");
   },
 
   renderTable: (customList) => {
@@ -323,7 +553,7 @@ window.modProjContractors = {
     if (!tbody) return;
 
     if (data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400 font-bold">Không tìm thấy dự án nào. Hãy bấm "Tạo Dự Án & Chỉ Định Thầu".</td></tr>`;
+      tbody.innerHTML = "<tr><td colspan='8' class='p-8 text-center text-slate-400 font-bold'>Không tìm thấy dự án nào. Hãy bấm nút Tạo & Đăng Dự Án.</td></tr>";
       return;
     }
 
@@ -331,67 +561,62 @@ window.modProjContractors = {
 
     tbody.innerHTML = data.map(p => {
       const isDone = p.status === "COMPLETED";
-      const docCount = (p.acceptance_documents || []).length;
-      const has6Photos = p.handover_data && p.handover_data.img_panels;
-      const checkin = p.checkin_data;
+      const isBidding = p.status === "OPEN_BIDDING" || p.status === "NEW";
+      const bidsCount = p.bids_count || (p.bids || []).length;
+      const photosCount = (p.survey_photos || []).length;
 
-      return `
-        <tr class="hover:bg-blue-50/40 transition">
-          <td class="p-3.5">
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-black font-mono text-xs">${p.project_code}</span>
-              <strong class="text-slate-900 font-bold cursor-pointer hover:text-blue-600" onclick="window.modProjContractors.openDetail(${p.id})">${p.project_name}</strong>
-            </div>
-            <p class="text-slate-400 text-[11px] mt-0.5">Phụ trách: ${p.lead_engineer || "Kỹ sư SUNGO"}</p>
-          </td>
+      let statusBadge = "<span class='px-2.5 py-1 rounded-full font-bold text-[10px] bg-amber-100 text-amber-900 border border-amber-300'><i class='fas fa-bullhorn mr-1'></i> Mở Thầu (" + bidsCount + " Báo Giá)</span>";
+      if (p.status === "ASSIGNED") statusBadge = "<span class='px-2.5 py-1 rounded-full font-bold text-[10px] bg-blue-100 text-blue-900 border border-blue-300'><i class='fas fa-user-check mr-1'></i> Đã Chỉ Định</span>";
+      if (p.status === "IN_PROGRESS") statusBadge = "<span class='px-2.5 py-1 rounded-full font-bold text-[10px] bg-indigo-100 text-indigo-900 border border-indigo-300'><i class='fas fa-spinner fa-spin mr-1'></i> Đang Thi Công</span>";
+      if (p.status === "UNDER_INSPECTION") statusBadge = "<span class='px-2.5 py-1 rounded-full font-bold text-[10px] bg-purple-100 text-purple-900 border border-purple-300'><i class='fas fa-clipboard-check mr-1'></i> Chờ Nghiệm Thu</span>";
+      if (isDone) statusBadge = "<span class='px-2.5 py-1 rounded-full font-bold text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300'><i class='fas fa-check-circle mr-1'></i> Đã Hoàn Tất</span>";
 
-          <td class="p-3.5">
-            <strong class="text-slate-800">${p.customer_name}</strong>
-            <p class="text-slate-500 text-[11px] font-mono">📞 ${p.customer_phone || "---"}</p>
-            <p class="text-slate-400 text-[11px] truncate max-w-[180px]">${p.address || (p.district + ", " + p.province_city)}</p>
-          </td>
-
-          <td class="p-3.5">
-            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs font-bold">${p.system_type}</span>
-            <p class="text-amber-600 font-black text-xs mt-0.5">${p.capacity_kwp} kWp ${p.battery_kwh ? "+ " + p.battery_kwh + " kWh" : ""}</p>
-            <p class="text-slate-400 text-[11px]">${p.roof_type || "Mái tôn"}</p>
-          </td>
-
-          <td class="p-3.5">
-            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 space-y-0.5">
-              <strong class="text-blue-900 font-bold block text-xs">${p.assigned_contractor_name || "Chưa chỉ định"}</strong>
-              <p class="text-emerald-700 font-black text-[11px]">${formatPrice(p.labor_cost)}</p>
-              ${checkin ? `<span class="text-[10px] text-emerald-600 font-bold"><i class="fas fa-check-circle"></i> Đã Check-in GPS</span>` : `<span class="text-[10px] text-slate-400">Chưa check-in</span>`}
-            </div>
-          </td>
-
-          <td class="p-3.5 text-center">
-            <div class="w-20 bg-slate-100 rounded-full h-2 mx-auto overflow-hidden">
-              <div class="${isDone ? "bg-emerald-500" : "bg-blue-600"} h-2 rounded-full" style="width: ${p.progress}%"></div>
-            </div>
-            <span class="text-xs font-black text-slate-700 mt-1 inline-block">${p.progress}%</span>
-          </td>
-
-          <td class="p-3.5 text-center">
-            <div class="flex flex-col items-center gap-1 text-[11px]">
-              ${has6Photos ? `<span class="text-emerald-600 font-bold"><i class="fas fa-camera"></i> Đã có 6 ảnh</span>` : `<span class="text-slate-400"><i class="fas fa-camera"></i> Chưa đủ 6 ảnh</span>`}
-              <span class="text-blue-600 font-bold">${docCount} tư liệu đính kèm</span>
-            </div>
-          </td>
-
-          <td class="p-3.5 text-center">
-            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isDone ? "bg-emerald-100 text-emerald-800" : (p.status === "UNDER_INSPECTION" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800")}">
-              ${isDone ? "Hoàn tất" : (p.status === "UNDER_INSPECTION" ? "Chờ nghiệm thu" : "Đang thi công")}
-            </span>
-          </td>
-
-          <td class="p-3.5 text-center">
-            <button onclick="window.modProjContractors.openDetail(${p.id})" class="px-3 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-sm transition">
-              Chi Tiết <i class="fas fa-chevron-right text-[10px] ml-1"></i>
-            </button>
-          </td>
-        </tr>
-      `;
+      return "<tr class='hover:bg-blue-50/40 transition'>" +
+        "<td class='p-3.5 pl-4'>" +
+          "<div class='flex items-center gap-2'>" +
+            "<span class='px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono font-black text-xs'>" + p.project_code + "</span>" +
+            "<strong class='text-slate-900 font-bold hover:text-blue-600 cursor-pointer' onclick='window.modProjContractors.openDetail(" + p.id + ")'>" + p.project_name + "</strong>" +
+          "</div>" +
+        "</td>" +
+        "<td class='p-3.5'>" +
+          "<strong class='text-slate-800'>" + p.customer_name + "</strong>" +
+          "<p class='text-slate-500 text-[11px]'>" + (p.province_city || "") + (p.district ? " • " + p.district : "") + "</p>" +
+        "</td>" +
+        "<td class='p-3.5'>" +
+          "<strong class='text-amber-600 font-black'>" + p.capacity_kwp + " kWp</strong>" +
+          "<p class='text-slate-500 text-[11px]'>" + p.system_type + " • " + (p.roof_type || "Mái tôn") + "</p>" +
+        "</td>" +
+        "<td class='p-3.5'>" +
+          (photosCount > 0 ? (
+            "<span class='px-2 py-1 bg-indigo-50 text-indigo-700 font-bold rounded-lg text-xs border border-indigo-200 flex items-center gap-1 w-fit'>" +
+              "<i class='fas fa-camera'></i> " + photosCount + " ảnh khảo sát" +
+            "</span>"
+          ) : "<span class='text-slate-400 text-xs italic'>Chưa có ảnh</span>") +
+        "</td>" +
+        "<td class='p-3.5'>" +
+          "<strong class='text-blue-900 block'>" + (p.assigned_contractor_name || (isBidding ? "📢 Đang mở thầu (" + bidsCount + " báo giá)" : "Chưa chọn")) + "</strong>" +
+          "<span class='text-emerald-700 font-bold text-[11px]'>" + formatPrice(p.labor_cost) + "</span>" +
+        "</td>" +
+        "<td class='p-3.5 text-center'>" +
+          "<div class='flex items-center justify-center gap-1.5'>" +
+            "<div class='w-16 bg-slate-200 rounded-full h-2 overflow-hidden'>" +
+              "<div class='bg-blue-600 h-full rounded-full' style='width: " + (p.progress || 0) + "%'></div>" +
+            "</div>" +
+            "<strong class='text-[11px] text-slate-700'>" + (p.progress || 0) + "%</strong>" +
+          "</div>" +
+        "</td>" +
+        "<td class='p-3.5 text-center'>" + statusBadge + "</td>" +
+        "<td class='p-3.5 pr-4 text-center'>" +
+          "<div class='flex items-center justify-center gap-1.5'>" +
+            "<button onclick='window.modProjContractors.openDetail(" + p.id + ")' class='px-2.5 py-1 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-lg shadow-sm cursor-pointer'>" +
+              "Chi Tiết" +
+            "</button>" +
+            "<button onclick='window.modProjContractors.deleteProject(" + p.id + ")' class='p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg text-xs cursor-pointer' title='Xóa'>" +
+              "<i class='fas fa-trash-alt'></i>" +
+            "</button>" +
+          "</div>" +
+        "</td>" +
+      "</tr>";
     }).join("");
   },
 
@@ -403,6 +628,8 @@ window.modProjContractors = {
     const filtered = window.modProjContractors.projects.filter(p => {
       const matchTerm = (p.project_name || "").toLowerCase().includes(term) ||
                         (p.project_code || "").toLowerCase().includes(term) ||
+                        (p.province_city || "").toLowerCase().includes(term) ||
+                        (p.district || "").toLowerCase().includes(term) ||
                         (p.customer_name || "").toLowerCase().includes(term);
       const matchStatus = !status || p.status === status;
       const matchCont = !contractorId || p.assigned_contractor_id == contractorId;
@@ -412,147 +639,188 @@ window.modProjContractors = {
     window.modProjContractors.renderTable(filtered);
   },
 
-  openDetail: (id) => {
-    const p = window.modProjContractors.projects.find(x => x.id == id);
-    if (!p) return;
-    window.modProjContractors.currentProject = p;
+  closeDetail: () => {
+    const el = document.getElementById("pc-detail-view");
+    if (el) el.classList.add("hidden");
+  },
+  openDetail: async (id) => {
+    try {
+      const res = await fetch("/api/bidding/projects/" + id + "?role=ADMIN&t=" + Date.now());
+      const json = await res.json();
+      if (!json.success || !json.data) return;
+      const p = json.data;
+      window.modProjContractors.currentProject = p;
 
-    const container = document.getElementById("pc-detail-view");
-    if (!container) return;
+      const container = document.getElementById("pc-detail-view");
+      if (!container) return;
 
-    const formatPrice = (v) => v ? Number(v).toLocaleString("vi-VN") + " đ" : "---";
-    const checkin = p.checkin_data;
-    const handover = p.handover_data || {};
-    const docs = p.acceptance_documents || [];
+      const formatPrice = (v) => v ? Number(v).toLocaleString("vi-VN") + " đ" : "---";
+      const bids = p.bids || [];
+      const photos = p.survey_photos || [];
+      const isBidding = p.status === "OPEN_BIDDING" || p.status === "NEW";
 
-    container.innerHTML = `
-      <div class="flex justify-between items-start border-b pb-3">
-        <div>
-          <button onclick="document.getElementById('pc-detail-view').classList.add('hidden')" class="text-xs font-bold text-slate-500 hover:text-slate-800 mb-1 flex items-center gap-1">
-            <i class="fas fa-times"></i> Đóng chi tiết
-          </button>
-          <div class="flex items-center gap-2">
-            <span class="px-2.5 py-1 bg-blue-100 text-blue-800 font-mono font-black text-xs rounded-lg">${p.project_code}</span>
-            <h2 class="text-lg font-black text-slate-900">${p.project_name}</h2>
-          </div>
-          <p class="text-xs text-slate-500 mt-0.5">Khách hàng: <strong>${p.customer_name}</strong> (📞 ${p.customer_phone}) • Địa chỉ: ${p.address}</p>
-        </div>
-        <div class="text-right">
-          <span class="text-[10px] text-slate-400 uppercase font-bold block">Nhà Thầu Được Chỉ Định</span>
-          <strong class="text-blue-900 text-sm font-black">${p.assigned_contractor_name}</strong>
-          <span class="text-emerald-700 font-black text-xs block">${formatPrice(p.labor_cost)}</span>
-        </div>
-      </div>
+      let photosHtml = photos.length > 0 ? (
+        "<div class='grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-indigo-100'>" +
+          photos.map((ph, i) => {
+            const url = typeof ph === "string" ? ph : ph.url;
+            return "<div class='rounded-xl overflow-hidden border border-slate-200 aspect-video group relative'>" +
+              "<img src='" + url + "' class='w-full h-full object-cover cursor-pointer hover:scale-105 transition' onclick='window.open(this.src)'>" +
+              "<span class='absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/60 text-[9px] text-white rounded'>Ảnh " + (i+1) + "</span>" +
+            "</div>";
+          }).join("") +
+        "</div>"
+      ) : "<p class='text-slate-400 italic text-xs bg-white p-3 rounded-xl border border-slate-100'>Chưa có ảnh khảo sát hiện trường.</p>";
 
-      <!-- 4 Khối chức năng: GPS Check-in | 6 Ảnh | Tư Liệu Nghiệm Thu | Quyết Toán & Đánh Giá -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
-        
-        <!-- Khối 1: Check-in GPS & App Inverter -->
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-          <h4 class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-            <i class="fas fa-map-marker-alt text-red-500"></i> Check-in GPS & Bàn Giao App Inverter
-          </h4>
-          ${checkin ? `
-            <div class="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
-              <p>⏱️ Giờ thợ đến: <strong>${new Date(checkin.timestamp).toLocaleString("vi-VN")}</strong></p>
-              <p>📍 Tọa độ GPS: <strong class="font-mono text-blue-600">${checkin.gps}</strong></p>
-              <p class="text-slate-600 italic">"${checkin.note}"</p>
-            </div>
-          ` : `<p class="text-slate-400 italic">Đội thợ chưa bấm Check-in GPS tại hiện trường.</p>`}
+      container.classList.remove("hidden");
+      container.scrollIntoView({ behavior: "smooth" });
 
-          <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-3 rounded-xl space-y-1">
-            <span class="text-[10px] text-amber-400 font-bold uppercase">Tài Khoản App Điều Khiển Bàn Giao</span>
-            <p>App: <strong>${handover.app_name || "Solarman Smart"}</strong></p>
-            <p>Tài khoản: <strong class="text-emerald-300">${handover.app_account || "Chưa bàn giao"}</strong> | Pass: <strong class="text-amber-300">${handover.app_password || "---"}</strong></p>
-          </div>
-        </div>
+      container.innerHTML = "<div class='flex justify-between items-start border-b pb-3'>" +
+          "<div>" +
+            "<button onclick='window.modProjContractors.closeDetail()' class='text-xs font-bold text-slate-500 hover:text-slate-800 mb-1 flex items-center gap-1 cursor-pointer'>" +
+              "<i class='fas fa-times'></i> Đóng chi tiết" +
+            "</button>" +
+            "<div class='flex items-center gap-2'>" +
+              "<span class='px-2.5 py-1 bg-blue-100 text-blue-800 font-mono font-black text-xs rounded-lg'>" + p.project_code + "</span>" +
+              "<h2 class='text-lg font-black text-slate-900'>" + p.project_name + "</h2>" +
+            "</div>" +
+            "<p class='text-xs text-slate-500 mt-0.5'>Khách hàng: <strong>" + p.customer_name + "</strong> (📞 " + p.customer_phone + ") • Địa chỉ: " + (p.address || (p.district + ", " + p.province_city)) + "</p>" +
+          "</div>" +
+          "<div class='text-right'>" +
+            "<span class='text-[10px] text-slate-400 uppercase font-bold block'>Đơn Vị Phụ Trách</span>" +
+            "<strong class='text-blue-900 text-sm font-black'>" + (p.assigned_contractor_name || "Đang mở thầu") + "</strong>" +
+            "<span class='text-emerald-700 font-black text-xs block'>" + formatPrice(p.labor_cost) + "</span>" +
+          "</div>" +
+        "</div>" +
 
-        <!-- Khối 2: Danh sách Tư Liệu / Biên Bản Nghiệm Thu -->
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-          <div class="flex justify-between items-center">
-            <h4 class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fas fa-file-alt text-blue-600"></i> Tư Liệu & Biên Bản Nghiệm Thu Đính Kèm
-            </h4>
-          </div>
-          <div class="space-y-2">
-            ${docs.length === 0 ? `<p class="text-slate-400 italic">Chưa có file biên bản nào được đính kèm.</p>` : docs.map(d => `
-              <div class="bg-white p-3 rounded-xl border border-slate-200 flex justify-between items-center">
-                <div>
-                  <strong class="text-slate-900 block">${d.name}</strong>
-                  <span class="text-[11px] text-slate-500">${d.notes || "---"}</span>
-                </div>
-                ${d.file_url ? `<a href="${d.file_url}" target="_blank" class="px-2.5 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg hover:bg-blue-100">Xem File</a>` : ""}
-              </div>
-            `).join("")}
-          </div>
-        </div>
+        "<!-- 📸 ALBUM ẢNH KHẢO SÁT HIỆN TRƯỜNG & GHI CHÚ -->" +
+        "<div class='bg-indigo-50/50 p-4 sm:p-5 rounded-2xl border-2 border-indigo-200 space-y-3'>" +
+          "<h4 class='font-black text-indigo-950 uppercase tracking-wider text-xs flex items-center gap-2'>" +
+            "<i class='fas fa-camera text-indigo-600 text-base'></i> Album Ảnh Khảo Sát Hiện Trường (" + photos.length + " Ảnh)" +
+          "</h4>" +
+          photosHtml +
+          "<div class='grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1'>" +
+            "<div class='bg-white p-3 rounded-xl border border-indigo-100'>" +
+              "<strong class='text-indigo-950 block mb-1'>📝 Ghi Chú Hiện Trường:</strong>" +
+              "<p class='text-slate-700 leading-relaxed'>" + (p.site_notes || "Chưa có ghi chú hiện trường cụ thể.") + "</p>" +
+            "</div>" +
+            "<div class='bg-white p-3 rounded-xl border border-indigo-100'>" +
+              "<strong class='text-indigo-950 block mb-1'>⚙️ Yêu Cầu Kỹ Thuật & An Toàn:</strong>" +
+              "<p class='text-slate-700 leading-relaxed'>" + (p.construction_requirements || "Thi công chuẩn an toàn điện & bảo hộ lao động.") + "</p>" +
+            "</div>" +
+          "</div>" +
+        "</div>" +
 
-      </div>
+        "<!-- Khối BÁO GIÁ ĐẤU THẦU CỦA CÁC ĐỘI THẦU (Dành cho Admin duyệt thầu) -->" +
+        "<div class='bg-gradient-to-r from-amber-50 to-orange-50 p-4 sm:p-5 rounded-2xl border-2 border-amber-300 space-y-3'>" +
+          "<div class='flex justify-between items-center border-b border-amber-200 pb-2'>" +
+            "<h4 class='font-black text-amber-950 uppercase tracking-wider text-xs flex items-center gap-2'>" +
+              "<i class='fas fa-gavel text-amber-600 text-base'></i> Hồ Sơ Báo Giá Chào Thầu (" + bids.length + " Đội Đã Nộp)" +
+            "</h4>" +
+            (isBidding ? "<span class='px-2.5 py-0.5 bg-amber-200 text-amber-900 font-bold rounded-lg text-[10px]'>Đang mở thầu</span>" : "<span class='px-2.5 py-0.5 bg-emerald-200 text-emerald-900 font-bold rounded-lg text-[10px]'>Đã đóng thầu</span>") +
+          "</div>" +
 
-      <!-- Khối 3: Bộ 6 Ảnh Nghiệm Thu Thực Tế -->
-      <div class="space-y-3">
-        <h4 class="font-black text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-          <i class="fas fa-camera text-amber-500"></i> Bộ 6 Ảnh Nghiệm Thu Hiện Trường Tiêu Chuẩn Solar
-        </h4>
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-          ${[
-            { t: "1. Tấm pin", s: handover.img_panels },
-            { t: "2. Tủ điện", s: handover.img_cabinet },
-            { t: "3. Inverter", s: handover.img_inverter },
-            { t: "4. Pin Lithium", s: handover.img_battery },
-            { t: "5. Đường dây", s: handover.img_wiring },
-            { t: "6. Màn hình App", s: handover.img_app }
-          ].map(img => `
-            <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center space-y-1.5">
-              <span class="font-bold text-slate-700 block text-[11px]">${img.t}</span>
-              ${img.s ? `<img src="${img.s}" class="w-full h-24 object-cover rounded-lg shadow-sm cursor-pointer" onclick="window.open('${img.s}')">` : `<div class="h-24 bg-slate-200 rounded-lg flex items-center justify-center text-slate-400 text-[10px]">Chưa có ảnh</div>`}
-            </div>
-          `).join("")}
-        </div>
-      </div>
+          (bids.length === 0 ? (
+            "<p class='text-slate-500 italic text-xs py-2'>Chưa có nhà thầu nào nộp hồ sơ báo giá cho công trình này. Dự án đang được hiển thị trên Sàn Đấu Thầu.</p>"
+          ) : (
+            "<div class='overflow-x-auto'>" +
+              "<table class='w-full text-left text-xs whitespace-nowrap bg-white rounded-xl shadow-2xs border border-amber-200'>" +
+                "<thead class='bg-amber-100/70 font-black text-amber-900 uppercase border-b border-amber-200'>" +
+                  "<tr>" +
+                    "<th class='p-2.5 pl-3'>Đội Thầu / Nhà Thầu</th>" +
+                    "<th class='p-2.5'>Giá Chào Nhân Công</th>" +
+                    "<th class='p-2.5 text-center'>Số Thợ</th>" +
+                    "<th class='p-2.5 text-center'>Thời Gian</th>" +
+                    "<th class='p-2.5 text-center'>Bảo Hành</th>" +
+                    "<th class='p-2.5'>Cam Kết / Ghi Chú</th>" +
+                    "<th class='p-2.5 text-center'>Trạng Thái</th>" +
+                    "<th class='p-2.5 pr-3 text-center'>Hành Động</th>" +
+                  "</tr>" +
+                "</thead>" +
+                "<tbody class='divide-y divide-amber-100'>" +
+                  bids.map(b => (
+                    "<tr class='hover:bg-amber-50/50'>" +
+                      "<td class='p-2.5 pl-3'>" +
+                        "<strong class='text-slate-900 block'>" + b.team_name + "</strong>" +
+                        "<span class='text-[10px] text-slate-500 font-mono'>📞 " + (b.team_phone || "---") + " • ⭐ " + (b.team_rating || 5.0) + "</span>" +
+                      "</td>" +
+                      "<td class='p-2.5 font-black text-emerald-700 text-sm'>" +
+                        formatPrice(b.total_bid_amount || b.labor_price) +
+                      "</td>" +
+                      "<td class='p-2.5 text-center font-bold text-slate-700'>" +
+                        (b.team_size || 4) + " thợ" +
+                      "</td>" +
+                      "<td class='p-2.5 text-center font-bold text-slate-700'>" +
+                        (b.estimated_days || 2) + " ngày" +
+                      "</td>" +
+                      "<td class='p-2.5 text-center font-bold text-slate-700'>" +
+                        (b.warranty_months || 24) + " tháng" +
+                      "</td>" +
+                      "<td class='p-2.5 text-slate-600 max-w-[200px] truncate text-[11px]' title='" + (b.notes || "") + "'>" +
+                        (b.notes || "Cam kết thi công đạt chuẩn") +
+                      "</td>" +
+                      "<td class='p-2.5 text-center'>" +
+                        "<span class='px-2 py-0.5 rounded-full text-[10px] font-bold " + (b.status === "ACCEPTED" ? "bg-emerald-100 text-emerald-800" : (b.status === "REJECTED" ? "bg-slate-100 text-slate-500" : "bg-amber-100 text-amber-800")) + "'>" +
+                          (b.status === "ACCEPTED" ? "ĐÃ TRÚNG THẦU" : (b.status === "REJECTED" ? "Không chọn" : "Đang chờ duyệt")) +
+                        "</span>" +
+                      "</td>" +
+                      "<td class='p-2.5 pr-3 text-center'>" +
+                        (isBidding ? (
+                          "<button onclick='window.modProjContractors.awardBid(" + p.id + ", " + b.id + ")' class='px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center gap-1 cursor-pointer mx-auto'>" +
+                            "<i class='fas fa-check-circle'></i> Duyệt Trúng Thầu" +
+                          "</button>"
+                        ) : (
+                          b.status === "ACCEPTED" ? "<span class='text-emerald-700 font-bold text-xs'>🏆 Đội Đang Làm</span>" : "<span class='text-slate-400 text-xs'>---</span>"
+                        )) +
+                      "</td>" +
+                    "</tr>"
+                  )).join("") +
+                "</tbody>" +
+              "</table>" +
+            "</div>"
+          )) +
+        "</div>";
+    } catch(err) { console.error(err); }
+  },
 
-      <!-- Khối 4: Duyệt Quyết Toán Chi Phí & Đánh Giá 1-5 Sao -->
-      <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-200 space-y-3">
-        <h4 class="font-black text-amber-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-          <i class="fas fa-award text-amber-600"></i> Phê Duyệt Nghiệm Thu, Quyết Toán Tiền Công & Chấm Điểm Sao ★
-        </h4>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          <div>
-            <label class="block font-bold text-amber-900 mb-1">Số Tiền Quyết Toán Thực Tế (VNĐ)</label>
-            <input type="number" id="pc-eval-amount" value="${p.settlement_amount || p.labor_cost || 0}" class="w-full px-3 py-2 border rounded-xl font-black text-emerald-700 bg-white outline-none">
-          </div>
-          <div>
-            <label class="block font-bold text-amber-900 mb-1">Trạng Thái Thanh Toán</label>
-            <select id="pc-eval-status" class="w-full px-3 py-2 border rounded-xl font-bold bg-white outline-none">
-              <option value="Đã tất toán (100%)" ${p.settlement_status === "Đã tất toán (100%)" ? "selected" : ""}>Đã tất toán (100%)</option>
-              <option value="Đã tạm ứng (50%)" ${p.settlement_status === "Đã tạm ứng (50%)" ? "selected" : ""}>Đã tạm ứng (50%)</option>
-              <option value="Chưa thanh toán" ${p.settlement_status === "Chưa thanh toán" ? "selected" : ""}>Chưa thanh toán</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-bold text-amber-900 mb-1">Đánh Giá Xếp Hạng</label>
-            <select id="pc-eval-stars" class="w-full px-3 py-2 border rounded-xl font-black text-amber-500 bg-white outline-none">
-              <option value="5">⭐⭐⭐⭐⭐ 5.0 Sao (Xuất sắc)</option>
-              <option value="4">⭐⭐⭐⭐ 4.0 Sao (Tốt)</option>
-              <option value="3">⭐⭐⭐ 3.0 Sao (Đạt)</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label class="block font-bold text-amber-900 mb-1">Nhận Xét Của Công Ty</label>
-          <input type="text" id="pc-eval-comment" value="${p.evaluation ? p.evaluation.comment : "Đội thợ thi công đạt chuẩn chất lượng SUNGO."}" class="w-full px-3 py-2 border rounded-xl bg-white text-xs outline-none">
-        </div>
-        <button onclick="window.modProjContractors.submitEvaluation(${p.id})" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-xl text-xs shadow transition flex items-center gap-1.5">
-          <i class="fas fa-check-double"></i> Lưu Phê Duyệt & Tất Toán Dự Án
-        </button>
-      </div>
-    `;
+  awardBid: async (projectId, bidId) => {
+    if (!confirm("Xác nhận DUYỆT TRÚNG THẦU cho đội thầu này?\n\nHệ thống sẽ tự động đóng thầu, cập nhật giá nhân công và chuyển dự án sang trạng thái triển khai.")) return;
 
-    container.classList.remove("hidden");
-    container.scrollIntoView({ behavior: "smooth" });
+    try {
+      const res = await fetch("/api/bidding/projects/" + projectId + "/award", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bid_id: bidId })
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert(json.message);
+        await window.modProjContractors.loadProjects();
+        window.modProjContractors.openDetail(projectId);
+      } else {
+        alert("Lỗi: " + json.error);
+      }
+    } catch(err) { alert("Lỗi kết nối: " + err.message); }
+  },
+
+  deleteProject: async (id) => {
+    if (!confirm("Bạn có chắc chắn muốn XÓA DỰ ÁN này và toàn bộ hồ sơ nghiệm thu liên quan?")) return;
+
+    try {
+      const res = await fetch("/api/bidding/projects/" + id, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        alert(json.message);
+        document.getElementById("pc-detail-view").classList.add("hidden");
+        await window.modProjContractors.loadProjects();
+      } else {
+        alert("Lỗi: " + json.error);
+      }
+    } catch(err) { alert("Lỗi kết nối: " + err.message); }
   },
 
   openCreateModal: () => {
+    window.modProjContractors.surveyPhotos = [];
+    window.modProjContractors.renderPhotoPreviews();
     const modal = document.getElementById("modal-pc-create");
     if (modal) modal.classList.remove("hidden");
   },
@@ -563,6 +831,9 @@ window.modProjContractors = {
 
   submitCreate: async (e) => {
     e.preventDefault();
+    const mode = document.querySelector('input[name="project_mode"]:checked')?.value || "OPEN_BIDDING";
+    const assignedContractor = mode === "ASSIGNED" ? document.getElementById("np-contractor").value : null;
+
     const payload = {
       project_name: document.getElementById("np-title").value.trim(),
       customer_name: document.getElementById("np-customer").value.trim(),
@@ -576,11 +847,22 @@ window.modProjContractors = {
       battery_kwh: document.getElementById("np-kwh").value || 0,
       inverter_brand: document.getElementById("np-inverter").value.trim(),
       roof_type: document.getElementById("np-roof").value,
-      assigned_contractor_id: document.getElementById("np-contractor").value,
+      roof_direction: document.getElementById("np-roof-dir").value.trim(),
+      site_notes: document.getElementById("np-site-notes").value.trim(),
+      construction_requirements: document.getElementById("np-tech-req").value.trim(),
+      survey_photos: window.modProjContractors.surveyPhotos,
+      status: mode,
+      assigned_contractor_id: assignedContractor,
       labor_cost: document.getElementById("np-labor-cost").value || 0,
-      assigned_supervisor_id: document.getElementById("np-supervisor").value,
-      assigned_supplier_id: document.getElementById("np-supplier").value
+      assigned_supervisor_id: document.getElementById("np-supervisor").value || null,
+      assigned_supplier_id: document.getElementById("np-supplier").value || null,
+      bom_items: []
     };
+
+    const bomText = (document.getElementById("np-bom-text").value || "").trim();
+    if (bomText) {
+      payload.bom_items = bomText.split(/[,\n;]+/).map(line => ({ name: line.trim(), qty: 1, unit: "bộ" })).filter(x => x.name);
+    }
 
     try {
       const res = await fetch("/api/bidding/projects", {
@@ -597,29 +879,6 @@ window.modProjContractors = {
         alert("Lỗi: " + json.error);
       }
     } catch(err) { alert("Lỗi kết nối: " + err.message); }
-  },
-
-  submitEvaluation: async (pid) => {
-    const settlement_amount = document.getElementById("pc-eval-amount").value;
-    const settlement_status = document.getElementById("pc-eval-status").value;
-    const rating_stars = document.getElementById("pc-eval-stars").value;
-    const comment = document.getElementById("pc-eval-comment").value.trim();
-
-    try {
-      const res = await fetch(`/api/bidding/projects/${pid}/evaluate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settlement_amount, settlement_status, rating_stars, comment })
-      });
-      const json = await res.json();
-      if (json.success) {
-        alert(json.message);
-        await window.modProjContractors.loadProjects();
-        window.modProjContractors.openDetail(pid);
-      } else {
-        alert("Lỗi: " + json.error);
-      }
-    } catch(err) { alert("Lỗi: " + err.message); }
   }
 };
 

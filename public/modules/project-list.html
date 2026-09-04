@@ -1,78 +1,81 @@
-<div class="h-full flex flex-col space-y-4 overflow-hidden">
+<div class="w-full min-h-full flex flex-col space-y-4 pb-28 md:pb-6">
   
   <!-- ======================= CẤP 1: DANH SÁCH HỒ SƠ CÁC DỰ ÁN ======================= -->
-  <div id="view-project-list" class="h-full flex flex-col space-y-4">
+  <div id="view-project-list" class="w-full min-h-full flex flex-col space-y-4">
     <!-- Header Banner -->
-    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-5 text-white shadow-lg shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-4 sm:p-5 text-white shadow-lg shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
       <div>
         <div class="flex items-center gap-2">
-          <span class="px-2.5 py-0.5 bg-blue-500/20 text-blue-300 font-bold rounded text-xs border border-blue-400/30">KỸ THUẬT & THI CÔNG</span>
-          <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs font-bold rounded">Kho Lưu Trữ Hồ Sơ Dự Án</span>
+          <span class="px-2 py-0.5 bg-blue-500/20 text-blue-300 font-bold rounded text-[10px] border border-blue-400/30">KỸ THUẬT & THI CÔNG</span>
+          <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold rounded">Hồ Sơ Dự Án</span>
         </div>
-        <h2 class="text-xl font-black text-white mt-1 flex items-center gap-2">
-          <i class="fas fa-folder-open text-amber-400"></i> Lưu Trữ Hồ Sơ Toàn Diện Các Dự Án
+        <h2 class="text-base sm:text-xl font-black text-white mt-1 flex items-center gap-2">
+          <i class="fas fa-folder-open text-amber-400"></i> Hồ Sơ Kỹ Thuật Các Dự Án
         </h2>
-        <p class="text-xs text-slate-300 mt-0.5">Kho lưu trữ tập trung: thông số kỹ thuật, cấu hình Solar, 6 ảnh hiện trường thực tế, tài khoản App Inverter và biên bản nghiệm thu.</p>
+        <p class="text-xs text-slate-300 mt-0.5">Kho lưu trữ: thông số kỹ thuật, cấu hình Solar, 6 ảnh hiện trường, tài khoản App và nghiệm thu.</p>
       </div>
 
-      <div class="flex items-center gap-2.5">
-        <button onclick="window.modConstruction.openCreateProjectModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
-          <i class="fas fa-plus"></i> Tạo Hồ Sơ Dự Án Mới
+      <div class="flex items-center gap-2 w-full md:w-auto">
+        <button onclick="window.modConstruction.openCreateProjectModal()" class="w-full md:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+          <i class="fas fa-plus"></i> Tạo Hồ Sơ Dự Án
         </button>
       </div>
     </div>
 
     <!-- Search & Filters -->
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-3 shrink-0">
-      <div class="flex items-center gap-2 w-full md:w-auto">
-        <div class="relative flex-1 md:w-72">
-          <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-          <input type="text" id="project-search-input" oninput="window.modConstruction.filterProjects()" placeholder="Tìm tên DA, mã DA, khách hàng, SĐT..." class="w-full pl-9 pr-3.5 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-blue-500 font-medium">
+    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row justify-between items-center gap-3 shrink-0">
+      <div class="flex flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
+        <div class="relative flex-1 min-w-[200px] md:w-72">
+          <i class="fas fa-search absolute left-3.5 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="project-search-input" oninput="window.modConstruction.filterProjects()" placeholder="Tìm tên DA, mã, khách hàng, SĐT..." class="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-blue-500 font-medium">
         </div>
-        <select id="pl-filter-type" onchange="window.modConstruction.filterProjects()" class="text-xs border border-slate-200 rounded-xl px-3 py-2 outline-none font-bold bg-slate-50 text-slate-700">
-          <option value="">Tất cả hệ thống</option>
-          <option value="Hybrid">Hybrid Lưu Trữ</option>
+        <select id="pl-filter-type" onchange="window.modConstruction.filterProjects()" class="text-xs border border-slate-200 rounded-xl px-2.5 py-1.5 sm:py-2 outline-none font-bold bg-slate-50 text-slate-700">
+          <option value="">Tất cả hệ</option>
+          <option value="Hybrid">Hybrid</option>
           <option value="Hòa Lưới">Hòa Lưới</option>
           <option value="Độc Lập">Độc Lập</option>
         </select>
-        <select id="pl-filter-status" onchange="window.modConstruction.filterProjects()" class="text-xs border border-slate-200 rounded-xl px-3 py-2 outline-none font-bold bg-slate-50 text-slate-700">
+        <select id="pl-filter-status" onchange="window.modConstruction.filterProjects()" class="text-xs border border-slate-200 rounded-xl px-2.5 py-1.5 sm:py-2 outline-none font-bold bg-slate-50 text-slate-700">
           <option value="">Tất cả trạng thái</option>
           <option value="IN_PROGRESS">Đang thi công</option>
-          <option value="ASSIGNED">Đã chỉ định thầu</option>
-          <option value="COMPLETED">Đã hoàn thành</option>
+          <option value="ASSIGNED">Đã chỉ định</option>
+          <option value="COMPLETED">Hoàn thành</option>
         </select>
       </div>
-      <div class="text-xs text-slate-500 font-bold" id="pl-count-badge">
+      <div class="text-xs text-slate-500 font-bold self-end md:self-auto" id="pl-count-badge">
         Đang tải danh sách...
       </div>
     </div>
 
-    <!-- Bảng danh sách dự án -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
-      <div class="overflow-y-auto flex-1">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-100 font-black text-slate-600 uppercase tracking-wider sticky top-0 z-10 border-b">
-            <tr>
-              <th class="p-3.5">Mã & Tên Dự Án</th>
-              <th class="p-3.5">Khách Hàng / Địa Chỉ</th>
-              <th class="p-3.5">Cấu Hình Solar</th>
-              <th class="p-3.5">Đơn Vị / Nhà Thầu Phụ Trách</th>
-              <th class="p-3.5 text-center">Hồ Sơ Nghiệm Thu & App</th>
-              <th class="p-3.5 text-center">Tiến Độ</th>
-              <th class="p-3.5 text-center">Trạng Thái</th>
-              <th class="p-3.5 text-center">Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody id="projects-table-body" class="divide-y divide-slate-100">
-            <!-- Render danh sách dự án -->
-          </tbody>
-        </table>
-      </div>
+    <!-- 1. Desktop Table View -->
+    <div class="hidden md:block bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-x-auto">
+      <table class="w-full text-left text-xs whitespace-nowrap">
+        <thead class="bg-slate-100 font-black text-slate-600 uppercase tracking-wider sticky top-0 z-10 border-b">
+          <tr>
+            <th class="p-3 pl-4">Mã & Tên Dự Án</th>
+            <th class="p-3">Khách Hàng / Địa Chỉ</th>
+            <th class="p-3">Cấu Hình Solar</th>
+            <th class="p-3">Đơn Vị Phụ Trách</th>
+            <th class="p-3 text-center">Nghiệm Thu & App</th>
+            <th class="p-3 text-center">Tiến Độ</th>
+            <th class="p-3 text-center">Trạng Thái</th>
+            <th class="p-3 pr-4 text-center">Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody id="projects-table-body" class="divide-y divide-slate-100">
+          <!-- Render danh sách dự án -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Mobile Smart Cards -->
+    <div id="projects-mobile-cards" class="md:hidden space-y-2.5 pb-8">
+      <!-- Rendered by JS -->
     </div>
   </div>
 
   <!-- ======================= CẤP 2: CHI TIẾT HỒ SƠ DỰ ÁN & NGHIỆM THU BÀN GIAO ======================= -->
-  <div id="view-project-detail" class="hidden h-full flex flex-col space-y-4 overflow-y-auto pr-1">
+  <div id="view-project-detail" class="hidden w-full min-h-full flex flex-col space-y-4 pb-36 sm:pb-12">
     <!-- Header Chi tiết dự án -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
       <div class="flex items-center gap-3">
@@ -381,6 +384,55 @@ window.modConstruction = {
         </tr>
       `;
     }).join("");
+
+    // Render Mobile Cards
+    const mobContainer = document.getElementById("projects-mobile-cards");
+    if (mobContainer) {
+      mobContainer.innerHTML = list.map(p => {
+        const isDone = Number(p.progress) >= 100 || p.status === "COMPLETED";
+        const ho = p.handover_data || {};
+        const has6Photos = ho.img_panels ? true : false;
+        const contractorName = p.assigned_contractor_name || p.lead_engineer || "Kỹ sư SUNGO";
+
+        return `
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-black text-xs font-mono">
+              ${p.project_code}
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isDone ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"}">
+              ${isDone ? "Hoàn tất" : "Đang thi công"}
+            </span>
+          </div>
+
+          <div>
+            <h4 class="font-black text-slate-900 text-xs sm:text-sm leading-snug cursor-pointer hover:text-blue-600" onclick="window.modConstruction.openProjectDetail(${p.id})">
+              ${p.project_name}
+            </h4>
+            <p class="text-[11px] text-slate-500 mt-1"><i class="fas fa-user text-slate-400 mr-1"></i><b>${p.customer_name}</b> • 📞 ${p.customer_phone || "---"}</p>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100">
+            <div>
+              <span class="text-amber-600 font-black">${p.capacity_kwp} kWp</span>
+              <span class="text-slate-500 font-medium">(${p.system_type})</span>
+            </div>
+            <div class="text-right">
+              <span class="text-slate-400 text-[10px]">Tiến độ:</span> <b class="text-blue-700">${p.progress}%</b>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+            <div class="text-[10px] text-slate-500">
+              ${has6Photos ? `<span class="text-emerald-700 font-bold"><i class="fas fa-camera"></i> Đủ 6 ảnh</span>` : `<span class="text-slate-400"><i class="fas fa-camera"></i> Chưa đủ ảnh</span>`}
+            </div>
+            <button type="button" onclick="window.modConstruction.openProjectDetail(${p.id})" class="bg-slate-900 hover:bg-black text-white px-3 py-1.5 rounded-xl font-bold text-xs shadow-2xs transition flex items-center gap-1 cursor-pointer">
+              Xem Hồ Sơ <i class="fas fa-chevron-right text-[9px]"></i>
+            </button>
+          </div>
+        </div>`;
+      }).join("");
+    }
   },
 
   filterProjects: () => {
@@ -479,11 +531,15 @@ window.modConstruction = {
 
     document.getElementById("view-project-list").classList.add("hidden");
     document.getElementById("view-project-detail").classList.remove("hidden");
+    const mainEl = document.getElementById("main-content");
+    if (mainEl) mainEl.scrollTo({ top: 0, behavior: "smooth" });
   },
 
   backToProjectList: () => {
     document.getElementById("view-project-detail").classList.add("hidden");
     document.getElementById("view-project-list").classList.remove("hidden");
+    const mainEl = document.getElementById("main-content");
+    if (mainEl) mainEl.scrollTo({ top: 0, behavior: "smooth" });
     window.modConstruction.loadProjects();
   },
 

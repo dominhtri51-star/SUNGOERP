@@ -179,6 +179,19 @@ router.put('/:id', async (req, res) => {
             repayment_method, payment_day_of_month, collateral, status
         } = req.body;
 
+        const origP = parseFloat(original_principal) || 0;
+        let curP = (current_principal !== undefined && current_principal !== null && String(current_principal).trim() !== '')
+            ? Math.max(0, parseFloat(current_principal))
+            : origP;
+
+        let finalStatus = status || (curP === 0 ? 'CLOSED' : 'ACTIVE');
+        if (finalStatus === 'CLOSED' || finalStatus === 'PAID_OFF' || curP === 0) {
+            curP = 0;
+            finalStatus = 'CLOSED';
+        } else {
+            finalStatus = 'ACTIVE';
+        }
+
         const result = await pool.query(`
             UPDATE bank_loans SET
                 loan_code = $1, lender_name = $2, loan_type = $3, purpose = $4,
@@ -189,12 +202,39 @@ router.put('/:id', async (req, res) => {
             RETURNING *
         `, [
             loan_code, lender_name, loan_type, purpose,
-            parseFloat(original_principal), parseFloat(current_principal), parseFloat(interest_rate),
-            disbursement_date, maturity_date, parseInt(term_months),
-            repayment_method, parseInt(payment_day_of_month), collateral, status, id
+            origP, curP, parseFloat(interest_rate) || 0,
+            disbursement_date || new Date(), maturity_date || new Date(), parseInt(term_months) || 12,
+            repayment_method || 'EQUAL_PRINCIPAL', parseInt(payment_day_of_month) || 25, collateral || '', finalStatus, id
         ]);
 
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy khoản vay' });
+        }
+
         res.json({ success: true, data: result.rows[0] });
+    } catch (err) {
+        console.error('Lỗi cập nhật khoản vay:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Tất toán khoản vay (Đưa dư nợ về 0đ và chuyển trạng thái CLOSED)
+router.post('/:id/settle', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(`
+            UPDATE bank_loans SET
+                current_principal = 0,
+                status = 'CLOSED'
+            WHERE id = $1
+            RETURNING *
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy khoản vay' });
+        }
+
+        res.json({ success: true, message: 'Đã tất toán hợp đồng vay và đưa dư nợ về 0đ', data: result.rows[0] });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -229,6 +269,7 @@ router.post('/:id/repay', async (req, res) => {
             id, repayment_date || new Date(), pPaid, iPaid,
             totalPaid, newPrincipal, payment_proof_url || '', notes || ''
         ]);
+        const repayId = repRes.rows[0].id;
 
         // 2. Cập nhật dư nợ hiện tại của khoản vay
         await client.query(
@@ -243,7 +284,7 @@ router.post('/:id/repay', async (req, res) => {
             VALUES ($1, 'CHI', $2, $3, $4)
         `, [
             cashCode, loan.lender_name, totalPaid,
-            `Thanh toán hợp đồng vay ${loan.loan_code} (Gốc: ${pPaid.toLocaleString('vi-VN')} đ, Lãi: ${iPaid.toLocaleString('vi-VN')} đ) - ${notes || ''}`
+            `Thanh toán hợp đồng vay ${loan.loan_code} (Gốc: ${pPaid.toLocaleString('vi-VN')} đ, Lãi: ${iPaid.toLocaleString('vi-VN')} đ) [Mã TT: #${repayId}] - ${notes || ''}`
         ]);
 
         // 4. Ghi nhận Chi phí Lãi vay vào bảng expenses (để tính đúng P&L)
@@ -254,7 +295,7 @@ router.post('/:id/repay', async (req, res) => {
                 ) VALUES ($1, 'CHI PHÍ LÃI VAY', $2, $3, $4, $4)
             `, [
                 repayment_date || new Date(),
-                `Chi phí tiền lãi vay hợp đồng ${loan.loan_code} - ${loan.lender_name}`,
+                `Chi phí tiền lãi vay hợp đồng ${loan.loan_code} [Mã TT: #${repayId}] - ${loan.lender_name}`,
                 loan.lender_name, iPaid
             ]);
         }
@@ -275,15 +316,118 @@ router.post('/:id/repay', async (req, res) => {
     }
 });
 
-// Xóa khoản vay
-router.delete('/:id', async (req, res) => {
+// Lấy danh sách lịch sử các lần thanh toán nợ thực tế
+router.get('/:id/repayments', async (req, res) => {
     try {
         const { id } = req.params;
-        await pool.query("DELETE FROM loan_repayments WHERE loan_id = $1", [id]);
-        await pool.query("DELETE FROM bank_loans WHERE id = $1", [id]);
-        res.json({ success: true, message: 'Đã xóa khoản vay' });
+        const repRes = await pool.query(
+            "SELECT * FROM loan_repayments WHERE loan_id = $1 ORDER BY id DESC",
+            [id]
+        );
+        res.json({ success: true, repayments: repRes.rows });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Xóa 1 lần thanh toán nợ bị bấm nhầm / sai số tiền -> Hoàn lại dư nợ & Tự động xóa khỏi Sổ Quỹ / Chi phí
+router.delete('/:id/repayments/:repayId', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const { id, repayId } = req.params;
+
+        const repRes = await client.query("SELECT * FROM loan_repayments WHERE id = $1 AND loan_id = $2", [repayId, id]);
+        if (repRes.rows.length === 0) throw new Error('Không tìm thấy giao dịch thanh toán nợ');
+        const repay = repRes.rows[0];
+
+        const loanRes = await client.query("SELECT * FROM bank_loans WHERE id = $1", [id]);
+        if (loanRes.rows.length === 0) throw new Error('Không tìm thấy khoản vay');
+        const loan = loanRes.rows[0];
+
+        // 1. Hoàn lại số tiền gốc đã thanh toán vào dư nợ
+        const rolledBackPrincipal = parseFloat(loan.current_principal) + parseFloat(repay.principal_paid || 0);
+        await client.query(
+            "UPDATE bank_loans SET current_principal = $1, status = 'ACTIVE' WHERE id = $2",
+            [rolledBackPrincipal, id]
+        );
+
+        // 2. Xóa giao dịch thanh toán trong loan_repayments
+        await client.query("DELETE FROM loan_repayments WHERE id = $1", [repayId]);
+
+        // 3. Tự động xóa Phiếu Chi tương ứng trong Sổ Quỹ (cash_transactions)
+        await client.query(
+            "DELETE FROM cash_transactions WHERE notes LIKE $1 OR (notes LIKE $2 AND amount = $3)",
+            [`%[Mã TT: #${repayId}]%`, `%${loan.loan_code}%`, repay.total_paid]
+        );
+
+        // 4. Xóa Chi phí lãi vay tương ứng trong expenses
+        if (repay.interest_paid > 0) {
+            await client.query(
+                "DELETE FROM expenses WHERE description LIKE $1 OR (description LIKE $2 AND total_amount = $3)",
+                [`%[Mã TT: #${repayId}]%`, `%${loan.loan_code}%`, repay.interest_paid]
+            );
+        }
+
+        await client.query('COMMIT');
+        res.json({
+            success: true,
+            message: `Đã hủy lần thanh toán nợ #${repayId}, hoàn lại dư nợ ${(parseFloat(repay.principal_paid)||0).toLocaleString('vi-VN')} đ và xóa hóa đơn/phiếu chi trong Sổ Quỹ!`
+        });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Lỗi xóa lần thanh toán nợ:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// Xóa khoản vay -> Tự động dọn dẹp sạch sẽ lịch sử trả nợ, Sổ Quỹ tiền mặt & Chi phí
+router.delete('/:id', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const { id } = req.params;
+
+        const loanRes = await client.query("SELECT * FROM bank_loans WHERE id = $1", [id]);
+        if (loanRes.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.json({ success: true, message: 'Khoản vay không tồn tại hoặc đã được xóa' });
+        }
+        const loan = loanRes.rows[0];
+        const loanCode = loan.loan_code;
+
+        // 1. Xóa các chứng từ/phiếu chi liên quan trong Sổ Quỹ (cash_transactions)
+        if (loanCode) {
+            await client.query(
+                "DELETE FROM cash_transactions WHERE notes LIKE $1 OR (code LIKE 'PC-VAY-%' AND notes LIKE $2)",
+                [`%${loanCode}%`, `%${loan.lender_name}%`]
+            );
+            // 2. Xóa các khoản chi phí lãi vay liên quan trong expenses
+            await client.query(
+                "DELETE FROM expenses WHERE description LIKE $1",
+                [`%${loanCode}%`]
+            );
+        }
+
+        // 3. Xóa lịch sử trả nợ trong loan_repayments
+        await client.query("DELETE FROM loan_repayments WHERE loan_id = $1", [id]);
+
+        // 4. Xóa hợp đồng vay trong bank_loans
+        await client.query("DELETE FROM bank_loans WHERE id = $1", [id]);
+
+        await client.query('COMMIT');
+        res.json({ 
+            success: true, 
+            message: `Đã xóa vĩnh viễn hợp đồng vay [${loanCode}] và toàn bộ hóa đơn/phiếu chi liên quan trong Sổ Quỹ tiền mặt!` 
+        });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Lỗi xóa khoản vay:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        client.release();
     }
 });
 

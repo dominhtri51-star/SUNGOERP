@@ -1,29 +1,29 @@
-<div class="h-full flex flex-col space-y-4 overflow-hidden">
+<div class="w-full min-h-full flex flex-col space-y-4 font-sans pb-28 md:pb-6">
   
   <!-- Header Banner -->
-  <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-5 text-white shadow-lg shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+  <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-4 sm:p-5 text-white shadow-2xs shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3.5">
     <div>
       <div class="flex items-center gap-2">
-        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded text-xs border border-emerald-400/30">CỔNG DÀNH CHO NHÀ THẦU</span>
-        <span class="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-xs font-bold rounded" id="cp-team-badge">Đội Kỹ Thuật Solar Fast</span>
+        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded-full text-[10px] border border-emerald-400/30">CỔNG NHÀ THẦU</span>
+        <span class="px-2.5 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-bold rounded-full" id="cp-team-badge">Đội Kỹ Thuật Solar Fast</span>
       </div>
-      <h1 class="text-xl font-black text-white mt-1 flex items-center gap-2">
+      <h1 class="text-base sm:text-xl font-black text-white mt-1 flex items-center gap-2">
         <i class="fas fa-clipboard-check text-amber-400"></i> Quản Trị Dự Án & Hồ Sơ Nghiệm Thu Hiện Trường
       </h1>
-      <p class="text-xs text-slate-300 mt-0.5">Xem dự án công ty chỉ định, Check-in GPS, cập nhật tiến độ, tải 6 ảnh nghiệm thu và thêm tư liệu bàn giao.</p>
+      <p class="text-xs text-slate-300 mt-0.5">Xem dự án chỉ định, Check-in GPS, cập nhật tiến độ, tải 6 ảnh nghiệm thu & biên bản bàn giao.</p>
     </div>
 
-    <div class="flex items-center gap-2">
-      <button onclick="window.modContractorPortal.saveAllHandover()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
+    <div class="flex items-center gap-2 w-full md:w-auto">
+      <button onclick="window.modContractorPortal.saveAllHandover()" class="flex-1 md:flex-initial px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
         <i class="fas fa-save"></i> Lưu Hồ Sơ & Tư Liệu
       </button>
     </div>
   </div>
 
   <!-- Chọn Dự Án Được Giao -->
-  <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0">
-    <div class="flex items-center gap-2 w-full md:w-auto">
-      <label class="text-xs font-bold text-slate-700 whitespace-nowrap"><i class="fas fa-tasks text-blue-600 mr-1"></i> Chọn Dự Án Được Chỉ Định:</label>
+  <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
+      <label class="text-xs font-bold text-slate-700 whitespace-nowrap"><i class="fas fa-tasks text-blue-600 mr-1"></i> Chọn Dự Án Chỉ Định:</label>
       <select id="cp-project-select" onchange="window.modContractorPortal.onSelectProject(this.value)" class="text-xs border border-slate-200 rounded-xl px-3 py-2 outline-none font-bold bg-slate-50 text-slate-800 flex-1 md:min-w-[320px]">
         <!-- Options -->
       </select>
@@ -34,10 +34,8 @@
   </div>
 
   <!-- Main Scrollable Workspace -->
-  <div class="flex-1 overflow-y-auto pr-1">
-    <div id="cp-content-area" class="space-y-5">
-      <!-- Dynamic Project Workspace -->
-    </div>
+  <div id="cp-content-area" class="space-y-4 pb-8">
+    <!-- Dynamic Project Workspace -->
   </div>
 
 </div>
@@ -83,6 +81,22 @@ window.modContractorPortal = {
   myTeamId: 1, // Default team 1
 
   init: async () => {
+    try {
+      const uStr = localStorage.getItem("user");
+      if (uStr) {
+        const u = JSON.parse(uStr);
+        window.modContractorPortal.currentUser = u;
+        if (u.username === 'thauthicong' || u.role === 'NHA_THAU_THI_CONG') {
+          window.modContractorPortal.myTeamId = 1;
+        } else if (u.username === 'thaugiamsat' || u.role === 'NHA_THAU_GIAM_SAT') {
+          window.modContractorPortal.myTeamId = 2;
+        } else if (u.username === 'nhacungcap' || u.role === 'NHA_CUNG_CAP') {
+          window.modContractorPortal.myTeamId = 3;
+        }
+        const badge = document.getElementById("cp-team-badge");
+        if (badge) badge.innerText = u.full_name || ("Đội thầu: " + u.username);
+      }
+    } catch(e) {}
     await window.modContractorPortal.loadMyProjects();
   },
 

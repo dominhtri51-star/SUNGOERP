@@ -1,53 +1,64 @@
-<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative">
+<div class="w-full min-h-full flex flex-col space-y-4 bg-white rounded-2xl shadow-2xs border border-slate-200 p-3.5 sm:p-5 relative pb-28 md:pb-6">
     <!-- Header & Nút hành động -->
-    <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-slate-900 text-base"><i class="fas fa-tools text-cyan-600"></i> Lịch Bảo Trì & Vệ Sinh (O&M)</h3>
-        <!-- ĐÃ THÊM SỰ KIỆN ONCLICK VÀO ĐÂY -->
-        <button onclick="window.modOmSchedule.openModal()" class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-            <i class="fas fa-plus mr-1"></i> Thêm Lịch Mới
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-2"><i class="fas fa-tools text-cyan-600"></i> Lịch Bảo Trì & Vệ Sinh (O&M)</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Theo dõi kế hoạch rửa pin, kiểm tra định kỳ và sự cố trạm.</p>
+        </div>
+        <button onclick="window.modOmSchedule.openModal()" class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+            <i class="fas fa-plus"></i> Thêm Lịch Mới
         </button>
     </div>
 
-    <!-- Cụm Thống Kê (Đã thêm ID để JS cập nhật số) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="border rounded-lg p-4 bg-slate-50">
-            <p class="text-xs text-slate-500 font-bold mb-1">Cần Xử Lý</p>
-            <p id="stat-pending" class="text-2xl font-black text-cyan-700">0 Trạm</p>
+    <!-- Cụm Thống Kê -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
+        <div class="border border-slate-200 rounded-2xl p-3.5 bg-slate-50 shadow-2xs">
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Cần Xử Lý</p>
+            <p id="stat-pending" class="text-lg sm:text-2xl font-black text-cyan-700">0 Trạm</p>
         </div>
-        <div class="border rounded-lg p-4 bg-slate-50">
-            <p class="text-xs text-slate-500 font-bold mb-1">Đã Hoàn Thành (Tháng)</p>
-            <p id="stat-done" class="text-2xl font-black text-emerald-600">0 Trạm</p>
+        <div class="border border-slate-200 rounded-2xl p-3.5 bg-slate-50 shadow-2xs">
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Đã Hoàn Thành (Tháng)</p>
+            <p id="stat-done" class="text-lg sm:text-2xl font-black text-emerald-600">0 Trạm</p>
         </div>
-        <div class="border rounded-lg p-4 bg-slate-50">
-            <p class="text-xs text-slate-500 font-bold mb-1">Báo Cáo Lỗi Từ Khách</p>
-            <p id="stat-issue" class="text-2xl font-black text-red-500">0 Sự cố</p>
+        <div class="border border-slate-200 rounded-2xl p-3.5 bg-slate-50 shadow-2xs">
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Báo Cáo Lỗi Từ Khách</p>
+            <p id="stat-issue" class="text-lg sm:text-2xl font-black text-red-500">0 Sự cố</p>
         </div>
     </div>
 
     <!-- Bộ lọc tìm kiếm -->
-    <div class="flex gap-2 mb-4">
-        <input type="text" id="om-search" placeholder="Tìm tên công trình hoặc địa chỉ..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm w-full md:w-1/3 focus:outline-none focus:border-cyan-500">
-        <select class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-cyan-500">
+    <div class="flex flex-col sm:flex-row gap-2">
+        <input type="text" id="om-search" placeholder="Tìm tên công trình hoặc địa chỉ..." class="border border-slate-200 rounded-xl px-3 py-2 text-xs w-full sm:w-1/3 outline-none focus:border-cyan-500 font-medium bg-slate-50">
+        <select id="om-status-select" onchange="window.modOmSchedule.filterStatus(this.value)" class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-cyan-500 font-bold bg-slate-50 text-slate-700">
             <option value="all">Tất cả trạng thái</option>
             <option value="pending">Chờ xử lý</option>
             <option value="done">Đã hoàn thành</option>
         </select>
     </div>
 
-    <!-- Bảng Dữ Liệu -->
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm border-t">
-            <thead class="bg-slate-100 text-xs uppercase text-slate-600">
+    <!-- 1. Desktop Table View -->
+    <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-xl">
+        <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-100 text-[10px] uppercase font-black text-slate-600">
                 <tr>
-                    <th class="p-3">Ngày Lên Lịch</th>
+                    <th class="p-3 pl-4">Ngày Lên Lịch</th>
                     <th class="p-3">Tên Công Trình</th>
                     <th class="p-3">Khu Vực</th>
                     <th class="p-3">Hạng Mục</th>
                     <th class="p-3 text-center">Trạng Thái</th>
-                    <th class="p-3 text-center">Thao Tác</th>
+                    <th class="p-3 pr-4 text-center">Thao Tác</th>
                 </tr>
             </thead>
-            <tbody id="tbl-om" class="divide-y text-slate-700">
+            <tbody id="tbl-om" class="divide-y divide-slate-100 text-slate-700">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 2. Mobile Smart Cards -->
+    <div id="tbl-om-mobile" class="md:hidden space-y-2.5 pb-8">
+        <!-- Rendered by JS -->
+    </div>
+</div>
                 <!-- Dữ liệu sẽ được render từ JS -->
             </tbody>
         </table>
@@ -190,36 +201,68 @@
 
         renderTable: function(filterText = '') {
             const tbody = document.getElementById("tbl-om");
-            tbody.innerHTML = "";
+            const mobContainer = document.getElementById("tbl-om-mobile");
+            if (tbody) tbody.innerHTML = "";
+            if (mobContainer) mobContainer.innerHTML = "";
+
             const filteredData = this.data.filter(item => 
-                item.name.toLowerCase().includes(filterText.toLowerCase()) || 
-                item.address.toLowerCase().includes(filterText.toLowerCase())
+                (item.name || '').toLowerCase().includes(filterText.toLowerCase()) || 
+                (item.address || '').toLowerCase().includes(filterText.toLowerCase())
             );
 
             if (filteredData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Không có dữ liệu lịch trình.</td></tr>`;
+                if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold">Không có dữ liệu lịch trình.</td></tr>`;
+                if (mobContainer) mobContainer.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold text-xs">Không có dữ liệu lịch trình.</div>`;
                 return;
             }
 
-            filteredData.forEach(item => {
-                const tr = document.createElement("tr");
-                tr.className = "hover:bg-slate-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="p-3 font-medium text-slate-700">${item.date}</td>
-                    <td class="p-3">
-                        <div class="font-bold text-cyan-800">${item.name}</div>
-                        <div class="text-xs text-slate-500 mt-0.5"><i class="fas fa-solar-panel"></i> ${item.type}</div>
-                    </td>
-                    <td class="p-3 text-slate-600">${item.address}</td>
-                    <td class="p-3 text-slate-700">${item.task}</td>
-                    <td class="p-3 text-center">${this.getStatusBadge(item.status)}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="window.modOmSchedule.updateStatus(${item.id}, 'done')" class="text-slate-400 hover:text-emerald-600 mr-2" title="Hoàn thành"><i class="fas fa-check-circle"></i></button>
-                        <button onclick="window.modOmSchedule.deleteItem(${item.id})" class="text-slate-400 hover:text-red-500" title="Xóa"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            if (tbody) {
+                filteredData.forEach(item => {
+                    const tr = document.createElement("tr");
+                    tr.className = "hover:bg-slate-50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="p-3 pl-4 font-medium text-slate-700 text-xs">${item.date}</td>
+                        <td class="p-3">
+                            <div class="font-bold text-cyan-800 text-xs">${item.name}</div>
+                            <div class="text-[10px] text-slate-400 mt-0.5"><i class="fas fa-solar-panel"></i> ${item.type}</div>
+                        </td>
+                        <td class="p-3 text-slate-600 text-xs">${item.address}</td>
+                        <td class="p-3 text-slate-700 text-xs font-medium">${item.task}</td>
+                        <td class="p-3 text-center">${this.getStatusBadge(item.status)}</td>
+                        <td class="p-3 pr-4 text-center">
+                            <button onclick="window.modOmSchedule.updateStatus(${item.id}, 'done')" class="text-slate-400 hover:text-emerald-600 mr-2 p-1 cursor-pointer" title="Hoàn thành"><i class="fas fa-check-circle"></i></button>
+                            <button onclick="window.modOmSchedule.deleteItem(${item.id})" class="text-slate-400 hover:text-red-500 p-1 cursor-pointer" title="Xóa"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            if (mobContainer) {
+                mobContainer.innerHTML = filteredData.map(item => `
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-black text-cyan-800">${item.date}</span>
+                        ${this.getStatusBadge(item.status)}
+                    </div>
+                    <div>
+                        <h4 class="font-black text-slate-900 text-xs sm:text-sm leading-snug">${item.name}</h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5"><i class="fas fa-map-marker-alt text-slate-400 mr-1"></i>${item.address}</p>
+                    </div>
+                    <div class="text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-between">
+                        <span class="text-slate-600 font-medium">${item.task}</span>
+                        <span class="text-slate-400 text-[10px]"><i class="fas fa-solar-panel mr-1"></i>${item.type}</span>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                        <button type="button" onclick="window.modOmSchedule.updateStatus(${item.id}, 'done')" class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl font-bold text-xs border border-emerald-200 transition flex items-center gap-1 cursor-pointer">
+                            <i class="fas fa-check-circle"></i> Hoàn Thành
+                        </button>
+                        <button type="button" onclick="window.modOmSchedule.deleteItem(${item.id})" class="p-1.5 text-red-500 hover:text-red-700 bg-red-50 rounded-lg text-xs transition cursor-pointer">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>`).join('');
+            }
         },
 
         updateStatus: async function(id, status) {

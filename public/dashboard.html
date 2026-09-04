@@ -6,21 +6,71 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="SUNGO ERP">
     
     <title>SUNGO ERP - Quản Trị Năng Lượng Thông Minh</title>
     
+    <!-- PWA Settings & Icons -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/pwa-install.js" defer></script>
 
     <style>
-        /* Tối ưu Safe Area cho iOS / Android */
-        .pb-safe {
-            padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
-        }
+        /* Tối ưu Safe Area cho iOS (Dynamic Island / Notch) & Android */
         .pt-safe {
-            padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+            padding-top: max(1.25rem, calc(env(safe-area-inset-top, 0px) + 0.5rem)) !important;
+        }
+        /* ========================================================= */
+        /* CHUẨN IN ẤN PDF / PRINT TOÀN DIỆN CHO DASHBOARD VÀ MODULES */
+        /* ========================================================= */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 6mm !important;
+            }
+            html, body {
+                background: white !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 100% !important;
+                overflow: visible !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            /* ẨN TUYỆT ĐỐI TOÀN BỘ KHUNG ĐIỀU HƯỚNG, SIDEBAR, HEADER, MENU, NÚT BẤM VÀ PROFILE SHEET ĐEN */
+            header,
+            aside,
+            #app-sidebar,
+            #mobile-bottom-nav,
+            #mobile-profile-sheet,
+            #sidebar-backdrop,
+            #profile-sheet-backdrop,
+            #desktop-floating-toggle,
+            #desktop-sidebar-toggle,
+            .no-print {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                height: 0 !important;
+                width: 0 !important;
+                pointer-events: none !important;
+            }
+            #main-content {
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                background: white !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
         }
         
         /* Tùy chỉnh thanh cuộn thanh mảnh trên Mobile & Desktop */
@@ -39,16 +89,41 @@
             background: #94a3b8;
         }
 
-        /* Chống kéo nảy ngoài ý muốn & tối ưu cảm ứng */
+        /* Tối ưu cảm ứng & cuộn mượt mà trên Mobile (iOS / Android) */
         body {
             -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none;
+        }
+
+        #main-content {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: auto;
+            scroll-behavior: smooth;
         }
 
         /* Tối ưu hiển thị bảng trên Mobile */
         .table-responsive {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+        }
+
+        /* Tối ưu hiệu ứng thu gọn / mở rộng Sidebar bên phải trên Desktop */
+        @media (min-width: 768px) {
+            #app-sidebar {
+                transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                            opacity 0.25s ease, 
+                            transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            #app-sidebar.desktop-collapsed {
+                width: 0 !important;
+                min-width: 0 !important;
+                max-width: 0 !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                overflow: hidden !important;
+                transform: translateX(100%) !important;
+                pointer-events: none !important;
+                border: none !important;
+            }
         }
     </style>
 </head>
@@ -60,42 +135,7 @@
     <!-- LỚP PHỦ MỜ KHI MỞ PROFILE BOTTOM SHEET (MOBILE) -->
     <div id="profile-sheet-backdrop" onclick="toggleMobileProfileSheet(false)" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 hidden transition-opacity duration-300 opacity-0 md:hidden"></div>
 
-    <!-- SIDEBAR (DRAWER TRÊN MOBILE, CỐ ĐỊNH TRÊN DESKTOP) -->
-    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-50 w-72 md:w-64 bg-slate-900 text-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out transform -translate-x-full md:translate-x-0 md:static md:shadow-xl shrink-0">
-        
-        <!-- HEADER CỦA SIDEBAR -->
-        <div class="p-4 md:p-5 flex items-center justify-between border-b border-slate-800">
-            <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-slate-900 shadow-md">
-                    <i class="fas fa-solar-panel text-sm"></i>
-                </div>
-                <h1 class="text-xl font-black text-amber-500 tracking-wider">SUNGO<span class="text-white">ERP</span></h1>
-            </div>
-            <!-- NÚT ĐÓNG DRAWER (CHỈ HIỆN TRÊN MOBILE) -->
-            <button onclick="closeMobileSidebar()" class="md:hidden w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition">
-                <i class="fas fa-times text-sm"></i>
-            </button>
-        </div>
-
-        <!-- DANH SÁCH MENU THEO PHÂN QUYỀN -->
-        <nav class="flex-1 overflow-y-auto py-3 space-y-1" id="sidebar-menu"></nav>
-
-        <!-- USER PROFILE FOOTER TRONG SIDEBAR -->
-        <div class="p-4 border-t border-slate-800 bg-slate-950/40">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center font-black text-slate-900 shadow-md" id="user-avatar-badge">AD</div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold truncate text-white" id="user-name">Đang tải...</p>
-                    <p class="text-[10px] text-amber-400 font-semibold truncate" id="user-role">...</p>
-                </div>
-            </div>
-            <button onclick="logout()" class="w-full bg-red-600/90 hover:bg-red-600 active:bg-red-700 text-xs py-2.5 rounded-xl text-white font-bold transition flex items-center justify-center gap-2 shadow-sm">
-                <i class="fas fa-sign-out-alt"></i> Đăng Xuất
-            </button>
-        </div>
-    </aside>
-
-    <!-- KHU VỰC NỘI DUNG CHÍNH (MAIN WRAPPER) -->
+    <!-- KHU VỰC NỘI DUNG CHÍNH (MAIN WRAPPER - NẰM BÊN TRÁI TRÊN DESKTOP ĐỂ TỐI ĐA HOÁ DIỆN TÍCH) -->
     <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative">
 
         <!-- HEADER TRÊN DESKTOP (TABLET / DESKTOP ONLY - TRÊN MOBILE ĐÃ LOẠI BỎ ĐỂ DÀNH TRỌN MÀN HÌNH) -->
@@ -112,19 +152,25 @@
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span class="font-bold text-slate-600">Online</span>
                 </div>
-                <button onclick="window.location.reload()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition text-xs font-bold" title="Làm mới dữ liệu">
+                <button onclick="window.location.reload()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition text-xs font-bold cursor-pointer" title="Làm mới dữ liệu">
                     <i class="fas fa-sync-alt"></i>
+                </button>
+                
+                <!-- NÚT ẨN / HIỆN MENU BÊN PHẢI TRÊN DESKTOP -->
+                <button id="desktop-sidebar-toggle" onclick="toggleDesktopSidebar()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 hover:text-amber-300 transition text-xs font-bold shadow-sm cursor-pointer" title="Ẩn/Hiện Menu bên phải (Phím tắt: Ctrl + B)">
+                    <i id="desktop-sidebar-toggle-icon" class="fas fa-outdent"></i>
+                    <span id="desktop-sidebar-toggle-text">Thu Gọn Menu</span>
                 </button>
             </div>
         </header>
 
         <!-- VÙNG TẢI MODULE NỘI DUNG CHÍNH (CONTENT AREA - FULL SCREEN TRÊN MOBILE TỐI ĐA DIỆN TÍCH) -->
-        <main class="flex-1 overflow-y-auto p-2 sm:p-3 md:p-6 pb-20 md:pb-6 bg-slate-50 relative pt-safe" id="main-content">
+        <main class="flex-1 overflow-y-auto p-2 sm:p-3 md:p-6 pb-28 sm:pb-20 md:pb-6 bg-slate-50 relative pt-safe" id="main-content">
             <!-- Dynamic Module Content Loads Here -->
         </main>
 
         <!-- THANH ĐIỀU HƯỚNG DUY NHẤT DƯỚI ĐÁY MÀN HÌNH (MOBILE BOTTOM TOOLBAR) -->
-        <nav id="mobile-bottom-nav" class="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800/90 flex justify-around items-center py-1 px-1 md:hidden shadow-2xl pb-safe">
+        <nav id="mobile-bottom-nav" class="fixed bottom-0 inset-x-0 z-40 bg-slate-900 border-t border-slate-800 flex justify-around items-center py-1.5 px-1 md:hidden shadow-2xl">
             <!-- Dynamic Bottom Tabs generated by app.js -->
         </nav>
 
@@ -139,7 +185,6 @@
                 <div class="flex-1 min-w-0">
                     <h3 class="font-bold text-base text-white truncate" id="sheet-user-name">Người Dùng</h3>
                     <p class="text-xs text-amber-400 font-semibold truncate" id="sheet-user-role">ADMIN</p>
-                    <p class="text-[10px] text-slate-400 font-mono" id="sheet-user-empid">Mã NV: UNKNOWN</p>
                 </div>
                 <button onclick="toggleMobileProfileSheet(false)" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center">
                     <i class="fas fa-times text-xs"></i>
@@ -166,6 +211,53 @@
 
     </div>
 
-    <script src="/js/app.js?v=20260827_v4"></script>
+    <!-- NÚT MỞ NHANH CẠNH PHẢI KHI ĐÃ THU GỌN TRÊN DESKTOP (FLOATING TRIGGER) -->
+    <button id="desktop-floating-toggle" onclick="toggleDesktopSidebar(false)" class="hidden fixed right-0 top-1/2 -translate-y-1/2 z-30 bg-slate-900 text-amber-400 hover:bg-amber-500 hover:text-slate-900 border-l border-t border-b border-slate-700 py-4 px-2 rounded-l-xl shadow-2xl transition items-center justify-center cursor-pointer group" title="Mở thanh Menu bên phải (Ctrl + B)">
+        <i class="fas fa-chevron-left text-sm group-hover:-translate-x-0.5 transition-transform"></i>
+    </button>
+
+    <!-- SIDEBAR BÊN PHẢI (DRAWER TRÊN MOBILE, CỐ ĐỊNH & CÓ THỂ THU GỌN TRÊN DESKTOP) -->
+    <aside id="app-sidebar" class="fixed inset-y-0 right-0 z-50 w-72 md:w-64 bg-slate-900 text-white flex flex-col shadow-2xl transition-all duration-300 ease-in-out transform translate-x-full md:translate-x-0 md:static md:shadow-xl shrink-0 border-l border-slate-800/80">
+        
+        <!-- HEADER CỦA SIDEBAR -->
+        <div class="p-4 md:p-5 flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-slate-900 shadow-md">
+                    <i class="fas fa-solar-panel text-sm"></i>
+                </div>
+                <h1 class="text-xl font-black text-amber-500 tracking-wider">SUNGO<span class="text-white">ERP</span></h1>
+            </div>
+            <!-- NÚT THU GỌN TRÊN DESKTOP -->
+            <button onclick="toggleDesktopSidebar(true)" class="hidden md:flex w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-amber-400 items-center justify-center transition cursor-pointer" title="Thu gọn Menu (Ctrl + B)">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </button>
+            <!-- NÚT ĐÓNG DRAWER (CHỈ HIỆN TRÊN MOBILE) -->
+            <button onclick="closeMobileSidebar()" class="md:hidden w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+
+        <!-- DANH SÁCH MENU THEO PHÂN QUYỀN -->
+        <nav class="flex-1 overflow-y-auto py-3 space-y-1" id="sidebar-menu"></nav>
+
+        <!-- USER PROFILE FOOTER TRONG SIDEBAR -->
+        <div class="p-4 border-t border-slate-800 bg-slate-950/40">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center font-black text-slate-900 shadow-md" id="user-avatar-badge">AD</div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold truncate text-white" id="user-name">Đang tải...</p>
+                    <p class="text-[10px] text-amber-400 font-semibold truncate" id="user-role">...</p>
+                </div>
+            </div>
+            <button id="sidebar-install-pwa-btn" onclick="window.triggerPwaInstall && window.triggerPwaInstall()" class="hidden w-full mb-2 bg-amber-500/15 hover:bg-amber-500/25 active:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-xs py-2.5 rounded-xl font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fas fa-mobile-screen-button"></i> Cài Đặt App Điện Thoại
+            </button>
+            <button onclick="logout()" class="w-full bg-red-600/90 hover:bg-red-600 active:bg-red-700 text-xs py-2.5 rounded-xl text-white font-bold transition flex items-center justify-center gap-2 shadow-sm">
+                <i class="fas fa-sign-out-alt"></i> Đăng Xuất
+            </button>
+        </div>
+    </aside>
+
+    <script src="/js/app.js?v=20260828_v1"></script>
 </body>
 </html>

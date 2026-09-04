@@ -140,8 +140,8 @@ router.post('/sync-pending', async (req, res) => {
                    c.vat_email
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.id
-            WHERE o.status IN ('Đã Hoàn Tất', 'COMPLETED', 'SHIPPED', 'DELIVERED', 'PAID')
-               OR o.paid_amount > 0
+            WHERE (o.status IN ('Đã Hoàn Tất', 'COMPLETED', 'SHIPPED', 'DELIVERED', 'PAID', 'CONFIRMED') OR o.paid_amount > 0)
+              AND o.status NOT IN ('CANCELLED', 'DRAFT', 'RETURNED')
             ORDER BY o.id DESC
         `);
 

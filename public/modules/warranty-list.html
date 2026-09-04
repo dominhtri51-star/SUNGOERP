@@ -1,113 +1,298 @@
 <div class="space-y-6">
-    <!-- 1. Tra Cứu & Cập nhật trạng thái bảo hành -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h3 class="font-bold text-slate-900 text-base mb-4"><i class="fas fa-search text-cyan-600"></i> Tra Cứu & Cập Nhật Bảo Hành</h3>
-        <div class="flex gap-4">
-            <input type="text" id="search-sn" placeholder="Nhập mã Serial (VD: SN-ZEN-889234)..." class="w-full md:w-1/2 border p-2.5 text-sm font-mono outline-none rounded focus:border-cyan-500">
-            <button onclick="window.modWarranty.check()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-6 rounded text-sm transition">Kiểm Tra</button>
+    <!-- TOP TOOLBAR: CỔNG BẢO HÀNH ĐIỆN TỬ & CÔNG CỤ IN TEM -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-4 sm:p-6 shadow-xl border border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500 text-slate-950 uppercase">Phân Hệ Kỹ Thuật</span>
+                <h2 class="text-lg sm:text-xl font-black text-white">Quản Lý Mã Serial & Cổng Bảo Hành Điện Tử</h2>
+            </div>
+            <p class="text-xs text-slate-300 mt-1">Đường link công khai cho khách hàng: <code class="bg-slate-950/80 px-2 py-0.5 rounded text-amber-300 font-mono text-[11px]" id="public-portal-url">/warranty.html</code></p>
         </div>
-        <div id="search-result" class="mt-4 hidden"></div>
 
-        <!-- Form ghi nhận lỗi mới -->
-        <div id="add-issue-form" class="mt-4 hidden p-4 border border-dashed border-slate-300 rounded bg-slate-50">
-            <h4 class="font-bold text-sm text-slate-800 mb-2">Ghi Nhận Lỗi Bảo Hành Mới</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input type="text" id="issue-detail" placeholder="Chi tiết lỗi (VD: Lỗi module công suất P50A...)" class="border p-2.5 text-sm outline-none rounded w-full focus:border-cyan-500">
-                <select id="issue-status" class="border p-2.5 text-sm outline-none rounded w-full focus:border-cyan-500">
-                    <option value="Đang tiếp nhận">Đang tiếp nhận</option>
-                    <option value="Chờ linh kiện">Chờ linh kiện</option>
-                    <option value="Đang sửa chữa">Đang sửa chữa</option>
-                    <option value="Đã hoàn thành">Đã hoàn thành</option>
-                </select>
-                <button onclick="window.modWarranty.addIssue()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded text-sm transition">Cập Nhật Trạng Thái</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Kích Hoạt Bảo Hành -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h3 class="font-bold text-slate-900 text-base mb-4"><i class="fas fa-qrcode text-cyan-600"></i> Kích Hoạt Bảo Hành Điện Tử</h3>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Mã Serial (QR/Barcode)</label>
-                <input type="text" id="w-sn" placeholder="Ví dụ: SN-ZEN-889234" class="w-full border p-2.5 text-sm font-mono outline-none rounded focus:border-cyan-500">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Thiết Bị Cần Kích Hoạt</label>
-                <select id="w-sku" class="w-full border p-2.5 text-sm outline-none rounded focus:border-cyan-500"><option value="">Đang tải...</option></select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Khách Hàng</label>
-                <input type="text" id="w-cust" class="w-full border p-2.5 text-sm outline-none rounded focus:border-cyan-500">
-            </div>
-            <div class="flex items-end">
-                <button onclick="window.modWarranty.register()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 rounded text-sm transition">Kích Hoạt</button>
-            </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="window.modWarranty.copyPortalLink()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow">
+                <i class="fas fa-link"></i>
+                <span id="btn-copy-text">Sao Chép Link Khách Hàng</span>
+            </button>
+            <button onclick="window.modWarranty.openStickerModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow-lg">
+                <i class="fas fa-qrcode text-base"></i>
+                <span>Tạo Tem QR Dán Thân Máy</span>
+            </button>
+            <a href="/warranty.html" target="_blank" class="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition flex items-center gap-1.5 shadow">
+                <i class="fas fa-arrow-up-right-from-square"></i>
+                <span>Mở Cổng Trực Tuyến</span>
+            </a>
         </div>
     </div>
 
-    <!-- 3. Lịch Sử Hệ Sinh Thái -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h3 class="font-bold text-slate-900 text-base mb-4 flex items-center">
-            📋 Hệ Sinh Thái Lịch Sử Bảo Hành 
-            <span id="count-result" class="ml-3 px-2 py-1 bg-rose-100 text-rose-700 text-xs rounded-full font-bold">Đang tải...</span>
-        </h3>
-        
-        <!-- BỘ LỌC THÔNG MINH (CRM, Sản phẩm & Trạng thái) -->
-        <div class="flex flex-col md:flex-row gap-4 mb-4 bg-slate-50 p-4 rounded border border-slate-200">
-            <!-- Ô Tìm kiếm khách hàng (w-1/4) -->
-            <div class="w-full md:w-1/4 relative">
-                <label class="block text-xs font-semibold text-slate-600 mb-2">🔍 Khách hàng (Tên/SĐT)</label>
-                <input type="text" id="search-customer" autocomplete="off" onkeyup="window.modWarranty.handleSearchInput()" placeholder="Tìm tên/số điện thoại..." class="w-full border border-slate-300 p-2 text-sm outline-none rounded focus:border-cyan-500 shadow-sm relative z-20">
-                
-                <div id="crm-suggest-box" class="absolute z-30 w-full bg-white border border-slate-200 shadow-xl rounded mt-1 hidden max-h-48 overflow-y-auto"></div>
-            </div>
+    <!-- MAIN MODULE TABS BAR -->
+    <div class="flex border-b border-slate-200 bg-white rounded-t-xl px-4 pt-3 gap-3 shadow-xs">
+        <button onclick="window.modWarranty.switchMainTab('devices')" id="tab-btn-dev" class="py-2.5 px-4 font-bold text-sm border-b-2 border-cyan-600 text-cyan-700 flex items-center gap-2">
+            <i class="fas fa-barcode"></i>
+            <span>Danh Sách Thiết Bị & Kích Hoạt</span>
+            <span id="badge-total-dev" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-100 text-cyan-800">...</span>
+        </button>
+        <button onclick="window.modWarranty.switchMainTab('claims')" id="tab-btn-claims" class="py-2.5 px-4 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition">
+            <i class="fas fa-inbox text-amber-500"></i>
+            <span>Phiếu Yêu Cầu Bảo Hành Từ Khách Hàng</span>
+            <span id="badge-total-claims" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">0</span>
+        </button>
+    </div>
 
-            <!-- Ô Lọc theo Sản phẩm (MỚI - w-1/4) -->
-            <div class="w-full md:w-1/4">
-                <label class="block text-xs font-semibold text-slate-600 mb-2">📦 Lọc theo Sản phẩm</label>
-                <select id="filter-product" onchange="window.modWarranty.handleProductFilter()" class="w-full border border-slate-300 p-2 text-sm outline-none rounded focus:border-cyan-500 shadow-sm">
-                    <option value="all">Tất cả sản phẩm</option>
-                </select>
+    <!-- ============================================================= -->
+    <!-- TAB 1: DANH SÁCH THIẾT BỊ & KÍCH HOẠT (DEVICES)                 -->
+    <!-- ============================================================= -->
+    <div id="subtab-devices" class="space-y-6">
+        <!-- 1. Tra Cứu & Cập nhật trạng thái bảo hành -->
+        <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5">
+            <h3 class="font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
+                <i class="fas fa-search text-cyan-600"></i> Tra Cứu Nhanh Theo Mã Serial
+            </h3>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="search-sn" placeholder="Nhập mã Serial (VD: SN-DEYE-01, SN-ZEN-889234)..." class="w-full sm:w-1/2 border border-slate-300 p-2.5 text-sm font-mono outline-none rounded-xl focus:border-cyan-500 uppercase">
+                <button onclick="window.modWarranty.check()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-6 rounded-xl text-sm transition">Kiểm Tra</button>
             </div>
-            
-            <!-- Các Label Lọc Tình Trạng (w-2/4) -->
-            <div class="w-full md:w-2/4">
-                <label class="block text-xs font-semibold text-slate-600 mb-2">🏷️ Lọc theo Tình trạng</label>
-                <div class="flex flex-wrap gap-2" id="filter-labels">
-                    <button onclick="window.modWarranty.setStatus('all_pending')" id="lbl-all_pending" class="px-3 py-1.5 text-xs font-bold rounded-full transition border bg-cyan-600 text-white border-cyan-600 shadow-sm">Đang xử lý</button>
-                    <button onclick="window.modWarranty.setStatus('Đang tiếp nhận')" id="lbl-Đang tiếp nhận" class="px-3 py-1.5 text-xs font-bold rounded-full transition border bg-white text-slate-600 border-slate-300 hover:bg-slate-100">Đang tiếp nhận</button>
-                    <button onclick="window.modWarranty.setStatus('Chờ linh kiện')" id="lbl-Chờ linh kiện" class="px-3 py-1.5 text-xs font-bold rounded-full transition border bg-white text-slate-600 border-slate-300 hover:bg-slate-100">Chờ linh kiện</button>
-                    <button onclick="window.modWarranty.setStatus('Đang sửa chữa')" id="lbl-Đang sửa chữa" class="px-3 py-1.5 text-xs font-bold rounded-full transition border bg-white text-slate-600 border-slate-300 hover:bg-slate-100">Đang sửa chữa</button>
-                    <button onclick="window.modWarranty.setStatus('Đã hoàn thành')" id="lbl-Đã hoàn thành" class="px-3 py-1.5 text-xs font-bold rounded-full transition border bg-white text-slate-600 border-slate-300 hover:bg-slate-100">Đã hoàn thành</button>
-                    <button onclick="window.modWarranty.setStatus('all')" id="lbl-all" class="px-3 py-1.5 text-xs font-bold rounded-full transition border bg-white text-slate-600 border-slate-300 hover:bg-slate-100">Toàn bộ</button>
+            <div id="search-result" class="mt-4 hidden"></div>
+
+            <!-- Form ghi nhận lỗi mới -->
+            <div id="add-issue-form" class="mt-4 hidden p-4 border border-dashed border-slate-300 rounded-xl bg-slate-50">
+                <h4 class="font-bold text-xs text-slate-800 uppercase mb-2">Ghi Nhận Lỗi Bảo Hành Mới</h4>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <input type="text" id="issue-detail" placeholder="Chi tiết lỗi (VD: Lỗi module công suất P50A...)" class="border p-2.5 text-sm outline-none rounded-xl w-full focus:border-cyan-500 md:col-span-2">
+                    <select id="issue-status" class="border p-2.5 text-sm outline-none rounded-xl w-full focus:border-cyan-500">
+                        <option value="Đang tiếp nhận">Đang tiếp nhận</option>
+                        <option value="Chờ linh kiện">Chờ linh kiện</option>
+                        <option value="Đang sửa chữa">Đang sửa chữa</option>
+                        <option value="Đã hoàn thành">Đã hoàn thành</option>
+                    </select>
+                    <button onclick="window.modWarranty.addIssue()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-sm transition">Cập Nhật Trạng Thái</button>
                 </div>
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead class="bg-slate-100 text-xs uppercase text-slate-600">
-                    <tr>
-                        <th class="p-3">Mã Serial</th>
-                        <th class="p-3">Thiết Bị</th>
-                        <th class="p-3">Khách Hàng</th>
-                        <th class="p-3 text-center">Ngày Kích Hoạt</th>
-                        <th class="p-3 text-center">Số Lần BH</th>
-                        <th class="p-3">Chi Tiết Lỗi & Tình Trạng</th>
-                    </tr>
-                </thead>
-                <tbody id="tbl-warranty" class="divide-y"></tbody>
-            </table>
+        <!-- 2. Kích Hoạt Bảo Hành Nhanh -->
+        <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5">
+            <h3 class="font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
+                <i class="fas fa-qrcode text-cyan-600"></i> Kích Hoạt Bảo Hành Thiết Bị Mới
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mã Serial</label>
+                    <input type="text" id="w-sn" placeholder="SN-ZEN-889234" class="w-full border border-slate-300 p-2.5 text-sm font-mono uppercase outline-none rounded-xl focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Thiết Bị / Model</label>
+                    <select id="w-sku" class="w-full border border-slate-300 p-2.5 text-sm outline-none rounded-xl focus:border-cyan-500"><option value="">Đang tải...</option></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Khách Hàng</label>
+                    <input type="text" id="w-cust" placeholder="Khách Hàng / Công Ty" class="w-full border border-slate-300 p-2.5 text-sm outline-none rounded-xl focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Số Điện Thoại</label>
+                    <input type="tel" id="w-phone" placeholder="0987654321" class="w-full border border-slate-300 p-2.5 text-sm font-mono outline-none rounded-xl focus:border-cyan-500">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="window.modWarranty.register()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 rounded-xl text-sm transition">Kích Hoạt</button>
+                </div>
+            </div>
         </div>
 
-        <!-- NÚT XEM THÊM -->
-        <div id="load-more-container" class="mt-6 text-center hidden">
-            <button onclick="window.modWarranty.loadMore()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-6 rounded-full text-sm transition">
-                Xem thêm 50 mã nữa ⬇️
+        <!-- 3. Lịch Sử Hệ Sinh Thái -->
+        <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                <h3 class="font-bold text-slate-900 text-base flex items-center">
+                    📋 Danh Sách Thiết Bị & Lịch Sử Bảo Hành
+                    <span id="count-result" class="ml-3 px-2.5 py-0.5 bg-rose-100 text-rose-700 text-xs rounded-full font-bold">Đang tải...</span>
+                </h3>
+            </div>
+            
+            <!-- BỘ LỌC THÔNG MINH -->
+            <div class="flex flex-col md:flex-row gap-3 mb-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div class="w-full md:w-1/3 relative">
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">🔍 Tìm Khách Hàng / SĐT / Serial</label>
+                    <input type="text" id="search-customer" autocomplete="off" onkeyup="window.modWarranty.handleSearchInput()" placeholder="Tìm tên, SĐT hoặc mã Serial..." class="w-full border border-slate-300 p-2 text-sm outline-none rounded-lg focus:border-cyan-500 bg-white">
+                    <div id="crm-suggest-box" class="absolute z-30 w-full bg-white border border-slate-200 shadow-xl rounded mt-1 hidden max-h-48 overflow-y-auto"></div>
+                </div>
+
+                <div class="w-full md:w-1/3">
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">📦 Lọc Theo Sản Phẩm</label>
+                    <select id="filter-product" onchange="window.modWarranty.handleProductFilter()" class="w-full border border-slate-300 p-2 text-sm outline-none rounded-lg focus:border-cyan-500 bg-white">
+                        <option value="all">Tất cả sản phẩm</option>
+                    </select>
+                </div>
+                
+                <div class="w-full md:w-1/3">
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">🏷️ Tình Trạng Lỗi</label>
+                    <div class="flex flex-wrap gap-1.5" id="filter-labels">
+                        <button onclick="window.modWarranty.setStatus('all')" id="lbl-all" class="px-2.5 py-1 text-xs font-bold rounded-lg transition border bg-cyan-600 text-white border-cyan-600">Toàn bộ</button>
+                        <button onclick="window.modWarranty.setStatus('all_pending')" id="lbl-all_pending" class="px-2.5 py-1 text-xs font-bold rounded-lg transition border bg-white text-slate-600 border-slate-300 hover:bg-slate-100">Đang xử lý</button>
+                        <button onclick="window.modWarranty.setStatus('Đã hoàn thành')" id="lbl-Đã hoàn thành" class="px-2.5 py-1 text-xs font-bold rounded-lg transition border bg-white text-slate-600 border-slate-300 hover:bg-slate-100">Đã xong</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-100 text-xs uppercase text-slate-600 font-bold">
+                        <tr>
+                            <th class="p-3">Mã Serial</th>
+                            <th class="p-3">Thiết Bị</th>
+                            <th class="p-3">Khách Hàng / SĐT</th>
+                            <th class="p-3 text-center">Ngày Kích Hoạt</th>
+                            <th class="p-3 text-center">Hết Hạn</th>
+                            <th class="p-3 text-center">Số Lần BH</th>
+                            <th class="p-3">Chi Tiết Lỗi & Tình Trạng</th>
+                            <th class="p-3 text-right">In Tem & Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-warranty" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+
+            <!-- NÚT XEM THÊM -->
+            <div id="load-more-container" class="mt-4 text-center hidden">
+                <button onclick="window.modWarranty.loadMore()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-6 rounded-full text-xs transition">
+                    Xem thêm 50 mã nữa ⬇️
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 2: HỘP THƯ PHIẾU YÊU CẦU BẢO HÀNH TỪ KHÁCH HÀNG (CLAIMS)    -->
+    <!-- ============================================================= -->
+    <div id="subtab-claims" class="hidden space-y-6">
+        <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <i class="fas fa-inbox text-amber-500"></i> Phiếu Yêu Cầu Bảo Hành / Báo Sự Cố Trực Tuyến
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Tiếp nhận và phản hồi phiếu sự cố khách hàng gửi qua Cổng Bảo Hành Điện Tử.</p>
+                </div>
+                <button onclick="window.modWarranty.loadClaims()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1">
+                    <i class="fas fa-sync-alt"></i> Làm Mới Danh Sách
+                </button>
+            </div>
+
+            <!-- Filters for claims -->
+            <div class="flex flex-wrap gap-3 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-slate-600">Lọc Trạng Thái:</span>
+                    <select id="filter-claim-status" onchange="window.modWarranty.loadClaims()" class="border border-slate-300 p-1.5 rounded-lg outline-none bg-white font-medium">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="Đang tiếp nhận">Đang tiếp nhận</option>
+                        <option value="Chờ linh kiện">Chờ linh kiện</option>
+                        <option value="Đang sửa chữa">Đang sửa chữa</option>
+                        <option value="Đã hoàn thành">Đã hoàn thành</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table of Claims -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-100 text-xs uppercase text-slate-600 font-bold">
+                        <tr>
+                            <th class="p-3">Mã Ticket</th>
+                            <th class="p-3">Mã Serial</th>
+                            <th class="p-3">Thiết Bị</th>
+                            <th class="p-3">Người Gửi / SĐT</th>
+                            <th class="p-3">Hiện Tượng Lỗi</th>
+                            <th class="p-3 text-center">Hình Thức</th>
+                            <th class="p-3 text-center">Trạng Thái</th>
+                            <th class="p-3">Phản Hồi Kỹ Thuật</th>
+                            <th class="p-3 text-right">Xử Lý</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-claims" class="divide-y divide-slate-100">
+                        <tr><td colspan="9" class="p-6 text-center text-slate-400">Đang tải phiếu yêu cầu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- MODAL: TẠO TEM QR IN DÁN MÁY CHUYÊN NGHIỆP                      -->
+<!-- ============================================================= -->
+<div id="modal-sticker-generator" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl w-full max-w-xl p-5 sm:p-7 shadow-2xl space-y-5 my-auto border border-slate-200">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-lg shadow-md shadow-amber-500/20">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+                <div>
+                    <h4 class="font-black text-base sm:text-lg text-slate-900">Tạo Tem QR Bảo Hành Dán Máy</h4>
+                    <p class="text-xs text-slate-500">Tự động sinh mã QR liên kết tra cứu và kích hoạt bảo hành</p>
+                </div>
+            </div>
+            <button onclick="window.modWarranty.closeStickerModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition">
+                <i class="fas fa-times"></i>
             </button>
         </div>
 
+        <!-- Form Controls Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Mã Serial Dán Máy <span class="text-red-500">*</span></label>
+                <input type="text" id="sticker-sn-input" oninput="window.modWarranty.generateStickerPreview()" placeholder="Ví dụ: SN-DEYE-01" class="w-full border border-slate-300 p-2.5 rounded-xl font-mono font-bold text-sm uppercase outline-none focus:border-amber-500 bg-slate-50 focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Tên Thiết Bị / Model</label>
+                <input type="text" id="sticker-product-input" oninput="window.modWarranty.generateStickerPreview()" placeholder="Ví dụ: Deye Hybrid 6kW..." class="w-full border border-slate-300 p-2.5 rounded-xl font-medium outline-none focus:border-amber-500 bg-slate-50 focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Chọn Từ Thiết Bị Đã Có</label>
+                <select id="sticker-device-select" onchange="window.modWarranty.onSelectDeviceForSticker(this.value)" class="w-full border border-slate-300 p-2.5 rounded-xl outline-none bg-slate-50 text-slate-700">
+                    <option value="">-- Chọn nhanh từ danh sách bảo hành --</option>
+                </select>
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Mẫu Thiết Kế Tem</label>
+                <select id="sticker-template-select" onchange="window.modWarranty.generateStickerPreview()" class="w-full border border-slate-300 p-2.5 rounded-xl outline-none bg-slate-50 text-slate-700 font-semibold">
+                    <option value="standard">Mẫu 1: Tem Nhãn Tiêu Chuẩn (80 x 50mm)</option>
+                    <option value="compact">Mẫu 2: Tem Nhỏ Tiết Kiệm (60 x 35mm)</option>
+                    <option value="security">Mẫu 3: Tem Bảo Hành Chống Giả (50 x 25mm)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- LIVE PREVIEW CONTAINER -->
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-600 uppercase flex items-center gap-1.5">
+                    <i class="fas fa-eye text-amber-500"></i> Bản Xem Trước Tem In Thực Tế:
+                </span>
+                <span class="text-[11px] text-slate-400 font-mono">Tỉ lệ 1:1 In Nhiệt / Laser</span>
+            </div>
+
+            <!-- The Sticker Card Wrapper -->
+            <div class="p-4 bg-slate-100 rounded-2xl border border-slate-200 flex items-center justify-center min-h-[160px]">
+                <div id="sticker-render-area" class="w-full max-w-[360px] bg-white rounded-xl shadow-lg border-2 border-slate-800 p-3.5 text-slate-900 transition-all">
+                    <!-- Dynamic Sticker Template will render here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+            <button onclick="window.modWarranty.generateStickerPreview()" class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5">
+                <i class="fas fa-rotate"></i> Làm Mới Tem
+            </button>
+            <div class="flex gap-2">
+                <button onclick="window.modWarranty.closeStickerModal()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition">
+                    Đóng
+                </button>
+                <button onclick="window.modWarranty.printSticker()" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20">
+                    <i class="fas fa-print text-sm"></i> In Tem Ngay
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -115,30 +300,52 @@
     window.modWarranty = {
         currentSearchSN: null,
         allWarranties: [], 
-        currentStatusFilter: 'all_pending', 
+        allClaims: [],
+        currentStatusFilter: 'all', 
         crmCustomers: [],
         displayLimit: 50, 
+        currentActiveTab: 'devices',
 
         load: async () => {
-            const pRes = await fetch('/api/products'); 
-            const pData = await pRes.json();
-            if(pData.success) {
-                // Đổ dữ liệu vào cả dropdown Kích hoạt và dropdown Lọc
-                const productOptions = pData.data.map(p => `<option value="${p.sku}">${p.product_name}</option>`).join('');
-                document.getElementById('w-sku').innerHTML = productOptions;
-                document.getElementById('filter-product').innerHTML = '<option value="all">Tất cả sản phẩm</option>' + productOptions;
-            }
-            
-            const wRes = await fetch('/api/warranties'); 
-            const wData = await wRes.json();
-            if(wData.success) {
-                window.modWarranty.allWarranties = wData.data; 
-                
-                const uniqueCust = [...new Set(wData.data.map(w => w.customer_name).filter(Boolean))];
-                window.modWarranty.crmCustomers = uniqueCust;
+            const portalUrl = `${window.location.origin}/warranty.html`;
+            const portalCode = document.getElementById('public-portal-url');
+            if (portalCode) portalCode.innerText = portalUrl;
 
-                window.modWarranty.renderTable();
-            }
+            // 1. Tải danh mục sản phẩm
+            try {
+                const pRes = await fetch('/api/products'); 
+                const pData = await pRes.json();
+                if(pData.success) {
+                    const productOptions = pData.data.map(p => `<option value="${p.sku}">[${p.category || 'Solar'}] ${p.product_name}</option>`).join('');
+                    document.getElementById('w-sku').innerHTML = productOptions;
+                    document.getElementById('filter-product').innerHTML = '<option value="all">Tất cả sản phẩm</option>' + productOptions;
+                }
+            } catch(e) {}
+            
+            // 2. Tải danh sách bảo hành
+            try {
+                const wRes = await fetch('/api/warranties'); 
+                const wData = await wRes.json();
+                if(wData.success) {
+                    window.modWarranty.allWarranties = wData.data; 
+                    document.getElementById('badge-total-dev').innerText = wData.data.length;
+                    
+                    const uniqueCust = [...new Set(wData.data.map(w => w.customer_name).filter(Boolean))];
+                    window.modWarranty.crmCustomers = uniqueCust;
+
+                    // Populate sticker selector
+                    const selectStk = document.getElementById('sticker-device-select');
+                    if (selectStk) {
+                        selectStk.innerHTML = '<option value="">-- Chọn nhanh từ danh sách bảo hành --</option>' +
+                            wData.data.map(w => `<option value="${w.serial_number}">${w.serial_number} - ${w.product_name || w.sku}</option>`).join('');
+                    }
+
+                    window.modWarranty.renderTable();
+                }
+            } catch(e) {}
+
+            // 3. Tải danh sách claims
+            window.modWarranty.loadClaims();
 
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('#search-customer') && !e.target.closest('#crm-suggest-box')) {
@@ -148,14 +355,293 @@
             });
         },
 
+        switchMainTab: (tabKey) => {
+            window.modWarranty.currentActiveTab = tabKey;
+            const tabDev = document.getElementById('subtab-devices');
+            const tabClaims = document.getElementById('subtab-claims');
+            const btnDev = document.getElementById('tab-btn-dev');
+            const btnClaims = document.getElementById('tab-btn-claims');
+
+            if (tabKey === 'devices') {
+                tabDev.classList.remove('hidden');
+                tabClaims.classList.add('hidden');
+                btnDev.className = "py-2.5 px-4 font-bold text-sm border-b-2 border-cyan-600 text-cyan-700 flex items-center gap-2";
+                btnClaims.className = "py-2.5 px-4 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition";
+            } else {
+                tabDev.classList.add('hidden');
+                tabClaims.classList.remove('hidden');
+                btnClaims.className = "py-2.5 px-4 font-bold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center gap-2";
+                btnDev.className = "py-2.5 px-4 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition";
+                window.modWarranty.loadClaims();
+            }
+        },
+
+        loadClaims: async () => {
+            const status = document.getElementById('filter-claim-status')?.value || 'all';
+            try {
+                const res = await fetch(`/api/warranties/claims/all?status=${status}`);
+                const data = await res.json();
+                if (data.success) {
+                    window.modWarranty.allClaims = data.data;
+                    document.getElementById('badge-total-claims').innerText = data.data.length;
+                    window.modWarranty.renderClaimsTable();
+                }
+            } catch(e) {}
+        },
+
+        renderClaimsTable: () => {
+            const tbody = document.getElementById('tbl-claims');
+            const list = window.modWarranty.allClaims || [];
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400 font-medium">Chưa có phiếu yêu cầu bảo hành nào từ khách hàng.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = list.map(c => {
+                const reqDate = new Date(c.created_at).toLocaleDateString('vi-VN');
+                const priorityBadge = c.priority === 'KHAN_CAP'
+                    ? '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-700">GẤP</span>'
+                    : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">Thường</span>';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-mono font-bold text-amber-600">${c.request_code || '#BH-' + c.id}</td>
+                        <td class="p-3 font-mono font-bold text-slate-900">${c.serial_number}</td>
+                        <td class="p-3 font-semibold text-slate-800">${c.product_name || 'Thiết bị Solar'}</td>
+                        <td class="p-3">
+                            <span class="font-bold text-slate-800">${c.customer_name}</span>
+                            <span class="block text-xs font-mono text-slate-500">${c.customer_phone || ''}</span>
+                        </td>
+                        <td class="p-3 text-xs text-slate-700 whitespace-normal min-w-[200px]">${c.detail}</td>
+                        <td class="p-3 text-center text-xs">${priorityBadge}</td>
+                        <td class="p-3 text-center">
+                            <select onchange="window.modWarranty.updateClaimStatus(${c.id}, this.value)" class="text-xs font-bold border border-slate-300 rounded p-1 outline-none bg-white">
+                                <option value="Đang tiếp nhận" ${c.status === 'Đang tiếp nhận' ? 'selected' : ''}>Đang tiếp nhận</option>
+                                <option value="Chờ linh kiện" ${c.status === 'Chờ linh kiện' ? 'selected' : ''}>Chờ linh kiện</option>
+                                <option value="Đang sửa chữa" ${c.status === 'Đang sửa chữa' ? 'selected' : ''}>Đang sửa chữa</option>
+                                <option value="Đã hoàn thành" ${c.status === 'Đã hoàn thành' ? 'selected' : ''}>Đã hoàn thành</option>
+                            </select>
+                        </td>
+                        <td class="p-3 text-xs">
+                            <input type="text" id="tech-note-${c.id}" value="${c.technician_notes || ''}" placeholder="Nhập ghi chú phản hồi..." class="border border-slate-300 p-1.5 rounded text-xs w-48 outline-none">
+                            <button onclick="window.modWarranty.saveClaimTechNote(${c.id})" class="ml-1 px-2 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded font-bold text-[11px]">Lưu</button>
+                        </td>
+                        <td class="p-3 text-right">
+                            <a href="/warranty.html?claim=${encodeURIComponent(c.request_code || c.id)}" target="_blank" class="text-cyan-600 hover:text-cyan-800 text-xs font-bold">
+                                Xem Live <i class="fas fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        updateClaimStatus: async (id, status) => {
+            try {
+                const res = await fetch(`/api/warranties/claims/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ Đã cập nhật trạng thái phiếu bảo hành thành công!');
+                }
+            } catch(e) {
+                alert('❌ Lỗi cập nhật!');
+            }
+        },
+
+        saveClaimTechNote: async (id) => {
+            const note = document.getElementById(`tech-note-${id}`)?.value || '';
+            try {
+                const res = await fetch(`/api/warranties/claims/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ technician_notes: note })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ Đã lưu phản hồi kỹ thuật viên thành công!');
+                }
+            } catch(e) {
+                alert('❌ Lỗi lưu phản hồi!');
+            }
+        },
+
+        copyPortalLink: () => {
+            const portalUrl = `${window.location.origin}/warranty.html`;
+            navigator.clipboard.writeText(portalUrl).then(() => {
+                const btn = document.getElementById('btn-copy-text');
+                btn.innerText = 'Đã Sao Chép!';
+                setTimeout(() => { btn.innerText = 'Sao Chép Link Khách Hàng'; }, 2000);
+            });
+        },
+
+        // ==========================================
+        // CÔNG CỤ TẠO TEM QR IN DÁN THÂN MÁY
+        // ==========================================
+        openStickerModal: (serial, productName) => {
+            document.getElementById('modal-sticker-generator').classList.remove('hidden');
+            if (serial) {
+                document.getElementById('sticker-sn-input').value = serial;
+            }
+            if (productName) {
+                document.getElementById('sticker-product-input').value = productName;
+            }
+            if (!document.getElementById('sticker-sn-input').value.trim()) {
+                // Fallback default sample if empty
+                const first = window.modWarranty.allWarranties[0];
+                if (first) {
+                    document.getElementById('sticker-sn-input').value = first.serial_number;
+                    document.getElementById('sticker-product-input').value = first.product_name || first.sku;
+                } else {
+                    document.getElementById('sticker-sn-input').value = 'SN-DEYE-01';
+                    document.getElementById('sticker-product-input').value = 'Deye Hybrid 6kW 1 Pha';
+                }
+            }
+            window.modWarranty.generateStickerPreview();
+        },
+
+        closeStickerModal: () => {
+            document.getElementById('modal-sticker-generator').classList.add('hidden');
+        },
+
+        onSelectDeviceForSticker: (serial) => {
+            if (!serial) return;
+            document.getElementById('sticker-sn-input').value = serial;
+            const found = window.modWarranty.allWarranties.find(w => w.serial_number === serial);
+            if (found) {
+                document.getElementById('sticker-product-input').value = found.product_name || found.sku;
+            }
+            window.modWarranty.generateStickerPreview();
+        },
+
+        generateStickerPreview: () => {
+            const sn = (document.getElementById('sticker-sn-input').value || '').trim().toUpperCase() || 'SN-DEMO-001';
+            const name = (document.getElementById('sticker-product-input').value || '').trim() || 'Thiết Bị Năng Lượng Mặt Trời SUNGO';
+            const tpl = document.getElementById('sticker-template-select')?.value || 'standard';
+            const renderArea = document.getElementById('sticker-render-area');
+
+            const verifyUrl = `${window.location.origin}/warranty.html?sn=${encodeURIComponent(sn)}`;
+            const qrImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(verifyUrl)}&margin=0`;
+
+            if (tpl === 'compact') {
+                // Mẫu nhỏ 60x35mm
+                renderArea.innerHTML = `
+                    <div class="flex items-center gap-3 p-2 bg-white font-sans text-slate-900 border border-slate-400 rounded-lg">
+                        <img src="${qrImgSrc}" alt="QR" class="w-16 h-16 shrink-0 border border-slate-300 rounded p-0.5" />
+                        <div class="leading-tight space-y-0.5 text-[11px] overflow-hidden">
+                            <div class="font-black text-amber-600 text-xs tracking-wide">SUNGO SOLAR</div>
+                            <div class="font-bold text-slate-900 truncate max-w-[190px]">${name}</div>
+                            <div class="font-mono font-black text-slate-950 text-xs bg-slate-100 px-1 py-0.5 rounded border border-slate-300 inline-block">${sn}</div>
+                            <div class="text-[9px] text-slate-500">Quét QR kích hoạt BH</div>
+                            <div class="text-[9px] font-bold text-slate-700">Hotline: 0855.959.656</div>
+                        </div>
+                    </div>
+                `;
+            } else if (tpl === 'security') {
+                // Mẫu tem bảo hành chống giả 50x25mm
+                renderArea.innerHTML = `
+                    <div class="p-2.5 bg-gradient-to-r from-amber-50 to-white text-slate-900 border-2 border-dashed border-amber-600 rounded-xl flex items-center justify-between gap-2">
+                        <div class="space-y-0.5 text-left">
+                            <div class="text-[9px] font-black uppercase text-amber-700 tracking-tighter">TEM BẢO HÀNH CHÍNH HÃNG</div>
+                            <div class="font-black text-slate-900 text-xs tracking-wider">SUNGO SOLAR</div>
+                            <div class="font-mono font-black text-xs text-red-600">${sn}</div>
+                            <div class="text-[8px] text-slate-500 font-semibold">Chính hãng • Bảo hành 5-10 năm</div>
+                        </div>
+                        <img src="${qrImgSrc}" alt="QR" class="w-14 h-14 shrink-0 border border-slate-300 rounded p-0.5 bg-white shadow-xs" />
+                    </div>
+                `;
+            } else {
+                // Mẫu tiêu chuẩn 80x50mm
+                renderArea.innerHTML = `
+                    <div class="p-3 bg-white text-slate-900 font-sans border-2 border-slate-900 rounded-xl relative overflow-hidden">
+                        <!-- Top header -->
+                        <div class="flex items-center justify-between pb-1.5 mb-2 border-b-2 border-slate-900">
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-5 h-5 rounded bg-amber-500 text-slate-950 flex items-center justify-center font-black text-[10px]">
+                                    <i class="fas fa-solar-panel"></i>
+                                </div>
+                                <span class="font-black text-xs tracking-wider text-slate-950">SUNGO SOLAR</span>
+                            </div>
+                            <span class="text-[9px] font-black text-amber-700 uppercase tracking-widest bg-amber-100 px-1.5 py-0.5 rounded">CHÍNH HÃNG</span>
+                        </div>
+
+                        <!-- Body with QR Code & Info -->
+                        <div class="flex items-center gap-3">
+                            <img src="${qrImgSrc}" alt="QR Code" class="w-20 h-20 shrink-0 border border-slate-400 rounded-lg p-1 bg-white shadow-xs" />
+                            <div class="space-y-1 text-left overflow-hidden flex-1">
+                                <div class="text-[11px] font-bold text-slate-800 line-clamp-1 leading-tight">${name}</div>
+                                <div>
+                                    <span class="text-[9px] text-slate-500 uppercase block font-bold">Mã Serial:</span>
+                                    <span class="font-mono font-black text-xs text-slate-950 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-300 inline-block tracking-wide">${sn}</span>
+                                </div>
+                                <div class="text-[9px] text-slate-600 leading-tight">
+                                    Quét QR để kích hoạt & tra cứu BH
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Footer -->
+                        <div class="mt-2 pt-1 border-t border-dashed border-slate-300 flex items-center justify-between text-[9px] text-slate-600 font-bold">
+                            <span>Hotline: 0855.959.656</span>
+                            <span>Website: sungo.vn</span>
+                        </div>
+                    </div>
+                `;
+            }
+        },
+
+        printSticker: () => {
+            const printContent = document.getElementById('sticker-render-area').innerHTML;
+            const w = window.open('', '', 'width=450,height=350');
+            w.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>In Tem Bảo Hành SUNGO</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                    <style>
+                        @page {
+                            size: auto;
+                            margin: 0;
+                        }
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 8px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: white;
+                            color: black;
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                        }
+                        .sticker-box {
+                            width: 320px;
+                        }
+                    </style>
+                </head>
+                <body onload="setTimeout(() => { window.print(); window.close(); }, 300);">
+                    <div class="sticker-box">${printContent}</div>
+                </body>
+                </html>
+            `);
+            w.document.close();
+        },
+
         loadMore: () => {
             window.modWarranty.displayLimit += 50; 
             window.modWarranty.renderTable();      
         },
 
-        // Xử lý khi chọn dropdown Sản phẩm
         handleProductFilter: () => {
-            window.modWarranty.displayLimit = 50; // Reset số lượng hiển thị
+            window.modWarranty.displayLimit = 50;
             window.modWarranty.renderTable();
         },
 
@@ -198,12 +684,12 @@
             
             const buttons = document.querySelectorAll('#filter-labels button');
             buttons.forEach(btn => {
-                btn.className = "px-3 py-1.5 text-xs font-bold rounded-full transition border bg-white text-slate-600 border-slate-300 hover:bg-slate-100";
+                btn.className = "px-2.5 py-1 text-xs font-bold rounded-lg transition border bg-white text-slate-600 border-slate-300 hover:bg-slate-100";
             });
 
             const activeBtn = document.getElementById('lbl-' + status);
             if(activeBtn) {
-                activeBtn.className = "px-3 py-1.5 text-xs font-bold rounded-full transition border bg-cyan-600 text-white border-cyan-600 shadow-sm";
+                activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg transition border bg-cyan-600 text-white border-cyan-600 shadow-xs";
             }
 
             window.modWarranty.renderTable();
@@ -214,16 +700,14 @@
             const keyword = document.getElementById('search-customer').value.trim().toLowerCase();
             const productFilter = document.getElementById('filter-product').value;
 
-            // 1. Lọc kết hợp (Tên khách + Tình trạng + Tên sản phẩm)
             let filteredWarranties = window.modWarranty.allWarranties.filter(w => {
-                // ĐK Khách hàng
                 const custInfo = (w.customer_name || '').toLowerCase();
-                const matchKeyword = (keyword === '') || custInfo.includes(keyword);
+                const snInfo = (w.serial_number || '').toLowerCase();
+                const phoneInfo = (w.customer_phone || '').toLowerCase();
+                const matchKeyword = (keyword === '') || custInfo.includes(keyword) || snInfo.includes(keyword) || phoneInfo.includes(keyword);
 
-                // ĐK Sản phẩm
                 const matchProduct = (productFilter === 'all') || (w.sku === productFilter);
 
-                // ĐK Tình trạng
                 let matchStatus = false;
                 if (statusFilter === 'all') {
                     matchStatus = true;
@@ -236,7 +720,6 @@
                 return matchKeyword && matchStatus && matchProduct;
             });
 
-            // Cập nhật bộ đếm hiển thị tỷ lệ
             document.getElementById('count-result').innerText = `Tổng: ${filteredWarranties.length} máy`;
 
             const btnContainer = document.getElementById('load-more-container');
@@ -258,14 +741,33 @@
 
                 const issueHtml = issuesToDisplay.map(i => `<div class="mb-1 border-b border-slate-100 pb-1 last:border-0">- ${i.detail} <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-1 font-semibold">${i.status}</span></div>`).join('');
 
+                const actDate = new Date(w.activated_at).toLocaleDateString('vi-VN');
+                const expDate = new Date(w.expiry_date).toLocaleDateString('vi-VN');
+
+                const safeProdName = (w.product_name || w.sku || '').replace(/'/g, "\\'");
+
                 return `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50 transition">
                     <td class="p-3 font-mono font-bold text-cyan-700">${w.serial_number}</td>
                     <td class="p-3 font-semibold">${w.product_name} <br><span class="text-[10px] text-slate-400 bg-slate-100 px-1 rounded">${w.sku}</span></td>
-                    <td class="p-3 font-medium">${w.customer_name}</td>
-                    <td class="p-3 text-center text-slate-500">${new Date(w.activated_at).toLocaleDateString('vi-VN')}</td>
+                    <td class="p-3">
+                        <span class="font-medium text-slate-800">${w.customer_name}</span>
+                        ${w.customer_phone ? `<span class="block text-xs font-mono text-slate-500">${w.customer_phone}</span>` : ''}
+                    </td>
+                    <td class="p-3 text-center text-slate-500">${actDate}</td>
+                    <td class="p-3 text-center font-bold ${w.is_valid ? 'text-emerald-600' : 'text-rose-600'}">${expDate}</td>
                     <td class="p-3 text-center font-bold text-rose-600">${issuesToDisplay.length}</td>
-                    <td class="p-3 text-xs text-slate-700 whitespace-normal min-w-[250px]">${issueHtml || '<span class="text-slate-400 italic">Không có dữ liệu</span>'}</td>
+                    <td class="p-3 text-xs text-slate-700 whitespace-normal min-w-[220px]">${issueHtml || '<span class="text-slate-400 italic">Bình thường</span>'}</td>
+                    <td class="p-3 text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="window.modWarranty.openStickerModal('${w.serial_number}', '${safeProdName}')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs inline-flex items-center gap-1 border border-amber-300 shadow-2xs" title="Tạo tem QR dán lên máy này">
+                                <i class="fas fa-qrcode text-[11px] text-amber-600"></i> In Tem
+                            </button>
+                            <a href="/warranty.html?sn=${encodeURIComponent(w.serial_number)}" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs inline-flex items-center gap-1">
+                                <i class="fas fa-eye text-[10px]"></i> Xem
+                            </a>
+                        </div>
+                    </td>
                 </tr>
             `}).join('');
         },
@@ -274,18 +776,24 @@
             const payload = { 
                 serial_number: document.getElementById('w-sn').value.trim(), 
                 sku: document.getElementById('w-sku').value, 
-                customer_name: document.getElementById('w-cust').value.trim()
+                customer_name: document.getElementById('w-cust').value.trim(),
+                customer_phone: document.getElementById('w-phone').value.trim()
             };
             if (!payload.serial_number || !payload.customer_name) return alert("⚠️ Nhập đủ Mã Serial và Tên Khách hàng!");
             
-            const res = await fetch('/api/warranties', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const res = await fetch('/api/warranties/public/activate', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(payload) 
+            });
             const data = await res.json();
             if (data.success) { 
                 alert("✅ Kích hoạt thiết bị thành công!"); 
                 document.getElementById('w-sn').value = ''; 
                 document.getElementById('w-cust').value = ''; 
+                document.getElementById('w-phone').value = ''; 
                 window.modWarranty.load(); 
-            } else alert("❌ Lỗi: " + data.error);
+            } else alert("❌ Lỗi: " + (data.error || 'Thất bại'));
         },
 
         check: async () => {
@@ -293,53 +801,35 @@
             if (!sn) return alert("Vui lòng nhập mã Serial!");
             
             window.modWarranty.currentSearchSN = sn;
-            const res = await fetch(`/api/warranties/${sn}`);
+            const res = await fetch(`/api/warranties/public/check/${encodeURIComponent(sn)}`);
             const data = await res.json();
             const resDiv = document.getElementById('search-result');
             const formDiv = document.getElementById('add-issue-form');
             
             resDiv.classList.remove('hidden');
 
-            if (data.success && data.found) {
+            if (data.success && data.found && data.is_activated) {
                 const w = data.data;
-                const actDate = new Date(w.activated_at);
+                const actDate = new Date(w.activated_at).toLocaleDateString('vi-VN');
+                const expDate = new Date(w.expiry_date).toLocaleDateString('vi-VN');
                 const issues = w.issues || [];
                 
                 formDiv.classList.remove('hidden');
                 
-                const historyHtml = issues.length > 0 ? `
-                    <div class="mt-4 p-3 bg-white border border-slate-200 rounded">
-                        <p class="font-bold text-xs text-slate-800 mb-2">Lịch Sử & Cập Nhật Lỗi:</p>
-                        ${issues.map(i => `
-                            <div class="flex items-center gap-2 text-xs mb-2 pb-2 border-b border-slate-100 last:border-0 last:mb-0 last:pb-0">
-                                <input type="text" id="edit-detail-${i.id}" value="${i.detail}" class="border border-slate-300 focus:border-cyan-500 p-1.5 rounded flex-1 outline-none">
-                                <select id="edit-status-${i.id}" class="border border-slate-300 focus:border-cyan-500 p-1.5 rounded outline-none w-36">
-                                    <option value="Đang tiếp nhận" ${i.status === 'Đang tiếp nhận' ? 'selected' : ''}>Đang tiếp nhận</option>
-                                    <option value="Chờ linh kiện" ${i.status === 'Chờ linh kiện' ? 'selected' : ''}>Chờ linh kiện</option>
-                                    <option value="Đang sửa chữa" ${i.status === 'Đang sửa chữa' ? 'selected' : ''}>Đang sửa chữa</option>
-                                    <option value="Đã hoàn thành" ${i.status === 'Đã hoàn thành' ? 'selected' : ''}>Đã hoàn thành</option>
-                                </select>
-                                <button onclick="window.modWarranty.updateIssue(${i.id})" class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 rounded font-bold transition">Lưu</button>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : '';
-
                 resDiv.innerHTML = `
-                    <div class="p-4 border rounded bg-slate-50 border-slate-200">
-                        <p class="font-bold text-lg text-cyan-700">✅ TÌM THẤY THÔNG TIN THIẾT BỊ</p>
-                        <div class="grid grid-cols-2 gap-2 mt-3 text-sm text-slate-700">
+                    <div class="p-4 border rounded-xl bg-slate-50 border-slate-200">
+                        <p class="font-bold text-base text-cyan-700">✅ TÌM THẤY THÔNG TIN THIẾT BỊ</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 text-xs text-slate-700">
                             <div><b>Thiết bị:</b> ${w.product_name} (${w.sku})</div>
-                            <div><b>Khách hàng:</b> ${w.customer_name}</div>
-                            <div><b>Ngày kích hoạt:</b> ${actDate.toLocaleDateString('vi-VN')}</div>
-                            <div><b>Số lần bảo hành:</b> <span class="text-rose-600 font-bold">${issues.length} lần</span></div>
+                            <div><b>Khách hàng:</b> ${w.customer_name} (${w.customer_phone || '---'})</div>
+                            <div><b>Kích hoạt:</b> ${actDate}</div>
+                            <div><b>Hết hạn:</b> <span class="${w.is_valid ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}">${expDate}</span></div>
                         </div>
-                        ${historyHtml}
                     </div>
                 `;
             } else {
                 formDiv.classList.add('hidden');
-                resDiv.innerHTML = `<div class="p-4 bg-amber-50 border border-amber-200 rounded text-amber-800 font-medium">⚠️ Không tìm thấy thông tin trên hệ thống cho mã Serial này.</div>`;
+                resDiv.innerHTML = `<div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-medium">⚠️ Không tìm thấy hoặc chưa kích hoạt mã Serial này.</div>`;
             }
         },
 
@@ -351,7 +841,7 @@
             if(!detail) return alert("Vui lòng nhập chi tiết lỗi phát sinh!");
             
             try {
-                const res = await fetch(`/api/warranties/${sn}/issues`, { 
+                const res = await fetch(`/api/warranties/${encodeURIComponent(sn)}/issues`, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ detail, status }) 
@@ -359,34 +849,8 @@
                 
                 const data = await res.json();
                 if(data.success) {
-                    alert("✅ Đã tạo mới lỗi thành công!");
+                    alert("✅ Đã ghi nhận lỗi thành công!");
                     document.getElementById('issue-detail').value = '';
-                    window.modWarranty.check(); 
-                    window.modWarranty.load();  
-                } else {
-                    alert("❌ Lỗi: " + data.error);
-                }
-            } catch (error) {
-                alert("❌ Lỗi kết nối tới máy chủ.");
-            }
-        },
-
-        updateIssue: async (id) => {
-            const detail = document.getElementById(`edit-detail-${id}`).value.trim();
-            const status = document.getElementById(`edit-status-${id}`).value;
-
-            if(!detail) return alert("Vui lòng không để trống chi tiết lỗi!");
-
-            try {
-                const res = await fetch(`/api/warranties/issues/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ detail, status })
-                });
-
-                const data = await res.json();
-                if(data.success) {
-                    alert("✅ Đã cập nhật trạng thái lỗi thành công!");
                     window.modWarranty.check(); 
                     window.modWarranty.load();  
                 } else {

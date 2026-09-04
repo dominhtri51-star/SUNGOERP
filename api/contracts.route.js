@@ -668,7 +668,7 @@ router.post('/from-order/:orderId', async (req, res) => {
 
         // Tự động tổng hợp chính sách bảo hành chi tiết từng sản phẩm
         const warrantyBullets = items.map((it, idx) => `• ${idx + 1}. ${it.product_name}: Bảo hành ${it.warranty}${it.specs ? ` (${it.specs})` : ''}`).join('\n');
-        const warrantyTerms = `CHÍNH SÁCH BẢO HÀNH CHI TIẾT TỪNG THIẾT BỊ:\n${warrantyBullets || '• Bảo hành chính hãng theo tiêu chuẩn của nhà sản xuất.'}`;
+        const warrantyTerms = `1. CHÍNH SÁCH BẢO HÀNH CHI TIẾT TỪNG THIẾT BỊ:\n${warrantyBullets || '• Bảo hành chính hãng theo tiêu chuẩn của nhà sản xuất.'}\n\n2. ĐIỀU KIỆN & CAM KẾT CHẤT LƯỢNG:\n• Toàn bộ thiết bị mới 100%, có đầy đủ CO, CQ và chứng chỉ chất lượng từ hãng sản xuất.\n• Kích hoạt bảo hành điện tử chính hãng SUNGO, hỗ trợ kỹ thuật và giám sát từ xa 24/7.\n• Đổi mới thiết bị trong trường hợp lỗi kỹ thuật của nhà sản xuất theo chính sách hãng.`;
 
         const insertRes = await client.query(`
             INSERT INTO contracts (

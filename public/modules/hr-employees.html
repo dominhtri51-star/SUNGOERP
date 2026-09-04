@@ -1,4 +1,4 @@
-<div class="h-full flex flex-col space-y-4 sm:space-y-6 font-sans relative pb-10">
+<div class="min-h-full flex flex-col space-y-4 sm:space-y-6 font-sans relative pb-10">
     <!-- HEADER & THANH CÔNG CỤ -->
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
@@ -11,12 +11,15 @@
                         QUẢN LÝ NHÂN SỰ & HỒ SƠ LAO ĐỘNG
                         <span class="text-[10px] bg-blue-100 text-blue-800 font-black px-2.5 py-0.5 rounded-full border border-blue-200 uppercase tracking-wide">HRM Core</span>
                     </h2>
-                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Quản lý hồ sơ nhân viên, chức vụ, hợp đồng, định mức lương và thông tin bảo hiểm xã hội.</p>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Quản lý hồ sơ nhân viên, chức vụ, hợp đồng, định mức lương và tỷ lệ bảo hiểm xã hội (32%).</p>
                 </div>
             </div>
         </div>
 
         <div class="w-full lg:w-auto flex flex-wrap items-center justify-between lg:justify-end gap-2">
+            <button onclick="window.modHR.openInsuranceModal()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-black py-2.5 px-4 rounded-xl text-xs transition shadow-xs flex items-center gap-2 uppercase tracking-wide">
+                <i class="fas fa-shield-alt text-purple-600"></i> <span>Tỷ Lệ Đóng BHXH (<span id="hr-top-ins-rate">32%</span>)</span>
+            </button>
             <button onclick="window.modHR.openModal()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black py-2.5 px-4 rounded-xl text-xs transition shadow-md flex items-center gap-2 uppercase tracking-wide">
                 <i class="fas fa-user-plus"></i> <span>Thêm Nhân Viên Mới</span>
             </button>
@@ -98,268 +101,375 @@
                         <th class="p-3.5">Họ & Tên Nhân Viên</th>
                         <th class="p-3.5">Tài Khoản RBAC</th>
                         <th class="p-3.5">Phòng Ban / Chức Vụ</th>
-                        <th class="p-3.5">Loại Hợp Đồng</th>
+                        <th class="p-3.5">Người Quản Lý</th>
                         <th class="p-3.5 text-right">Lương Cơ Bản</th>
                         <th class="p-3.5 text-right">Lương Đóng BH</th>
                         <th class="p-3.5 text-center">Bảo Hiểm</th>
+                        <th class="p-3.5 text-center">Hợp Đồng</th>
                         <th class="p-3.5 text-center">Trạng Thái</th>
                         <th class="p-3.5 text-center pr-4">Thao Tác</th>
                     </tr>
                 </thead>
-                <tbody id="hr-tbody" class="divide-y divide-slate-100 text-xs">
+                <tbody id="hr-employees-tbody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                     <tr>
-                        <td colspan="10" class="p-8 text-center text-slate-400">
-                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                            <p>Đang nạp danh sách nhân sự...</p>
+                        <td colspan="11" class="p-8 text-center text-slate-400 font-bold">
+                            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                            <p>Đang tải danh sách nhân viên...</p>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
+</div>
 
-    <!-- MODAL THÊM / SỬA HỒ SƠ NHÂN SỰ -->
-    <div id="hr-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden my-auto transform transition-all border border-slate-200">
-            <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 sm:p-5 text-white flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 text-sm">
-                        <i class="fas fa-user-edit"></i>
+<!-- MODAL: CẤU HÌNH TỶ LỆ ĐÓNG BẢO HIỂM XÃ HỘI (32%) -->
+<div id="hr-insurance-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-100">
+        <div class="bg-gradient-to-r from-purple-700 to-indigo-700 p-5 text-white flex items-center justify-between sticky top-0 z-10">
+            <div>
+                <h3 class="font-black text-sm uppercase tracking-wide flex items-center gap-2">
+                    <i class="fas fa-shield-alt"></i> Cấu Hình Tỷ Lệ Đóng Bảo Hiểm Xã Hội & Kinh Phí
+                </h3>
+                <p class="text-[11px] text-purple-200 mt-0.5">Tùy biến theo Luật BHXH hiện hành (Hiện tại: 32% = NLĐ 10.5% + Doanh Nghiệp 21.5%)</p>
+            </div>
+            <button onclick="window.modHR.closeInsuranceModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        
+        <div class="p-5 space-y-4">
+            <!-- Thẻ Live Summary -->
+            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-2xl border border-purple-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tổng Tỷ Lệ Trích Nộp Hiện Hành</span>
+                    <h3 class="text-2xl font-black text-purple-700 mt-0.5" id="ins-live-total">32.0%</h3>
+                    <p class="text-[11px] text-slate-600 mt-0.5">
+                        NLĐ trừ lương: <b id="ins-live-emp" class="text-rose-600 font-bold">10.5%</b> • DN chi trả: <b id="ins-live-comp" class="text-indigo-600 font-bold">21.5%</b>
+                    </p>
+                </div>
+                <div class="px-3 py-1.5 rounded-xl bg-purple-100 text-purple-800 font-black text-xs border border-purple-200">
+                    <i class="fas fa-gavel"></i> Theo Luật BHXH
+                </div>
+            </div>
+
+            <!-- Khối 1: Người Lao Động Đóng (Trừ vào Lương) -->
+            <div class="bg-rose-50/40 p-4 rounded-2xl border border-rose-100">
+                <h4 class="text-xs font-black uppercase text-rose-800 mb-2 flex items-center justify-between">
+                    <span><i class="fas fa-user"></i> 1. Người Lao Động Đóng (Trừ Lương)</span>
+                    <span id="ins-subtotal-emp" class="text-rose-600 font-black">10.5%</span>
+                </h4>
+                <div class="grid grid-cols-3 gap-2.5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-rose-900 uppercase mb-1">BHXH NLĐ (%)</label>
+                        <input type="number" step="0.1" id="ins-bhxh-emp" oninput="window.modHR.updateInsuranceLiveTotals()" class="w-full border border-rose-200 rounded-xl p-2 text-xs font-black text-rose-700 bg-white">
+                        <span class="text-[9px] text-slate-400">Luật: 8.0%</span>
                     </div>
                     <div>
-                        <h3 class="font-black text-sm sm:text-base uppercase tracking-wide" id="hr-modal-title">Thêm Hồ Sơ Nhân Viên</h3>
-                        <p class="text-[11px] text-slate-400">Điền thông tin định danh, công việc, mức lương và chế độ bảo hiểm</p>
+                        <label class="block text-[10px] font-bold text-rose-900 uppercase mb-1">BHYT NLĐ (%)</label>
+                        <input type="number" step="0.1" id="ins-bhyt-emp" oninput="window.modHR.updateInsuranceLiveTotals()" class="w-full border border-rose-200 rounded-xl p-2 text-xs font-black text-rose-700 bg-white">
+                        <span class="text-[9px] text-slate-400">Luật: 1.5%</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-rose-900 uppercase mb-1">BHTN NLĐ (%)</label>
+                        <input type="number" step="0.1" id="ins-bhtn-emp" oninput="window.modHR.updateInsuranceLiveTotals()" class="w-full border border-rose-200 rounded-xl p-2 text-xs font-black text-rose-700 bg-white">
+                        <span class="text-[9px] text-slate-400">Luật: 1.0%</span>
                     </div>
                 </div>
-                <button onclick="window.modHR.closeModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition">
-                    <i class="fas fa-times"></i>
+            </div>
+
+            <!-- Khối 2: Doanh Nghiệp / Người Sử Dụng Lao Động Đóng -->
+            <div class="bg-indigo-50/40 p-4 rounded-2xl border border-indigo-100">
+                <h4 class="text-xs font-black uppercase text-indigo-800 mb-2 flex items-center justify-between">
+                    <span><i class="fas fa-building"></i> 2. Doanh Nghiệp Đóng (Chi Phí Công Ty)</span>
+                    <span id="ins-subtotal-comp" class="text-indigo-600 font-black">21.5%</span>
+                </h4>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-indigo-900 uppercase mb-1">BHXH DN (%)</label>
+                        <input type="number" step="0.1" id="ins-bhxh-comp" oninput="window.modHR.updateInsuranceLiveTotals()" class="w-full border border-indigo-200 rounded-xl p-2 text-xs font-black text-indigo-700 bg-white">
+                        <span class="text-[9px] text-slate-400">Luật: 17.5%</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-indigo-900 uppercase mb-1">BHYT DN (%)</label>
+                        <input type="number" step="0.1" id="ins-bhyt-comp" oninput="window.modHR.updateInsuranceLiveTotals()" class="w-full border border-indigo-200 rounded-xl p-2 text-xs font-black text-indigo-700 bg-white">
+                        <span class="text-[9px] text-slate-400">Luật: 3.0%</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-indigo-900 uppercase mb-1">BHTN DN (%)</label>
+                        <input type="number" step="0.1" id="ins-bhtn-comp" oninput="window.modHR.updateInsuranceLiveTotals()" class="w-full border border-indigo-200 rounded-xl p-2 text-xs font-black text-indigo-700 bg-white">
+                        <span class="text-[9px] text-slate-400">Luật: 1.0%</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-indigo-900 uppercase mb-1">Kinh Phí CĐ (%)</label>
+                        <input type="number" step="0.1" id="ins-kpcd-comp" oninput="window.modHR.updateInsuranceLiveTotals()" class="w-full border border-indigo-200 rounded-xl p-2 text-xs font-black text-indigo-700 bg-white">
+                        <span class="text-[9px] text-slate-400">Luật: 2.0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khối 3: Mức Lương Trần & Sàn -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <h4 class="text-xs font-black uppercase text-slate-700 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-sliders-h"></i> 3. Khung Mức Lương Đóng Bảo Hiểm (Trần / Sàn)
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Mức Lương Tối Thiểu (VNĐ)</label>
+                        <input type="number" id="ins-min-salary" placeholder="5000000" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-800 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Mức Trần Tối Đa (VNĐ - 20x Lương Cơ Sở)</label>
+                        <input type="number" id="ins-max-salary" placeholder="46800000" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-800 bg-white">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button onclick="window.modHR.closeInsuranceModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs">Hủy</button>
+                <button onclick="window.modHR.saveInsurancePolicy()" class="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs transition shadow-md flex items-center gap-1.5">
+                    <i class="fas fa-save"></i> Lưu Tỷ Lệ Bảo Hiểm
                 </button>
             </div>
+        </div>
+    </div>
+</div>
 
-            <!-- Modal Form Body -->
-            <div class="p-4 sm:p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-                <input type="hidden" id="hr-id">
+<!-- MODAL: THÊM / CHỈNH SỬA HỒ SƠ NHÂN VIÊN -->
+<div id="hr-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-100">
+        <div class="bg-gradient-to-r from-blue-700 to-indigo-700 p-5 text-white flex items-center justify-between sticky top-0 z-10">
+            <div>
+                <h3 class="font-black text-sm uppercase tracking-wide" id="hr-modal-title">Thêm Nhân Viên Mới</h3>
+                <p class="text-[11px] text-blue-100 mt-0.5">Điền đầy đủ thông tin định danh, hợp đồng và chính sách hoa hồng</p>
+            </div>
+            <button onclick="window.modHR.closeModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
 
-                <!-- 1. THÔNG TIN ĐỊNH DANH -->
-                <div>
-                    <h4 class="text-xs font-black uppercase tracking-wider text-blue-600 mb-2 flex items-center gap-1.5">
-                        <i class="fas fa-id-card"></i> 1. Thông Tin Định Danh & Phân Quyền RBAC
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-amber-700 uppercase mb-1 flex items-center justify-between">
-                                <span>Mã NV (Khớp RBAC) <span class="text-red-500">*</span></span>
-                            </label>
-                            <input type="text" id="hr-code" placeholder="VD: NV001, SALE_01..." class="w-full border-2 border-amber-300 rounded-xl p-2.5 text-xs font-black text-amber-800 bg-amber-50/50 focus:bg-white focus:border-amber-500 outline-none uppercase font-mono">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Họ và Tên Nhân Viên <span class="text-red-500">*</span></label>
-                            <input type="text" id="hr-fullname" placeholder="Nguyễn Văn A" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1 flex items-center justify-between">
-                                <span>Tài Khoản Đăng Nhập RBAC (Dùng khi lên đơn/dự án tính KPI)</span>
-                                <span class="text-[10px] text-emerald-600 font-bold"><i class="fas fa-shield-alt"></i> Tự động đồng bộ</span>
-                            </label>
-                            <select id="hr-user-id" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 focus:border-blue-500 outline-none">
-                                <option value="">-- Tự động khớp theo Mã NV hoặc chọn tài khoản RBAC --</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Giới tính</label>
-                            <select id="hr-gender" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
-                                <option value="Nam">Nam</option>
-                                <option value="Nữ">Nữ</option>
-                                <option value="Khác">Khác</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày sinh</label>
-                            <input type="date" id="hr-dob" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-blue-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Số CCCD / CMND</label>
-                            <input type="text" id="hr-idcard" placeholder="079..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-blue-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Số điện thoại</label>
-                            <input type="text" id="hr-phone" placeholder="090..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-blue-600 focus:border-blue-500 outline-none">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Email</label>
-                            <input type="email" id="hr-email" placeholder="email@sungo.vn" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-blue-500 outline-none">
-                        </div>
-                        <div class="sm:col-span-3">
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Địa chỉ thường trú</label>
-                            <input type="text" id="hr-address" placeholder="Số nhà, đường, quận/huyện, tỉnh/tp..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-blue-500 outline-none">
-                        </div>
+        <div class="p-5 sm:p-6 space-y-6">
+            <input type="hidden" id="hr-id">
+
+            <!-- 1. THÔNG TIN CƠ BẢN & ĐỊNH DANH HỆ THỐNG -->
+            <div>
+                <h4 class="text-xs font-black uppercase tracking-wider text-blue-700 mb-3 flex items-center gap-2">
+                    <i class="fas fa-id-card"></i> 1. Thông Tin Định Danh & Phân Quyền (RBAC)
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mã Nhân Viên <span class="text-red-500">*</span></label>
+                        <input type="text" id="hr-code" placeholder="VD: NV01, SALE02, ADM..." class="w-full border border-blue-200 bg-blue-50/40 rounded-xl p-2.5 text-xs font-black text-blue-800 uppercase focus:border-blue-500 outline-none">
+                        <span class="text-[10px] text-slate-400 mt-0.5 block">Khớp với Mã RBAC để tính hoa hồng tự động</span>
                     </div>
-                </div>
-
-                <!-- 2. PHÒNG BAN & CÔNG VIỆC -->
-                <div class="pt-2 border-t border-slate-100">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-blue-600 mb-2 flex items-center gap-1.5">
-                        <i class="fas fa-briefcase"></i> 2. Phòng Ban & Phân Cấp Quản Lý
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Phòng ban</label>
-                            <select id="hr-dept" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
-                                <option value="">-- Chọn phòng ban --</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Cấp bậc / Vai trò</label>
-                            <select id="hr-dept-role" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-indigo-700 bg-indigo-50/40 focus:border-indigo-500 outline-none">
-                                <option value="STAFF">Nhân Viên Kinh Doanh</option>
-                                <option value="MANAGER">Trưởng Phòng Kinh Doanh (Quản lý đội)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Trưởng phòng Quản lý trực tiếp</label>
-                            <select id="hr-manager-id" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-blue-500 outline-none">
-                                <option value="">-- Thuộc Giám Đốc / Tự quản lý --</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Chức vụ / Vị trí</label>
-                            <input type="text" id="hr-position" placeholder="VD: Chuyên Viên Bán Hàng Khách Sỉ" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Loại Hợp đồng</label>
-                            <select id="hr-contract" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
-                                <option value="CHINH_THUC">HĐ Chính thức</option>
-                                <option value="THU_VIEC">HĐ Thử việc</option>
-                                <option value="CTV">Thời vụ / CTV</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Trạng thái công tác</label>
-                            <select id="hr-status" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
-                                <option value="ACTIVE">Đang làm việc</option>
-                                <option value="TERMINATED">Đã nghỉ việc</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày bắt đầu làm</label>
-                            <input type="date" id="hr-startdate" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-blue-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày kết thúc HĐ (nếu có)</label>
-                            <input type="date" id="hr-enddate" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-blue-500 outline-none">
-                        </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tài Khoản Đăng Nhập (RBAC)</label>
+                        <select id="hr-user-id" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
+                            <option value="">-- Chưa liên kết tài khoản --</option>
+                        </select>
                     </div>
-                </div>
-
-                <!-- 3. CẤU HÌNH HOA HỒNG & NGƯỠNG LỢI NHUẬN GỘP TỐI THIỂU -->
-                <div class="pt-2 border-t border-slate-100 bg-amber-50/40 p-3.5 rounded-2xl border border-amber-200/70">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-amber-800 mb-2 flex items-center justify-between">
-                        <span class="flex items-center gap-1.5"><i class="fas fa-percentage text-amber-600"></i> 3. Chính Sách Hoa Hồng & Ngưỡng Lợi Nhuận Tối Thiểu</span>
-                        <span class="text-[10px] text-amber-700 font-bold bg-amber-200/60 px-2 py-0.5 rounded-full"><i class="fas fa-shield-alt"></i> Chống rủi ro lỗ lương cứng</span>
-                    </h4>
-                    <p class="text-[11px] text-slate-600 mb-2.5">Thiết lập tỷ lệ hoa hồng riêng theo từng nhân sự. Hoa hồng chỉ bắt đầu được ghi nhận khi tổng Lợi Nhuận Gộp trong tháng vượt Ngưỡng Tối Thiểu.</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">% Hoa hồng Đơn sỉ</label>
-                            <div class="relative">
-                                <input type="number" id="hr-rate-ws" step="0.1" placeholder="5" class="w-full border border-amber-300 rounded-xl p-2.5 text-xs font-black text-amber-700 bg-white focus:border-amber-500 outline-none pr-8">
-                                <span class="absolute right-3 top-2.5 text-xs font-black text-slate-400">%</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">% Hoa hồng BOQ / EPC</label>
-                            <div class="relative">
-                                <input type="number" id="hr-rate-boq" step="0.1" placeholder="10" class="w-full border border-amber-300 rounded-xl p-2.5 text-xs font-black text-amber-700 bg-white focus:border-amber-500 outline-none pr-8">
-                                <span class="absolute right-3 top-2.5 text-xs font-black text-slate-400">%</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-rose-700 uppercase mb-1 flex items-center justify-between">
-                                <span>Ngưỡng LN Gộp Tối Thiểu</span>
-                                <span class="text-[9px] text-rose-600 font-bold">VNĐ/Tháng</span>
-                            </label>
-                            <input type="number" id="hr-min-gp" placeholder="VD: 20000000" class="w-full border-2 border-rose-300 rounded-xl p-2.5 text-xs font-black text-rose-700 bg-white focus:border-rose-500 outline-none">
-                        </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Họ Và Tên <span class="text-red-500">*</span></label>
+                        <input type="text" id="hr-fullname" placeholder="Nguyễn Văn A" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
                     </div>
-                </div>
-
-                <!-- 4. TIỀN LƯƠNG & NGÂN HÀNG -->
-                <div class="pt-2 border-t border-slate-100">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-emerald-700 mb-2 flex items-center gap-1.5">
-                        <i class="fas fa-coins"></i> 4. Tiền Lương & Tài Khoản Chi Trả
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Lương cơ bản (VNĐ) <span class="text-red-500">*</span></label>
-                            <input type="number" id="hr-basesalary" placeholder="10000000" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-black text-emerald-600 focus:border-emerald-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Lương đóng BHXH (VNĐ)</label>
-                            <input type="number" id="hr-inssalary" placeholder="6000000" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-purple-600 focus:border-purple-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Số Tài Khoản</label>
-                            <input type="text" id="hr-bankacc" placeholder="Số TK ngân hàng..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tên Ngân Hàng</label>
-                            <input type="text" id="hr-bankname" placeholder="Techcombank, VCB..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-blue-500 outline-none">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Chi nhánh ngân hàng</label>
-                            <input type="text" id="hr-bankbranch" placeholder="Chi nhánh Tân Bình, HCM..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-blue-500 outline-none">
-                        </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Giới Tính</label>
+                        <select id="hr-gender" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                            <option value="Khác">Khác</option>
+                        </select>
                     </div>
-                </div>
-
-                <!-- 5. CHẾ ĐỘ BẢO HIỂM (BHXH, BHYT, BHTN, KPCĐ) -->
-                <div class="pt-2 border-t border-slate-100">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-purple-600 mb-2 flex items-center gap-1.5">
-                        <i class="fas fa-hospital-user"></i> 5. Chế Độ Bảo Hiểm (BHXH / BHYT / BHTN)
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mã số BHXH</label>
-                            <input type="text" id="hr-bhxhcode" placeholder="79..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-purple-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mã thẻ BHYT</label>
-                            <input type="text" id="hr-bhytcode" placeholder="DN479..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-purple-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Nơi KCB Ban Đầu</label>
-                            <input type="text" id="hr-hospital" placeholder="Bệnh viện Quận..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:border-purple-500 outline-none">
-                        </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày Sinh</label>
+                        <input type="date" id="hr-dob" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
                     </div>
-                    <div class="flex flex-wrap items-center gap-4 bg-purple-50/60 p-3 rounded-xl border border-purple-100 text-xs font-bold text-purple-900">
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" id="hr-hasbhxh" checked class="w-4 h-4 text-purple-600 rounded">
-                            <span>BHXH (17.5% DN + 8% NLĐ)</span>
-                        </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" id="hr-hasbhyt" checked class="w-4 h-4 text-purple-600 rounded">
-                            <span>BHYT (3% DN + 1.5% NLĐ)</span>
-                        </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" id="hr-hasbhtn" checked class="w-4 h-4 text-purple-600 rounded">
-                            <span>BHTN (1% DN + 1% NLĐ)</span>
-                        </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" id="hr-haskpcd" checked class="w-4 h-4 text-purple-600 rounded">
-                            <span>Kinh phí CĐ (2% DN)</span>
-                        </label>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Số CCCD / CMND</label>
+                        <input type="text" id="hr-idcard" placeholder="0123456789xx" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Số Điện Thoại</label>
+                        <input type="text" id="hr-phone" placeholder="0901234567" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Email</label>
+                        <input type="email" id="hr-email" placeholder="email@company.com" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Địa Chỉ Thường Trú</label>
+                        <input type="text" id="hr-address" placeholder="TP. Hồ Chí Minh" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-blue-500 outline-none">
                     </div>
                 </div>
             </div>
 
-            <!-- Modal Footer Buttons -->
-            <div class="bg-slate-50 p-4 sm:p-5 border-t border-slate-200 flex justify-end items-center gap-2">
-                <button onclick="window.modHR.closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100 transition">
+            <!-- 2. PHÒNG BAN, CHỨC VỤ & PHÂN CẤP QUẢN LÝ -->
+            <div class="pt-4 border-t border-slate-100">
+                <h4 class="text-xs font-black uppercase tracking-wider text-indigo-700 mb-3 flex items-center gap-2">
+                    <i class="fas fa-sitemap"></i> 2. Phòng Ban, Chức Vụ & Cấp Quản Lý
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Phòng Ban</label>
+                        <select id="hr-dept" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-indigo-500 outline-none">
+                            <option value="">-- Chưa phân phòng ban --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Vai Trò Trong Phòng</label>
+                        <select id="hr-dept-role" onchange="window.modHR.onRoleChange()" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-indigo-500 outline-none">
+                            <option value="STAFF">Nhân Viên Thực Thi</option>
+                            <option value="DEPUTY_MANAGER">Phó Phòng</option>
+                            <option value="MANAGER">Trưởng Phòng (Quản Lý Nhóm)</option>
+                            <option value="DIRECTOR">Giám Đốc Khối / Ban Giám Đốc</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Quản Lý Trực Tiếp</label>
+                        <select id="hr-manager-id" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-indigo-500 outline-none">
+                            <option value="">-- Không có (Cấp cao nhất) --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Chức Danh Công Việc</label>
+                        <input type="text" id="hr-position" placeholder="Kỹ sư Solar / Chuyên viên KD" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Loại Hợp Đồng</label>
+                        <select id="hr-contract" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-indigo-500 outline-none">
+                            <option value="CHINH_THUC">Hợp Đồng Chính Thức</option>
+                            <option value="THU_VIEC">Hợp Đồng Thử Việc</option>
+                            <option value="CTV">Cộng Tác Viên (Freelance)</option>
+                            <option value="THOI_VU">Thời Vụ / Dự Án</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Trạng Thái Làm Việc</label>
+                        <select id="hr-status" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-indigo-500 outline-none">
+                            <option value="ACTIVE">Đang Làm Việc</option>
+                            <option value="TERMINATED">Đã Nghỉ Việc</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày Bắt Đầu Làm</label>
+                        <input type="date" id="hr-startdate" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ngày Kết Thúc (Nếu Có)</label>
+                        <input type="date" id="hr-enddate" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. CHÍNH SÁCH HOA HỒNG & THƯỞNG KPI -->
+            <div class="pt-4 border-t border-slate-100 bg-amber-50/50 p-4 rounded-2xl border border-amber-200/60">
+                <h4 class="text-xs font-black uppercase tracking-wider text-amber-800 mb-3 flex items-center gap-2">
+                    <i class="fas fa-percent"></i> 3. Chính Sách Hoa Hồng & Thưởng KPI
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-amber-900 uppercase mb-1">% HH Đơn Bán Lẻ / Vật Tư (Wholesale)</label>
+                        <input type="number" step="0.1" id="hr-rate-ws" placeholder="5" class="w-full border border-amber-300 rounded-xl p-2.5 text-xs font-black text-amber-800 bg-white">
+                        <span class="text-[10px] text-slate-500">Mặc định: 5% trên Lãi gộp</span>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-amber-900 uppercase mb-1">% HH Hợp Đồng Dự Án / EPC (BOQ)</label>
+                        <input type="number" step="0.1" id="hr-rate-boq" placeholder="10" class="w-full border border-amber-300 rounded-xl p-2.5 text-xs font-black text-amber-800 bg-white">
+                        <span class="text-[10px] text-slate-500">Mặc định: 10% trên Lãi gộp</span>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-amber-900 uppercase mb-1">Mức Lãi Gộp Tối Thiểu Được Ăn HH</label>
+                        <input type="number" id="hr-min-gp" placeholder="0" class="w-full border border-amber-300 rounded-xl p-2.5 text-xs font-black text-amber-800 bg-white">
+                        <span class="text-[10px] text-slate-500">VNĐ (0 = Ăn từ đồng lãi đầu tiên)</span>
+                    </div>
+                </div>
+
+                <!-- Hoa hồng quản lý (dành cho Trưởng phòng / Quản lý) -->
+                <div id="hr-manager-comm-section" class="mt-4 pt-3 border-t border-amber-200 hidden">
+                    <p class="text-[11px] font-black text-amber-900 uppercase mb-2">
+                        <i class="fas fa-crown text-amber-600"></i> Quyền Lợi Trưởng Phòng: Hoa Hồng Trên Doanh Số Cấp Dưới
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">% HH Quản Lý Bán Lẻ</label>
+                            <input type="number" step="0.1" id="hr-rate-mgr-ws" placeholder="2" class="w-full border border-amber-300 rounded-xl p-2.5 text-xs font-black text-amber-800 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">% HH Quản Lý Dự Án EPC</label>
+                            <input type="number" step="0.1" id="hr-rate-mgr-boq" placeholder="3" class="w-full border border-amber-300 rounded-xl p-2.5 text-xs font-black text-amber-800 bg-white">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. LƯƠNG & BẢO HIỂM XÃ HỘI (32%) -->
+            <div class="pt-4 border-t border-slate-100 bg-purple-50/50 p-4 rounded-2xl border border-purple-200/60">
+                <h4 class="text-xs font-black uppercase tracking-wider text-purple-800 mb-3 flex items-center justify-between">
+                    <span class="flex items-center gap-2"><i class="fas fa-shield-alt"></i> 4. Lương, Ngân Hàng & Bảo Hiểm Xã Hội</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">Tỷ Lệ 32% (NLĐ: 10.5% + DN: 21.5%)</span>
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-purple-900 uppercase mb-1">Lương Cơ Bản Hợp Đồng (VNĐ)</label>
+                        <input type="number" id="hr-basesalary" placeholder="8000000" class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-black text-purple-900 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-purple-900 uppercase mb-1">Mức Lương Đóng BHXH (VNĐ)</label>
+                        <input type="number" id="hr-inssalary" placeholder="5000000" class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-black text-purple-900 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-purple-900 uppercase mb-1">Số Tài Khoản Ngân Hàng</label>
+                        <input type="text" id="hr-bankacc" placeholder="1903..." class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-bold bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-purple-900 uppercase mb-1">Tên Ngân Hàng</label>
+                        <input type="text" id="hr-bankname" placeholder="Techcombank / Vietcombank" class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-bold bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-purple-900 uppercase mb-1">Chi Nhánh Ngân Hàng</label>
+                        <input type="text" id="hr-bankbranch" placeholder="Chi nhánh Tân Bình" class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-bold bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-purple-900 uppercase mb-1">Mã Số Sổ BHXH</label>
+                        <input type="text" id="hr-bhxhcode" placeholder="79..." class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-bold bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-purple-900 uppercase mb-1">Mã Thẻ BHYT</label>
+                        <input type="text" id="hr-bhytcode" placeholder="DN479..." class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-bold bg-white">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-[11px] font-bold text-purple-900 uppercase mb-1">Bệnh Viện KCB Ban Đầu</label>
+                        <input type="text" id="hr-hospital" placeholder="Bệnh viện Thống Nhất / BV Quận Tân Bình" class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-bold bg-white">
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-purple-200/60 flex flex-wrap gap-4">
+                    <label class="flex items-center gap-2 text-xs font-bold text-purple-900 cursor-pointer">
+                        <input type="checkbox" id="hr-hasbhxh" checked class="w-4 h-4 text-purple-600 rounded">
+                        Đóng BHXH (NLĐ: 8% + DN: 17.5%)
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-bold text-purple-900 cursor-pointer">
+                        <input type="checkbox" id="hr-hasbhyt" checked class="w-4 h-4 text-purple-600 rounded">
+                        Đóng BHYT (NLĐ: 1.5% + DN: 3%)
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-bold text-purple-900 cursor-pointer">
+                        <input type="checkbox" id="hr-hasbhtn" checked class="w-4 h-4 text-purple-600 rounded">
+                        Đóng BHTN (NLĐ: 1% + DN: 1%)
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-bold text-purple-900 cursor-pointer">
+                        <input type="checkbox" id="hr-haskpcd" checked class="w-4 h-4 text-purple-600 rounded">
+                        Kinh Phí Công Đoàn (DN: 2%)
+                    </label>
+                </div>
+            </div>
+
+            <!-- NÚT THAO TÁC -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button onclick="window.modHR.closeModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition">
                     Hủy Bỏ
                 </button>
-                <button onclick="window.modHR.save()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs transition shadow-md uppercase tracking-wider">
-                    Lưu Hồ Sơ Nhân Viên
+                <button onclick="window.modHR.save()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs transition shadow-md flex items-center gap-2">
+                    <i class="fas fa-save"></i> <span>Lưu Hồ Sơ Nhân Sự</span>
                 </button>
             </div>
         </div>
@@ -370,71 +480,185 @@
 window.modHR = {
     employees: [],
     departments: [],
-    rbacUsers: [],
+    users: [],
+    insurancePolicy: null,
 
     load: async () => {
         try {
-            // 1. Tải danh sách phòng ban
-            const deptRes = await fetch('/api/hr/departments');
-            const deptData = await deptRes.json();
-            if (deptData.success) {
-                window.modHR.departments = deptData.data;
-                const deptSelect = document.getElementById('hr-filter-dept');
-                const modalDeptSelect = document.getElementById('hr-dept');
-                
-                let optHtml = '<option value="">-- Tất cả phòng ban --</option>';
-                let modalOptHtml = '<option value="">-- Chọn phòng ban --</option>';
-                deptData.data.forEach(d => {
-                    optHtml += `<option value="${d.id}">${d.dept_name} (${d.dept_code})</option>`;
-                    modalOptHtml += `<option value="${d.id}">${d.dept_name} (${d.dept_code})</option>`;
-                });
-                deptSelect.innerHTML = optHtml;
-                modalDeptSelect.innerHTML = modalOptHtml;
-            }
+            await Promise.all([
+                window.modHR.loadDepartments(),
+                window.modHR.loadUsers(),
+                window.modHR.loadInsurancePolicy()
+            ]);
+            await window.modHR.loadEmployees();
+        } catch (err) {
+            console.error('Lỗi nạp dữ liệu HR:', err);
+        }
+    },
 
-            // 2. Tải danh sách tài khoản RBAC để liên kết
-            const uRes = await fetch('/api/hr/rbac-users');
-            const uData = await uRes.json();
-            if (uData.success) {
-                window.modHR.rbacUsers = uData.data;
-                const userSelect = document.getElementById('hr-user-id');
-                let uHtml = '<option value="">-- Tự động khớp theo Mã NV hoặc chọn tài khoản RBAC --</option>';
-                uData.data.forEach(u => {
-                    uHtml += `<option value="${u.id || u.user_id}">[${u.role}] ${u.username} (${u.full_name || 'N/A'} - Mã: ${u.emp_id || 'Chưa gán'})</option>`;
-                });
-                userSelect.innerHTML = uHtml;
+    loadInsurancePolicy: async () => {
+        try {
+            const res = await fetch('/api/hr/insurance-policies');
+            const data = await res.json();
+            if (data.success && data.data) {
+                window.modHR.insurancePolicy = data.data;
+                const p = data.data;
+                const rEmp = (parseFloat(p.rate_bhxh_emp) || 0) + (parseFloat(p.rate_bhyt_emp) || 0) + (parseFloat(p.rate_bhtn_emp) || 0);
+                const rComp = (parseFloat(p.rate_bhxh_comp) || 0) + (parseFloat(p.rate_bhyt_comp) || 0) + (parseFloat(p.rate_bhtn_comp) || 0) + (parseFloat(p.rate_kpcd_comp) || 0);
+                const rTot = (rEmp + rComp).toFixed(1).replace('.0', '');
+                const topBadge = document.getElementById('hr-top-ins-rate');
+                if (topBadge) topBadge.innerText = `${rTot}%`;
             }
+        } catch(e){}
+    },
 
-            // 3. Tải thống kê
-            const sumRes = await fetch('/api/hr/summary');
-            const sumData = await sumRes.json();
-            if (sumData.success && sumData.data) {
-                const s = sumData.data;
-                document.getElementById('hr-stat-total').innerText = s.total_employees || 0;
-                document.getElementById('hr-stat-active').innerText = `${s.active_employees || 0} (${s.official_employees || 0} chính thức)`;
-                document.getElementById('hr-stat-salary').innerText = (parseFloat(s.total_base_salary_fund) || 0).toLocaleString('vi-VN') + ' đ';
-                document.getElementById('hr-stat-ins').innerText = (parseFloat(s.total_insurance_fund) || 0).toLocaleString('vi-VN') + ' đ';
-            }
+    openInsuranceModal: async () => {
+        await window.modHR.loadInsurancePolicy();
+        const p = window.modHR.insurancePolicy || {};
 
-            // 4. Tải danh sách nhân viên & khởi tạo danh sách Trưởng phòng
-            const res = await fetch('/api/hr/employees');
+        document.getElementById('ins-bhxh-emp').value = p.rate_bhxh_emp !== undefined ? p.rate_bhxh_emp : 8.0;
+        document.getElementById('ins-bhyt-emp').value = p.rate_bhyt_emp !== undefined ? p.rate_bhyt_emp : 1.5;
+        document.getElementById('ins-bhtn-emp').value = p.rate_bhtn_emp !== undefined ? p.rate_bhtn_emp : 1.0;
+
+        document.getElementById('ins-bhxh-comp').value = p.rate_bhxh_comp !== undefined ? p.rate_bhxh_comp : 17.5;
+        document.getElementById('ins-bhyt-comp').value = p.rate_bhyt_comp !== undefined ? p.rate_bhyt_comp : 3.0;
+        document.getElementById('ins-bhtn-comp').value = p.rate_bhtn_comp !== undefined ? p.rate_bhtn_comp : 1.0;
+        document.getElementById('ins-kpcd-comp').value = p.rate_kpcd_comp !== undefined ? p.rate_kpcd_comp : 2.0;
+
+        document.getElementById('ins-min-salary').value = p.min_insurance_salary || 5000000;
+        document.getElementById('ins-max-salary').value = p.max_insurance_salary || 46800000;
+
+        window.modHR.updateInsuranceLiveTotals();
+
+        const m = document.getElementById('hr-insurance-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    closeInsuranceModal: () => {
+        const m = document.getElementById('hr-insurance-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    },
+
+    updateInsuranceLiveTotals: () => {
+        const bhxhEmp = parseFloat(document.getElementById('ins-bhxh-emp').value) || 0;
+        const bhytEmp = parseFloat(document.getElementById('ins-bhyt-emp').value) || 0;
+        const bhtnEmp = parseFloat(document.getElementById('ins-bhtn-emp').value) || 0;
+
+        const bhxhComp = parseFloat(document.getElementById('ins-bhxh-comp').value) || 0;
+        const bhytComp = parseFloat(document.getElementById('ins-bhyt-comp').value) || 0;
+        const bhtnComp = parseFloat(document.getElementById('ins-bhtn-comp').value) || 0;
+        const kpcdComp = parseFloat(document.getElementById('ins-kpcd-comp').value) || 0;
+
+        const totEmp = bhxhEmp + bhytEmp + bhtnEmp;
+        const totComp = bhxhComp + bhytComp + bhtnComp + kpcdComp;
+        const grandTotal = totEmp + totComp;
+
+        document.getElementById('ins-live-total').innerText = `${grandTotal.toFixed(1)}%`;
+        document.getElementById('ins-live-emp').innerText = `${totEmp.toFixed(1)}%`;
+        document.getElementById('ins-live-comp').innerText = `${totComp.toFixed(1)}%`;
+        document.getElementById('ins-subtotal-emp').innerText = `${totEmp.toFixed(1)}%`;
+        document.getElementById('ins-subtotal-comp').innerText = `${totComp.toFixed(1)}%`;
+    },
+
+    saveInsurancePolicy: async () => {
+        const payload = {
+            rate_bhxh_emp: parseFloat(document.getElementById('ins-bhxh-emp').value) || 0,
+            rate_bhyt_emp: parseFloat(document.getElementById('ins-bhyt-emp').value) || 0,
+            rate_bhtn_emp: parseFloat(document.getElementById('ins-bhtn-emp').value) || 0,
+            rate_bhxh_comp: parseFloat(document.getElementById('ins-bhxh-comp').value) || 0,
+            rate_bhyt_comp: parseFloat(document.getElementById('ins-bhyt-comp').value) || 0,
+            rate_bhtn_comp: parseFloat(document.getElementById('ins-bhtn-comp').value) || 0,
+            rate_kpcd_comp: parseFloat(document.getElementById('ins-kpcd-comp').value) || 0,
+            min_insurance_salary: parseFloat(document.getElementById('ins-min-salary').value) || 5000000,
+            max_insurance_salary: parseFloat(document.getElementById('ins-max-salary').value) || 46800000
+        };
+
+        try {
+            const res = await fetch('/api/hr/insurance-policies', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
             const data = await res.json();
             if (data.success) {
-                window.modHR.employees = data.data;
-                
-                // Cập nhật danh sách Trưởng phòng quản lý trong Modal
-                const managerSelect = document.getElementById('hr-manager-id');
-                let mHtml = '<option value="">-- Thuộc Giám Đốc / Tự quản lý --</option>';
-                data.data.forEach(emp => {
-                    mHtml += `<option value="${emp.id}">${emp.full_name} (${emp.emp_code} - ${emp.position || 'Trưởng phòng'})</option>`;
-                });
-                managerSelect.innerHTML = mHtml;
-
-                window.modHR.applyFilter();
+                alert(`✅ ${data.message}`);
+                window.modHR.closeInsuranceModal();
+                await window.modHR.loadInsurancePolicy();
+            } else {
+                alert('Lỗi: ' + data.error);
             }
-        } catch (err) {
-            console.error('Lỗi tải HRM:', err);
+        } catch(err) {
+            alert('Lỗi lưu tỷ lệ bảo hiểm: ' + err.message);
         }
+    },
+
+    loadDepartments: async () => {
+        const res = await fetch('/api/hr/departments');
+        const data = await res.json();
+        if (data.success) {
+            window.modHR.departments = data.data;
+            const filterDept = document.getElementById('hr-filter-dept');
+            const formDept = document.getElementById('hr-dept');
+            
+            let options = '<option value="">-- Tất cả phòng ban --</option>';
+            let formOpts = '<option value="">-- Chưa phân phòng ban --</option>';
+            data.data.forEach(d => {
+                options += `<option value="${d.id}">${d.dept_name} (${d.dept_code})</option>`;
+                formOpts += `<option value="${d.id}">${d.dept_name} (${d.dept_code})</option>`;
+            });
+            if (filterDept) filterDept.innerHTML = options;
+            if (formDept) formDept.innerHTML = formOpts;
+        }
+    },
+
+    loadUsers: async () => {
+        try {
+            const res = await fetch('/api/auth/users');
+            const data = await res.json();
+            if (data.success) {
+                window.modHR.users = data.data;
+                const formUser = document.getElementById('hr-user-id');
+                let opts = '<option value="">-- Chưa liên kết tài khoản --</option>';
+                data.data.forEach(u => {
+                    opts += `<option value="${u.id}">${u.full_name} (@${u.username}) - [Mã: ${u.emp_id || 'N/A'}]</option>`;
+                });
+                if (formUser) formUser.innerHTML = opts;
+            }
+        } catch(e) {}
+    },
+
+    loadEmployees: async () => {
+        const res = await fetch('/api/hr/employees');
+        const data = await res.json();
+        if (data.success) {
+            window.modHR.employees = data.data;
+            window.modHR.renderStats(data.data);
+            window.modHR.populateManagers(data.data);
+            window.modHR.applyFilter();
+        }
+    },
+
+    renderStats: (list) => {
+        const total = list.length;
+        const active = list.filter(e => e.status === 'ACTIVE').length;
+        const totalSalary = list.reduce((sum, e) => sum + (parseFloat(e.base_salary) || 0), 0);
+        const totalInsSalary = list.reduce((sum, e) => sum + (parseFloat(e.insurance_salary) || 0), 0);
+
+        document.getElementById('hr-stat-total').innerText = total;
+        document.getElementById('hr-stat-active').innerText = active;
+        document.getElementById('hr-stat-salary').innerText = `${totalSalary.toLocaleString('vi-VN')} đ`;
+        document.getElementById('hr-stat-ins').innerText = `${totalInsSalary.toLocaleString('vi-VN')} đ`;
+    },
+
+    populateManagers: (list) => {
+        const sel = document.getElementById('hr-manager-id');
+        let opts = '<option value="">-- Không có (Cấp cao nhất) --</option>';
+        list.filter(e => e.department_role === 'MANAGER' || e.department_role === 'DIRECTOR').forEach(m => {
+            opts += `<option value="${m.id}">${m.full_name} (${m.emp_code}) - ${m.position || 'Quản lý'}</option>`;
+        });
+        if (sel) sel.innerHTML = opts;
     },
 
     applyFilter: () => {
@@ -446,84 +670,92 @@ window.modHR = {
             if (deptId && String(e.department_id) !== String(deptId)) return false;
             if (status && e.status !== status) return false;
             if (search) {
-                const text = `${e.emp_code} ${e.full_name} ${e.phone} ${e.position} ${e.username || ''}`.toLowerCase();
-                if (!text.includes(search)) return false;
+                const fullText = `${e.emp_code} ${e.full_name} ${e.phone || ''} ${e.email || ''} ${e.position || ''}`.toLowerCase();
+                if (!fullText.includes(search)) return false;
             }
             return true;
         });
 
-        const tbody = document.getElementById('hr-tbody');
+        const tbody = document.getElementById('hr-employees-tbody');
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400 font-bold">Không tìm thấy hồ sơ nhân viên nào phù hợp</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-400 font-bold">Không tìm thấy nhân viên nào phù hợp.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = filtered.map(e => {
+            let roleBadge = '';
+            if (e.department_role === 'DIRECTOR') roleBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200">Giám Đốc</span>';
+            else if (e.department_role === 'MANAGER') roleBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">Trưởng Phòng</span>';
+            else if (e.department_role === 'DEPUTY_MANAGER') roleBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200">Phó Phòng</span>';
+            else roleBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-700">Nhân Viên</span>';
+
+            let insIcon = (e.bhxh_code && e.bhxh_code.trim() !== '') 
+                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1 mx-auto w-max"><i class="fas fa-check-circle"></i> Đang Đóng</span>'
+                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 flex items-center gap-1 mx-auto w-max"><i class="fas fa-minus-circle"></i> Chưa Đóng</span>';
+
             let statusBadge = e.status === 'ACTIVE'
-                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">Đang làm việc</span>'
-                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-200">Đã nghỉ việc</span>';
+                ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">Đang Làm</span>'
+                : '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-700">Đã Nghỉ</span>';
 
             let contractBadge = '';
-            if (e.contract_type === 'CHINH_THUC') contractBadge = '<span class="text-blue-600 font-bold">Chính thức</span>';
-            else if (e.contract_type === 'THU_VIEC') contractBadge = '<span class="text-amber-600 font-bold">Thử việc</span>';
-            else contractBadge = '<span class="text-slate-500 font-bold">Thời vụ / CTV</span>';
-
-            let insIcon = (e.bhxh_code && e.bhxh_code.trim() !== '')
-                ? '<span class="text-emerald-600" title="Đã có mã BHXH"><i class="fas fa-check-circle"></i> Đang đóng</span>'
-                : '<span class="text-slate-400" title="Chưa có BHXH"><i class="fas fa-minus-circle"></i> Chưa đóng</span>';
-
-            let rbacBadge = e.username
-                ? `<div class="font-bold text-slate-800 flex items-center gap-1"><i class="fas fa-user-shield text-emerald-500"></i> ${e.username}</div><span class="text-[9px] font-black bg-indigo-50 text-indigo-700 px-1.5 py-0.2 rounded border border-indigo-100 uppercase">${e.user_role || 'USER'}</span>`
-                : '<span class="text-[10px] text-amber-600 font-semibold italic"><i class="fas fa-exclamation-triangle mr-0.5"></i> Chưa gán RBAC</span>';
-
-            let roleBadge = e.department_role === 'MANAGER'
-                ? '<span class="text-[9px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded border border-amber-300 mr-1"><i class="fas fa-crown text-amber-500"></i> TRƯỞNG PHÒNG</span>'
-                : '';
-
-            const rateWs = parseFloat(e.commission_rate_wholesale) !== undefined && !isNaN(parseFloat(e.commission_rate_wholesale)) ? e.commission_rate_wholesale : 5;
-            const rateBoq = parseFloat(e.commission_rate_boq) !== undefined && !isNaN(parseFloat(e.commission_rate_boq)) ? e.commission_rate_boq : 10;
-            const minGp = parseFloat(e.min_gross_profit_threshold) || 0;
-
-            let commInfo = `
-                <div class="text-[10px] text-amber-700 font-bold mt-0.5 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 inline-block">
-                    Hoa hồng: <span class="text-blue-700">${rateWs}% Sỉ</span> | <span class="text-purple-700">${rateBoq}% BOQ</span>
-                    ${minGp > 0 ? ` | Ngưỡng: <b class="text-rose-600">${(minGp/1000000).toFixed(0)}Tr</b>` : ''}
-                </div>
-            `;
+            if (e.contract_type === 'CHINH_THUC') contractBadge = '<span class="font-bold text-blue-700">Chính Thức</span>';
+            else if (e.contract_type === 'THU_VIEC') contractBadge = '<span class="font-bold text-amber-600">Thử Việc</span>';
+            else if (e.contract_type === 'CTV') contractBadge = '<span class="font-bold text-purple-600">Cộng Tác Viên</span>';
+            else contractBadge = '<span class="font-bold text-slate-600">Thời Vụ</span>';
 
             return `
-                <tr class="hover:bg-blue-50/40 transition border-b border-slate-100">
-                    <td class="p-3.5 pl-4 font-black text-amber-600 font-mono text-sm">${e.emp_code}</td>
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="p-3.5 pl-4 font-black text-blue-600 font-mono">${e.emp_code}</td>
                     <td class="p-3.5">
-                        <div class="font-bold text-slate-800 flex items-center gap-1">${roleBadge}<span>${e.full_name}</span></div>
-                        <div class="text-[10px] text-slate-400 font-medium">${e.phone || 'Chưa có SĐT'} | ${e.gender || 'Nam'}</div>
+                        <div class="font-bold text-slate-900">${e.full_name}</div>
+                        <div class="text-[11px] text-slate-400 font-mono">${e.phone || 'Chưa có SĐT'}</div>
                     </td>
-                    <td class="p-3.5">${rbacBadge}</td>
                     <td class="p-3.5">
-                        <div class="font-bold text-indigo-700">${e.dept_name || 'Chưa phân phòng'}</div>
-                        <div class="text-[11px] text-slate-500">${e.position || 'Nhân viên'}</div>
-                        ${commInfo}
+                        ${e.username ? `<span class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono font-bold text-[11px]">@${e.username}</span>` : '<span class="text-slate-400 italic text-[11px]">Chưa gán</span>'}
                     </td>
-                    <td class="p-3.5">${contractBadge}</td>
-                    <td class="p-3.5 text-right font-black text-slate-800">${(parseFloat(e.base_salary) || 0).toLocaleString('vi-VN')} đ</td>
-                    <td class="p-3.5 text-right font-bold text-purple-700">${(parseFloat(e.insurance_salary) || 0).toLocaleString('vi-VN')} đ</td>
-                    <td class="p-3.5 text-center font-semibold text-[11px]">${insIcon}</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-slate-800">${e.dept_name || '<span class="text-slate-400">Chưa phân phòng</span>'}</div>
+                        <div class="flex items-center gap-1.5 mt-0.5">${roleBadge} <span class="text-[11px] text-slate-500">${e.position || ''}</span></div>
+                    </td>
+                    <td class="p-3.5">
+                        ${e.manager_name ? `<span class="font-bold text-slate-700">${e.manager_name}</span>` : '<span class="text-slate-400 text-[11px] italic">Ban Giám Đốc</span>'}
+                    </td>
+                    <td class="p-3.5 text-right font-black font-mono text-slate-800">
+                        ${(parseFloat(e.base_salary) || 0).toLocaleString('vi-VN')} đ
+                    </td>
+                    <td class="p-3.5 text-right font-black font-mono text-purple-700">
+                        ${(parseFloat(e.insurance_salary) || 0).toLocaleString('vi-VN')} đ
+                    </td>
+                    <td class="p-3.5 text-center">${insIcon}</td>
+                    <td class="p-3.5 text-center">${contractBadge}</td>
                     <td class="p-3.5 text-center">${statusBadge}</td>
                     <td class="p-3.5 text-center pr-4">
-                        <button onclick="window.modHR.editModal(${e.id})" class="text-blue-600 hover:text-blue-800 font-bold text-xs p-1.5 rounded-lg hover:bg-blue-50 mr-1" title="Sửa hồ sơ">
-                            <i class="fas fa-edit"></i> Sửa
-                        </button>
-                        <button onclick="window.modHR.deleteEmp(${e.id}, '${e.full_name}')" class="text-rose-500 hover:text-rose-700 font-bold text-xs p-1.5 rounded-lg hover:bg-rose-50" title="Xóa nhân viên">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="window.modHR.editModal(${e.id})" class="p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition shadow-2xs" title="Chỉnh sửa hồ sơ">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="window.modHR.deleteEmp(${e.id}, '${e.full_name}')" class="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition shadow-2xs" title="Xóa nhân sự">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
         }).join('');
     },
 
+    onRoleChange: () => {
+        const role = document.getElementById('hr-dept-role').value;
+        const mgrSection = document.getElementById('hr-manager-comm-section');
+        if (role === 'MANAGER' || role === 'DIRECTOR' || role === 'DEPUTY_MANAGER') {
+            mgrSection.classList.remove('hidden');
+        } else {
+            mgrSection.classList.add('hidden');
+        }
+    },
+
     openModal: () => {
-        document.getElementById('hr-modal-title').innerText = 'Thêm Hồ Sơ Nhân Viên Mới';
+        document.getElementById('hr-modal-title').innerText = 'Thêm Nhân Viên Mới';
         document.getElementById('hr-id').value = '';
         document.getElementById('hr-code').value = '';
         document.getElementById('hr-user-id').value = '';
@@ -544,6 +776,8 @@ window.modHR = {
         document.getElementById('hr-status').value = 'ACTIVE';
         document.getElementById('hr-rate-ws').value = '5';
         document.getElementById('hr-rate-boq').value = '10';
+        document.getElementById('hr-rate-mgr-ws').value = '2';
+        document.getElementById('hr-rate-mgr-boq').value = '3';
         document.getElementById('hr-min-gp').value = '0';
         document.getElementById('hr-basesalary').value = '';
         document.getElementById('hr-inssalary').value = '';
@@ -557,6 +791,8 @@ window.modHR = {
         document.getElementById('hr-hasbhyt').checked = true;
         document.getElementById('hr-hasbhtn').checked = true;
         document.getElementById('hr-haskpcd').checked = true;
+
+        window.modHR.onRoleChange();
 
         const m = document.getElementById('hr-modal');
         m.classList.remove('hidden');
@@ -588,6 +824,8 @@ window.modHR = {
         document.getElementById('hr-status').value = emp.status || 'ACTIVE';
         document.getElementById('hr-rate-ws').value = emp.commission_rate_wholesale !== null && emp.commission_rate_wholesale !== undefined ? emp.commission_rate_wholesale : 5;
         document.getElementById('hr-rate-boq').value = emp.commission_rate_boq !== null && emp.commission_rate_boq !== undefined ? emp.commission_rate_boq : 10;
+        document.getElementById('hr-rate-mgr-ws').value = emp.commission_rate_manager_wholesale !== null && emp.commission_rate_manager_wholesale !== undefined ? emp.commission_rate_manager_wholesale : 2;
+        document.getElementById('hr-rate-mgr-boq').value = emp.commission_rate_manager_boq !== null && emp.commission_rate_manager_boq !== undefined ? emp.commission_rate_manager_boq : 3;
         document.getElementById('hr-min-gp').value = emp.min_gross_profit_threshold || 0;
         document.getElementById('hr-basesalary').value = emp.base_salary || 0;
         document.getElementById('hr-inssalary').value = emp.insurance_salary || 0;
@@ -601,6 +839,8 @@ window.modHR = {
         document.getElementById('hr-hasbhyt').checked = emp.has_bhyt !== false;
         document.getElementById('hr-hasbhtn').checked = emp.has_bhtn !== false;
         document.getElementById('hr-haskpcd').checked = emp.has_kpcd !== false;
+
+        window.modHR.onRoleChange();
 
         const m = document.getElementById('hr-modal');
         m.classList.remove('hidden');
@@ -650,6 +890,8 @@ window.modHR = {
             status: document.getElementById('hr-status').value,
             commission_rate_wholesale: parseFloat(document.getElementById('hr-rate-ws').value) || 0,
             commission_rate_boq: parseFloat(document.getElementById('hr-rate-boq').value) || 0,
+            commission_rate_manager_wholesale: parseFloat(document.getElementById('hr-rate-mgr-ws').value) || 0,
+            commission_rate_manager_boq: parseFloat(document.getElementById('hr-rate-mgr-boq').value) || 0,
             min_gross_profit_threshold: parseFloat(document.getElementById('hr-min-gp').value) || 0,
             base_salary: parseFloat(document.getElementById('hr-basesalary').value) || 0,
             insurance_salary: parseFloat(document.getElementById('hr-inssalary').value) || 0,

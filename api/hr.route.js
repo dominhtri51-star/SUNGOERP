@@ -68,6 +68,94 @@ router.delete('/departments/:id', async (req, res) => {
 });
 
 // ==========================================
+// 1.1. CẤU HÌNH TỶ LỆ BẢO HIỂM XÃ HỘI (32%)
+// ==========================================
+router.get('/insurance-policies', async (req, res) => {
+    try {
+        let result = await pool.query("SELECT * FROM insurance_policies WHERE id = 1");
+        if (result.rows.length === 0) {
+            result = await pool.query(`
+                INSERT INTO insurance_policies (id, policy_name, rate_bhxh_emp, rate_bhyt_emp, rate_bhtn_emp, rate_bhxh_comp, rate_bhyt_comp, rate_bhtn_comp, rate_kpcd_comp)
+                VALUES (1, 'Quy Định Tỷ Lệ Đóng Bảo Hiểm Xã Hội & Kinh Phí Công Đoàn', 8.0, 1.5, 1.0, 17.5, 3.0, 1.0, 2.0)
+                RETURNING *
+            `);
+        }
+        res.json({ success: true, data: result.rows[0] });
+    } catch (err) {
+        console.error('Lỗi lấy chính sách bảo hiểm:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.put('/insurance-policies', async (req, res) => {
+    try {
+        const {
+            policy_name,
+            rate_bhxh_emp, rate_bhyt_emp, rate_bhtn_emp,
+            rate_bhxh_comp, rate_bhyt_comp, rate_bhtn_comp, rate_kpcd_comp,
+            min_insurance_salary, max_insurance_salary, notes
+        } = req.body;
+
+        const safeFloat = (v, fallback) => {
+            const p = parseFloat(v);
+            return isNaN(p) ? fallback : p;
+        };
+
+        const rBhxhEmp = safeFloat(rate_bhxh_emp, 8.0);
+        const rBhytEmp = safeFloat(rate_bhyt_emp, 1.5);
+        const rBhtnEmp = safeFloat(rate_bhtn_emp, 1.0);
+
+        const rBhxhComp = safeFloat(rate_bhxh_comp, 17.5);
+        const rBhytComp = safeFloat(rate_bhyt_comp, 3.0);
+        const rBhtnComp = safeFloat(rate_bhtn_comp, 1.0);
+        const rKpcdComp = safeFloat(rate_kpcd_comp, 2.0);
+
+        const minSalary = safeFloat(min_insurance_salary, 5000000);
+        const maxSalary = safeFloat(max_insurance_salary, 46800000);
+        const pName = policy_name || 'Quy Định Tỷ Lệ Đóng Bảo Hiểm Xã Hội & Kinh Phí Công Đoàn';
+
+        const result = await pool.query(`
+            INSERT INTO insurance_policies (
+                id, policy_name, rate_bhxh_emp, rate_bhyt_emp, rate_bhtn_emp,
+                rate_bhxh_comp, rate_bhyt_comp, rate_bhtn_comp, rate_kpcd_comp,
+                min_insurance_salary, max_insurance_salary, notes, updated_at
+            ) VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+            ON CONFLICT (id) DO UPDATE SET
+                policy_name = EXCLUDED.policy_name,
+                rate_bhxh_emp = EXCLUDED.rate_bhxh_emp,
+                rate_bhyt_emp = EXCLUDED.rate_bhyt_emp,
+                rate_bhtn_emp = EXCLUDED.rate_bhtn_emp,
+                rate_bhxh_comp = EXCLUDED.rate_bhxh_comp,
+                rate_bhyt_comp = EXCLUDED.rate_bhyt_comp,
+                rate_bhtn_comp = EXCLUDED.rate_bhtn_comp,
+                rate_kpcd_comp = EXCLUDED.rate_kpcd_comp,
+                min_insurance_salary = EXCLUDED.min_insurance_salary,
+                max_insurance_salary = EXCLUDED.max_insurance_salary,
+                notes = EXCLUDED.notes,
+                updated_at = NOW()
+            RETURNING *
+        `, [
+            pName, rBhxhEmp, rBhytEmp, rBhtnEmp,
+            rBhxhComp, rBhytComp, rBhtnComp, rKpcdComp,
+            minSalary, maxSalary, notes || ''
+        ]);
+
+        const totalEmp = rBhxhEmp + rBhytEmp + rBhtnEmp;
+        const totalComp = rBhxhComp + rBhytComp + rBhtnComp + rKpcdComp;
+        const totalRate = totalEmp + totalComp;
+
+        res.json({
+            success: true,
+            message: `Đã cập nhật tỷ lệ đóng bảo hiểm thành công! Tổng cộng: ${totalRate}% (NLĐ: ${totalEmp}% + DN: ${totalComp}%)`,
+            data: result.rows[0]
+        });
+    } catch (err) {
+        console.error('Lỗi cập nhật chính sách bảo hiểm:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================
 // 2. HỒ SƠ NHÂN SỰ (EMPLOYEES)
 // ==========================================
 
@@ -83,6 +171,7 @@ router.get('/employees', async (req, res) => {
                    u.role AS user_role,
                    m.full_name AS manager_name,
                    m.emp_code AS manager_code,
+                   (SELECT COUNT(*) FROM employees sub WHERE sub.manager_id = e.id AND sub.status = 'ACTIVE') AS subordinate_count,
                    ins.bhxh_code,
                    ins.bhyt_code,
                    ins.hospital_name,
@@ -93,7 +182,7 @@ router.get('/employees', async (req, res) => {
                    ins.status AS insurance_status
             FROM employees e
             LEFT JOIN departments d ON e.department_id = d.id
-            LEFT JOIN users u ON e.user_id = u.id OR e.user_id = u.user_id
+            LEFT JOIN users u ON e.user_id = u.id
             LEFT JOIN employees m ON e.manager_id = m.id
             LEFT JOIN employee_insurances ins ON e.id = ins.employee_id
             WHERE 1=1
@@ -171,6 +260,7 @@ router.get('/employees/:id', async (req, res) => {
                    u.role AS user_role,
                    m.full_name AS manager_name,
                    m.emp_code AS manager_code,
+                   (SELECT COUNT(*) FROM employees sub WHERE sub.manager_id = e.id AND sub.status = 'ACTIVE') AS subordinate_count,
                    ins.bhxh_code,
                    ins.bhyt_code,
                    ins.hospital_name,
@@ -181,7 +271,7 @@ router.get('/employees/:id', async (req, res) => {
                    ins.status AS insurance_status
             FROM employees e
             LEFT JOIN departments d ON e.department_id = d.id
-            LEFT JOIN users u ON e.user_id = u.id OR e.user_id = u.user_id
+            LEFT JOIN users u ON e.user_id = u.id
             LEFT JOIN employees m ON e.manager_id = m.id
             LEFT JOIN employee_insurances ins ON e.id = ins.employee_id
             WHERE e.id = $1
@@ -205,7 +295,9 @@ router.post('/employees', async (req, res) => {
             emp_code, user_id, department_id, full_name, gender, dob, id_card_number,
             phone, email, address, position, contract_type, start_date, end_date,
             status, base_salary, insurance_salary, bank_account_no, bank_name, bank_branch,
-            commission_rate_wholesale, commission_rate_boq, min_gross_profit_threshold,
+            commission_rate_wholesale, commission_rate_boq,
+            commission_rate_manager_wholesale, commission_rate_manager_boq,
+            min_gross_profit_threshold,
             department_role, manager_id,
             bhxh_code, bhyt_code, hospital_name, has_bhxh, has_bhyt, has_bhtn, has_kpcd
         } = req.body;
@@ -246,9 +338,11 @@ router.post('/employees', async (req, res) => {
                 emp_code, user_id, department_id, full_name, gender, dob, id_card_number,
                 phone, email, address, position, contract_type, start_date, end_date,
                 status, base_salary, insurance_salary, bank_account_no, bank_name, bank_branch,
-                commission_rate_wholesale, commission_rate_boq, min_gross_profit_threshold,
+                commission_rate_wholesale, commission_rate_boq,
+                commission_rate_manager_wholesale, commission_rate_manager_boq,
+                min_gross_profit_threshold,
                 department_role, manager_id
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
             RETURNING *
         `, [
             finalEmpCode, finalUserId, department_id || null, full_name, gender || 'Nam',
@@ -258,6 +352,8 @@ router.post('/employees', async (req, res) => {
             parseFloat(insurance_salary) || 0, bank_account_no || '', bank_name || '', bank_branch || '',
             parseFloat(commission_rate_wholesale) !== undefined && !isNaN(parseFloat(commission_rate_wholesale)) ? parseFloat(commission_rate_wholesale) : 5,
             parseFloat(commission_rate_boq) !== undefined && !isNaN(parseFloat(commission_rate_boq)) ? parseFloat(commission_rate_boq) : 10,
+            parseFloat(commission_rate_manager_wholesale) !== undefined && !isNaN(parseFloat(commission_rate_manager_wholesale)) ? parseFloat(commission_rate_manager_wholesale) : 2,
+            parseFloat(commission_rate_manager_boq) !== undefined && !isNaN(parseFloat(commission_rate_manager_boq)) ? parseFloat(commission_rate_manager_boq) : 3,
             parseFloat(min_gross_profit_threshold) || 0,
             department_role || 'STAFF', manager_id || null
         ]);
@@ -303,7 +399,9 @@ router.put('/employees/:id', async (req, res) => {
             emp_code, user_id, department_id, full_name, gender, dob, id_card_number,
             phone, email, address, position, contract_type, start_date, end_date,
             status, base_salary, insurance_salary, bank_account_no, bank_name, bank_branch,
-            commission_rate_wholesale, commission_rate_boq, min_gross_profit_threshold,
+            commission_rate_wholesale, commission_rate_boq,
+            commission_rate_manager_wholesale, commission_rate_manager_boq,
+            min_gross_profit_threshold,
             department_role, manager_id,
             bhxh_code, bhyt_code, hospital_name, has_bhxh, has_bhyt, has_bhtn, has_kpcd, insurance_status
         } = req.body;
@@ -337,9 +435,11 @@ router.put('/employees/:id', async (req, res) => {
                 email = $9, address = $10, position = $11, contract_type = $12,
                 start_date = $13, end_date = $14, status = $15, base_salary = $16,
                 insurance_salary = $17, bank_account_no = $18, bank_name = $19, bank_branch = $20,
-                commission_rate_wholesale = $21, commission_rate_boq = $22, min_gross_profit_threshold = $23,
-                department_role = $24, manager_id = $25
-            WHERE id = $26 RETURNING *
+                commission_rate_wholesale = $21, commission_rate_boq = $22,
+                commission_rate_manager_wholesale = $23, commission_rate_manager_boq = $24,
+                min_gross_profit_threshold = $25,
+                department_role = $26, manager_id = $27
+            WHERE id = $28 RETURNING *
         `, [
             finalEmpCode, finalUserId, department_id || null, full_name, gender || 'Nam',
             dob || null, id_card_number || '', phone || '', email || '', address || '',
@@ -348,6 +448,8 @@ router.put('/employees/:id', async (req, res) => {
             parseFloat(insurance_salary) || 0, bank_account_no || '', bank_name || '', bank_branch || '',
             parseFloat(commission_rate_wholesale) !== undefined && !isNaN(parseFloat(commission_rate_wholesale)) ? parseFloat(commission_rate_wholesale) : 5,
             parseFloat(commission_rate_boq) !== undefined && !isNaN(parseFloat(commission_rate_boq)) ? parseFloat(commission_rate_boq) : 10,
+            parseFloat(commission_rate_manager_wholesale) !== undefined && !isNaN(parseFloat(commission_rate_manager_wholesale)) ? parseFloat(commission_rate_manager_wholesale) : 2,
+            parseFloat(commission_rate_manager_boq) !== undefined && !isNaN(parseFloat(commission_rate_manager_boq)) ? parseFloat(commission_rate_manager_boq) : 3,
             parseFloat(min_gross_profit_threshold) || 0,
             department_role || 'STAFF', manager_id || null,
             id

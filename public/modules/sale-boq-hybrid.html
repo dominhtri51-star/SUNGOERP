@@ -23,13 +23,18 @@
             print-color-adjust: exact !important;
         }
 
-        /* Ẩn các thành phần không cần in - TUYỆT ĐỐI ẨN THẺ MOBILE KHI IN */
-        aside, header, #sidebar-menu, #page-title, .no-print, nav, button, 
+        /* Ẩn các thành phần không cần in - TUYỆT ĐỐI ẨN THẺ MOBILE VÀ PROFILE SHEET KHI IN */
+        aside, header, #app-sidebar, #sidebar-menu, #page-title, .no-print, nav, button, 
         #sale-control-panel, #history-list, #view-labor, #user-role, #user-name, 
         .action-column, .btn-action-cell, #modal-device-manager, #modal-labor-manager,
         .mobile-only-cards, #detail-items-mobile-cards, #labor-items-mobile-cards, #boq-mobile-cards,
+        #mobile-bottom-nav, #mobile-profile-sheet, #desktop-floating-toggle, #desktop-sidebar-toggle,
         #bottom-nav, #sidebar-backdrop, #profile-sheet-backdrop, #mobile-bottom-bar { 
-            display: none !important; 
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
         }
 
         /* Mở rộng các container cha ra 100% chiều ngang và LUÔN HIỆN BẢNG TABLE CHUẨN */
@@ -249,7 +254,7 @@
                         <label class="block text-[11px] font-bold text-amber-900">💵 Tiền Điện Bình Quân / Tháng</label>
                         <span class="text-[10px] text-amber-600 font-bold">VNĐ</span>
                     </div>
-                    <input type="text" id="monthly-bill" value="3.500.000" class="w-full bg-white border border-amber-300 rounded-lg p-2 text-sm font-black text-amber-700 outline-none text-right focus:border-amber-500" oninput="window.modSaleHybrid.formatAndCalcBill(this)">
+                    <input type="text" id="monthly-bill" value="5.500.000" class="w-full bg-white border border-amber-300 rounded-lg p-2 text-sm font-black text-amber-700 outline-none text-right focus:border-amber-500" oninput="window.modSaleHybrid.formatAndCalcBill(this)">
                     <p class="text-[10px] text-amber-700 italic">👉 Tự động đề xuất công suất tối ưu theo tiền điện</p>
                 </div>
             </div>
@@ -276,10 +281,10 @@
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-[11px] font-bold text-slate-600">Công suất giàn PV</label>
-                        <span class="text-[11px] font-black text-blue-600" id="display-kwp">6.2 kWp</span>
+                        <span class="text-[11px] font-black text-blue-600" id="display-kwp">16.5 kWp</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="number" id="kwp" value="6.2" min="1" step="0.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-blue-500" oninput="window.modSaleHybrid.calcBOQ()">
+                        <input type="number" id="kwp" value="16.5" min="1" step="0.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-blue-500" oninput="window.modSaleHybrid.calcBOQ()">
                         <span class="text-xs font-bold text-slate-500">kWp</span>
                     </div>
                 </div>
@@ -402,15 +407,15 @@
                                 <span class="text-2xl font-black text-slate-900 tracking-wider">SOLAR</span>
                                 <span class="text-[9px] bg-slate-950 text-amber-400 font-black px-2 py-0.5 rounded tracking-widest uppercase shadow-2xs">RMS HYBRID</span>
                             </div>
-                            <p class="text-xs text-slate-800 font-black uppercase tracking-wide">CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO</p>
-                            <p class="text-[10.5px] text-slate-500"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i> Trụ sở: 419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
-                            <p class="text-[10.5px] text-slate-500"><i class="fas fa-phone-alt text-amber-600 mr-1"></i> Hotline: <strong>0937.039.889</strong> | <i class="fas fa-envelope text-amber-600 ml-1 mr-1"></i> contact@sungo.vn | <i class="fas fa-globe text-amber-600 ml-1 mr-1"></i> www.sungo.vn</p>
+                            <p id="header-company-name" class="text-xs text-slate-800 font-black uppercase tracking-wide">CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO</p>
+                            <p id="header-company-addr" class="text-[10.5px] text-slate-500"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i> Trụ sở: 419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
+                            <p id="header-company-contact" class="text-[10.5px] text-slate-500"><i class="fas fa-phone-alt text-amber-600 mr-1"></i> Hotline: <strong>0937.039.889</strong> | <i class="fas fa-envelope text-amber-600 ml-1 mr-1"></i> contact@sungo.vn | <i class="fas fa-globe text-amber-600 ml-1 mr-1"></i> www.sungo.vn</p>
                         </div>
                         
                         <div class="text-left sm:text-right space-y-1 shrink-0">
                             <div class="inline-block">
-                                <span id="detail-status-badge" class="text-[10.5px] px-3.5 py-1 rounded-full font-black uppercase bg-slate-950 text-amber-400 border border-amber-500 shadow-2xs">
-                                    BẢNG BÁO GIÁ CHÍNH THỨC
+                                <span id="pdf-quote-main-title" class="text-[10.5px] px-3.5 py-1 rounded-full font-black uppercase bg-slate-950 text-amber-400 border border-amber-500 shadow-2xs">
+                                    BẢNG BÁO GIÁ HỆ THỐNG ĐIỆN MẶT TRỜI HYBRID LƯU TRỮ
                                 </span>
                             </div>
                             <p id="pdf-q-code" class="text-lg font-mono font-black text-blue-700 mt-1 tracking-tight">HYB-000000</p>
@@ -428,13 +433,13 @@
                         </div>
                         <div class="print-info-cell bg-amber-50/50 rounded-xl p-2.5 border border-amber-200/80">
                             <span class="text-amber-800 text-[9.5px] font-bold uppercase tracking-wider block">⚡ Giải pháp công nghệ:</span>
-                            <strong class="text-amber-900 font-black text-xs block mt-0.5 truncate">HYBRID ATS BACKUP</strong>
-                            <span class="text-[10px] text-slate-600 block">Tự động chuyển nguồn 10ms</span>
+                            <strong id="pdf-tech-solution" class="text-amber-900 font-black text-xs block mt-0.5 truncate">HYBRID ATS BACKUP</strong>
+                            <span id="pdf-tech-desc" class="text-[10px] text-slate-600 block">Tự động chuyển nguồn 10ms</span>
                         </div>
                         <div class="print-info-cell bg-blue-50/50 rounded-xl p-2.5 border border-blue-200/80">
                             <span class="text-blue-800 text-[9.5px] font-bold uppercase tracking-wider block">☀️ Công suất giàn PV:</span>
-                            <strong id="pdf-kwp" class="text-blue-900 text-xs font-black block mt-0.5">6.2 kWp</strong>
-                            <span class="text-[10px] text-slate-600 block">Ước tính: ~750 - 800 kWh/tháng</span>
+                            <strong id="pdf-kwp" class="text-blue-900 text-xs font-black block mt-0.5">16.5 kWp</strong>
+                            <span id="pdf-kwp-est" class="text-[10px] text-slate-600 block">Ước tính: ~750 - 800 kWh/tháng</span>
                         </div>
                         <div class="print-info-cell bg-emerald-50/50 rounded-xl p-2.5 border border-emerald-200/80">
                             <span class="text-emerald-800 text-[9.5px] font-bold uppercase tracking-wider block">🔋 Dung lượng Lưu Trữ:</span>
@@ -553,15 +558,23 @@
                         </div>
                     </div>
 
+                    <!-- CAM KẾT & ĐIỀU KHOẢN BẢO HÀNH CHÍNH HÃNG -->
+                    <div id="pdf-quote-notes" class="text-[10px] text-slate-600 border-t border-slate-200 pt-2.5 space-y-1 page-break-avoid italic leading-relaxed">
+                        <p>1. Bảo hành tấm pin mặt trời 12 năm vật lý, 30 năm hiệu suất trên 80%.</p>
+                        <p>2. Bảo hành biến tần Inverter Hybrid 05 năm chính hãng.</p>
+                        <p>3. Bảo hành Pin lưu trữ Lithium 05 năm (6000 chu kỳ nạp xả).</p>
+                        <p>4. Bảo hành tủ điện ATS và hệ thống vận hành 02 năm trọn gói.</p>
+                    </div>
+
                     <!-- CHỮ KÝ XÁC NHẬN BÁO GIÁ (PHÂN RÕ TRÁI - PHẢI 50/50 CHUẨN A4) -->
                     <div class="print-signature-grid grid grid-cols-2 text-center pt-4 text-xs text-slate-700 border-t border-slate-200 page-break-avoid gap-4">
                         <div class="print-signature-cell">
-                            <p class="font-black uppercase text-slate-800 text-xs">ĐẠI DIỆN KHÁCH HÀNG</p>
+                            <p id="pdf-left-sign-title" class="font-black uppercase text-slate-800 text-xs">ĐẠI DIỆN KHÁCH HÀNG</p>
                             <p class="text-[10px] text-slate-400 italic mb-12">(Ký & ghi rõ họ tên)</p>
                             <p id="pdf-sign-cust-name" class="font-black text-slate-900 text-xs">Anh Toàn</p>
                         </div>
                         <div class="print-signature-cell">
-                            <p class="font-black uppercase text-amber-800 text-xs">ĐẠI DIỆN SUNGO SOLAR</p>
+                            <p id="pdf-right-sign-title" class="font-black uppercase text-amber-800 text-xs">ĐẠI DIỆN SUNGO SOLAR</p>
                             <p class="text-[10px] text-slate-400 italic mb-12">(Ký, đóng dấu & ghi rõ họ tên)</p>
                             <p id="pdf-sign-sale-name" class="font-black text-slate-900 text-xs">Đỗ Minh Trí</p>
                         </div>
@@ -935,6 +948,7 @@ window.modSaleHybrid = {
             } catch(e) {}
         }
 
+        window.modSaleHybrid.loadCompanySettings();
         window.modSaleHybrid.loadProducts().then(() => {
             const pendingEditId = sessionStorage.getItem('pending_edit_quotation_id');
             if (pendingEditId) {
@@ -992,11 +1006,31 @@ window.modSaleHybrid = {
         const bill = window.modSaleHybrid.parseRawBillValue();
         const kwhMonth = bill / 2750;
         const kwhDay = kwhMonth / 30;
-        let calculatedKwp = Math.round((kwhDay / 4.1) * 2) / 2;
+        // Giờ nắng trung bình 4.25h/ngày (từ 3.5h đến 5.0h)
+        let calculatedKwp = Math.round((kwhDay / 4.25) * 10) / 10;
         if (calculatedKwp < 3) calculatedKwp = 3;
 
+        // Tìm công suất tấm pin đang chọn (mặc định 620W)
+        const panelSku = document.getElementById('select-panel')?.value;
+        const panel = (window.modSaleHybrid.dbProducts || []).find(p => p.sku === panelSku) || { product_name: 'Jinko 620W' };
+        let panelWatt = 620;
+        const matchWatt = (panel.product_name || '').match(/(\d{3})W/i);
+        if (matchWatt && matchWatt[1]) panelWatt = parseInt(matchWatt[1]);
+
+        // Công suất PV = công suất tấm pin * số lượng tấm pin
+        const panelQty = Math.max(4, Math.ceil((calculatedKwp * 1000) / panelWatt));
+        calculatedKwp = Math.round(((panelQty * panelWatt) / 1000) * 100) / 100;
+
         document.getElementById('kwp').value = calculatedKwp;
-        document.getElementById('display-kwp').innerText = `${calculatedKwp} kWp`;
+        document.getElementById('display-kwp').innerText = `${calculatedKwp} kWp (${panelQty} Tấm)`;
+        
+        // Tự động tính số bộ lưu trữ Lithium Apess 16kWh theo nhu cầu dùng ban đêm (~50% lượng điện ngày)
+        const nightKwh = kwhDay * 0.5;
+        let autoBatQty = Math.max(1, Math.round(nightKwh / 16));
+        if (calculatedKwp <= 18) autoBatQty = 1;
+        const batQtyInput = document.getElementById('bat-qty');
+        if (batQtyInput) batQtyInput.value = autoBatQty;
+
         window.modSaleHybrid.updateHybridLabor();
     },
 
@@ -1027,6 +1061,16 @@ window.modSaleHybrid = {
             
             return isPanel && !isNotPanel;
         });
+
+        // Tìm tấm pin Jinko 620wp ưu tiên làm mặc định
+        const defaultPanel = panels.find(p => p.sku === 'SP0266') || panels.find(p => {
+            const n = (p.product_name || '').toLowerCase();
+            return n.includes('jinko') && n.includes('620');
+        }) || panels[0];
+
+        if (defaultPanel) {
+            panels.sort((a, b) => (a.sku === defaultPanel.sku ? -1 : b.sku === defaultPanel.sku ? 1 : 0));
+        }
 
         // 2. BIẾN TẦN INVERTER HYBRID: CHỈ LẤY BIẾN TẦN
         const inverters = dbP.filter(p => {
@@ -1077,7 +1121,7 @@ window.modSaleHybrid = {
         }
         
         const panelList = panels.length > 0 ? panels : dbP.slice(0, 5);
-        document.getElementById('select-panel').innerHTML = panelList.map(p => `<option value="${p.sku}">${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
+        document.getElementById('select-panel').innerHTML = panelList.map(p => `<option value="${p.sku}" ${defaultPanel && p.sku === defaultPanel.sku ? 'selected' : ''}>${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
         
         const invList = inverters.length > 0 ? inverters : dbP.slice(5, 10);
         document.getElementById('select-inverter').innerHTML = invList.map(p => `<option value="${p.sku}" ${defaultInv && p.sku === defaultInv.sku ? 'selected' : ''}>${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
@@ -1085,6 +1129,7 @@ window.modSaleHybrid = {
         const batList = batteries.length > 0 ? batteries : dbP.slice(10, 15);
         document.getElementById('select-battery').innerHTML = batList.map(p => `<option value="${p.sku}" ${defaultBat && p.sku === defaultBat.sku ? 'selected' : ''}>${p.product_name} (${fmt(p.retail_price)})</option>`).join('');
 
+        if (defaultPanel) document.getElementById('select-panel').value = defaultPanel.sku;
         if (defaultInv) document.getElementById('select-inverter').value = defaultInv.sku;
         if (defaultBat) document.getElementById('select-battery').value = defaultBat.sku;
 
@@ -1114,38 +1159,47 @@ window.modSaleHybrid = {
         }
     },
 
-    openAddDeviceModal: () => {
-        window.modSaleHybrid.deviceModalMode = 'ADD';
-        window.modSaleHybrid.targetReplaceIndex = null;
-        document.getElementById('md-device-title').innerText = 'Thêm Thiết Bị / Phụ Kiện Mới';
-        document.getElementById('md-device-select').value = '';
-        document.getElementById('md-device-name').value = '';
-        document.getElementById('md-device-desc').value = '';
-        document.getElementById('md-device-unit').value = 'Bộ';
-        document.getElementById('md-device-qty').value = '1';
-        document.getElementById('md-device-price').value = '0';
-        document.getElementById('md-device-ws-price').value = '0';
-        document.getElementById('modal-device-manager').classList.remove('hidden');
-    },
+    loadCompanySettings: async () => {
+        try {
+            const res = await fetch('/api/settings?t=' + Date.now());
+            const json = await res.json();
+            if (json.success && json.data) {
+                const d = json.data;
+                const compName = d.store_name || d.quote_store_name || 'CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO';
+                const compPhone = d.company_hotline || d.store_phone || d.quote_store_phone || '0937.039.889';
+                const compEmail = d.company_email || d.quote_store_email || 'contact@sungo.vn';
+                const compWeb = d.company_website || 'www.sungo.vn';
+                const compAddr = d.store_address || d.quote_store_address || '419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM';
 
-    openReplaceDeviceModal: (index) => {
-        window.modSaleHybrid.deviceModalMode = 'REPLACE';
-        window.modSaleHybrid.targetReplaceIndex = index;
-        const item = window.modSaleHybrid.currentCalculatedItems[index];
+                if (document.getElementById('header-company-name')) document.getElementById('header-company-name').innerText = compName;
+                if (document.getElementById('header-company-addr')) document.getElementById('header-company-addr').innerHTML = `<i class="fas fa-map-marker-alt text-amber-600 mr-1"></i> Trụ sở: ${compAddr}`;
+                if (document.getElementById('header-company-contact')) document.getElementById('header-company-contact').innerHTML = `<i class="fas fa-phone-alt text-amber-600 mr-1"></i> Hotline: <strong>${compPhone}</strong> | <i class="fas fa-envelope text-amber-600 ml-1 mr-1"></i> ${compEmail} | <i class="fas fa-globe text-amber-600 ml-1 mr-1"></i> ${compWeb}`;
 
-        document.getElementById('md-device-title').innerText = `Thay Thế: ${item.product_name}`;
-        document.getElementById('md-device-select').value = item.sku || '';
-        document.getElementById('md-device-name').value = item.product_name || '';
-        document.getElementById('md-device-desc').value = item.description || '';
-        document.getElementById('md-device-unit').value = item.unit || 'Bộ';
-        document.getElementById('md-device-qty').value = item.quantity || 1;
-        document.getElementById('md-device-price').value = item.unit_price || 0;
-        document.getElementById('md-device-ws-price').value = item.wholesale_price || 0;
-        document.getElementById('modal-device-manager').classList.remove('hidden');
-    },
-
-    closeDeviceModal: () => {
-        document.getElementById('modal-device-manager').classList.add('hidden');
+                if (d.quote_templates && d.quote_templates.hybrid) {
+                    const tpl = d.quote_templates.hybrid;
+                    if (tpl.title && document.getElementById('pdf-quote-main-title')) {
+                        document.getElementById('pdf-quote-main-title').innerText = tpl.title;
+                    }
+                    if (tpl.tech_solution && document.getElementById('pdf-tech-solution')) {
+                        document.getElementById('pdf-tech-solution').innerText = tpl.tech_solution;
+                    }
+                    if (tpl.tech_desc && document.getElementById('pdf-tech-desc')) {
+                        document.getElementById('pdf-tech-desc').innerText = tpl.tech_desc;
+                    }
+                    if (tpl.notes && document.getElementById('pdf-quote-notes')) {
+                        document.getElementById('pdf-quote-notes').innerHTML = tpl.notes.split('\n').map(l => `<p>${l}</p>`).join('');
+                    }
+                    if (tpl.left_sign && document.getElementById('pdf-left-sign-title')) {
+                        document.getElementById('pdf-left-sign-title').innerText = tpl.left_sign;
+                    }
+                    if (tpl.right_sign && document.getElementById('pdf-right-sign-title')) {
+                        document.getElementById('pdf-right-sign-title').innerText = tpl.right_sign;
+                    }
+                }
+            }
+        } catch(e) {
+            console.warn('Lỗi loadCompanySettings hybrid:', e);
+        }
     },
 
     // ==============================================================
@@ -1486,12 +1540,12 @@ window.modSaleHybrid = {
         }
 
         window.modSaleHybrid.laborItems = [
-            { id: 'L1', name: 'Nhân công kéo cáp DC, lắp giàn pin PV & treo Inverter Hybrid', unit: 'Wp', qty: totalWp, price: baseLaborPrice, wholesale: baseLaborPrice * 0.7 },
-            { id: 'L2', name: frameName, unit: 'Trọn gói', qty: 1, price: frameCost, wholesale: frameCost * 0.7 },
-            { id: 'L3', name: 'Thi công tủ điện Hybrid ATS chuyển mạch tự động & kéo đường cáp Backup Load', unit: 'Bộ', qty: 1, price: 3500000, wholesale: 2500000 },
-            { id: 'L4', name: 'Đấu nối tủ pin Lithium, đi cáp nguồn dòng lớn & cài đặt giao thức giao tiếp (BMS)', unit: 'Bộ', qty: 1, price: 1500000, wholesale: 1000000 },
-            { id: 'L5', name: 'Thi công tiếp địa chống sét Cadivi & cọc đồng tiếp địa thoát dòng sét', unit: 'Bộ', qty: 1, price: 1200000, wholesale: 800000 },
-            { id: 'L6', name: 'Chi phí xe cẩu, vận chuyển trọn gói vật tư & an toàn lao động', unit: 'Chuyến', qty: 1, price: transportCost, wholesale: transportCost * 0.75 }
+            { id: 'L1', name: 'Nhân công kéo cáp DC, lắp giàn pin PV & treo Inverter Hybrid', unit: 'Wp', qty: totalWp, price: baseLaborPrice, wholesale: baseLaborPrice },
+            { id: 'L2', name: frameName, unit: 'Trọn gói', qty: 1, price: frameCost, wholesale: frameCost },
+            { id: 'L3', name: 'Thi công tủ điện Hybrid ATS chuyển mạch tự động & kéo đường cáp Backup Load', unit: 'Bộ', qty: 1, price: 3500000, wholesale: 3500000 },
+            { id: 'L4', name: 'Đấu nối tủ pin Lithium, đi cáp nguồn dòng lớn & cài đặt giao thức giao tiếp (BMS)', unit: 'Bộ', qty: 1, price: 1500000, wholesale: 1500000 },
+            { id: 'L5', name: 'Thi công tiếp địa chống sét Cadivi & cọc đồng tiếp địa thoát dòng sét', unit: 'Bộ', qty: 1, price: 1200000, wholesale: 1200000 },
+            { id: 'L6', name: 'Chi phí xe cẩu, vận chuyển trọn gói vật tư & an toàn lao động', unit: 'Chuyến', qty: 1, price: transportCost, wholesale: transportCost }
         ];
         window.modSaleHybrid.calcBOQ();
     },
@@ -1645,8 +1699,8 @@ window.modSaleHybrid = {
     computeFinancials: (totalCapex, actualSystemKwp, monthlyBill) => {
         const bankRate = 0.07;
         const totalBankInterest20Y = (totalCapex * bankRate) * 20;
-        const bill = monthlyBill || (actualSystemKwp * 4.1 * 30 * 2750);
-        const annualSavingsY1 = Math.min(bill * 12, (actualSystemKwp * 4.1 * 365 * 2750));
+        const bill = monthlyBill || (actualSystemKwp * 4.25 * 30 * 2750);
+        const annualSavingsY1 = Math.min(bill * 12, (actualSystemKwp * 4.25 * 365 * 2750));
         
         let totalSolarCash20Y = 0;
         let currentYrSaving = annualSavingsY1;
@@ -1668,6 +1722,16 @@ window.modSaleHybrid = {
         return { totalBankInterest20Y, totalSolarCash20Y, paybackYears, roePercent, npvAmount: npvSum };
     },
 
+    getProductCostPrice: (product, fallbackRetail) => {
+        if (!product) return fallbackRetail ? Math.round(fallbackRetail * 0.85) : 0;
+        const imp = parseFloat(product.import_price);
+        if (!isNaN(imp) && imp > 0) return imp;
+        const ws = parseFloat(product.wholesale_price);
+        if (!isNaN(ws) && ws > 0) return ws;
+        const ret = parseFloat(product.retail_price || product.price || fallbackRetail || 0);
+        return ret > 0 ? Math.round(ret * 0.85) : 0;
+    },
+
     getProductImage: (product, defaultCategory) => {
         if (product && product.image_url && product.image_url.trim().length > 5) {
             const firstImg = product.image_url.split(',')[0].trim();
@@ -1684,53 +1748,53 @@ window.modSaleHybrid = {
             return product.description.trim();
         }
         if (categoryKey === 'PANEL') return 'Công nghệ N-Type TopCon 2 mặt kính, hiệu suất 22.8%, bảo hành 12/30 năm.';
-        if (categoryKey === 'INVERTER') return 'Chuẩn IP65 ngoài trời, sóng sin chuẩn, hỗ trợ bám tải + ATS, bảo hành 5 năm.';
+        if (categoryKey === 'INVERTER') return 'Inverter Hybrid Cery 6Kw ECO Công suất PV lắp đặt tối đa: 10 KWP - Công suất PV chuyển đổi tối đa: 7.8KW Hỗ trợ Acquy/LFP 40-60V PV đầu vào 2 MPPT 18A On-grid/Backup 6kW Công suất sạc/xả 135A Cài đặt tùy chình nhiều chế độ Tích hợp Wifi + App cập nhâp 5 phút/lần Ghép song song chạy 1 pha hoặc 3 pha BH: 05 năm';
         if (categoryKey === 'BATTERY') return 'Cell Lithium LiFePO4, 6.000 chu kỳ nạp xả, tích hợp Smart BMS bảo vệ đa tầng.';
-        if (categoryKey === 'RAIL') return 'Hợp kim nhôm Anodized AL-6005-T5 chống ăn mòn muối biển, chịu bão cấp 12.';
-        if (categoryKey === 'CLAMP_MID') return 'Kẹp giữa nhôm kèm bu lông Inox 304 chống rỉ sét, cố định vững chắc.';
-        if (categoryKey === 'CLAMP_END') return 'Kẹp biên nhôm kèm bu lông Inox 304 khóa mép giàn tấm pin an toàn.';
-        if (categoryKey === 'DC_CABLE') return 'Cáp DC chuyên dụng chống tia UV, chịu nhiệt +120°C, chuẩn TUV Đức.';
-        if (categoryKey === 'MC4') return 'Đầu nối MC4 1000V/1500V 30A chống nước IP68, tiếp điểm mạ bạc giảm suy hao.';
-        if (categoryKey === 'BOX') return 'Tủ điện ATS chuyển nguồn tự động 10ms, tích hợp chống sét SPD & MCB Schneider.';
         return 'Vật tư tiêu chuẩn chuyên dụng cho hệ thống điện mặt trời.';
     },
 
-    // QUY TẮC SẮP XẾP BẮT BUỘC: 1. Pin -> 2. Inverter -> 3. Pin Lưu Trữ -> Các phụ kiện còn lại giảm dần theo giá
+    // QUY TẮC SẮP XẾP CHUẨN: 1. Pin -> 2. Inverter -> 3. Pin Lưu Trữ -> 4. Tủ điện -> 5. Dây DC Đỏ -> 6. Dây DC Đen -> 7. Bát Z -> 8. Kẹp giữa -> 9. Kẹp biên -> 10. MC4 -> Phụ kiện thêm khác
     sortQuotationItems: (items) => {
-        let panelItem = null;
-        let invItem = null;
-        let batItem = null;
-        let otherItems = [];
+        const priorityOrder = {
+            'PANEL': 1,
+            'INVERTER': 2,
+            'BATTERY': 3,
+            'BOX': 4,
+            'DC_RED': 5,
+            'DC_BLACK': 6,
+            'BAT_Z': 7,
+            'CLAMP_MID': 8,
+            'CLAMP_END': 9,
+            'MC4': 10
+        };
 
-        items.forEach(item => {
-            const name = (item.product_name || '').toLowerCase();
-            const sku = (item.sku || '').toUpperCase();
-
-            if (!panelItem && (item.categoryKey === 'PANEL' || sku.startsWith('PAN-') || name.startsWith('tấm pin') || (name.includes('jinko') && !name.includes('inverter')))) {
-                panelItem = item;
-            } else if (!invItem && (item.categoryKey === 'INVERTER' || sku.startsWith('INV-') || name.includes('inverter') || name.includes('biến tần') || name.includes('cergy') || name.includes('senergy') || name.includes('lumentree') || name.includes('deye'))) {
-                invItem = item;
-            } else if (!batItem && (item.categoryKey === 'BATTERY' || sku.startsWith('BAT-') || name.includes('lithium') || name.includes('lưu trữ') || name.includes('apess') || name.includes('ebox') || name.includes('jaixi'))) {
-                batItem = item;
-            } else {
-                otherItems.push(item);
+        const getItemRank = (item) => {
+            if (item.categoryKey && priorityOrder[item.categoryKey]) {
+                return priorityOrder[item.categoryKey];
             }
-        });
+            const sku = (item.sku || '').toUpperCase();
+            const name = (item.product_name || '').toLowerCase();
+            if (sku === 'SP0266' || sku.startsWith('PAN-') || name.startsWith('tấm pin') || name.includes('jinko')) return 1;
+            if (sku === 'SP0155' || sku.startsWith('INV-') || name.includes('inverter') || name.includes('biến tần') || name.includes('cergy')) return 2;
+            if (sku === 'SP0165' || sku.startsWith('BAT-') || name.includes('lithium') || name.includes('lưu trữ') || name.includes('apess 16')) return 3;
+            if (sku === 'SP0032' || sku.startsWith('BOX-') || name.includes('tủ điện') || name.includes('ats')) return 4;
+            if (sku === 'SP0361' || (name.includes('dây dc') && name.includes('đỏ'))) return 5;
+            if (sku === 'SP0362' || (name.includes('dây dc') && name.includes('đen'))) return 6;
+            if (sku === 'SP0385' || name.includes('bát z')) return 7;
+            if (sku === 'PG' || name.includes('kẹp giữa')) return 8;
+            if (sku === 'PC' || sku === 'PC35' || name.includes('kẹp biên')) return 9;
+            if (sku === 'SP0033' || name.includes('mc4')) return 10;
+            return 99;
+        };
 
-        // Sắp xếp các mục còn lại theo thành tiền / đơn giá GIẢM DẦN
-        otherItems.sort((a, b) => {
+        return items.slice().sort((a, b) => {
+            const rankA = getItemRank(a);
+            const rankB = getItemRank(b);
+            if (rankA !== rankB) return rankA - rankB;
             const totalA = (a.quantity || 1) * (a.unit_price || 0);
             const totalB = (b.quantity || 1) * (b.unit_price || 0);
             return totalB - totalA;
         });
-
-        const sorted = [];
-        if (panelItem) sorted.push(panelItem);
-        if (invItem) sorted.push(invItem);
-        if (batItem) sorted.push(batItem);
-        sorted.push(...otherItems);
-
-        return sorted;
     },
 
     calcBOQ: () => {
@@ -1741,32 +1805,35 @@ window.modSaleHybrid = {
         const batSku = document.getElementById('select-battery').value;
         const batQty = parseInt(document.getElementById('bat-qty').value) || 0;
 
-        const panel = dbP.find(p => p.sku === panelSku);
-        const inv = dbP.find(p => p.sku === invSku);
-        const bat = dbP.find(p => p.sku === batSku);
+        const panel = dbP.find(p => p.sku === panelSku) || dbP.find(p => p.sku === 'SP0266') || dbP[0];
+        const inv = dbP.find(p => p.sku === invSku) || dbP.find(p => p.sku === 'SP0155') || dbP[1];
+        const bat = dbP.find(p => p.sku === batSku) || dbP.find(p => p.sku === 'SP0165');
         
-        const rail = dbP.find(p => p.sku === 'ACC-RAIL-20CM' || p.sku === 'SP0036') || { sku: 'ACC-RAIL-20CM', product_name: 'Rail Nhôm mini 20cm', unit: 'Cái', wholesale_price: 25000, retail_price: 32000 };
-        const midClamp = dbP.find(p => p.sku === 'ACC-CLAMP-MID') || { sku: 'ACC-CLAMP-MID', product_name: 'Bộ kẹp giữa nhôm AL-60055', unit: 'Bộ', wholesale_price: 9000, retail_price: 10500 };
-        const endClamp = dbP.find(p => p.sku === 'ACC-CLAMP-END') || { sku: 'ACC-CLAMP-END', product_name: 'Bộ kẹp biên nhôm AL-60055', unit: 'Bộ', wholesale_price: 9000, retail_price: 10500 };
-        const dcCable = dbP.find(p => p.sku === 'CBL-DC-04BLK') || { sku: 'CBL-DC-04BLK', product_name: 'Cáp DC màu đen 4.0mm² (Chống tia TUV, +95°C)', unit: 'Mét', wholesale_price: 16500, retail_price: 19000 };
-        const mc4 = dbP.find(p => p.sku === 'CON-MC4-30A') || { sku: 'CON-MC4-30A', product_name: 'Jack MC4 1000V 30A (Cặp Đực/Cái)', unit: 'Cặp', wholesale_price: 12000, retail_price: 14000 };
-        const box = dbP.find(p => p.sku === 'BOX-HYB-ATS125' || p.sku === 'SP0123') || { sku: 'BOX-HYB-ATS125', product_name: 'Tủ điện hybrid đấu sẵn màu trắng (ATS khối 125A)', unit: 'Bộ', wholesale_price: 3250000, retail_price: 3738000 };
+        const box = dbP.find(p => p.sku === 'SP0032') || dbP.find(p => (p.product_name || '').toLowerCase().includes('ats 125')) || { sku: 'SP0032', product_name: 'Bộ Tủ điện đấu sẵn ats 125 khối 1 pha', unit: 'Bộ', wholesale_price: 7500000, retail_price: 9500000, description: 'Vật tư tiêu chuẩn chuyên dụng cho hệ thống điện mặt trời.' };
+        const dcRed = dbP.find(p => p.sku === 'SP0361') || dbP.find(p => (p.product_name || '').toLowerCase().includes('dây dc') && (p.product_name || '').toLowerCase().includes('đỏ')) || { sku: 'SP0361', product_name: 'Dây DC apess 4mm Đỏ', unit: 'Mét', wholesale_price: 16000, retail_price: 21000, description: 'Vật tư tiêu chuẩn chuyên dụng cho hệ thống điện mặt trời.' };
+        const dcBlack = dbP.find(p => p.sku === 'SP0362') || dbP.find(p => (p.product_name || '').toLowerCase().includes('dây dc') && (p.product_name || '').toLowerCase().includes('đen')) || { sku: 'SP0362', product_name: 'Dây DC apess 4mm Đen', unit: 'Mét', wholesale_price: 16000, retail_price: 21000, description: 'Vật tư tiêu chuẩn chuyên dụng cho hệ thống điện mặt trời.' };
+        const batZ = dbP.find(p => p.sku === 'SP0385') || dbP.find(p => (p.product_name || '').toLowerCase().includes('bát z')) || { sku: 'SP0385', product_name: 'Bát Z mạ kẽm cao 100mm dài 200mm loại dày chắc chắn', unit: 'Cái', wholesale_price: 15000, retail_price: 20000, description: 'Vật tư tiêu chuẩn chuyên dụng cho hệ thống điện mặt trời.' };
+        const midClamp = dbP.find(p => p.sku === 'PG') || dbP.find(p => (p.product_name || '').toLowerCase().includes('kẹp giữa')) || { sku: 'PG', product_name: 'Kẹp giữa PG', unit: 'Bộ', wholesale_price: 10000, retail_price: 15000, description: 'Vật tư tiêu chuẩn chuyên dụng cho hệ thống điện mặt trời.' };
+        const endClamp = dbP.find(p => p.sku === 'PC' || p.sku === 'PC35') || dbP.find(p => (p.product_name || '').toLowerCase().includes('kẹp biên')) || { sku: 'PC', product_name: 'Kẹp biên 30mm PC', unit: 'Bộ', wholesale_price: 10000, retail_price: 15000, description: 'Vật tư tiêu chuẩn chuyên dụng cho hệ thống điện mặt trời.' };
+        const mc4 = dbP.find(p => p.sku === 'SP0033') || dbP.find(p => (p.product_name || '').toLowerCase().includes('mc4')) || { sku: 'SP0033', product_name: 'Jack MC4 Sunpeace chính hãng', unit: 'bộ', wholesale_price: 18000, retail_price: 25000, description: 'Vật tư tiêu chuẩn chuyên dụng cho hệ thống điện mặt trời.' };
 
         if (!panel || !inv) return 0;
 
         let panelWatt = 620;
-        const matchWatt = panel.product_name.match(/(\d{3})W/);
+        const matchWatt = panel.product_name.match(/(\d{3})W/i);
         if (matchWatt && matchWatt[1]) panelWatt = parseInt(matchWatt[1]);
 
-        const panelQty = Math.ceil((kwpTarget * 1000) / panelWatt);
-        const rowCount = 2;
-        const endQty = rowCount * 4;
-        const midQty = Math.max(0, panelQty - rowCount) * 2;
+        const panelQty = Math.max(4, Math.ceil((kwpTarget * 1000) / panelWatt));
+        
+        // Tỷ lệ phụ kiện chuẩn theo demo (với 27 tấm):
+        const dcRedMeters = Math.ceil(panelQty * 3.78); // 27 -> 102 mét
+        const dcBlackMeters = Math.ceil(panelQty * 3.70); // 27 -> 100 mét
+        const batZQty = Math.ceil(panelQty * 2.22); // 27 -> 60 cái
+        const midQty = panelQty * 6; // 27 -> 162 bộ
+        const endQty = Math.ceil(panelQty * 1.33); // 27 -> 36 bộ
+        const mc4Pairs = Math.max(4, Math.ceil(panelQty / 3) + 1); // 27 -> 10 bộ
 
-        const rate = window.modSaleHybrid.ACCESSORY_WASTAGE_RATE;
-        const railQty = Math.ceil((panelQty * 2) * rate);
-        const dcMeters = Math.ceil((panelQty * 4.0) * rate);
-        const mc4Pairs = Math.ceil(2 * rate);
+        const getCost = window.modSaleHybrid.getProductCostPrice;
 
         let items = [
             { 
@@ -1775,8 +1842,8 @@ window.modSaleHybrid = {
                 product_name: panel.product_name, 
                 unit: panel.unit || 'Tấm', 
                 quantity: panelQty, 
-                wholesale_price: parseFloat(panel.wholesale_price || (panel.retail_price / 1.15)), 
-                unit_price: parseFloat(panel.retail_price),
+                wholesale_price: getCost(panel, panel.retail_price), 
+                unit_price: parseFloat(panel.retail_price || 0),
                 image_url: window.modSaleHybrid.getProductImage(panel, 'PANEL'),
                 description: window.modSaleHybrid.getProductShortDesc(panel, 'PANEL')
             },
@@ -1786,15 +1853,15 @@ window.modSaleHybrid = {
                 product_name: inv.product_name, 
                 unit: inv.unit || 'Bộ', 
                 quantity: 1, 
-                wholesale_price: parseFloat(inv.wholesale_price || (inv.retail_price / 1.15)), 
-                unit_price: parseFloat(inv.retail_price),
+                wholesale_price: getCost(inv, inv.retail_price), 
+                unit_price: parseFloat(inv.retail_price || 0),
                 image_url: window.modSaleHybrid.getProductImage(inv, 'INVERTER'),
                 description: window.modSaleHybrid.getProductShortDesc(inv, 'INVERTER')
             }
         ];
 
         if (bat && batQty > 0) {
-            let unitKwh = 14.3;
+            let unitKwh = 16.0;
             const matchKwh = bat.product_name.match(/(\d+(\.\d+)?)kWh/i);
             if (matchKwh && matchKwh[1]) unitKwh = parseFloat(matchKwh[1]);
             document.getElementById('pdf-bat-capacity').innerText = `${(unitKwh * batQty).toFixed(2)} kWh Lithium (${batQty} Bộ)`;
@@ -1805,8 +1872,8 @@ window.modSaleHybrid = {
                 product_name: bat.product_name, 
                 unit: bat.unit || 'Bộ', 
                 quantity: batQty, 
-                wholesale_price: parseFloat(bat.wholesale_price || (bat.retail_price / 1.15)), 
-                unit_price: parseFloat(bat.retail_price),
+                wholesale_price: getCost(bat, bat.retail_price), 
+                unit_price: parseFloat(bat.retail_price || 0),
                 image_url: window.modSaleHybrid.getProductImage(bat, 'BATTERY'),
                 description: window.modSaleHybrid.getProductShortDesc(bat, 'BATTERY')
             });
@@ -1814,7 +1881,7 @@ window.modSaleHybrid = {
             document.getElementById('pdf-bat-capacity').innerText = `Không chọn Lithium`;
         }
 
-        // CÁC PHỤ KIỆN TIÊU CHUẨN
+        // CÁC PHỤ KIỆN TIÊU CHUẨN (KHỚP 100% DEMO)
         items.push(
             { 
                 categoryKey: 'BOX',
@@ -1822,32 +1889,43 @@ window.modSaleHybrid = {
                 product_name: box.product_name, 
                 unit: box.unit || 'Bộ', 
                 quantity: 1, 
-                wholesale_price: parseFloat(box.wholesale_price || (box.retail_price / 1.15)), 
-                unit_price: parseFloat(box.retail_price),
+                wholesale_price: getCost(box, box.retail_price), 
+                unit_price: parseFloat(box.retail_price || 0),
                 image_url: window.modSaleHybrid.getProductImage(box, 'BOX'),
                 description: window.modSaleHybrid.getProductShortDesc(box, 'BOX')
             },
             { 
-                categoryKey: 'DC_CABLE',
-                sku: dcCable.sku, 
-                product_name: dcCable.product_name, 
-                unit: dcCable.unit || 'Mét', 
-                quantity: dcMeters, 
-                wholesale_price: parseFloat(dcCable.wholesale_price || (dcCable.retail_price / 1.15)), 
-                unit_price: parseFloat(dcCable.retail_price),
-                image_url: window.modSaleHybrid.getProductImage(dcCable, 'DC_CABLE'),
-                description: window.modSaleHybrid.getProductShortDesc(dcCable, 'DC_CABLE')
+                categoryKey: 'DC_RED',
+                sku: dcRed.sku, 
+                product_name: dcRed.product_name, 
+                unit: dcRed.unit || 'Mét', 
+                quantity: dcRedMeters, 
+                wholesale_price: getCost(dcRed, dcRed.retail_price), 
+                unit_price: parseFloat(dcRed.retail_price || 0),
+                image_url: window.modSaleHybrid.getProductImage(dcRed, 'DC_CABLE'),
+                description: window.modSaleHybrid.getProductShortDesc(dcRed, 'DC_CABLE')
             },
             { 
-                categoryKey: 'RAIL',
-                sku: rail.sku, 
-                product_name: rail.product_name, 
-                unit: rail.unit || 'Cái', 
-                quantity: railQty, 
-                wholesale_price: parseFloat(rail.wholesale_price || (rail.retail_price / 1.15)), 
-                unit_price: parseFloat(rail.retail_price),
-                image_url: window.modSaleHybrid.getProductImage(rail, 'RAIL'),
-                description: window.modSaleHybrid.getProductShortDesc(rail, 'RAIL')
+                categoryKey: 'DC_BLACK',
+                sku: dcBlack.sku, 
+                product_name: dcBlack.product_name, 
+                unit: dcBlack.unit || 'Mét', 
+                quantity: dcBlackMeters, 
+                wholesale_price: getCost(dcBlack, dcBlack.retail_price), 
+                unit_price: parseFloat(dcBlack.retail_price || 0),
+                image_url: window.modSaleHybrid.getProductImage(dcBlack, 'DC_CABLE'),
+                description: window.modSaleHybrid.getProductShortDesc(dcBlack, 'DC_CABLE')
+            },
+            { 
+                categoryKey: 'BAT_Z',
+                sku: batZ.sku, 
+                product_name: batZ.product_name, 
+                unit: batZ.unit || 'Cái', 
+                quantity: batZQty, 
+                wholesale_price: getCost(batZ, batZ.retail_price), 
+                unit_price: parseFloat(batZ.retail_price || 0),
+                image_url: window.modSaleHybrid.getProductImage(batZ, 'RAIL'),
+                description: window.modSaleHybrid.getProductShortDesc(batZ, 'BAT_Z')
             },
             { 
                 categoryKey: 'CLAMP_MID',
@@ -1855,8 +1933,8 @@ window.modSaleHybrid = {
                 product_name: midClamp.product_name, 
                 unit: midClamp.unit || 'Bộ', 
                 quantity: midQty, 
-                wholesale_price: parseFloat(midClamp.wholesale_price || (midClamp.retail_price / 1.15)), 
-                unit_price: parseFloat(midClamp.retail_price),
+                wholesale_price: getCost(midClamp, midClamp.retail_price), 
+                unit_price: parseFloat(midClamp.retail_price || 0),
                 image_url: window.modSaleHybrid.getProductImage(midClamp, 'CLAMP_MID'),
                 description: window.modSaleHybrid.getProductShortDesc(midClamp, 'CLAMP_MID')
             },
@@ -1866,8 +1944,8 @@ window.modSaleHybrid = {
                 product_name: endClamp.product_name, 
                 unit: endClamp.unit || 'Bộ', 
                 quantity: endQty, 
-                wholesale_price: parseFloat(endClamp.wholesale_price || (endClamp.retail_price / 1.15)), 
-                unit_price: parseFloat(endClamp.retail_price),
+                wholesale_price: getCost(endClamp, endClamp.retail_price), 
+                unit_price: parseFloat(endClamp.retail_price || 0),
                 image_url: window.modSaleHybrid.getProductImage(endClamp, 'CLAMP_END'),
                 description: window.modSaleHybrid.getProductShortDesc(endClamp, 'CLAMP_END')
             },
@@ -1875,16 +1953,16 @@ window.modSaleHybrid = {
                 categoryKey: 'MC4',
                 sku: mc4.sku, 
                 product_name: mc4.product_name, 
-                unit: mc4.unit || 'Cặp', 
+                unit: mc4.unit || 'bộ', 
                 quantity: mc4Pairs, 
-                wholesale_price: parseFloat(mc4.wholesale_price || (mc4.retail_price / 1.15)), 
-                unit_price: parseFloat(mc4.retail_price),
+                wholesale_price: getCost(mc4, mc4.retail_price), 
+                unit_price: parseFloat(mc4.retail_price || 0),
                 image_url: window.modSaleHybrid.getProductImage(mc4, 'MC4'),
                 description: window.modSaleHybrid.getProductShortDesc(mc4, 'MC4')
             }
         );
 
-        // Áp dụng sắp xếp chuẩn: Pin -> Inverter -> Pin lưu trữ -> Phụ kiện giảm dần theo giá
+        // Áp dụng sắp xếp chuẩn: Pin -> Inverter -> Pin lưu trữ -> Phụ kiện theo thứ tự chuẩn demo
         window.modSaleHybrid.currentCalculatedItems = window.modSaleHybrid.sortQuotationItems(items);
         window.modSaleHybrid.renderLaborTable();
         window.modSaleHybrid.renderBOQTable();
@@ -2026,9 +2104,23 @@ window.modSaleHybrid = {
     updateItemQty: (index, newQtyVal) => {
         const q = parseFloat(newQtyVal) || 0;
         window.modSaleHybrid.currentCalculatedItems[index].quantity = q;
+        const item = window.modSaleHybrid.currentCalculatedItems[index];
+
+        const sku = (item.sku || '').toUpperCase();
+        const name = (item.product_name || '').toLowerCase();
+        if (item.categoryKey === 'PANEL' || sku.startsWith('PAN-') || name.startsWith('tấm pin') || (name.includes('jinko') && !name.includes('inverter'))) {
+            let pWatt = 620;
+            const mW = (item.product_name || '').match(/(\d{3})W/i);
+            if (mW && mW[1]) pWatt = parseInt(mW[1]);
+            const actualKwp = (pWatt * q) / 1000;
+            const kwpVal = Number.isInteger(actualKwp) ? actualKwp : actualKwp.toFixed(2);
+            if (document.getElementById('kwp')) {
+                document.getElementById('kwp').value = kwpVal;
+            }
+        }
+
         window.modSaleHybrid.recalculateTotals();
         const fmt = window.modSaleHybrid.formatVND;
-        const item = window.modSaleHybrid.currentCalculatedItems[index];
         const rowTotals = document.querySelectorAll(`.row-boq-total-${index}`);
         rowTotals.forEach(el => {
             el.innerText = fmt(item.quantity * item.unit_price);
@@ -2047,31 +2139,39 @@ window.modSaleHybrid = {
     },
 
     recalculateTotals: () => {
-        let totalCapex = 0;
-        let totalWholesale = 0;
+        let materialRetail = 0;
+        let materialWholesale = 0;
+        let laborRetail = 0;
         let hasViolation = false;
         let violationDetails = [];
         const fmt = window.modSaleHybrid.formatVND;
 
         window.modSaleHybrid.currentCalculatedItems.forEach(item => {
-            totalCapex += item.quantity * item.unit_price;
-            totalWholesale += item.quantity * item.wholesale_price;
-            const minPriceAllowed = Math.ceil(item.wholesale_price * window.modSaleHybrid.MIN_PROFIT_MARGIN);
-            if (item.unit_price < minPriceAllowed) {
+            const itemPrice = parseFloat(item.unit_price) || 0;
+            const itemWholesale = parseFloat(item.wholesale_price) || 0;
+            const itemQty = parseFloat(item.quantity) || 0;
+            materialRetail += itemQty * itemPrice;
+            materialWholesale += itemQty * itemWholesale;
+            const minPriceAllowed = Math.ceil(itemWholesale * window.modSaleHybrid.MIN_PROFIT_MARGIN);
+            if (itemPrice < minPriceAllowed) {
                 hasViolation = true;
                 violationDetails.push(`${item.product_name} (Sàn: ${fmt(minPriceAllowed)})`);
             }
         });
 
         window.modSaleHybrid.laborItems.forEach(item => {
-            totalCapex += item.qty * item.price;
-            totalWholesale += item.qty * item.wholesale;
+            const laborPrice = parseFloat(item.price) || 0;
+            const laborQty = parseFloat(item.qty) || 0;
+            laborRetail += laborQty * laborPrice;
         });
 
+        const totalCapex = materialRetail + laborRetail;
         const isVatChecked = document.getElementById('chk-vat').checked;
         const finalTotal = isVatChecked ? Math.ceil(totalCapex * 1.08) : totalCapex;
-        const profit = finalTotal - totalWholesale;
-        const commission = Math.max(0, profit * 0.10);
+
+        // Chỉ tính lợi nhuận trên tiền vật tư/thiết bị (tiền công làm không lãi)
+        const profit = Math.max(0, materialRetail - materialWholesale);
+        const commission = Math.max(0, Math.round(profit * 0.10));
 
         document.getElementById('side-total-price').innerText = fmt(finalTotal);
         document.getElementById('side-profit').innerText = fmt(profit);
@@ -2082,23 +2182,63 @@ window.modSaleHybrid = {
 
         const warnBox = document.getElementById('price-floor-warning');
         const actionArea = document.getElementById('save-action-area');
-
-        const btnText = window.modSaleHybrid.editingQuotationId ? '💾 Cập Nhật Báo Giá Đang Sửa' : '💾 Lưu & Xuất Báo Giá Hybrid';
+        const isEditing = !!window.modSaleHybrid.editingQuotationId;
+        const btnText = isEditing ? '💾 Cập Nhật Báo Giá Đang Sửa' : '💾 Lưu & Xuất Báo Giá Hybrid';
+        const cancelBtnHtml = `
+            <div id="edit-cancel-btn-area" class="${isEditing ? '' : 'hidden'}">
+                <button onclick="window.modSaleHybrid.resetFormToNew()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs transition">
+                    <i class="fas fa-times mr-1"></i> Hủy chế độ sửa (Tạo mới)
+                </button>
+            </div>
+        `;
 
         if (hasViolation) {
-            warnBox.classList.remove('hidden');
-            document.getElementById('warning-text-detail').innerText = `Thiết bị dưới sàn: ${violationDetails.join(', ')}`;
-            actionArea.innerHTML = `<button onclick="window.modSaleHybrid.saveQuotation('PENDING_APPROVAL')" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-2xl transition shadow-lg shadow-red-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fas fa-paper-plane"></i> Gửi Admin Duyệt Báo Giá Chạm Sàn
-            </button>`;
+            if (warnBox) warnBox.classList.remove('hidden');
+            const warnDetail = document.getElementById('warning-text-detail');
+            if (warnDetail) warnDetail.innerText = `Thiết bị dưới sàn: ${violationDetails.join(', ')}`;
+            if (actionArea) {
+                actionArea.innerHTML = `
+                    <button id="btn-save-quotation" onclick="window.modSaleHybrid.saveQuotation('PENDING_APPROVAL')" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-2xl transition shadow-lg shadow-red-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fas fa-paper-plane"></i> Gửi Admin Duyệt Báo Giá Chạm Sàn
+                    </button>
+                    ${cancelBtnHtml}
+                `;
+            }
         } else {
-            warnBox.classList.add('hidden');
-            actionArea.innerHTML = `<button onclick="window.modSaleHybrid.saveQuotation('QUOTING')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black py-3 rounded-2xl transition shadow-lg shadow-amber-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fas fa-save text-sm"></i> ${btnText}
-            </button>`;
+            if (warnBox) warnBox.classList.add('hidden');
+            if (actionArea) {
+                actionArea.innerHTML = `
+                    <button id="btn-save-quotation" onclick="window.modSaleHybrid.saveQuotation('QUOTING')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black py-3 rounded-2xl transition shadow-lg shadow-amber-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fas fa-save text-sm"></i> ${btnText}
+                    </button>
+                    ${cancelBtnHtml}
+                `;
+            }
         }
 
-        const systemKwp = parseFloat(document.getElementById('kwp').value) || 14.8;
+        // Tìm tấm pin trong bảng vật tư để tính chính xác công suất PV
+        const panelItem = window.modSaleHybrid.currentCalculatedItems.find(i => 
+            i.categoryKey === 'PANEL' || 
+            (i.sku || '').toUpperCase().startsWith('PAN-') || 
+            (i.product_name || '').toLowerCase().startsWith('tấm pin') || 
+            ((i.product_name || '').toLowerCase().includes('jinko') && !(i.product_name || '').toLowerCase().includes('inverter'))
+        );
+        let panelWatt = 620;
+        let panelQty = 0;
+        if (panelItem) {
+            const mW = (panelItem.product_name || '').match(/(\d{3})W/i);
+            if (mW && mW[1]) panelWatt = parseInt(mW[1]);
+            panelQty = parseFloat(panelItem.quantity) || 0;
+        }
+
+        // Công suất PV = công suất tấm pin * số lượng tấm pin
+        const systemKwp = panelQty > 0 ? ((panelWatt * panelQty) / 1000) : (parseFloat(document.getElementById('kwp').value) || 0);
+        const kwpDisp = Number.isInteger(systemKwp) ? systemKwp : systemKwp.toFixed(2);
+
+        if (document.getElementById('display-kwp')) {
+            document.getElementById('display-kwp').innerText = `${kwpDisp} kWp (${panelQty} Tấm)`;
+        }
+
         const monthlyBill = window.modSaleHybrid.parseRawBillValue();
         const fin = window.modSaleHybrid.computeFinancials(finalTotal, systemKwp, monthlyBill);
         
@@ -2114,7 +2254,13 @@ window.modSaleHybrid = {
         document.getElementById('pdf-cust-name').innerText = cust;
         document.getElementById('pdf-sign-cust-name').innerText = cust;
         document.getElementById('pdf-cust-phone-disp').innerText = phone || '---';
-        document.getElementById('pdf-kwp').innerText = `${document.getElementById('kwp').value} kWp`;
+        document.getElementById('pdf-kwp').innerText = `${kwpDisp} kWp (${panelQty} Tấm)`;
+
+        // Sản lượng sinh ra = công suất PV * 30 ngày * 3.5 giờ nắng đến 5 giờ nắng
+        const estMin = Math.round(systemKwp * 30 * 3.5);
+        const estMax = Math.round(systemKwp * 30 * 5.0);
+        const estEl = document.getElementById('pdf-kwp-est');
+        if (estEl) estEl.innerText = `Sản lượng: ~${estMin.toLocaleString('vi-VN')} - ${estMax.toLocaleString('vi-VN')} kWh/tháng`;
 
         const d = new Date();
         document.getElementById('pdf-date-now').innerText = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
@@ -2479,9 +2625,13 @@ window.modSaleHybrid = {
 
     resetFormToNew: () => {
         window.modSaleHybrid.editingQuotationId = null;
-        document.getElementById('editing-mode-badge').innerText = 'Tạo mới';
-        document.getElementById('editing-mode-badge').className = "text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md font-bold";
-        document.getElementById('edit-cancel-btn-area').classList.add('hidden');
+        const badge = document.getElementById('editing-mode-badge');
+        if (badge) {
+            badge.innerText = 'Tạo mới';
+            badge.className = "text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md font-bold";
+        }
+        const cancelBtnArea = document.getElementById('edit-cancel-btn-area');
+        if (cancelBtnArea) cancelBtnArea.classList.add('hidden');
         window.modSaleHybrid.calcBOQ();
     },
 

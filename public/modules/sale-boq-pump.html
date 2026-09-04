@@ -23,13 +23,18 @@
             print-color-adjust: exact !important;
         }
 
-        /* Ẩn các thành phần không cần in - TUYỆT ĐỐI ẨN THẺ MOBILE KHI IN */
-        aside, header, #sidebar-menu, #page-title, .no-print, nav, button, 
+        /* Ẩn các thành phần không cần in - TUYỆT ĐỐI ẨN THẺ MOBILE VÀ PROFILE SHEET KHI IN */
+        aside, header, #app-sidebar, #sidebar-menu, #page-title, .no-print, nav, button, 
         #sale-control-panel, #history-list, #view-labor, #user-role, #user-name, 
         .action-column, .btn-action-cell, #modal-device-manager, #modal-labor-manager,
         .mobile-only-cards, #detail-items-mobile-cards, #labor-items-mobile-cards, #boq-mobile-cards,
+        #mobile-bottom-nav, #mobile-profile-sheet, #desktop-floating-toggle, #desktop-sidebar-toggle,
         #bottom-nav, #sidebar-backdrop, #profile-sheet-backdrop, #mobile-bottom-bar { 
-            display: none !important; 
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
         }
 
         /* Mở rộng các container cha ra 100% chiều ngang và LUÔN HIỆN BẢNG TABLE CHUẨN */
@@ -410,18 +415,18 @@
                                 <span class="text-2xl font-black text-slate-900 tracking-wider">SOLAR</span>
                                 <span class="text-[9px] bg-slate-950 text-amber-400 font-black px-2 py-0.5 rounded tracking-widest uppercase shadow-2xs">RMS SOLAR PUMP</span>
                             </div>
-                            <p class="text-xs text-slate-800 font-black uppercase tracking-wide">CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO</p>
-                            <p class="text-[10.5px] text-slate-500"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i> Trụ sở: 419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
-                            <p class="text-[10.5px] text-slate-500"><i class="fas fa-phone-alt text-amber-600 mr-1"></i> Hotline: <strong>0937.039.889</strong> | <i class="fas fa-envelope text-amber-600 ml-1 mr-1"></i> contact@sungo.vn | <i class="fas fa-globe text-amber-600 ml-1 mr-1"></i> www.sungo.vn</p>
+                            <p id="header-company-name" class="text-xs text-slate-800 font-black uppercase tracking-wide">CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO</p>
+                            <p id="header-company-addr" class="text-[10.5px] text-slate-500"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i> Trụ sở: 419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
+                            <p id="header-company-contact" class="text-[10.5px] text-slate-500"><i class="fas fa-phone-alt text-amber-600 mr-1"></i> Hotline: <strong>0937.039.889</strong> | <i class="fas fa-envelope text-amber-600 ml-1 mr-1"></i> contact@sungo.vn | <i class="fas fa-globe text-amber-600 ml-1 mr-1"></i> www.sungo.vn</p>
                         </div>
                         
                         <div class="text-left sm:text-right space-y-1 shrink-0">
                             <div class="inline-block">
-                                <span id="detail-status-badge" class="text-[10.5px] px-3.5 py-1 rounded-full font-black uppercase bg-slate-950 text-amber-400 border border-amber-500 shadow-2xs">
-                                    BẢNG BÁO GIÁ CHÍNH THỨC
+                                <span id="pdf-quote-main-title" class="text-[10.5px] px-3.5 py-1 rounded-full font-black uppercase bg-slate-950 text-blue-400 border border-blue-500 shadow-2xs">
+                                    BẢNG BÁO GIÁ HỆ THỐNG BƠM NĂNG LƯỢNG MẶT TRỜI (SOLAR PUMP)
                                 </span>
                             </div>
-                            <p id="pdf-q-code" class="text-lg font-mono font-black text-blue-700 mt-1 tracking-tight">HYB-000000</p>
+                            <p id="pdf-q-code" class="text-lg font-mono font-black text-blue-700 mt-1 tracking-tight">PMP-000000</p>
                             <p class="text-[10px] text-slate-500 font-medium">Ngày lập: <span id="pdf-date-now" class="font-bold text-slate-800">--/--/----</span></p>
                             <p class="text-[10px] text-slate-500">Thời hạn hiệu lực: <span class="font-bold text-emerald-700">15 ngày</span></p>
                         </div>
@@ -436,18 +441,18 @@
                         </div>
                         <div class="print-info-cell bg-amber-50/50 rounded-xl p-2.5 border border-amber-200/80">
                             <span class="text-amber-800 text-[9.5px] font-bold uppercase tracking-wider block">⚡ Giải pháp công nghệ:</span>
-                            <strong class="text-amber-900 font-black text-xs block mt-0.5 truncate">BƠM TỰ ĐỘNG THEO NẮNG</strong>
-                            <span class="text-[10px] text-slate-600 block">Tiết kiệm 100% tiền dầu & điện</span>
+                            <strong id="pdf-tech-solution" class="text-amber-900 font-black text-xs block mt-0.5 truncate">BƠM NĂNG LƯỢNG MẶT TRỜI</strong>
+                            <span id="pdf-tech-desc" class="text-[10px] text-slate-600 block">Biến tần VFD tự động theo nắng</span>
                         </div>
                         <div class="print-info-cell bg-blue-50/50 rounded-xl p-2.5 border border-blue-200/80">
                             <span class="text-blue-800 text-[9.5px] font-bold uppercase tracking-wider block">☀️ Công suất giàn PV:</span>
                             <strong id="pdf-kwp" class="text-blue-900 text-xs font-black block mt-0.5">6.2 kWp</strong>
-                            <span class="text-[10px] text-slate-600 block">Ước tính: ~750 - 800 kWh/tháng</span>
+                            <span id="pdf-kwp-est" class="text-[10px] text-slate-600 block">Lưu lượng: ~30 - 50 m³/ngày</span>
                         </div>
                         <div class="print-info-cell bg-emerald-50/50 rounded-xl p-2.5 border border-emerald-200/80">
-                            <span class="text-emerald-800 text-[9.5px] font-bold uppercase tracking-wider block">🔋 Dung lượng Lưu Trữ:</span>
-                            <strong id="pdf-bat-capacity" class="text-emerald-900 text-xs font-black block mt-0.5">16.00 kWh (1 Bộ)</strong>
-                            <span class="text-[10px] text-slate-600 block">Apess LiFePO4 6000 chu kỳ</span>
+                            <span class="text-emerald-800 text-[9.5px] font-bold uppercase tracking-wider block">💧 Cảm Biến & Phao Điện:</span>
+                            <strong class="text-emerald-900 text-xs font-black block mt-0.5">Phao Chống Cạn & Tràn</strong>
+                            <span class="text-[10px] text-slate-600 block">Tự ngắt bảo vệ motor 24/7</span>
                         </div>
                     </div>
 
@@ -561,15 +566,23 @@
                         </div>
                     </div>
 
+                    <!-- CAM KẾT & ĐIỀU KHOẢN BẢO HÀNH CHÍNH HÃNG -->
+                    <div id="pdf-quote-notes" class="text-[10px] text-slate-600 border-t border-slate-200 pt-2.5 space-y-1 page-break-avoid italic leading-relaxed">
+                        <p>1. Bảo hành tấm pin mặt trời 12 năm vật lý, 30 năm hiệu suất trên 80%.</p>
+                        <p>2. Bảo hành biến tần chuyên dụng Bơm Solar (VFD) 02 - 03 năm chính hãng.</p>
+                        <p>3. Bảo hành cụm bơm & cảm biến phao điện 01 - 02 năm.</p>
+                        <p>4. Bảo hành đường ống, kết cấu giàn khung và lắp đặt 02 năm.</p>
+                    </div>
+
                     <!-- CHỮ KÝ XÁC NHẬN BÁO GIÁ (PHÂN RÕ TRÁI - PHẢI 50/50 CHUẨN A4) -->
                     <div class="print-signature-grid grid grid-cols-2 text-center pt-4 text-xs text-slate-700 border-t border-slate-200 page-break-avoid gap-4">
                         <div class="print-signature-cell">
-                            <p class="font-black uppercase text-slate-800 text-xs">ĐẠI DIỆN KHÁCH HÀNG</p>
+                            <p id="pdf-left-sign-title" class="font-black uppercase text-slate-800 text-xs">ĐẠI DIỆN KHÁCH HÀNG</p>
                             <p class="text-[10px] text-slate-400 italic mb-12">(Ký & ghi rõ họ tên)</p>
                             <p id="pdf-sign-cust-name" class="font-black text-slate-900 text-xs">Anh Toàn</p>
                         </div>
                         <div class="print-signature-cell">
-                            <p class="font-black uppercase text-amber-800 text-xs">ĐẠI DIỆN SUNGO SOLAR</p>
+                            <p id="pdf-right-sign-title" class="font-black uppercase text-amber-800 text-xs">ĐẠI DIỆN SUNGO SOLAR</p>
                             <p class="text-[10px] text-slate-400 italic mb-12">(Ký, đóng dấu & ghi rõ họ tên)</p>
                             <p id="pdf-sign-sale-name" class="font-black text-slate-900 text-xs">Đỗ Minh Trí</p>
                         </div>
@@ -687,53 +700,169 @@
         </div>
     </div>
 
-    <!-- MODAL THÊM / THAY THẾ THIẾT BỊ (BẢNG I) -->
-    <div id="modal-device-manager" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95">
-            <div class="bg-slate-950 p-4 text-white flex items-center justify-between border-b border-blue-500">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-boxes text-blue-400"></i>
-                    <h3 class="font-black text-sm uppercase text-blue-400" id="md-device-title">Thêm Thiết Bị / Phụ Kiện Bơm</h3>
+    <!-- ============================================================== -->
+    <!-- MODAL CHỌN THIẾT BỊ TỪ KHO HÀNG TRỰC QUAN (POS PRODUCT PICKER) -->
+    <!-- ============================================================== -->
+    <div id="modal-device-manager" class="fixed inset-0 bg-slate-950/75 z-50 hidden flex items-center justify-center p-2 sm:p-4 backdrop-blur-md no-print">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full h-[92vh] sm:h-[86vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95">
+            
+            <!-- MODAL HEADER -->
+            <div class="bg-slate-900 px-4 sm:px-6 py-3 text-white flex items-center justify-between border-b border-blue-500/80 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-slate-950 font-black shadow-md">
+                        <i class="fas fa-boxes text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-xs sm:text-sm uppercase tracking-wide text-white flex items-center gap-2" id="md-device-title">
+                            Chọn Thiết Bị Bơm & Phụ Kiện (POS)
+                        </h3>
+                        <p class="text-[10px] text-slate-400 font-medium hidden sm:block">Tra cứu trực quan theo danh mục, hình ảnh, mã SKU và giá niêm yết</p>
+                    </div>
                 </div>
-                <button onclick="window.modSalePump.closeDeviceModal()" class="text-slate-400 hover:text-white p-1"><i class="fas fa-times"></i></button>
+                <button type="button" onclick="window.modSalePump.closeDeviceModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="p-5 space-y-4 text-xs">
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Chọn từ Danh mục Sản phẩm có sẵn:</label>
-                    <select id="md-device-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold outline-none focus:border-blue-500" onchange="window.modSalePump.onSelectExistingProduct(this.value)">
-                        <option value="">-- Hoặc nhập thiết bị tự do bên dưới --</option>
-                    </select>
+
+            <!-- MODAL SEARCH & CATEGORY FILTER BAR -->
+            <div class="bg-slate-50 p-3 sm:px-6 border-b border-slate-200 space-y-2.5 shrink-0">
+                <!-- Search Box -->
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fas fa-search text-xs"></i>
+                    </span>
+                    <input type="text" id="pos-picker-search" 
+                           oninput="window.modSalePump.filterPickerProducts()" 
+                           placeholder="🔍 Gõ tìm tên thiết bị, mã SKU, thương hiệu (Jinko, Biến tần Bơm, Động cơ, Phao điện, Dây DC, Rail, MC4...)" 
+                           class="w-full pl-9 pr-8 py-2 text-xs font-bold border border-slate-300 rounded-xl outline-none bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-2xs">
+                    <button type="button" onclick="document.getElementById('pos-picker-search').value=''; window.modSalePump.filterPickerProducts();" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-slate-500 cursor-pointer">
+                        <i class="fas fa-times-circle text-xs"></i>
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Tên Thiết Bị / Bơm / Thông số:</label>
-                    <input type="text" id="md-device-name" placeholder="VD: Cảm biến phao điện chống cạn giếng khoan" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold outline-none focus:border-blue-500">
+
+                <!-- Category Chips Bar -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pos-scroll pb-0.5" id="pos-picker-cat-bar">
+                    <button type="button" onclick="window.modSalePump.selectPickerCategory('ALL')" id="pp-cat-ALL" class="pp-cat-chip active px-3 py-1 rounded-lg text-[11px] font-bold border border-blue-500 bg-blue-500 text-white whitespace-nowrap cursor-pointer transition shadow-2xs font-black">
+                        ✨ Tất Cả SP (<span id="pp-cnt-all">0</span>)
+                    </button>
+                    <button type="button" onclick="window.modSalePump.selectPickerCategory('PANEL')" id="pp-cat-PANEL" class="pp-cat-chip px-3 py-1 rounded-lg text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap cursor-pointer transition shadow-2xs">
+                        ☀️ Tấm Pin PV
+                    </button>
+                    <button type="button" onclick="window.modSalePump.selectPickerCategory('INVERTER')" id="pp-cat-INVERTER" class="pp-cat-chip px-3 py-1 rounded-lg text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap cursor-pointer transition shadow-2xs">
+                        ⚡ Biến Tần Bơm (VFD)
+                    </button>
+                    <button type="button" onclick="window.modSalePump.selectPickerCategory('PUMP')" id="pp-cat-PUMP" class="pp-cat-chip px-3 py-1 rounded-lg text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap cursor-pointer transition shadow-2xs">
+                        💧 Bơm & Động Cơ
+                    </button>
+                    <button type="button" onclick="window.modSalePump.selectPickerCategory('RAIL')" id="pp-cat-RAIL" class="pp-cat-chip px-3 py-1 rounded-lg text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap cursor-pointer transition shadow-2xs">
+                        🧱 Khung & Rail Nhôm
+                    </button>
+                    <button type="button" onclick="window.modSalePump.selectPickerCategory('ELECTRICAL')" id="pp-cat-ELECTRICAL" class="pp-cat-chip px-3 py-1 rounded-lg text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap cursor-pointer transition shadow-2xs">
+                        🔌 Tủ Điều Khiển & Cáp
+                    </button>
+                    <button type="button" onclick="window.modSalePump.selectPickerCategory('OTHER')" id="pp-cat-OTHER" class="pp-cat-chip px-3 py-1 rounded-lg text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 whitespace-nowrap cursor-pointer transition shadow-2xs">
+                        🛠️ Phụ Kiện Khác
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Mô tả ngắn kỹ thuật (Tùy chọn):</label>
-                    <input type="text" id="md-device-desc" placeholder="VD: Tự động ngắt khi cạn nước, bảo vệ cháy motor..." class="w-full border border-slate-300 rounded-xl p-2 font-medium outline-none focus:border-blue-500">
-                </div>
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Đơn Vị Tính</label>
-                        <input type="text" id="md-device-unit" value="Bộ" class="w-full border border-slate-300 rounded-xl p-2 font-bold text-center outline-none focus:border-blue-500">
+            </div>
+
+            <!-- MODAL BODY: 2 COLUMNS (PRODUCT GRID 60% + CUSTOMIZATION PANEL 40%) -->
+            <div class="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+                
+                <!-- CỘT TRÁI: LƯỚI SẢN PHẨM TRỰC QUAN (60% DESKTOP) -->
+                <div class="w-full md:w-[58%] lg:w-[60%] flex flex-col bg-slate-100/60 overflow-y-auto pos-scroll p-3 sm:p-4 border-r border-slate-200">
+                    <div class="flex justify-between items-center mb-2 px-1 text-xs">
+                        <span class="font-bold text-slate-500" id="pp-products-count">Đang tải sản phẩm...</span>
+                        <button type="button" onclick="window.modSalePump.switchToManualCustomDevice()" class="text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer">
+                            <i class="fas fa-edit"></i> + Nhập Tự Do Ngoài Danh Mục
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Số Lượng</label>
-                        <input type="number" id="md-device-qty" value="1" min="1" class="w-full border border-slate-300 rounded-xl p-2 font-black text-center outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Đơn Giá Bán (VNĐ)</label>
-                        <input type="number" id="md-device-price" value="0" class="w-full border border-slate-300 rounded-xl p-2 font-black text-right outline-none focus:border-blue-500">
+
+                    <!-- Grid Sản Phẩm -->
+                    <div id="pos-picker-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5">
+                        <!-- Render danh sách sản phẩm trực quan -->
                     </div>
                 </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Giá Vốn Nội Bộ (VNĐ):</label>
-                    <input type="number" id="md-device-ws-price" value="0" class="w-full border border-slate-300 rounded-xl p-2 font-bold text-right outline-none focus:border-blue-500">
+
+                <!-- CỘT PHẢI: BẢNG TINH CHỈNH SỐ LƯỢNG, ĐƠN GIÁ & XÁC NHẬN (40% DESKTOP) -->
+                <div class="w-full md:w-[42%] lg:w-[40%] flex flex-col bg-white overflow-y-auto pos-scroll p-4 sm:p-5 space-y-3.5">
+                    
+                    <!-- THẺ SẢN PHẨM ĐANG CHỌN -->
+                    <div class="bg-blue-50/70 p-3 rounded-2xl border border-blue-200 flex items-center gap-3">
+                        <div class="w-14 h-14 rounded-xl bg-white border border-blue-200 overflow-hidden shrink-0 flex items-center justify-center p-0.5 shadow-2xs">
+                            <img id="md-preview-img" src="https://images.unsplash.com/photo-1509391365360-2e959784a276?w=100&auto=format&fit=crop&q=60" alt="Preview" class="w-full h-full object-cover rounded-lg">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <span id="md-preview-sku-badge" class="px-1.5 py-0.2 rounded bg-blue-200 text-blue-900 text-[10px] font-mono font-black uppercase">CHƯA CHỌN</span>
+                            <h4 id="md-preview-title" class="font-black text-slate-900 text-xs truncate mt-0.5">Vui lòng click chọn 1 sản phẩm ở cột bên trái</h4>
+                            <p id="md-preview-price-tag" class="text-xs font-black text-blue-700 mt-0.5">0 VNĐ</p>
+                        </div>
+                    </div>
+
+                    <!-- FORM ĐIỀU CHỈNH CHI TIẾT -->
+                    <div class="space-y-2.5 text-xs">
+                        <input type="hidden" id="md-device-select" value="">
+                        
+                        <div>
+                            <label class="block text-slate-700 font-black mb-1">Tên Thiết Bị / Bơm / Vật Tư:</label>
+                            <input type="text" id="md-device-name" placeholder="Tên thiết bị..." class="w-full border border-slate-300 rounded-xl p-2.5 font-bold outline-none focus:border-blue-500 bg-white">
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Thông số / Mô tả ngắn:</label>
+                            <input type="text" id="md-device-desc" placeholder="Thông số kỹ thuật..." class="w-full border border-slate-300 rounded-xl p-2 font-medium outline-none focus:border-blue-500 bg-white">
+                        </div>
+
+                        <!-- Cụm Số lượng & Đơn vị tính -->
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-slate-700 font-black mb-1">Số Lượng:</label>
+                                <div class="flex items-center border border-slate-300 rounded-xl overflow-hidden bg-white shadow-2xs">
+                                    <button type="button" onclick="window.modSalePump.stepPickerQty(-1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black transition cursor-pointer">-</button>
+                                    <input type="number" id="md-device-qty" value="1" min="1" step="1" 
+                                           oninput="window.modSalePump.updatePickerSubtotal()" 
+                                           class="w-full text-center p-2 font-black text-xs outline-none bg-transparent">
+                                    <button type="button" onclick="window.modSalePump.stepPickerQty(1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black transition cursor-pointer">+</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-bold mb-1">Đơn Vị Tính:</label>
+                                <input type="text" id="md-device-unit" value="Bộ" class="w-full border border-slate-300 rounded-xl p-2 font-bold text-center outline-none focus:border-blue-500 bg-white">
+                            </div>
+                        </div>
+
+                        <!-- Cụm Đơn giá bán & Giá vốn -->
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-slate-700 font-black mb-1">Đơn Giá Bán (VNĐ):</label>
+                                <input type="number" id="md-device-price" value="0" 
+                                       oninput="window.modSalePump.updatePickerSubtotal()" 
+                                       class="w-full border border-slate-300 rounded-xl p-2 font-black text-right outline-none focus:border-blue-500 bg-white text-blue-700">
+                            </div>
+                            <div>
+                                <label class="block text-slate-500 font-bold mb-1">Giá Vốn Nội Bộ (VNĐ):</label>
+                                <input type="number" id="md-device-ws-price" value="0" class="w-full border border-slate-300 rounded-xl p-2 font-bold text-right outline-none focus:border-blue-500 bg-slate-50 text-slate-600">
+                            </div>
+                        </div>
+
+                        <!-- THÀNH TIỀN PREVIEW TO RÕ -->
+                        <div class="p-3 bg-slate-900 text-white rounded-2xl flex items-center justify-between shadow-sm">
+                            <span class="text-[10px] text-blue-400 uppercase font-black tracking-wider">Tổng Thành Tiền:</span>
+                            <strong id="md-picker-subtotal-display" class="text-base font-black text-blue-400 font-mono">0 VNĐ</strong>
+                        </div>
+                    </div>
+
+                    <!-- NÚT THAO TÁC -->
+                    <div class="pt-2 flex items-center gap-2 border-t border-slate-100 mt-auto">
+                        <button type="button" onclick="window.modSalePump.closeDeviceModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-100 transition cursor-pointer text-center text-xs">
+                            Đóng
+                        </button>
+                        <button type="button" onclick="window.modSalePump.saveDeviceItem()" id="md-picker-submit-btn" class="flex-2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-black shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer text-xs">
+                            <i class="fas fa-check-circle"></i> <span id="md-picker-submit-text">Xác Nhận Thêm Vào Báo Giá</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="pt-2 flex justify-end gap-2 border-t border-slate-100">
-                    <button onclick="window.modSalePump.closeDeviceModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-100">Đóng</button>
-                    <button onclick="window.modSalePump.saveDeviceItem()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black shadow-md">Xác Nhận Lưu</button>
-                </div>
+
             </div>
         </div>
     </div>
@@ -837,6 +966,7 @@ window.modSalePump = {
             } catch(e) {}
         }
 
+        window.modSalePump.loadCompanySettings();
         window.modSalePump.loadProducts().then(() => {
             const pendingEditId = sessionStorage.getItem('pending_edit_quotation_id');
             if (pendingEditId) {
@@ -959,34 +1089,47 @@ window.modSalePump = {
         }
     },
 
-    openAddDeviceModal: () => {
-        window.modSalePump.deviceModalMode = 'ADD';
-        window.modSalePump.targetReplaceIndex = null;
-        document.getElementById('md-device-title').innerText = 'Thêm Thiết Bị / Phụ Kiện Bơm';
-        document.getElementById('md-device-select').value = '';
-        document.getElementById('md-device-name').value = '';
-        document.getElementById('md-device-desc').value = '';
-        document.getElementById('md-device-unit').value = 'Bộ';
-        document.getElementById('md-device-qty').value = '1';
-        document.getElementById('md-device-price').value = '0';
-        document.getElementById('md-device-ws-price').value = '0';
-        document.getElementById('modal-device-manager').classList.remove('hidden');
-    },
+    loadCompanySettings: async () => {
+        try {
+            const res = await fetch('/api/settings?t=' + Date.now());
+            const json = await res.json();
+            if (json.success && json.data) {
+                const d = json.data;
+                const compName = d.store_name || d.quote_store_name || 'CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO';
+                const compPhone = d.company_hotline || d.store_phone || d.quote_store_phone || '0937.039.889';
+                const compEmail = d.company_email || d.quote_store_email || 'contact@sungo.vn';
+                const compWeb = d.company_website || 'www.sungo.vn';
+                const compAddr = d.store_address || d.quote_store_address || '419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM';
 
-    openReplaceDeviceModal: (index) => {
-        window.modSalePump.deviceModalMode = 'REPLACE';
-        window.modSalePump.targetReplaceIndex = index;
-        const item = window.modSalePump.currentCalculatedItems[index];
+                if (document.getElementById('header-company-name')) document.getElementById('header-company-name').innerText = compName;
+                if (document.getElementById('header-company-addr')) document.getElementById('header-company-addr').innerHTML = `<i class="fas fa-map-marker-alt text-amber-600 mr-1"></i> Trụ sở: ${compAddr}`;
+                if (document.getElementById('header-company-contact')) document.getElementById('header-company-contact').innerHTML = `<i class="fas fa-phone-alt text-amber-600 mr-1"></i> Hotline: <strong>${compPhone}</strong> | <i class="fas fa-envelope text-amber-600 ml-1 mr-1"></i> ${compEmail} | <i class="fas fa-globe text-amber-600 ml-1 mr-1"></i> ${compWeb}`;
 
-        document.getElementById('md-device-title').innerText = `Thay Thế: ${item.product_name}`;
-        document.getElementById('md-device-select').value = item.sku || '';
-        document.getElementById('md-device-name').value = item.product_name || '';
-        document.getElementById('md-device-desc').value = item.description || '';
-        document.getElementById('md-device-unit').value = item.unit || 'Bộ';
-        document.getElementById('md-device-qty').value = item.quantity || 1;
-        document.getElementById('md-device-price').value = item.unit_price || 0;
-        document.getElementById('md-device-ws-price').value = item.wholesale_price || 0;
-        document.getElementById('modal-device-manager').classList.remove('hidden');
+                if (d.quote_templates && d.quote_templates.pump) {
+                    const tpl = d.quote_templates.pump;
+                    if (tpl.title && document.getElementById('pdf-quote-main-title')) {
+                        document.getElementById('pdf-quote-main-title').innerText = tpl.title;
+                    }
+                    if (tpl.tech_solution && document.getElementById('pdf-tech-solution')) {
+                        document.getElementById('pdf-tech-solution').innerText = tpl.tech_solution;
+                    }
+                    if (tpl.tech_desc && document.getElementById('pdf-tech-desc')) {
+                        document.getElementById('pdf-tech-desc').innerText = tpl.tech_desc;
+                    }
+                    if (tpl.notes && document.getElementById('pdf-quote-notes')) {
+                        document.getElementById('pdf-quote-notes').innerHTML = tpl.notes.split('\n').map(l => `<p>${l}</p>`).join('');
+                    }
+                    if (tpl.left_sign && document.getElementById('pdf-left-sign-title')) {
+                        document.getElementById('pdf-left-sign-title').innerText = tpl.left_sign;
+                    }
+                    if (tpl.right_sign && document.getElementById('pdf-right-sign-title')) {
+                        document.getElementById('pdf-right-sign-title').innerText = tpl.right_sign;
+                    }
+                }
+            }
+        } catch(e) {
+            console.warn('Lỗi loadCompanySettings pump:', e);
+        }
     },
 
     closeDeviceModal: () => {
@@ -1330,11 +1473,11 @@ window.modSalePump = {
         }
 
         window.modSalePump.laborItems = [
-            { id: 'L1', name: 'Nhân công lắp giàn pin PV & kéo dây cáp DC ngoài trời', unit: 'Wp', qty: totalWp, price: baseLaborPrice, wholesale: baseLaborPrice * 0.7 },
-            { id: 'L2', name: frameName, unit: 'Trọn gói', qty: 1, price: frameCost, wholesale: frameCost * 0.7 },
-            { id: 'L3', name: 'Đấu nối tủ biến tần bơm, cài đặt Soft-start chống búa nước & phao thông minh', unit: 'Bộ', qty: 1, price: 1800000, wholesale: 1200000 },
-            { id: 'L4', name: 'Đóng cọc đồng & thi công hệ thống tiếp địa an toàn chống sét', unit: 'Bộ', qty: 1, price: 1200000, wholesale: 800000 },
-            { id: 'L5', name: 'Vận chuyển trọn gói thiết bị & vật tư đến tận trang trại/vườn', unit: 'Chuyến', qty: 1, price: transportCost, wholesale: transportCost * 0.75 }
+            { id: 'L1', name: 'Nhân công lắp giàn pin PV & kéo dây cáp DC ngoài trời', unit: 'Wp', qty: totalWp, price: baseLaborPrice, wholesale: baseLaborPrice },
+            { id: 'L2', name: frameName, unit: 'Trọn gói', qty: 1, price: frameCost, wholesale: frameCost },
+            { id: 'L3', name: 'Đấu nối tủ biến tần bơm, cài đặt Soft-start chống búa nước & phao thông minh', unit: 'Bộ', qty: 1, price: 1800000, wholesale: 1800000 },
+            { id: 'L4', name: 'Đóng cọc đồng & thi công hệ thống tiếp địa an toàn chống sét', unit: 'Bộ', qty: 1, price: 1200000, wholesale: 1200000 },
+            { id: 'L5', name: 'Vận chuyển trọn gói thiết bị & vật tư đến tận trang trại/vườn', unit: 'Chuyến', qty: 1, price: transportCost, wholesale: transportCost }
         ];
         window.modSalePump.calcPumpBOQ();
     },
@@ -1485,6 +1628,16 @@ window.modSalePump = {
         });
     },
 
+    getProductCostPrice: (product, fallbackRetail) => {
+        if (!product) return fallbackRetail ? Math.round(fallbackRetail * 0.85) : 0;
+        const imp = parseFloat(product.import_price);
+        if (!isNaN(imp) && imp > 0) return imp;
+        const ws = parseFloat(product.wholesale_price);
+        if (!isNaN(ws) && ws > 0) return ws;
+        const ret = parseFloat(product.retail_price || product.price || fallbackRetail || 0);
+        return ret > 0 ? Math.round(ret * 0.85) : 0;
+    },
+
     getProductImage: (product, defaultCategory) => {
         if (product && product.image_url && product.image_url.trim().length > 5) {
             const firstImg = product.image_url.split(',')[0].trim();
@@ -1577,9 +1730,14 @@ window.modSalePump = {
 
         if (!panel || !inv) return 0;
 
-        const totalKwp = ((panelQty * 620) / 1000).toFixed(1);
-        document.getElementById('display-kwp').innerText = `${totalKwp} kWp (${panelQty} Tấm)`;
-        document.getElementById('pdf-kwp').innerText = `Giàn PV: ${totalKwp} kWp`;
+        let panelWatt = 620;
+        const matchWatt = (panel.product_name || '').match(/(\d{3})W/i);
+        if (matchWatt && matchWatt[1]) panelWatt = parseInt(matchWatt[1]);
+
+        const totalKwp = ((panelQty * panelWatt) / 1000);
+        const kwpDisp = Number.isInteger(totalKwp) ? totalKwp : totalKwp.toFixed(2);
+        document.getElementById('display-kwp').innerText = `${kwpDisp} kWp (${panelQty} Tấm)`;
+        document.getElementById('pdf-kwp').innerText = `${kwpDisp} kWp (${panelQty} Tấm)`;
         
         const preset = window.modSalePump.HP_PRESETS[hpKey] || { kw: (hp * 0.746).toFixed(1) };
         document.getElementById('pdf-motor-hp-disp').innerText = `${hp} HP (~${preset.kw} kW)`;
@@ -1606,6 +1764,8 @@ window.modSalePump = {
         const dcMeters = Math.ceil((panelQty * 4.0) * rate);
         const mc4Pairs = Math.ceil(2 * rate);
 
+        const getCost = window.modSalePump.getProductCostPrice;
+
         let items = [
             { 
                 categoryKey: 'PANEL',
@@ -1613,8 +1773,8 @@ window.modSalePump = {
                 product_name: panel.product_name, 
                 unit: panel.unit || 'Tấm', 
                 quantity: panelQty, 
-                wholesale_price: parseFloat(panel.wholesale_price || (panel.retail_price / 1.15)), 
-                unit_price: parseFloat(panel.retail_price),
+                wholesale_price: getCost(panel, panel.retail_price), 
+                unit_price: parseFloat(panel.retail_price || 0),
                 image_url: window.modSalePump.getProductImage(panel, 'PANEL'),
                 description: window.modSalePump.getProductShortDesc(panel, 'PANEL')
             },
@@ -1624,8 +1784,8 @@ window.modSalePump = {
                 product_name: inv.product_name, 
                 unit: inv.unit || 'Bộ', 
                 quantity: 1, 
-                wholesale_price: parseFloat(inv.wholesale_price || (inv.retail_price / 1.15)), 
-                unit_price: parseFloat(inv.retail_price),
+                wholesale_price: getCost(inv, inv.retail_price), 
+                unit_price: parseFloat(inv.retail_price || 0),
                 image_url: window.modSalePump.getProductImage(inv, 'INVERTER'),
                 description: window.modSalePump.getProductShortDesc(inv, 'INVERTER')
             }
@@ -1634,7 +1794,7 @@ window.modSalePump = {
         // Nếu khách chọn cung cấp trọn gói cả Thân Bơm Mới
         if (supplyMode === 'FULL_PACKAGE') {
             const pumpPrice = Math.round(hp * 1800000 + 3500000);
-            const pumpWs = Math.round(pumpPrice * 0.82);
+            const pumpWs = Math.round(pumpPrice * 0.85);
             items.push({
                 categoryKey: 'PUMP',
                 sku: 'PUMP-HP-' + hp,
@@ -1656,8 +1816,8 @@ window.modSalePump = {
                 product_name: box.product_name, 
                 unit: box.unit || 'Bộ', 
                 quantity: 1, 
-                wholesale_price: parseFloat(box.wholesale_price || (box.retail_price / 1.15)), 
-                unit_price: parseFloat(box.retail_price),
+                wholesale_price: getCost(box, box.retail_price), 
+                unit_price: parseFloat(box.retail_price || 0),
                 image_url: window.modSalePump.getProductImage(box, 'BOX'),
                 description: window.modSalePump.getProductShortDesc(box, 'BOX')
             },
@@ -1667,7 +1827,7 @@ window.modSalePump = {
                 product_name: floatSensor.product_name, 
                 unit: floatSensor.unit || 'Bộ', 
                 quantity: 1, 
-                wholesale_price: parseFloat(floatSensor.wholesale_price || 650000), 
+                wholesale_price: getCost(floatSensor, floatSensor.retail_price || 950000), 
                 unit_price: parseFloat(floatSensor.retail_price || 950000),
                 image_url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=100&auto=format&fit=crop&q=60',
                 description: window.modSalePump.getProductShortDesc(floatSensor, 'FLOAT')
@@ -1684,7 +1844,7 @@ window.modSalePump = {
                     product_name: waterCable.product_name, 
                     unit: waterCable.unit || 'Mét', 
                     quantity: cableLen, 
-                    wholesale_price: parseFloat(waterCable.wholesale_price || 45000), 
+                    wholesale_price: getCost(waterCable, waterCable.retail_price || 58000), 
                     unit_price: parseFloat(waterCable.retail_price || 58000),
                     image_url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=100&auto=format&fit=crop&q=60',
                     description: window.modSalePump.getProductShortDesc(waterCable, 'WATER_CABLE')
@@ -1695,7 +1855,7 @@ window.modSalePump = {
                     product_name: steelRope.product_name, 
                     unit: steelRope.unit || 'Mét', 
                     quantity: cableLen, 
-                    wholesale_price: parseFloat(steelRope.wholesale_price || 22000), 
+                    wholesale_price: getCost(steelRope, steelRope.retail_price || 28000), 
                     unit_price: parseFloat(steelRope.retail_price || 28000),
                     image_url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=100&auto=format&fit=crop&q=60',
                     description: window.modSalePump.getProductShortDesc(steelRope, 'STEEL_ROPE')
@@ -1711,8 +1871,8 @@ window.modSalePump = {
                 product_name: dcCable.product_name, 
                 unit: dcCable.unit || 'Mét', 
                 quantity: dcMeters, 
-                wholesale_price: parseFloat(dcCable.wholesale_price || (dcCable.retail_price / 1.15)), 
-                unit_price: parseFloat(dcCable.retail_price),
+                wholesale_price: getCost(dcCable, dcCable.retail_price), 
+                unit_price: parseFloat(dcCable.retail_price || 0),
                 image_url: window.modSalePump.getProductImage(dcCable, 'DC_CABLE'),
                 description: window.modSalePump.getProductShortDesc(dcCable, 'DC_CABLE')
             },
@@ -1722,8 +1882,8 @@ window.modSalePump = {
                 product_name: rail.product_name, 
                 unit: rail.unit || 'Cái', 
                 quantity: railQty, 
-                wholesale_price: parseFloat(rail.wholesale_price || (rail.retail_price / 1.15)), 
-                unit_price: parseFloat(rail.retail_price),
+                wholesale_price: getCost(rail, rail.retail_price), 
+                unit_price: parseFloat(rail.retail_price || 0),
                 image_url: window.modSalePump.getProductImage(rail, 'RAIL'),
                 description: window.modSalePump.getProductShortDesc(rail, 'RAIL')
             },
@@ -1733,8 +1893,8 @@ window.modSalePump = {
                 product_name: midClamp.product_name, 
                 unit: midClamp.unit || 'Bộ', 
                 quantity: midQty, 
-                wholesale_price: parseFloat(midClamp.wholesale_price || (midClamp.retail_price / 1.15)), 
-                unit_price: parseFloat(midClamp.retail_price),
+                wholesale_price: getCost(midClamp, midClamp.retail_price), 
+                unit_price: parseFloat(midClamp.retail_price || 0),
                 image_url: window.modSalePump.getProductImage(midClamp, 'CLAMP_MID'),
                 description: window.modSalePump.getProductShortDesc(midClamp, 'CLAMP_MID')
             },
@@ -1744,8 +1904,8 @@ window.modSalePump = {
                 product_name: endClamp.product_name, 
                 unit: endClamp.unit || 'Bộ', 
                 quantity: endQty, 
-                wholesale_price: parseFloat(endClamp.wholesale_price || (endClamp.retail_price / 1.15)), 
-                unit_price: parseFloat(endClamp.retail_price),
+                wholesale_price: getCost(endClamp, endClamp.retail_price), 
+                unit_price: parseFloat(endClamp.retail_price || 0),
                 image_url: window.modSalePump.getProductImage(endClamp, 'CLAMP_END'),
                 description: window.modSalePump.getProductShortDesc(endClamp, 'CLAMP_END')
             },
@@ -1755,8 +1915,8 @@ window.modSalePump = {
                 product_name: mc4.product_name, 
                 unit: mc4.unit || 'Cặp', 
                 quantity: mc4Pairs, 
-                wholesale_price: parseFloat(mc4.wholesale_price || (mc4.retail_price / 1.15)), 
-                unit_price: parseFloat(mc4.retail_price),
+                wholesale_price: getCost(mc4, mc4.retail_price), 
+                unit_price: parseFloat(mc4.retail_price || 0),
                 image_url: window.modSalePump.getProductImage(mc4, 'MC4'),
                 description: window.modSalePump.getProductShortDesc(mc4, 'MC4')
             }
@@ -1902,9 +2062,18 @@ window.modSalePump = {
     updateItemQty: (index, newQtyVal) => {
         const q = parseFloat(newQtyVal) || 0;
         window.modSalePump.currentCalculatedItems[index].quantity = q;
+        const item = window.modSalePump.currentCalculatedItems[index];
+
+        const sku = (item.sku || '').toUpperCase();
+        const name = (item.product_name || '').toLowerCase();
+        if (item.categoryKey === 'PANEL' || sku.startsWith('PAN-') || name.startsWith('tấm pin') || (name.includes('jinko') && !name.includes('inverter'))) {
+            if (document.getElementById('custom-panel-qty')) {
+                document.getElementById('custom-panel-qty').value = q;
+            }
+        }
+
         window.modSalePump.recalculateTotals();
         const fmt = window.modSalePump.formatVND;
-        const item = window.modSalePump.currentCalculatedItems[index];
         const rowTotals = document.querySelectorAll(`.row-boq-total-${index}`);
         rowTotals.forEach(el => {
             el.innerText = fmt(item.quantity * item.unit_price);
@@ -1923,31 +2092,39 @@ window.modSalePump = {
     },
 
     recalculateTotals: () => {
-        let totalCapex = 0;
-        let totalWholesale = 0;
+        let materialRetail = 0;
+        let materialWholesale = 0;
+        let laborRetail = 0;
         let hasViolation = false;
         let violationDetails = [];
         const fmt = window.modSalePump.formatVND;
 
         window.modSalePump.currentCalculatedItems.forEach(item => {
-            totalCapex += item.quantity * item.unit_price;
-            totalWholesale += item.quantity * item.wholesale_price;
-            const minPriceAllowed = Math.ceil(item.wholesale_price * window.modSalePump.MIN_PROFIT_MARGIN);
-            if (item.unit_price < minPriceAllowed) {
+            const itemPrice = parseFloat(item.unit_price) || 0;
+            const itemWholesale = parseFloat(item.wholesale_price) || 0;
+            const itemQty = parseFloat(item.quantity) || 0;
+            materialRetail += itemQty * itemPrice;
+            materialWholesale += itemQty * itemWholesale;
+            const minPriceAllowed = Math.ceil(itemWholesale * window.modSalePump.MIN_PROFIT_MARGIN);
+            if (itemPrice < minPriceAllowed) {
                 hasViolation = true;
                 violationDetails.push(`${item.product_name} (Sàn: ${fmt(minPriceAllowed)})`);
             }
         });
 
         window.modSalePump.laborItems.forEach(item => {
-            totalCapex += item.qty * item.price;
-            totalWholesale += item.qty * item.wholesale;
+            const laborPrice = parseFloat(item.price) || 0;
+            const laborQty = parseFloat(item.qty) || 0;
+            laborRetail += laborQty * laborPrice;
         });
 
+        const totalCapex = materialRetail + laborRetail;
         const isVatChecked = document.getElementById('chk-vat').checked;
         const finalTotal = isVatChecked ? Math.ceil(totalCapex * 1.08) : totalCapex;
-        const profit = finalTotal - totalWholesale;
-        const commission = Math.max(0, profit * 0.10);
+
+        // Chỉ tính lợi nhuận trên tiền vật tư/thiết bị (tiền công làm không lãi)
+        const profit = Math.max(0, materialRetail - materialWholesale);
+        const commission = Math.max(0, Math.round(profit * 0.10));
 
         document.getElementById('side-total-price').innerText = fmt(finalTotal);
         document.getElementById('side-profit').innerText = fmt(profit);
@@ -1958,20 +2135,61 @@ window.modSalePump = {
 
         const warnBox = document.getElementById('price-floor-warning');
         const actionArea = document.getElementById('save-action-area');
-
-        const btnText = window.modSalePump.editingQuotationId ? '💾 Cập Nhật Báo Giá Đang Sửa' : '💾 Lưu & Xuất Báo Giá Bơm Nước';
+        const isEditing = !!window.modSalePump.editingQuotationId;
+        const btnText = isEditing ? '💾 Cập Nhật Báo Giá Đang Sửa' : '💾 Lưu & Xuất Báo Giá Bơm Nước';
+        const cancelBtnHtml = `
+            <div id="edit-cancel-btn-area" class="${isEditing ? '' : 'hidden'}">
+                <button onclick="window.modSalePump.resetFormToNew()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs transition">
+                    <i class="fas fa-times mr-1"></i> Hủy chế độ sửa (Tạo mới)
+                </button>
+            </div>
+        `;
 
         if (hasViolation) {
-            warnBox.classList.remove('hidden');
-            document.getElementById('warning-text-detail').innerText = `Thiết bị dưới sàn: ${violationDetails.join(', ')}`;
-            actionArea.innerHTML = `<button onclick="window.modSalePump.saveQuotation('PENDING_APPROVAL')" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-2xl transition shadow-lg shadow-red-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fas fa-paper-plane"></i> Gửi Admin Duyệt Báo Giá Chạm Sàn
-            </button>`;
+            if (warnBox) warnBox.classList.remove('hidden');
+            const warnDetail = document.getElementById('warning-text-detail');
+            if (warnDetail) warnDetail.innerText = `Thiết bị dưới sàn: ${violationDetails.join(', ')}`;
+            if (actionArea) {
+                actionArea.innerHTML = `
+                    <button id="btn-save-quotation" onclick="window.modSalePump.saveQuotation('PENDING_APPROVAL')" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-2xl transition shadow-lg shadow-red-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fas fa-paper-plane"></i> Gửi Admin Duyệt Báo Giá Chạm Sàn
+                    </button>
+                    ${cancelBtnHtml}
+                `;
+            }
         } else {
-            warnBox.classList.add('hidden');
-            actionArea.innerHTML = `<button onclick="window.modSalePump.saveQuotation('QUOTING')" class="w-full bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-black py-3 rounded-2xl transition shadow-lg shadow-blue-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fas fa-save text-sm"></i> ${btnText}
-            </button>`;
+            if (warnBox) warnBox.classList.add('hidden');
+            if (actionArea) {
+                actionArea.innerHTML = `
+                    <button id="btn-save-quotation" onclick="window.modSalePump.saveQuotation('QUOTING')" class="w-full bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-black py-3 rounded-2xl transition shadow-lg shadow-blue-500/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fas fa-save text-sm"></i> ${btnText}
+                    </button>
+                    ${cancelBtnHtml}
+                `;
+            }
+        }
+
+        // Tìm tấm pin trong bảng vật tư để tính chính xác công suất PV
+        const panelItem = window.modSalePump.currentCalculatedItems.find(i => 
+            i.categoryKey === 'PANEL' || 
+            (i.sku || '').toUpperCase().startsWith('PAN-') || 
+            (i.product_name || '').toLowerCase().startsWith('tấm pin') || 
+            ((i.product_name || '').toLowerCase().includes('jinko') && !(i.product_name || '').toLowerCase().includes('inverter'))
+        );
+        let panelWatt = 620;
+        let panelQty = 0;
+        if (panelItem) {
+            const mW = (panelItem.product_name || '').match(/(\d{3})W/i);
+            if (mW && mW[1]) panelWatt = parseInt(mW[1]);
+            panelQty = parseFloat(panelItem.quantity) || 0;
+        }
+
+        // Công suất PV = công suất tấm pin * số lượng tấm pin
+        const systemKwp = panelQty > 0 ? ((panelWatt * panelQty) / 1000) : 6.2;
+        const kwpDisp = Number.isInteger(systemKwp) ? systemKwp : systemKwp.toFixed(2);
+
+        if (document.getElementById('display-kwp')) {
+            document.getElementById('display-kwp').innerText = `${kwpDisp} kWp (${panelQty} Tấm)`;
         }
 
         const hp = parseFloat(document.getElementById('motor-hp').value) || 7.5;
@@ -1990,6 +2208,7 @@ window.modSalePump = {
         document.getElementById('pdf-cust-name').innerText = cust;
         document.getElementById('pdf-sign-cust-name').innerText = cust;
         document.getElementById('pdf-cust-phone-disp').innerText = phone || '---';
+        document.getElementById('pdf-kwp').innerText = `${kwpDisp} kWp (${panelQty} Tấm)`;
 
         const d = new Date();
         document.getElementById('pdf-date-now').innerText = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
@@ -2354,9 +2573,13 @@ window.modSalePump = {
 
     resetFormToNew: () => {
         window.modSalePump.editingQuotationId = null;
-        document.getElementById('editing-mode-badge').innerText = 'Tạo mới';
-        document.getElementById('editing-mode-badge').className = "text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md font-bold";
-        document.getElementById('edit-cancel-btn-area').classList.add('hidden');
+        const badge = document.getElementById('editing-mode-badge');
+        if (badge) {
+            badge.innerText = 'Tạo mới';
+            badge.className = "text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md font-bold";
+        }
+        const cancelBtnArea = document.getElementById('edit-cancel-btn-area');
+        if (cancelBtnArea) cancelBtnArea.classList.add('hidden');
         window.modSalePump.calcPumpBOQ();
     },
 

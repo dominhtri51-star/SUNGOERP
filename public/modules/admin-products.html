@@ -43,7 +43,7 @@
 </style>
 
 <!-- KHUNG TOÀN MÀN HÌNH SPLIT-VIEW (2 CỘT) -->
-<div class="h-full flex flex-col gap-3 relative">
+<div class="min-h-full flex flex-col gap-3 relative pb-12">
     
     <!-- THANH HEADER TRÊN CÙNG -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3.5 shrink-0 flex flex-col md:flex-row justify-between items-center gap-3">
@@ -67,12 +67,12 @@
             </button>
 
             <!-- Nút Upload Nhanh Excel (Nổi bật) -->
-            <button onclick="window.modProducts.openUploadModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow-md shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer" title="Nhập danh sách hàng trăm sản phẩm cùng lúc từ file Excel">
+            <button id="btn-quick-upload-excel" onclick="window.modProducts.openUploadModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow-md shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer" title="Nhập danh sách hàng trăm sản phẩm cùng lúc từ file Excel">
                 <i class="fas fa-file-excel"></i> <span>Upload Nhanh Excel</span>
             </button>
 
             <!-- Menu Excel (Mở rộng) -->
-            <div class="relative group">
+            <div class="relative group" id="btn-excel-menu-group">
                 <button class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5">
                     <i class="fas fa-ellipsis-v text-slate-300"></i> Excel <i class="fas fa-chevron-down text-[9px] text-slate-300"></i>
                 </button>
@@ -90,7 +90,7 @@
             </div>
 
             <!-- Nút Thêm Mới Thiết Bị -->
-            <button onclick="window.modProducts.openModal()" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+            <button id="btn-add-product-main" onclick="window.modProducts.openModal()" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
                 <i class="fas fa-plus"></i> <span>Thêm Thiết Bị</span>
             </button>
         </div>
@@ -275,7 +275,7 @@
 </div>
 
 <!-- MODAL XEM ẢNH PHÓNG TO (LIGHTBOX VIEWER) -->
-<div id="image-lightbox-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[95] p-4 transition-all" onclick="window.modProducts.closeImageLightbox()">
+<div id="image-lightbox-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[9999] p-4 transition-all" onclick="window.modProducts.closeImageLightbox()">
     <div class="relative max-w-2xl w-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-700 flex flex-col transform transition-all" onclick="event.stopPropagation()">
         <!-- Header Lightbox -->
         <div class="p-3.5 bg-slate-900 border-b border-slate-800 text-white flex justify-between items-center">
@@ -302,23 +302,23 @@
 </div>
 
 <!-- MODAL THÊM / SỬA DANH MỤC HỆ THỐNG -->
-<div id="cat-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[70] p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 transform transition-all">
+<div id="cat-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[99999] p-2 sm:p-4 overflow-hidden">
+    <div class="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 transform transition-all my-auto h-[88vh] sm:h-auto sm:max-h-[90vh] flex flex-col">
         <!-- Header Modal -->
-        <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-4 text-white flex justify-between items-center">
+        <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-3.5 sm:p-4 text-white flex justify-between items-center shrink-0">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm shadow">
+                <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm shadow shrink-0">
                     <i class="fas fa-sitemap"></i>
                 </div>
                 <div>
                     <h3 class="font-bold text-sm" id="cat-modal-title">Khởi Tạo Danh Mục Mới</h3>
-                    <p class="text-[11px] text-slate-300">Cấu hình cây phân cấp và icon nhận diện</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-300">Cấu hình cây phân cấp và icon nhận diện</p>
                 </div>
             </div>
-            <button onclick="window.modCats.closeModal()" class="text-slate-400 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
+            <button type="button" onclick="window.modCats.closeModal()" class="text-slate-400 hover:text-white transition p-1 cursor-pointer"><i class="fas fa-times text-lg"></i></button>
         </div>
 
-        <div class="p-5 space-y-4 text-xs">
+        <div class="p-4 sm:p-5 space-y-3.5 sm:space-y-4 text-xs overflow-y-auto flex-1">
             <!-- Thư mục cha -->
             <div>
                 <label class="block font-bold text-slate-700 mb-1">Thuộc Danh Mục Cha</label>
@@ -363,9 +363,9 @@
             </div>
         </div>
 
-        <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2.5">
-            <button onclick="window.modCats.closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold transition text-xs">Hủy Bỏ</button>
-            <button onclick="window.modCats.saveModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition text-xs shadow-md flex items-center gap-1.5">
+        <div class="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2.5 shrink-0">
+            <button type="button" onclick="window.modCats.closeModal()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition text-xs cursor-pointer">Hủy Bỏ</button>
+            <button type="button" onclick="window.modCats.saveModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl font-black transition text-xs shadow-md flex items-center gap-1.5 cursor-pointer">
                 <i class="fas fa-save"></i> <span>Lưu Danh Mục</span>
             </button>
         </div>
@@ -373,23 +373,23 @@
 </div>
 
 <!-- MODAL KHỞI TẠO / CHỈNH SỬA THIẾT BỊ -->
-<div id="product-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl w-full max-w-3xl shadow-2xl my-auto flex flex-col relative overflow-hidden border border-slate-200 max-h-[90vh]">
+<div id="product-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[99999] p-2 sm:p-4 overflow-hidden">
+    <div class="bg-white rounded-2xl sm:rounded-3xl w-full max-w-3xl shadow-2xl my-auto flex flex-col relative overflow-hidden border border-slate-200 h-[88vh] sm:h-auto sm:max-h-[90vh]">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-4 text-white flex justify-between items-center shrink-0">
+        <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-3.5 sm:p-4 text-white flex justify-between items-center shrink-0">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm shadow">
+                <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm shadow shrink-0">
                     <i class="fas fa-box-open"></i>
                 </div>
                 <div>
                     <h3 class="font-bold text-sm" id="prod-modal-title">Khởi Tạo / Chỉnh Sửa Mã Hàng</h3>
-                    <p class="text-[11px] text-slate-300">Thông tin kỹ thuật, hồ sơ kho và bảng giá 6 cấp</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-300">Thông tin kỹ thuật, hồ sơ kho và bảng giá 6 cấp</p>
                 </div>
             </div>
-            <button onclick="window.modProducts.closeModal()" class="text-slate-400 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
+            <button type="button" onclick="window.modProducts.closeModal()" class="text-slate-400 hover:text-white transition p-1 cursor-pointer"><i class="fas fa-times text-lg"></i></button>
         </div>
         
-        <div class="p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs">
+        <div class="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs">
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="w-24 h-24 shrink-0 bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative shadow-inner">
                     <img id="p-img-preview" src="" class="hidden w-full h-full object-cover">
@@ -517,9 +517,9 @@
             </div>
         </div>
         
-        <div class="flex justify-end gap-2.5 p-4 bg-slate-50 border-t border-slate-200 shrink-0">
-            <button onclick="window.modProducts.closeModal()" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold transition text-xs">Hủy Bỏ</button>
-            <button onclick="window.modProducts.save()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-lg transition text-xs flex items-center gap-1.5">
+        <div class="flex items-center justify-end gap-2.5 p-3 sm:p-4 bg-slate-50 border-t border-slate-200 shrink-0">
+            <button onclick="window.modProducts.closeModal()" class="px-4 sm:px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition text-xs cursor-pointer">Đóng</button>
+            <button id="btn-save-product" onclick="window.modProducts.save()" class="px-5 sm:px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl font-black shadow-lg transition text-xs flex items-center gap-1.5 cursor-pointer">
                 <i class="fas fa-save"></i> <span>Lưu Thiết Bị</span>
             </button>
         </div>
@@ -527,12 +527,12 @@
 </div>
 
 <!-- MODAL UPLOAD EXCEL SIÊU TỐC & XEM TRƯỚC (PREVIEW MODAL) -->
-<div id="excel-upload-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center z-[80] p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh] transform transition-all">
+<div id="excel-upload-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[99999] p-2 sm:p-4 overflow-hidden">
+    <div class="bg-white rounded-2xl sm:rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col h-[88vh] sm:h-auto sm:max-h-[92vh] my-auto transform transition-all">
         <!-- Header Modal -->
         <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-4 text-white flex justify-between items-center shrink-0 border-b border-slate-700">
             <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center text-base shadow-md shadow-emerald-500/20">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center text-base shadow-md shadow-emerald-500/20 shrink-0">
                     <i class="fas fa-file-excel"></i>
                 </div>
                 <div>
@@ -718,20 +718,36 @@
         dragPosition: null, // 'BEFORE', 'AFTER', 'INSIDE'
 
         init: () => {
-            // Xác định quyền User từ sungo_user trong localStorage
+            // Xác định quyền User từ hệ thống phân quyền động
             try {
-                const uStr = localStorage.getItem('sungo_user') || localStorage.getItem('currentUser') || sessionStorage.getItem('sungo_user');
-                const u = uStr ? JSON.parse(uStr) : { role: 'GUEST' };
-                const roleUpper = (u && u.role) ? String(u.role).toUpperCase().trim() : '';
-                window.modCats.isAdmin = (
-                    roleUpper === 'ADMIN' || 
-                    roleUpper === 'SUPER_ADMIN' || 
-                    roleUpper === 'SALE_ADMIN' || 
-                    roleUpper === 'QUẢN TRỊ VIÊN' || 
-                    roleUpper === 'GIÁM ĐỐC'
-                );
+                if (typeof window.canEditModule === 'function') {
+                    window.modCats.isAdmin = window.canEditModule('admin-products');
+                } else {
+                    const uStr = localStorage.getItem('sungo_user') || localStorage.getItem('currentUser') || sessionStorage.getItem('sungo_user');
+                    const u = uStr ? JSON.parse(uStr) : { role: 'GUEST' };
+                    const roleUpper = (u && u.role) ? String(u.role).toUpperCase().trim() : '';
+                    window.modCats.isAdmin = (
+                        roleUpper === 'ADMIN' || 
+                        roleUpper === 'SUPER_ADMIN' || 
+                        roleUpper === 'SALE_ADMIN' || 
+                        roleUpper === 'QUẢN TRỊ VIÊN' || 
+                        roleUpper === 'GIÁM ĐỐC'
+                    );
+                }
             } catch (e) {
                 window.modCats.isAdmin = false;
+            }
+
+            // Hiển thị/ẩn các nút chỉnh sửa nếu có quyền Sửa
+            const btnAdd = document.getElementById('btn-add-product-main');
+            if (btnAdd) {
+                if (window.modCats.isAdmin) btnAdd.classList.remove('hidden');
+                else btnAdd.classList.add('hidden');
+            }
+            const btnUpload = document.getElementById('btn-quick-upload-excel');
+            if (btnUpload) {
+                if (window.modCats.isAdmin) btnUpload.classList.remove('hidden');
+                else btnUpload.classList.add('hidden');
             }
 
             // Hiển thị các nút Admin nếu có quyền
@@ -1174,6 +1190,12 @@
                 document.getElementById('cat-form-parent').value = '';
             }
 
+            const catModal = document.getElementById('cat-modal');
+            if (catModal && catModal.parentElement !== document.body) {
+                catModal.classList.add('teleported-module-modal');
+                document.body.appendChild(catModal);
+            }
+
             document.getElementById('cat-modal').classList.replace('hidden', 'flex');
         },
 
@@ -1192,6 +1214,12 @@
 
             window.modCats.populateParentDropdown(id);
             document.getElementById('cat-form-parent').value = cat.parent_id || '';
+
+            const catModal = document.getElementById('cat-modal');
+            if (catModal && catModal.parentElement !== document.body) {
+                catModal.classList.add('teleported-module-modal');
+                document.body.appendChild(catModal);
+            }
 
             document.getElementById('cat-modal').classList.replace('hidden', 'flex');
         },
@@ -1404,6 +1432,10 @@
             if (dlLink) dlLink.href = imageUrl;
 
             if (modal) {
+                if (modal.parentElement !== document.body) {
+                    modal.classList.add('teleported-module-modal');
+                    document.body.appendChild(modal);
+                }
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
             }
@@ -1614,12 +1646,18 @@
                     <!-- 4. Thao Tác -->
                     <td class="p-2.5 text-center">
                         <div class="flex flex-col gap-1.5 w-full max-w-[80px] mx-auto">
-                            <button onclick="window.modProducts.openModal(${p.id})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-2 py-1 rounded-lg transition font-bold border border-blue-200 shadow-sm text-xs flex items-center justify-center gap-1">
+                            ${(typeof window.canEditModule === 'function' ? window.canEditModule('admin-products') : window.modCats.isAdmin) ? `
+                            <button onclick="window.modProducts.openModal(${p.id})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-2 py-1 rounded-lg transition font-bold border border-blue-200 shadow-sm text-xs flex items-center justify-center gap-1 cursor-pointer">
                                 <i class="fas fa-edit"></i> Sửa
                             </button>
-                            <button onclick="window.modProducts.deleteProduct(${p.id})" class="text-red-500 bg-red-50 hover:bg-red-600 hover:text-white px-2 py-0.5 rounded-lg transition font-bold border border-red-200 text-[10px] flex items-center justify-center gap-1">
+                            <button onclick="window.modProducts.deleteProduct(${p.id})" class="text-red-500 bg-red-50 hover:bg-red-600 hover:text-white px-2 py-0.5 rounded-lg transition font-bold border border-red-200 text-[10px] flex items-center justify-center gap-1 cursor-pointer">
                                 <i class="fas fa-trash-alt"></i> Xóa
                             </button>
+                            ` : `
+                            <button onclick="window.modProducts.openModal(${p.id}, true)" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-2 py-1 rounded-lg transition font-bold border border-blue-200 shadow-sm text-xs flex items-center justify-center gap-1 cursor-pointer" title="Xem chi tiết thiết bị (Chỉ Xem)">
+                                <i class="fas fa-eye"></i> Xem
+                            </button>
+                            `}
                         </div>
                     </td>
                 </tr>
@@ -1697,11 +1735,40 @@
             input.value = '';
         },
 
-        openModal: (id = null) => {
+        openModal: (id = null, viewOnly = false) => {
             window.modProducts.isEdit = !!id;
             window.modProducts.editId = id;
 
-            document.getElementById('prod-modal-title').innerText = id ? 'Chỉnh Sửa Mã Hàng' : 'Khởi Tạo Thiết Bị Mới';
+            const canEdit = typeof window.canEditModule === 'function' ? window.canEditModule('admin-products') : window.modCats.isAdmin;
+            const isReadonly = !canEdit || viewOnly;
+
+            // Đảm bảo modal luôn là con trực tiếp của document.body để nổi trên cùng
+            const pModal = document.getElementById('product-modal');
+            if (pModal && pModal.parentElement !== document.body) {
+                pModal.classList.add('teleported-module-modal');
+                document.body.appendChild(pModal);
+            }
+
+            document.getElementById('prod-modal-title').innerText = isReadonly ? (id ? 'Chi Tiết Thiết Bị (Chỉ Xem)' : 'Chi Tiết Thiết Bị') : (id ? 'Chỉnh Sửa Mã Hàng' : 'Khởi Tạo Thiết Bị Mới');
+
+            const saveBtn = document.getElementById('btn-save-product');
+            if (saveBtn) {
+                if (isReadonly) saveBtn.classList.add('hidden');
+                else saveBtn.classList.remove('hidden');
+            }
+
+            // Bật/tắt trạng thái readonly/disabled cho các input
+            const inputs = document.querySelectorAll('#product-modal input, #product-modal select, #product-modal textarea');
+            inputs.forEach(inp => {
+                if (inp.id === 'p-total-stock') return;
+                if (isReadonly) {
+                    inp.setAttribute('disabled', 'disabled');
+                    inp.classList.add('bg-slate-100', 'cursor-not-allowed');
+                } else {
+                    inp.removeAttribute('disabled');
+                    inp.classList.remove('bg-slate-100', 'cursor-not-allowed');
+                }
+            });
 
             // Khởi tạo giao diện nhập kho động
             const whContainer = document.getElementById('dynamic-warehouse-stocks');
@@ -1854,6 +1921,9 @@
         },
 
         deleteProduct: async (id) => {
+            const canEdit = typeof window.canEditModule === 'function' ? window.canEditModule('admin-products') : window.modCats.isAdmin;
+            if (!canEdit) return window.showToast('error', '⚠️ Bạn chỉ có quyền Xem, không có quyền xóa sản phẩm!');
+
             const p = window.modProducts.list.find(x => x.id === id);
             if (!p) return;
             if (!confirm(`⚠️ Sếp có chắc muốn xóa thiết bị "${p.product_name}" (${p.sku})?`)) return;
@@ -1978,6 +2048,10 @@
             }
 
             if (modal) {
+                if (modal.parentElement !== document.body) {
+                    modal.classList.add('teleported-module-modal');
+                    document.body.appendChild(modal);
+                }
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
             }
@@ -2492,6 +2566,15 @@
                 if (typeof window.modProducts.switchMobileView === 'function') {
                     window.modProducts.switchMobileView('PRODUCTS');
                 }
+
+                // Tự động đưa toàn bộ modal ra document.body ngay khi khởi tạo để thoát khỏi stacking context của main-content
+                ['product-modal', 'cat-modal', 'excel-upload-modal', 'image-lightbox-modal'].forEach(mId => {
+                    const el = document.getElementById(mId);
+                    if (el && el.parentElement !== document.body) {
+                        el.classList.add('teleported-module-modal');
+                        document.body.appendChild(el);
+                    }
+                });
             } catch (e) {
                 console.error("Lỗi khởi tạo module:", e);
             }

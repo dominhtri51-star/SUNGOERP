@@ -1,168 +1,179 @@
-<div class="h-full flex flex-col space-y-4 font-sans">
+<div class="w-full min-h-full flex flex-col space-y-4 font-sans pb-28 md:pb-6">
     
     <!-- HEADER & ACTION BAR -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3.5 sm:p-5 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-red-500 flex items-center justify-center text-white shadow-md shadow-rose-500/20 shrink-0">
-                <i class="fas fa-file-invoice-dollar text-xl"></i>
+                <i class="fas fa-file-invoice-dollar text-lg"></i>
             </div>
             <div>
                 <div class="flex items-center gap-2">
-                    <h2 class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2">
-                        CÔNG NỢ PHẢI TRẢ NHÀ CUNG CẤP & THANH TOÁN (TK 331)
+                    <h2 class="text-base sm:text-xl font-black text-slate-900 flex items-center gap-2">
+                        CÔNG NỢ PHẢI TRẢ NCC & THANH TOÁN (331)
                     </h2>
-                    <span class="text-[10px] bg-rose-100 text-rose-800 font-bold px-2.5 py-0.5 rounded-full border border-rose-200 uppercase">Phải Trả NCC & UNC</span>
+                    <span class="text-[9.5px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full border border-rose-200 uppercase">NCC & UNC</span>
                 </div>
-                <p class="text-xs text-slate-500 font-medium mt-0.5">Theo dõi số nợ từng Nhà Cung Cấp • Lập kế hoạch chi trả • Tạo Ủy Nhiệm Chi (UNC) & Phê duyệt thanh toán.</p>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Theo dõi số nợ từng Nhà Cung Cấp • Lập kế hoạch chi trả • Tạo UNC & Duyệt thanh toán.</p>
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <button onclick="window.modPayment.openCreate()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-plus-circle"></i> <span>Lập Ủy Nhiệm Chi / Phiếu Chi</span>
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <button onclick="window.modPayment.openCreate()" class="flex-1 md:flex-initial bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold py-2 px-3.5 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <i class="fas fa-plus-circle"></i> <span>Lập UNC / Phiếu Chi</span>
             </button>
-            <button onclick="window.modPayment.openCreateSupplier()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-building"></i> <span>Thêm Nhà Cung Cấp</span>
+            <button onclick="window.modPayment.openCreateSupplier()" class="flex-1 md:flex-initial bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-2 px-3.5 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <i class="fas fa-building"></i> <span>Thêm NCC</span>
             </button>
-            <button onclick="window.modPayment.reloadAll()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs transition border border-slate-300 flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-sync-alt"></i> <span>Làm Mới</span>
+            <button onclick="window.modPayment.reloadAll()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition border border-slate-200 text-xs font-bold cursor-pointer" title="Làm mới">
+                <i class="fas fa-sync-alt"></i>
             </button>
         </div>
     </div>
 
     <!-- RADAR KPI CARDS (CÔNG NỢ PHẢI TRẢ NCC & DÒNG CHI) -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 shrink-0">
         <!-- 1. TỔNG NỢ PHẢI TRẢ NCC -->
-        <div class="bg-white p-3.5 rounded-xl border border-rose-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 font-black shrink-0 animate-pulse">
-                <i class="fas fa-file-invoice-dollar text-lg"></i>
+        <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-rose-200 shadow-2xs flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 font-black shrink-0">
+                <i class="fas fa-file-invoice-dollar text-base"></i>
             </div>
             <div class="min-w-0">
-                <p class="text-[10px] font-black uppercase text-rose-700 tracking-wider">Tổng Nợ Phải Trả (TK 331)</p>
-                <h4 class="text-lg md:text-xl font-black text-rose-600 truncate" id="kpi-total-payable">0 đ</h4>
-                <p class="text-[10px] text-slate-500 font-semibold" id="kpi-sup-debt-count">0 NCC đang có dư nợ</p>
+                <p class="text-[9.5px] font-black uppercase text-rose-700 tracking-wider truncate">Nợ Phải Trả (331)</p>
+                <h4 class="text-sm sm:text-lg font-black text-rose-600 truncate" id="kpi-total-payable">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate" id="kpi-sup-debt-count">0 NCC đang có dư nợ</p>
             </div>
         </div>
 
         <!-- 2. ĐÃ THANH TOÁN TRONG THÁNG -->
-        <div class="bg-white p-3.5 rounded-xl border border-emerald-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-black shrink-0">
-                <i class="fas fa-circle-check text-lg"></i>
+        <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-emerald-200 shadow-2xs flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-black shrink-0">
+                <i class="fas fa-circle-check text-base"></i>
             </div>
             <div class="min-w-0">
-                <p class="text-[10px] font-black uppercase text-emerald-700 tracking-wider">Đã Thanh Toán Tháng Này</p>
-                <h4 class="text-lg md:text-xl font-black text-emerald-700 truncate" id="kpi-paid-month">0 đ</h4>
-                <p class="text-[10px] text-slate-500 font-semibold">Các UNC / Phiếu chi đã duyệt</p>
+                <p class="text-[9.5px] font-black uppercase text-emerald-700 tracking-wider truncate">Đã Chi Tháng Này</p>
+                <h4 class="text-sm sm:text-lg font-black text-emerald-700 truncate" id="kpi-paid-month">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate">Các UNC đã duyệt</p>
             </div>
         </div>
 
         <!-- 3. PHIẾU CHI / UNC CHỜ DUYỆT -->
-        <div class="bg-white p-3.5 rounded-xl border border-amber-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 font-black shrink-0">
-                <i class="fas fa-hourglass-half text-lg"></i>
+        <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-amber-200 shadow-2xs flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 font-black shrink-0">
+                <i class="fas fa-hourglass-half text-base"></i>
             </div>
             <div class="min-w-0">
-                <p class="text-[10px] font-black uppercase text-amber-700 tracking-wider">Phiếu Chi Chờ Duyệt</p>
-                <h4 class="text-lg md:text-xl font-black text-amber-600 truncate" id="kpi-pending-count">0</h4>
-                <p class="text-[10px] text-slate-500 font-semibold">Cần KTT / GĐ ký duyệt chi</p>
+                <p class="text-[9.5px] font-black uppercase text-amber-700 tracking-wider truncate">UNC Chờ Duyệt</p>
+                <h4 class="text-sm sm:text-lg font-black text-amber-600 truncate" id="kpi-pending-count">0</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate">Cần KTT / GĐ ký</p>
             </div>
         </div>
 
         <!-- 4. TỔNG SỐ ĐỐI TÁC NCC -->
-        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 font-black shrink-0">
-                <i class="fas fa-truck text-lg"></i>
+        <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 font-black shrink-0">
+                <i class="fas fa-truck text-base"></i>
             </div>
             <div class="min-w-0">
-                <p class="text-[10px] font-black uppercase text-slate-600 tracking-wider">Tổng Số Nhà Cung Cấp</p>
-                <h4 class="text-lg md:text-xl font-black text-slate-800 truncate" id="kpi-total-suppliers">0</h4>
-                <p class="text-[10px] text-slate-500 font-semibold">Đối tác cung ứng thiết bị</p>
+                <p class="text-[9.5px] font-black uppercase text-slate-600 tracking-wider truncate">Tổng Nhà Cung Cấp</p>
+                <h4 class="text-sm sm:text-lg font-black text-slate-800 truncate" id="kpi-total-suppliers">0</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate">Đối tác vật tư Solar</p>
             </div>
         </div>
     </div>
 
     <!-- MAIN CONTAINER CHIA 2 TABS -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex-1 flex flex-col overflow-hidden">
         
         <!-- TABS HEADER -->
-        <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-3 pt-2 gap-1.5">
-            <button onclick="window.modPayment.switchTab('SUPPLIERS')" id="tab-btn-SUPPLIERS" class="px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-rose-600 text-rose-700 rounded-t-lg shadow-sm transition flex items-center gap-1.5">
-                <i class="fas fa-building text-rose-600"></i> 1. Danh Sách Công Nợ Từng Nhà Cung Cấp (TK 331)
+        <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-3 pt-2 gap-1.5 overflow-x-auto no-scrollbar">
+            <button onclick="window.modPayment.switchTab('SUPPLIERS')" id="tab-btn-SUPPLIERS" class="px-3.5 py-2 font-bold text-xs bg-white border-t-2 border-rose-600 text-rose-700 rounded-t-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <i class="fas fa-building text-rose-600"></i> 1. Công Nợ NCC (TK 331)
             </button>
-            <button onclick="window.modPayment.switchTab('PAYMENTS')" id="tab-btn-PAYMENTS" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
-                <i class="fas fa-money-check-dollar text-blue-600"></i> 2. Sổ Quỹ Chi & Lịch Sử Ủy Nhiệm Chi (UNC)
+            <button onclick="window.modPayment.switchTab('PAYMENTS')" id="tab-btn-PAYMENTS" class="px-3.5 py-2 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-xl transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <i class="fas fa-money-check-dollar text-blue-600"></i> 2. Lịch Sử Chi & UNC
             </button>
         </div>
 
         <!-- ========================================================= -->
         <!-- TAB 1: DANH SÁCH CÔNG NỢ TỪNG NHÀ CUNG CẤP (TK 331) -->
         <!-- ========================================================= -->
-        <div id="tab-content-SUPPLIERS" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3 overflow-hidden">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0 bg-rose-50/50 p-3 rounded-xl border border-rose-100">
+        <div id="tab-content-SUPPLIERS" class="flex-1 flex flex-col p-3 sm:p-4 bg-white min-h-0 space-y-3">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2.5 shrink-0 bg-rose-50/50 p-2.5 sm:p-3 rounded-2xl border border-rose-100">
                 <div class="flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-lg bg-rose-600 text-white flex items-center justify-center text-xs font-bold shrink-0">331</span>
+                    <span class="w-7 h-7 rounded-lg bg-rose-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">331</span>
                     <div>
-                        <h4 class="font-black text-rose-950 text-xs uppercase">Bảng Tổng Hợp Công Nợ Phải Trả Nhà Cung Cấp</h4>
-                        <p class="text-[11px] text-slate-500">Tự động tổng hợp số tiền nhập kho từ các đơn mua hàng (PO) trừ các phiếu chi/UNC đã thanh toán.</p>
+                        <h4 class="font-black text-rose-950 text-xs uppercase">Bảng Công Nợ Phải Trả Nhà Cung Cấp</h4>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 w-full md:w-auto">
-                    <input type="text" id="sup-search-input" oninput="window.modPayment.filterSuppliers()" placeholder="Tìm tên NCC, MST, SĐT..." class="border border-slate-300 bg-white p-1.5 rounded-lg text-xs font-medium outline-none focus:border-rose-500 w-full md:w-64">
+                <div class="w-full md:w-auto">
+                    <input type="text" id="sup-search-input" oninput="window.modPayment.filterSuppliers()" placeholder="Tìm tên NCC, MST, SĐT..." class="border border-slate-300 bg-white px-2.5 py-1.5 rounded-xl text-xs font-medium outline-none focus:border-rose-500 w-full md:w-64">
                 </div>
             </div>
 
-            <div class="overflow-y-auto border border-slate-200 rounded-xl flex-1">
-                <table class="w-full text-left text-xs border-collapse">
-                    <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase font-bold text-[10px] shadow-sm z-10">
+            <!-- 1. Desktop Table -->
+            <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-2xl flex-1">
+                <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+                    <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase font-bold text-[10px] shadow-2xs z-10">
                         <tr>
-                            <th class="p-3 border-b">Nhà Cung Cấp</th>
-                            <th class="p-3 border-b text-right">Tổng Nhập Hàng (PO)</th>
+                            <th class="p-3 pl-4 border-b">Nhà Cung Cấp</th>
+                            <th class="p-3 border-b text-right">Tổng Nhập (PO)</th>
                             <th class="p-3 border-b text-right text-emerald-700">Đã Thanh Toán</th>
-                            <th class="p-3 border-b text-right text-rose-700">Dư Nợ Phải Trả (331)</th>
+                            <th class="p-3 border-b text-right text-rose-700 font-black">Dư Nợ (331)</th>
                             <th class="p-3 border-b text-center">Hạn Mức & Hạn Nợ</th>
                             <th class="p-3 border-b text-center">Trạng Thái</th>
-                            <th class="p-3 border-b text-center">Thao Tác</th>
+                            <th class="p-3 pr-4 border-b text-center">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="tbl-supplier-debts" class="divide-y divide-slate-100 text-slate-700 font-medium">
-                        <tr><td colspan="7" class="p-8 text-center text-slate-400">Đang tải danh sách công nợ Nhà Cung Cấp...</td></tr>
+                        <tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold">Đang tải danh sách công nợ Nhà Cung Cấp...</td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- 2. Mobile Smart Cards -->
+            <div id="tbl-supplier-debts-mobile" class="md:hidden space-y-2.5 pb-8">
+                <!-- Rendered by JS -->
             </div>
         </div>
 
         <!-- ========================================================= -->
         <!-- TAB 2: SỔ QUỸ CHI & LỊCH SỬ ỦY NHIỆM CHI (UNC) -->
         <!-- ========================================================= -->
-        <div id="tab-content-PAYMENTS" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3 overflow-hidden hidden">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <div class="flex items-center gap-2">
-                    <button onclick="window.modPayment.filterPaymentStatus('ALL')" id="btn-pay-status-ALL" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-sm transition">Tất Cả Phiếu</button>
-                    <button onclick="window.modPayment.filterPaymentStatus('Chờ Duyệt')" id="btn-pay-status-PENDING" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-amber-700 border border-amber-300 hover:bg-amber-50 transition"><i class="fas fa-hourglass-half mr-1"></i> Chờ Duyệt Chi</button>
-                    <button onclick="window.modPayment.filterPaymentStatus('Đã Thanh Toán')" id="btn-pay-status-PAID" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 transition"><i class="fas fa-check-circle mr-1"></i> Đã Thanh Toán</button>
+        <div id="tab-content-PAYMENTS" class="flex-1 flex flex-col p-3 sm:p-4 bg-white min-h-0 space-y-3 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2.5 shrink-0 bg-slate-50 p-2.5 sm:p-3 rounded-2xl border border-slate-200">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <button onclick="window.modPayment.filterPaymentStatus('ALL')" id="btn-pay-status-ALL" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-2xs transition cursor-pointer">Tất Cả</button>
+                    <button onclick="window.modPayment.filterPaymentStatus('Chờ Duyệt')" id="btn-pay-status-PENDING" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-amber-700 border border-amber-300 hover:bg-amber-50 transition cursor-pointer"><i class="fas fa-hourglass-half mr-1"></i> Chờ Duyệt</button>
+                    <button onclick="window.modPayment.filterPaymentStatus('Đã Thanh Toán')" id="btn-pay-status-PAID" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 transition cursor-pointer"><i class="fas fa-check-circle mr-1"></i> Đã Trả</button>
                 </div>
                 <div class="w-full md:w-auto">
-                    <input type="text" id="pay-search-input" oninput="window.modPayment.searchPayments(this.value)" placeholder="Tìm mã UNC, tên NCC..." class="border border-slate-300 bg-white p-1.5 rounded-lg text-xs font-medium outline-none focus:border-blue-500 w-full md:w-64">
+                    <input type="text" id="pay-search-input" oninput="window.modPayment.searchPayments(this.value)" placeholder="Tìm mã UNC, tên NCC..." class="border border-slate-300 bg-white px-2.5 py-1.5 rounded-xl text-xs font-medium outline-none focus:border-blue-500 w-full md:w-64">
                 </div>
             </div>
 
-            <div class="overflow-y-auto border border-slate-200 rounded-xl flex-1">
-                <table class="w-full text-left text-xs border-collapse">
-                    <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase font-bold text-[10px] shadow-sm z-10">
+            <!-- 1. Desktop Table -->
+            <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-2xl flex-1">
+                <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+                    <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase font-bold text-[10px] shadow-2xs z-10">
                         <tr>
-                            <th class="p-3 border-b">Mã Phiếu & Ngày Lập</th>
+                            <th class="p-3 pl-4 border-b">Mã Phiếu & Ngày</th>
                             <th class="p-3 border-b">Đơn Vị Thụ Hưởng (NCC)</th>
                             <th class="p-3 border-b">Tài Khoản & Ngân Hàng</th>
-                            <th class="p-3 border-b text-right">Số Tiền Chi (VNĐ)</th>
+                            <th class="p-3 border-b text-right">Số Tiền (VNĐ)</th>
                             <th class="p-3 border-b text-center">Hình Thức</th>
                             <th class="p-3 border-b text-center">Trạng Thái</th>
-                            <th class="p-3 border-b text-center">Phê Duyệt</th>
+                            <th class="p-3 pr-4 border-b text-center">Phê Duyệt</th>
                         </tr>
                     </thead>
                     <tbody id="tbl-payments" class="divide-y divide-slate-100 text-slate-700 font-medium">
-                        <tr><td colspan="7" class="p-8 text-center text-slate-400">Đang tải lịch sử thanh toán...</td></tr>
+                        <tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold">Đang tải lịch sử thanh toán...</td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- 2. Mobile Smart Cards -->
+            <div id="tbl-payments-mobile" class="md:hidden space-y-2.5 pb-8">
+                <!-- Rendered by JS -->
             </div>
         </div>
 
@@ -325,15 +336,15 @@
 <div id="supplier-statement-drawer" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden justify-end">
     <div class="bg-white w-full md:w-[500px] h-full shadow-2xl flex flex-col animate-slide-in-right">
         <!-- Header -->
-        <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-white shadow-sm shrink-0">
-            <div class="flex items-center gap-3">
-                <div id="drawer-sup-avatar" class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center font-black text-base shadow">N</div>
-                <div>
-                    <h3 class="font-black text-slate-800 text-sm leading-tight" id="drawer-sup-name">Tên Nhà Cung Cấp</h3>
+        <div class="px-4 pb-3 pt-6 sm:pt-4 border-b border-slate-200 flex justify-between items-center bg-white shadow-sm shrink-0">
+            <div class="flex items-center gap-3 min-w-0 pr-2">
+                <div id="drawer-sup-avatar" class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center font-black text-base shadow shrink-0">N</div>
+                <div class="min-w-0">
+                    <h3 class="font-black text-slate-800 text-sm leading-tight truncate" id="drawer-sup-name">Tên Nhà Cung Cấp</h3>
                     <p class="text-[11px] font-bold text-slate-500 mt-0.5" id="drawer-sup-code">Mã: NCC001</p>
                 </div>
             </div>
-            <button onclick="window.modPayment.closeStatementDrawer()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition"><i class="fas fa-times text-base"></i></button>
+            <button type="button" onclick="window.modPayment.closeStatementDrawer()" class="w-10 h-10 rounded-full text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition shrink-0 cursor-pointer shadow-xs"><i class="fas fa-times text-lg"></i></button>
         </div>
         
         <!-- Body -->
@@ -424,8 +435,10 @@ window.modPayment = {
         const activeBtn = document.getElementById(`tab-btn-${tab}`);
         if (activeContent) activeContent.classList.remove('hidden');
         if (activeBtn) {
-            activeBtn.className = 'px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-rose-600 text-rose-700 rounded-t-lg shadow-sm transition flex items-center gap-1.5';
+            activeBtn.className = 'px-3.5 py-2 font-bold text-xs bg-white border-t-2 border-rose-600 text-rose-700 rounded-t-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap';
         }
+        const mainEl = document.getElementById('main-content');
+        if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     // =========================================================
@@ -456,57 +469,120 @@ window.modPayment = {
 
     renderSupplierDebts: (list) => {
         const tbody = document.getElementById('tbl-supplier-debts');
+        const mobContainer = document.getElementById('tbl-supplier-debts-mobile');
         if (!list || list.length === 0) {
-            return tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">Chưa có dữ liệu Nhà Cung Cấp nào.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold">Chưa có dữ liệu Nhà Cung Cấp nào.</td></tr>';
+            if (mobContainer) mobContainer.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold text-xs">Chưa có dữ liệu Nhà Cung Cấp nào.</div>';
+            return;
         }
 
-        tbody.innerHTML = list.map(s => {
-            const debt = parseFloat(s.current_debt || 0);
-            const limit = parseFloat(s.credit_limit || 0);
+        if (tbody) {
+            tbody.innerHTML = list.map(s => {
+                const debt = parseFloat(s.current_debt || 0);
+                const limit = parseFloat(s.credit_limit || 0);
 
-            let statusBadge = '<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded font-black text-[10px]">ĐÃ HẾT NỢ</span>';
-            if (debt > 0) {
-                if (limit > 0 && debt > limit) {
-                    statusBadge = '<span class="bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded font-black text-[10px]"><i class="fas fa-triangle-exclamation mr-1"></i> VƯỢT HẠN MỨC</span>';
-                } else {
-                    statusBadge = '<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded font-black text-[10px]">TRONG HẠN MỨC</span>';
+                let statusBadge = '<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded font-black text-[10px]">ĐÃ HẾT NỢ</span>';
+                if (debt > 0) {
+                    if (limit > 0 && debt > limit) {
+                        statusBadge = '<span class="bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded font-black text-[10px]"><i class="fas fa-triangle-exclamation mr-1"></i> VƯỢT HẠN MỨC</span>';
+                    } else {
+                        statusBadge = '<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded font-black text-[10px]">TRONG HẠN MỨC</span>';
+                    }
                 }
-            }
 
-            return `
-                <tr class="hover:bg-rose-50/30 transition">
-                    <td class="p-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 font-black flex items-center justify-center text-xs uppercase shrink-0">
+                return `
+                    <tr class="hover:bg-rose-50/30 transition">
+                        <td class="p-3 pl-4">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 font-black flex items-center justify-center text-xs uppercase shrink-0">
+                                    ${(s.name || 'N').charAt(0)}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-900 text-xs">${s.name}</p>
+                                    <p class="text-[10px] text-slate-500 mt-0.5">Mã: ${s.supplier_code} ${s.phone ? `| SĐT: ${s.phone}` : ''}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right font-bold text-slate-700 text-xs">${window.modPayment.fmt(s.total_purchased)} đ</td>
+                        <td class="p-3 text-right font-bold text-emerald-700 text-xs">${window.modPayment.fmt(s.total_paid)} đ</td>
+                        <td class="p-3 text-right font-black text-rose-700 text-sm">${window.modPayment.fmt(debt)} đ</td>
+                        <td class="p-3 text-center text-[11px] text-slate-600">
+                            <span class="font-bold">${limit > 0 ? window.modPayment.fmt(limit) + ' đ' : 'Không giới hạn'}</span>
+                            <span class="text-[10px] text-slate-400 block">Hạn nợ: ${s.debt_days || 30} ngày</span>
+                        </td>
+                        <td class="p-3 text-center">${statusBadge}</td>
+                        <td class="p-3 pr-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="window.modPayment.openCreateWithSupplier(${s.id})" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer">
+                                    <i class="fas fa-money-bill-wave mr-0.5"></i> Trả Nợ (UNC)
+                                </button>
+                                <button onclick="window.modPayment.openStatementDrawer(${s.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer">
+                                    <i class="fas fa-eye"></i> Sao Kê
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        if (mobContainer) {
+            mobContainer.innerHTML = list.map(s => {
+                const debt = parseFloat(s.current_debt || 0);
+                const limit = parseFloat(s.credit_limit || 0);
+
+                let statusBadge = '<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded font-black text-[10px]">ĐÃ HẾT NỢ</span>';
+                if (debt > 0) {
+                    if (limit > 0 && debt > limit) {
+                        statusBadge = '<span class="bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded font-black text-[10px]">VƯỢT HẠN</span>';
+                    } else {
+                        statusBadge = '<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded font-black text-[10px]">TRONG HẠN</span>';
+                    }
+                }
+
+                return `
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 font-black flex items-center justify-center text-[11px] uppercase shrink-0">
                                 ${(s.name || 'N').charAt(0)}
-                            </div>
-                            <div>
-                                <p class="font-bold text-slate-900 text-xs">${s.name}</p>
-                                <p class="text-[10px] text-slate-500 mt-0.5">Mã: ${s.supplier_code} ${s.phone ? `| SĐT: ${s.phone}` : ''} ${s.tax_code ? `| MST: ${s.tax_code}` : ''}</p>
+                            </span>
+                            <div class="min-w-0">
+                                <h4 class="font-black text-slate-900 text-xs truncate">${s.name}</h4>
+                                <p class="text-[10px] text-slate-400">${s.supplier_code} ${s.phone ? `• 📞 ${s.phone}` : ''}</p>
                             </div>
                         </div>
-                    </td>
-                    <td class="p-3 text-right font-bold text-slate-700 text-xs">${window.modPayment.fmt(s.total_purchased)} đ</td>
-                    <td class="p-3 text-right font-bold text-emerald-700 text-xs">${window.modPayment.fmt(s.total_paid)} đ</td>
-                    <td class="p-3 text-right font-black text-rose-700 text-sm">${window.modPayment.fmt(debt)} đ</td>
-                    <td class="p-3 text-center text-[11px] text-slate-600">
-                        <span class="font-bold">${limit > 0 ? window.modPayment.fmt(limit) + ' đ' : 'Không giới hạn'}</span>
-                        <span class="text-[10px] text-slate-400 block">Hạn nợ: ${s.debt_days || 30} ngày</span>
-                    </td>
-                    <td class="p-3 text-center">${statusBadge}</td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-1.5">
-                            <button onclick="window.modPayment.openCreateWithSupplier(${s.id})" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded text-[10px] font-bold transition shadow">
-                                <i class="fas fa-money-bill-wave mr-0.5"></i> Trả Nợ (UNC)
+                        ${statusBadge}
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Tổng nhập (PO):</span>
+                            <b class="text-slate-700">${window.modPayment.fmt(s.total_purchased)} đ</b>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 block text-[10px]">Đã thanh toán:</span>
+                            <b class="text-emerald-700">${window.modPayment.fmt(s.total_paid)} đ</b>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Dư Nợ Phải Trả</span>
+                            <strong class="text-sm font-black text-rose-600">${window.modPayment.fmt(debt)} đ</strong>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="window.modPayment.openCreateWithSupplier(${s.id})" class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-money-bill-wave"></i> Trả Nợ
                             </button>
-                            <button onclick="window.modPayment.openStatementDrawer(${s.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded text-[10px] font-bold transition">
-                                <i class="fas fa-eye"></i> Sao Kê
+                            <button type="button" onclick="window.modPayment.openStatementDrawer(${s.id})" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+                                <i class="fas fa-eye"></i>
                             </button>
                         </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+                    </div>
+                </div>`;
+            }).join('');
+        }
     },
 
     filterSuppliers: () => {
@@ -516,8 +592,8 @@ window.modPayment = {
         const filtered = window.modPayment.supplierDebts.filter(s => 
             (s.name && s.name.toLowerCase().includes(q)) ||
             (s.supplier_code && s.supplier_code.toLowerCase().includes(q)) ||
-            (s.phone && s.phone.includes(q)) ||
-            (s.tax_code && s.tax_code.includes(q))
+            (s.tax_code && s.tax_code.toLowerCase().includes(q)) ||
+            (s.phone && s.phone.toLowerCase().includes(q))
         );
         window.modPayment.renderSupplierDebts(filtered);
     },
@@ -559,64 +635,116 @@ window.modPayment = {
     },
 
     // =========================================================
-    // 2. SỔ QUỸ CHI & LỊCH SỬ ỦY NHIỆM CHI (UNC)
+    // 2. SỔ QUỸ CHI & LỊCH SỬ PHIẾU CHI / UNC
     // =========================================================
     loadPayments: async () => {
         const tbody = document.getElementById('tbl-payments');
         try {
-            const res = await fetch('/api/payments?t=' + Date.now());
+            const res = await fetch('/api/payments/history?t=' + Date.now());
             const data = await res.json();
             if (data.success) {
                 window.modPayment.payments = data.data || [];
                 window.modPayment.renderPayments(window.modPayment.payments);
             }
         } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Lỗi kết nối lịch sử thanh toán!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Lỗi kết nối API Sổ quỹ chi!</td></tr>';
         }
     },
 
     renderPayments: (list) => {
         const tbody = document.getElementById('tbl-payments');
+        const mobContainer = document.getElementById('tbl-payments-mobile');
         if (!list || list.length === 0) {
-            return tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">Chưa có giao dịch chi nào.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold">Chưa có lịch sử phiếu chi nào.</td></tr>';
+            if (mobContainer) mobContainer.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold text-xs">Chưa có lịch sử phiếu chi nào.</div>';
+            return;
         }
 
-        tbody.innerHTML = list.map(p => {
-            const d = new Date(p.created_at);
-            let badge = '<span class="bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"><i class="fas fa-hourglass-half mr-1"></i> Chờ Duyệt</span>';
-            let actionBtn = `<button onclick="window.modPayment.approvePayment(${p.id}, 'Đã Thanh Toán')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-[10px] font-bold shadow transition"><i class="fas fa-check mr-1"></i> Duyệt Chi</button>`;
+        if (tbody) {
+            tbody.innerHTML = list.map(p => {
+                const d = new Date(p.created_at);
+                let badge = '<span class="bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"><i class="fas fa-hourglass-half mr-1"></i> Chờ Duyệt</span>';
+                let actionBtn = `<button onclick="window.modPayment.approvePayment(${p.id}, 'Đã Thanh Toán')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-2xs transition cursor-pointer"><i class="fas fa-check mr-1"></i> Duyệt Chi</button>`;
 
-            if (p.status === 'Đã Thanh Toán') {
-                badge = '<span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"><i class="fas fa-circle-check mr-1"></i> Đã Thanh Toán</span>';
-                actionBtn = '<span class="text-slate-400 text-xs font-bold"><i class="fas fa-check-circle text-emerald-500"></i> Hoàn Tất</span>';
-            } else if (p.status === 'Đã Hủy') {
-                badge = '<span class="bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">Đã Hủy</span>';
-                actionBtn = '---';
-            }
+                if (p.status === 'Đã Thanh Toán') {
+                    badge = '<span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase"><i class="fas fa-circle-check mr-1"></i> Đã Thanh Toán</span>';
+                    actionBtn = '<span class="text-slate-400 text-xs font-bold"><i class="fas fa-check-circle text-emerald-500"></i> Hoàn Tất</span>';
+                } else if (p.status === 'Đã Hủy') {
+                    badge = '<span class="bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">Đã Hủy</span>';
+                    actionBtn = '---';
+                }
 
-            return `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="p-3">
-                        <p class="font-mono font-black text-slate-800 text-xs">${p.payment_code}</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">${d.toLocaleString('vi-VN')}</p>
-                    </td>
-                    <td class="p-3">
-                        <p class="font-bold text-slate-900 text-xs">${p.supplier_name}</p>
-                        <p class="text-[10px] text-slate-500 mt-0.5 italic line-clamp-1">${p.note || '---'}</p>
-                    </td>
-                    <td class="p-3 text-xs text-slate-600">
-                        <p class="font-semibold">${p.bank_account || '---'}</p>
-                        <p class="text-[10px] text-slate-400">${p.bank_name || ''}</p>
-                    </td>
-                    <td class="p-3 text-right font-black text-rose-700 text-sm">
-                        -${window.modPayment.fmt(p.amount)} đ
-                    </td>
-                    <td class="p-3 text-center text-xs font-bold text-slate-600">${p.payment_method}</td>
-                    <td class="p-3 text-center">${badge}</td>
-                    <td class="p-3 text-center">${actionBtn}</td>
-                </tr>
-            `;
-        }).join('');
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 pl-4">
+                            <p class="font-mono font-black text-slate-800 text-xs">${p.payment_code}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${d.toLocaleString('vi-VN')}</p>
+                        </td>
+                        <td class="p-3">
+                            <p class="font-bold text-slate-900 text-xs">${p.supplier_name}</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 italic line-clamp-1">${p.note || '---'}</p>
+                        </td>
+                        <td class="p-3 text-xs text-slate-600">
+                            <p class="font-semibold">${p.bank_account || '---'}</p>
+                            <p class="text-[10px] text-slate-400">${p.bank_name || ''}</p>
+                        </td>
+                        <td class="p-3 text-right font-black text-rose-700 text-sm">
+                            -${window.modPayment.fmt(p.amount)} đ
+                        </td>
+                        <td class="p-3 text-center text-xs font-bold text-slate-600">${p.payment_method}</td>
+                        <td class="p-3 text-center">${badge}</td>
+                        <td class="p-3 pr-4 text-center">${actionBtn}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        if (mobContainer) {
+            mobContainer.innerHTML = list.map(p => {
+                const d = new Date(p.created_at);
+                let badge = '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">Chờ Duyệt</span>';
+                let actionBtn = `<button onclick="window.modPayment.approvePayment(${p.id}, 'Đã Thanh Toán')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer"><i class="fas fa-check mr-1"></i> Duyệt Chi</button>`;
+
+                if (p.status === 'Đã Thanh Toán') {
+                    badge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">Đã Thanh Toán</span>';
+                    actionBtn = '<span class="text-emerald-600 text-xs font-bold"><i class="fas fa-check-circle"></i> Đã Duyệt</span>';
+                } else if (p.status === 'Đã Hủy') {
+                    badge = '<span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">Đã Hủy</span>';
+                    actionBtn = '---';
+                }
+
+                return `
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-black font-mono text-[10px]">
+                                ${p.payment_code}
+                            </span>
+                            <h4 class="font-black text-slate-900 text-xs truncate">${p.supplier_name}</h4>
+                        </div>
+                        ${badge}
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">TK Thụ Hưởng:</span>
+                            <span class="font-bold text-slate-700 truncate block">${p.bank_account || '---'}</span>
+                            <span class="text-[10px] text-slate-400 block truncate">${p.bank_name || ''}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 block text-[10px]">Số tiền chi:</span>
+                            <b class="text-rose-600 text-xs font-black">-${window.modPayment.fmt(p.amount)} đ</b>
+                            <span class="text-[10px] text-slate-400 block">${p.payment_method}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-[10px]">
+                        <span class="text-slate-400">${d.toLocaleDateString('vi-VN')}</span>
+                        <div>${actionBtn}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
     },
 
     filterPaymentStatus: (status) => {

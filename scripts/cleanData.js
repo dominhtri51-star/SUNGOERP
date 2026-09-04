@@ -190,10 +190,17 @@ async function main() {
     // 4. Dọn dẹp file upload demo
     cleanUploadFiles();
 
-    // 5. Kiểm tra kết quả Local
+    // 5. Khởi tạo lại cấu trúc & đồng bộ nhân sự mặc định
+    try {
+        await require('../config/initDb')();
+    } catch(e) {
+        console.warn("⚠️ Không thể tự động re-init sau khi clean:", e.message);
+    }
+
+    // 6. Kiểm tra kết quả Local
     await verifyDatabase(localPool, "Local PostgreSQL");
 
-    // 6. Đóng kết nối
+    // 7. Đóng kết nối
     await localPool.end();
     await cloudPool.end();
 

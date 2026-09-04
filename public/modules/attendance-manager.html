@@ -1,0 +1,1424 @@
+<div class="min-h-full flex flex-col p-4 sm:p-6 bg-slate-50 pb-12">
+    <!-- TIÊU ĐỀ & NÚT ĐIỀU KHIỂN CHÍNH -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md">
+                    <i class="fas fa-fingerprint text-lg"></i>
+                </span>
+                <div>
+                    <h2 class="text-xl font-black text-slate-800 tracking-tight">Quản Lý Chấm Công, Kỷ Luật & Thưởng Giờ Giấc</h2>
+                    <p class="text-xs text-slate-500 font-medium">Tích hợp Máy Chấm Công Cloud • Lịch Nghỉ Chiều Thứ 7 & Ngày Lễ • Thưởng Đúng Giờ & OT</p>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="window.modAtt.openHolidaysModal()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs transition shadow-xs flex items-center gap-1.5">
+                <i class="fas fa-calendar-star"></i> Lịch Ngày Nghỉ Lễ
+            </button>
+            <button onclick="window.modAtt.openAdjustModal()" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs transition shadow-xs flex items-center gap-1.5">
+                <i class="fas fa-edit"></i> Kế Toán Sửa Giờ
+            </button>
+            <button onclick="window.modAtt.openQuickCheckinModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-xs flex items-center gap-1.5">
+                <i class="fas fa-user-clock"></i> Chấm Công Nhanh
+            </button>
+            <button onclick="window.modAtt.openImportModal()" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs transition shadow-xs flex items-center gap-1.5">
+                <i class="fas fa-file-import"></i> Import Log Vân Tay
+            </button>
+            <button onclick="window.modAtt.openPolicyModal()" class="px-3.5 py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-black text-xs transition flex items-center gap-1.5">
+                <i class="fas fa-sliders-h"></i> Cấu Hình Ca, Thứ 7 & Thưởng Phạt
+            </button>
+            <button onclick="window.modAtt.syncToPayroll()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs transition shadow-md flex items-center gap-1.5">
+                <i class="fas fa-sync-alt"></i> Đồng Bộ Sang Bảng Lương
+            </button>
+        </div>
+    </div>
+
+    <!-- BANNER KẾT NỐI MÁY CHẤM CÔNG CLOUD (YUNATT GLOBAL) -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white shadow-md border border-indigo-800/40 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center text-indigo-400 text-xl shrink-0">
+                <i class="fas fa-cloud-download-alt"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="font-black text-sm text-amber-400">YunAtt Global Cloud Attendance</span>
+                    <span id="att-cloud-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ĐÃ KẾT NỐI
+                    </span>
+                </div>
+                <p class="text-xs text-slate-300 mt-0.5 flex flex-wrap items-center gap-2 font-mono">
+                    <span><i class="fas fa-user-circle text-slate-400"></i> vinhfuc92@gmail.com</span>
+                    <span>•</span>
+                    <span id="att-cloud-devices"><i class="fas fa-microchip text-slate-400"></i> Thiết bị: <b>6300 Pro Wifi</b> (IP: 42.116.172.254)</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2.5 w-full md:w-auto">
+            <select id="att-cloud-month-sel" class="bg-slate-800/90 border border-slate-700 text-amber-300 font-black text-xs rounded-xl px-3 py-2 outline-none">
+                <option value="2026-08">Kỳ 2026-08</option>
+                <option value="2026-07">Kỳ 2026-07</option>
+                <option value="2026-06">Kỳ 2026-06</option>
+            </select>
+            <button id="btn-cloud-sync" onclick="window.modAtt.triggerCloudSync()" class="flex-1 md:flex-none px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-2">
+                <i class="fas fa-bolt text-amber-400"></i> Đồng Bộ Trực Tiếp Từ Máy Chấm Công
+            </button>
+        </div>
+    </div>
+
+    <!-- 4 THẺ CHỈ SỐ KPI CHẤM CÔNG THÁNG -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tổng Ngày Công Đã Đồng Bộ</p>
+                <h3 id="att-stat-total-days" class="text-xl font-black text-blue-700 mt-1">0 / 26 ngày</h3>
+                <p id="att-stat-total-emps" class="text-[10px] text-slate-400 font-medium mt-0.5">0 nhân sự có dữ liệu</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Tổng Thưởng (Đúng Giờ, C.Cần & OT)</p>
+                <h3 id="att-stat-bonus-amount" class="text-xl font-black text-emerald-600 mt-1">+0 đ</h3>
+                <p id="att-stat-bonus-emps" class="text-[10px] text-emerald-700 font-bold mt-0.5">0 lượt nhân sự nhận thưởng</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                <i class="fas fa-award"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Tổng Giờ Làm Thêm (OT)</p>
+                <h3 id="att-stat-ot-hours" class="text-xl font-black text-purple-600 mt-1">0 giờ</h3>
+                <p id="att-stat-ot-amount" class="text-[10px] text-purple-700 font-medium mt-0.5">Tiền OT: +0 đ</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+                <i class="fas fa-business-time"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-rose-700 uppercase tracking-wider">Tổng Phạt Kỷ Luật Giờ Giấc</p>
+                <h3 id="att-stat-penalty-amount" class="text-xl font-black text-rose-600 mt-1">-0 đ</h3>
+                <p id="att-stat-late-count" class="text-[10px] text-rose-500 font-medium mt-0.5">0 lượt vi phạm trễ / sớm</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS ĐIỀU HƯỚNG -->
+    <div class="flex items-center gap-2 border-b border-slate-200 mb-4">
+        <button id="tab-btn-monthly" onclick="window.modAtt.switchTab('monthly')" class="px-4 py-2.5 text-xs font-black border-b-2 border-blue-600 text-blue-700 flex items-center gap-1.5">
+            <i class="fas fa-calendar-alt"></i> Tổng Hợp Công Tháng, Thưởng & Tiền OT
+        </button>
+        <button id="tab-btn-daily" onclick="window.modAtt.switchTab('daily')" class="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center gap-1.5">
+            <i class="fas fa-calendar-day"></i> Bảng Chấm Công Chi Tiết Từng Ngày
+        </button>
+    </div>
+
+    <!-- TAB 1: TỔNG HỢP CÔNG THÁNG & THƯỞNG PHẠT -->
+    <div id="tab-content-monthly" class="flex-1 flex flex-col bg-white rounded-2xl shadow-xs border border-slate-200">
+        <!-- Bộ lọc tháng -->
+        <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-bold text-slate-500">Kỳ Chấm Công:</span>
+                <input type="month" id="att-filter-period" onchange="window.modAtt.loadMonthly()" class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-black text-slate-800 outline-none focus:border-blue-500">
+                <button onclick="window.modAtt.loadMonthly()" class="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-xl font-bold">
+                    <i class="fas fa-check-circle"></i> Đúng giờ: 0 lần trễ/sớm
+                </span>
+                <span class="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-xl font-bold">
+                    <i class="fas fa-award"></i> Chuyên cần: $\ge 26$ công, 0 trễ
+                </span>
+                <span class="text-xs text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-xl font-bold">
+                    <i class="fas fa-business-time"></i> OT: Sau giờ ca $\times 1.5$
+                </span>
+                <span class="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-xl font-bold">
+                    <i class="fas fa-calendar-day"></i> Thứ 7: Sáng 08:30 - 12:00 (Nghỉ chiều)
+                </span>
+            </div>
+        </div>
+
+        <!-- Bảng Monthly Summary -->
+        <div class="flex-1 overflow-x-auto overflow-y-auto">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-slate-100/80 text-slate-600 text-[11px] uppercase font-black tracking-wider border-b border-slate-200 sticky top-0 z-10">
+                    <tr>
+                        <th class="p-3.5 pl-4">Mã NV</th>
+                        <th class="p-3.5">Họ Và Tên</th>
+                        <th class="p-3.5">Phòng Ban / Vị Trí</th>
+                        <th class="p-3.5 text-center">Công Thực Tế</th>
+                        <th class="p-3.5 text-center">Giờ Làm Thêm (OT)</th>
+                        <th class="p-3.5 text-center">Trễ / Sớm</th>
+                        <th class="p-3.5 text-right">Thưởng Đúng Giờ</th>
+                        <th class="p-3.5 text-right">Thưởng Chuyên Cần</th>
+                        <th class="p-3.5 text-right">Tiền Thêm Giờ (OT)</th>
+                        <th class="p-3.5 text-right">Tổng Thưởng</th>
+                        <th class="p-3.5 text-right">Phạt Kỷ Luật</th>
+                        <th class="p-3.5 text-center pr-4">Đánh Giá</th>
+                    </tr>
+                </thead>
+                <tbody id="att-monthly-tbody" class="divide-y divide-slate-100 text-xs">
+                    <tr>
+                        <td colspan="12" class="p-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Đang nạp bảng tổng hợp công tháng...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB 2: BẢNG CHẤM CÔNG HÀNG NGÀY -->
+    <div id="tab-content-daily" class="hidden flex-1 flex flex-col bg-white rounded-2xl shadow-xs border border-slate-200">
+        <!-- Bộ lọc ngày -->
+        <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5">
+                    <span class="text-[11px] font-bold text-slate-400">Từ:</span>
+                    <input type="date" id="att-filter-from" onchange="window.modAtt.loadDaily()" class="text-xs font-bold text-slate-700 outline-none">
+                </div>
+                <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5">
+                    <span class="text-[11px] font-bold text-slate-400">Đến:</span>
+                    <input type="date" id="att-filter-to" onchange="window.modAtt.loadDaily()" class="text-xs font-bold text-slate-700 outline-none">
+                </div>
+                <select id="att-filter-status" onchange="window.modAtt.applyDailyFilter()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-500">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="ON_TIME">Đúng giờ</option>
+                    <option value="LATE">Đi trễ</option>
+                    <option value="EARLY_OUT">Về sớm</option>
+                    <option value="ADJUSTED">Đã kế toán sửa/duyệt</option>
+                    <option value="HOLIDAY">Nghỉ Lễ</option>
+                    <option value="HOLIDAY_WORK">Đi làm ngày Lễ</option>
+                    <option value="SUNDAY_WORK">Làm thêm Chủ Nhật</option>
+                    <option value="WEEKEND">Nghỉ cuối tuần</option>
+                    <option value="ABSENT">Vắng mặt / Không quét</option>
+                </select>
+                <input type="text" id="att-filter-search" oninput="window.modAtt.applyDailyFilter()" placeholder="Tìm tên, mã nhân viên..." class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium outline-none w-48 focus:border-blue-500">
+            </div>
+            <div class="text-xs font-bold text-slate-500" id="att-shift-info-label">
+                T2 - T6: <b class="text-slate-800">08:30 - 17:00</b> (Chuẩn 7.5h) • Thứ 7: <b class="text-indigo-700">08:30 - 12:00</b> (Nghỉ chiều)
+            </div>
+        </div>
+
+        <!-- Bảng Daily -->
+        <div class="flex-1 overflow-x-auto overflow-y-auto">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-slate-100/80 text-slate-600 text-[11px] uppercase font-black tracking-wider border-b border-slate-200 sticky top-0 z-10">
+                    <tr>
+                        <th class="p-3.5 pl-4">Ngày</th>
+                        <th class="p-3.5">Mã NV</th>
+                        <th class="p-3.5">Họ Và Tên</th>
+                        <th class="p-3.5 text-center">Giờ Vào (Check-In)</th>
+                        <th class="p-3.5 text-center">Giờ Ra (Check-Out)</th>
+                        <th class="p-3.5 text-center">Giờ Làm</th>
+                        <th class="p-3.5 text-center">Làm Thêm (OT)</th>
+                        <th class="p-3.5 text-center">Đi Trễ / Về Sớm</th>
+                        <th class="p-3.5 text-center">Công Tính</th>
+                        <th class="p-3.5 text-center">Trạng Thái</th>
+                        <th class="p-3.5 text-right">Phạt Kỷ Luật</th>
+                        <th class="p-3.5 text-center pr-4">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="att-daily-tbody" class="divide-y divide-slate-100 text-xs">
+                    <tr>
+                        <td colspan="12" class="p-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Đang nạp dữ liệu chấm công hàng ngày...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: QUẢN LÝ NGÀY NGHỈ LỄ (PUBLIC HOLIDAYS) -->
+<div id="att-holidays-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-100">
+        <div class="bg-gradient-to-r from-amber-600 to-orange-600 p-5 text-white flex items-center justify-between sticky top-0 z-10">
+            <div>
+                <h3 class="font-black text-sm uppercase tracking-wide flex items-center gap-2">
+                    <i class="fas fa-calendar-star"></i> Danh Sách Ngày Nghỉ Lễ Trong Năm
+                </h3>
+                <p class="text-[11px] text-amber-100 mt-0.5">Nghỉ hưởng 100% lương • Đi làm ngày lễ tính OT $\times 3.0$</p>
+            </div>
+            <button onclick="window.modAtt.closeModal('att-holidays-modal')" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        <div class="p-5 space-y-4">
+            <!-- Form Thêm Ngày Nghỉ Lễ Mới -->
+            <div class="bg-amber-50/70 p-4 rounded-2xl border border-amber-200">
+                <h4 class="text-xs font-black uppercase text-amber-900 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-plus-circle"></i> Thêm Ngày Nghỉ Lễ Mới
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">Ngày Nghỉ Lễ <span class="text-red-500">*</span></label>
+                        <input type="date" id="new-hol-date" class="w-full border border-amber-300 rounded-xl p-2 text-xs font-bold text-slate-800 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">Tên Ngày Nghỉ Lễ <span class="text-red-500">*</span></label>
+                        <input type="text" id="new-hol-name" placeholder="VD: Quốc Khánh 2/9" class="w-full border border-amber-300 rounded-xl p-2 text-xs font-bold text-slate-800 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">Hệ Số OT Nếu Đi Làm</label>
+                        <input type="number" step="0.5" id="new-hol-ot" value="3.0" class="w-full border border-amber-300 rounded-xl p-2 text-xs font-black text-amber-700 bg-white">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between mt-3">
+                    <label class="flex items-center gap-2 text-xs font-bold text-amber-900 cursor-pointer">
+                        <input type="checkbox" id="new-hol-paid" checked class="w-4 h-4 rounded text-amber-600">
+                        Nghỉ hưởng nguyên 100% lương (Tính 1.0 ngày công)
+                    </label>
+                    <button onclick="window.modAtt.submitNewHoliday()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition shadow-xs flex items-center gap-1.5">
+                        <i class="fas fa-save"></i> Thêm Ngày Lễ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bảng danh sách Ngày Nghỉ Lễ -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left whitespace-nowrap">
+                    <thead class="bg-slate-100 text-slate-600 text-[10px] uppercase font-black border-b border-slate-200">
+                        <tr>
+                            <th class="p-3 pl-4">Ngày Nghỉ Lễ</th>
+                            <th class="p-3">Tên Ngày Lễ</th>
+                            <th class="p-3 text-center">Hưởng Lương</th>
+                            <th class="p-3 text-center">Hệ Số OT</th>
+                            <th class="p-3 text-center pr-4">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="att-holidays-tbody" class="divide-y divide-slate-100 text-xs font-medium">
+                        <tr><td colspan="5" class="p-6 text-center text-slate-400">Đang tải danh sách ngày lễ...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: ĐIỀU CHỈNH CHẤM CÔNG THỦ CÔNG (KẾ TOÁN / ADMIN) -->
+<div id="att-adjust-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100">
+        <div class="bg-gradient-to-r from-purple-700 to-indigo-700 p-5 text-white flex items-center justify-between">
+            <div>
+                <h3 class="font-black text-sm uppercase tracking-wide flex items-center gap-2">
+                    <i class="fas fa-edit"></i> Kế Toán Điều Chỉnh / Bổ Sung Giờ Công
+                </h3>
+                <p class="text-[11px] text-purple-200 mt-0.5">Xử lý quên quét vân tay, máy lỗi, đi công tác, duyệt giờ công</p>
+            </div>
+            <button onclick="window.modAtt.closeModal('att-adjust-modal')" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        <div class="p-5 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nhân Viên <span class="text-red-500">*</span></label>
+                    <select id="adj-emp-id" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 focus:border-purple-500 outline-none">
+                        <option value="">-- Chọn nhân viên --</option>
+                    </select>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Ngày Làm Việc <span class="text-red-500">*</span></label>
+                    <input type="date" id="adj-work-date" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-black text-slate-800 focus:border-purple-500 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100">
+                <div>
+                    <label class="block text-[10px] font-bold text-purple-900 uppercase mb-1">Giờ Vào Thực Tế (Check-In)</label>
+                    <input type="datetime-local" id="adj-checkin-time" class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-black text-slate-800 focus:border-purple-500 outline-none bg-white">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-purple-900 uppercase mb-1">Giờ Ra Thực Tế (Check-Out)</label>
+                    <input type="datetime-local" id="adj-checkout-time" class="w-full border border-purple-200 rounded-xl p-2.5 text-xs font-black text-slate-800 focus:border-purple-500 outline-none bg-white">
+                </div>
+                <div class="col-span-2 flex flex-wrap gap-1.5 pt-1">
+                    <span class="text-[10px] font-bold text-slate-400 self-center">Chọn nhanh:</span>
+                    <button type="button" onclick="window.modAtt.fillQuickShift('WEEKDAY')" class="px-2 py-1 bg-white border border-purple-300 hover:bg-purple-100 text-purple-700 rounded-lg text-[10px] font-black">
+                        ⚡ Ca chuẩn T2-T6 (08:30 - 17:00)
+                    </button>
+                    <button type="button" onclick="window.modAtt.fillQuickShift('SATURDAY')" class="px-2 py-1 bg-white border border-indigo-300 hover:bg-indigo-100 text-indigo-700 rounded-lg text-[10px] font-black">
+                        ⚡ Ca sáng Thứ 7 (08:30 - 12:00)
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Lý Do Điều Chỉnh / Xác Nhận <span class="text-red-500">*</span></label>
+                <div class="flex flex-wrap gap-1.5 mb-2">
+                    <button type="button" onclick="document.getElementById('adj-reason').value = 'Quên quét vân tay'" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold">
+                        Quên quét vân tay
+                    </button>
+                    <button type="button" onclick="document.getElementById('adj-reason').value = 'Máy chấm công lỗi/mất điện'" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold">
+                        Máy lỗi/mất điện
+                    </button>
+                    <button type="button" onclick="document.getElementById('adj-reason').value = 'Đi công tác / Gặp khách hàng'" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold">
+                        Đi gặp khách hàng
+                    </button>
+                    <button type="button" onclick="document.getElementById('adj-reason').value = 'Trực luân phiên chiều Thứ 7'" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold">
+                        Trực chiều Thứ 7
+                    </button>
+                </div>
+                <input type="text" id="adj-reason" placeholder="Nhập lý do cụ thể..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 focus:border-purple-500 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Kế Toán / Người Xác Nhận</label>
+                <input type="text" id="adj-by" value="Kế toán viên" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 focus:border-purple-500 outline-none">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button onclick="window.modAtt.closeModal('att-adjust-modal')" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs">Hủy</button>
+                <button onclick="window.modAtt.submitAdjust()" class="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs transition shadow-md flex items-center gap-1.5">
+                    <i class="fas fa-check-circle"></i> Lưu & Tự Động Tính Lại
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: CHẤM CÔNG NHANH (ONLINE CHECK-IN) -->
+<div id="att-quick-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white flex items-center justify-between">
+            <h3 class="font-black text-sm uppercase tracking-wide flex items-center gap-2">
+                <i class="fas fa-fingerprint"></i> Chấm Công Nhanh
+            </h3>
+            <button onclick="window.modAtt.closeModal('att-quick-modal')" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        <div class="p-5 space-y-4">
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Chọn Nhân Viên Chấm Công <span class="text-red-500">*</span></label>
+                <select id="quick-emp-id" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:border-emerald-500 outline-none">
+                    <option value="">-- Chọn nhân viên --</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Thời Gian Quét</label>
+                <input type="datetime-local" id="quick-scan-time" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 focus:border-emerald-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Loại Quét</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="window.modAtt.submitQuickCheckin('CHECK_IN')" class="py-3 rounded-xl bg-emerald-50 border-2 border-emerald-500 text-emerald-700 font-black text-xs hover:bg-emerald-100 flex items-center justify-center gap-1.5">
+                        <i class="fas fa-sign-in-alt"></i> Quét Vào (Check-In)
+                    </button>
+                    <button type="button" onclick="window.modAtt.submitQuickCheckin('CHECK_OUT')" class="py-3 rounded-xl bg-blue-50 border-2 border-blue-500 text-blue-700 font-black text-xs hover:bg-blue-100 flex items-center justify-center gap-1.5">
+                        <i class="fas fa-sign-out-alt"></i> Quét Ra (Check-Out)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: IMPORT FILE MÁY CHẤM CÔNG (EXCEL / CSV / LOGS) -->
+<div id="att-import-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-100">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 text-white flex items-center justify-between">
+            <h3 class="font-black text-sm uppercase tracking-wide flex items-center gap-2">
+                <i class="fas fa-file-import"></i> Import Dữ Liệu Máy Chấm Công
+            </h3>
+            <button onclick="window.modAtt.closeModal('att-import-modal')" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        <div class="p-5 space-y-4">
+            <div class="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100 text-xs text-blue-900">
+                <p class="font-bold mb-1"><i class="fas fa-info-circle"></i> Hỗ trợ mọi định dạng máy chấm công phổ biến:</p>
+                <p class="text-[11px] text-slate-600">ZKTeco, Ronald Jack, Hikvision, Wise Eye... Dán danh sách nhật ký quét vân tay hoặc nhập log.</p>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Dán Nhật Ký Quét Vân Tay (Mã NV [Tab/Phẩy] Ngày Giờ)</label>
+                <textarea id="import-raw-text" rows="6" placeholder="Ví dụ:&#10;NV04, 2026-08-27 08:06:00&#10;NV04, 2026-08-27 17:15:00&#10;VP05, 2026-08-27 08:30:00" class="w-full border border-slate-200 rounded-xl p-3 font-mono text-xs focus:border-blue-500 outline-none"></textarea>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button onclick="window.modAtt.closeModal('att-import-modal')" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs">Hủy</button>
+                <button onclick="window.modAtt.submitImport()" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs transition shadow-md">
+                    Phân Tích & Tính Công
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: CẤU HÌNH CHÍNH SÁCH CA, THỨ BẢY NGHỈ CHIỀU & THƯỞNG PHẠT -->
+<div id="att-policy-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-100">
+        <div class="bg-gradient-to-r from-indigo-700 to-purple-700 p-5 text-white flex items-center justify-between sticky top-0 z-10">
+            <h3 class="font-black text-sm uppercase tracking-wide flex items-center gap-2">
+                <i class="fas fa-sliders-h"></i> Cấu Hình Quy Chuẩn Ca, Lịch Thứ Bảy Nghỉ Chiều & Thưởng Phạt
+            </h3>
+            <button onclick="window.modAtt.closeModal('att-policy-modal')" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        <div class="p-5 space-y-4">
+            <!-- 1. Ca làm việc ngày thường (T2 - T6) -->
+            <div>
+                <h4 class="text-xs font-black uppercase tracking-wider text-indigo-700 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-clock"></i> 1. Ca Làm Việc Ngày Thường (Thứ 2 - Thứ 6)
+                </h4>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Giờ Vào Làm (Sáng)</label>
+                        <input type="text" id="pol-start" placeholder="08:30" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-black text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Giờ Tan Làm (Chiều)</label>
+                        <input type="text" id="pol-end" placeholder="17:00" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-black text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nghỉ Trưa Từ</label>
+                        <input type="text" id="pol-lunch-start" placeholder="12:00" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-black text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nghỉ Trưa Đến</label>
+                        <input type="text" id="pol-lunch-end" placeholder="13:00" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-black text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Giờ Làm Chuẩn/Ngày</label>
+                        <input type="number" step="0.5" id="pol-daily-hours" placeholder="7.5" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-black text-blue-700">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Ân Hạn (Phút)</label>
+                        <input type="number" id="pol-grace" placeholder="5" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-black text-indigo-700">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Số lần trễ nhẹ miễn phạt / tháng</label>
+                        <input type="number" id="pol-free-late" placeholder="3" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-black text-emerald-700">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Quy chế Thứ Bảy & Luân phiên nghỉ chiều -->
+            <div class="pt-3 border-t border-slate-100 bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200">
+                <h4 class="text-xs font-black uppercase tracking-wider text-amber-900 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-calendar-day"></i> 2. Quy Chế Làm Việc Thứ Bảy & Luân Phiên Nghỉ Chiều
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                    <div class="sm:col-span-3">
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">Chế Độ Làm Việc Thứ Bảy</label>
+                        <select id="pol-sat-mode" class="w-full border border-amber-300 rounded-xl p-2 text-xs font-bold text-amber-900 bg-white">
+                            <option value="OFF_AFTERNOON">⚡ Nghỉ Buổi Chiều Thứ Bảy (Sáng 08:30 - 12:00 tính đủ 1.0 công)</option>
+                            <option value="ALTERNATE_SAT">🔄 Nghỉ Thứ Bảy Luân Phiên / Cách Tuần</option>
+                            <option value="OFF_ALL_DAY">🌴 Nghỉ Cả Ngày Thứ Bảy (Chỉ làm T2 - T6)</option>
+                            <option value="FULL_DAY">💼 Làm Cả Ngày Thứ Bảy như ngày thường</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">Giờ Vào Sáng T7</label>
+                        <input type="text" id="pol-sat-start" placeholder="08:30" class="w-full border border-amber-300 rounded-xl p-2 text-xs font-black text-slate-800 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">Giờ Tan Sáng T7</label>
+                        <input type="text" id="pol-sat-end" placeholder="12:00" class="w-full border border-amber-300 rounded-xl p-2 text-xs font-black text-slate-800 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">Công Tính Sáng T7</label>
+                        <input type="number" step="0.5" id="pol-sat-dayval" placeholder="1.0" class="w-full border border-amber-300 rounded-xl p-2 text-xs font-black text-amber-800 bg-white">
+                        <span class="text-[9px] text-slate-500">1.0 = Đủ 1 ngày công trọn vẹn</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-amber-200/60">
+                    <div>
+                        <label class="block text-[9px] font-bold text-amber-800 uppercase mb-1">OT Chiều T7 (x Lương)</label>
+                        <input type="number" step="0.1" id="pol-sat-ot-rate" placeholder="1.5" class="w-full border border-amber-300 rounded-xl p-1.5 text-xs font-bold bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-amber-800 uppercase mb-1">OT Chủ Nhật (x Lương)</label>
+                        <input type="number" step="0.1" id="pol-sun-ot-rate" placeholder="2.0" class="w-full border border-amber-300 rounded-xl p-1.5 text-xs font-bold bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-amber-800 uppercase mb-1">OT Ngày Nghỉ Lễ (x Lương)</label>
+                        <input type="number" step="0.1" id="pol-hol-ot-rate" placeholder="3.0" class="w-full border border-amber-300 rounded-xl p-1.5 text-xs font-bold bg-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Kịch bản Thưởng Đúng Giờ & Chuyên cần -->
+            <div class="pt-3 border-t border-slate-100 bg-emerald-50/50 p-3.5 rounded-2xl border border-emerald-100">
+                <h4 class="text-xs font-black uppercase tracking-wider text-emerald-800 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-award"></i> 3. Kịch Bản Thưởng Đúng Giờ Tuyệt Đối & Thưởng Chuyên Cần
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-emerald-900 uppercase mb-1">Thưởng Đúng Giờ Tuyệt Đối (VNĐ)</label>
+                        <input type="number" id="pol-bonus-punctual" placeholder="300000" class="w-full border border-emerald-300 rounded-xl p-2 text-xs font-black text-emerald-800 bg-white">
+                        <span class="text-[9px] text-slate-500">Có đi làm trong tháng, 0 trễ và 0 về sớm bất kỳ ngày nào</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-emerald-900 uppercase mb-1">Thưởng Chuyên Cần Tháng (VNĐ)</label>
+                        <input type="number" id="pol-bonus-att" placeholder="500000" class="w-full border border-emerald-300 rounded-xl p-2 text-xs font-black text-emerald-800 bg-white">
+                        <span class="text-[9px] text-slate-500">Đủ $\ge 26$ công, không trễ lần nào, không nghỉ không phép</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Kịch bản Thưởng Làm Thêm Giờ (OT) -->
+            <div class="pt-3 border-t border-slate-100 bg-blue-50/50 p-3.5 rounded-2xl border border-blue-100">
+                <h4 class="text-xs font-black uppercase tracking-wider text-blue-800 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-business-time"></i> 4. Kịch Bản Thưởng Làm Thêm Giờ (OT / Ngoài Giờ)
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-blue-900 uppercase mb-1">Hệ Số Làm Thêm Ngày Thường</label>
+                        <input type="number" step="0.1" id="pol-ot-rate" placeholder="1.5" class="w-full border border-blue-200 rounded-xl p-2 text-xs font-black text-blue-700 bg-white">
+                        <span class="text-[9px] text-slate-500">Mặc định 1.5 (150% lương giờ)</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-blue-900 uppercase mb-1">Thời Gian Tối Thiểu Tính OT (Phút)</label>
+                        <input type="number" id="pol-ot-min" placeholder="0" class="w-full border border-blue-200 rounded-xl p-2 text-xs font-black text-blue-700 bg-white">
+                        <span class="text-[9px] text-slate-500">0 = Tính đủ mọi phút vượt ca chuẩn</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-blue-900 uppercase mb-1">Đơn Giá Khoán OT (VNĐ/giờ)</label>
+                        <input type="number" id="pol-ot-fixed" placeholder="0" class="w-full border border-blue-200 rounded-xl p-2 text-xs font-black text-blue-700 bg-white">
+                        <span class="text-[9px] text-slate-500">0 = Tự động tính theo Lương CB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Kịch bản Phạt Đi Trễ -->
+            <div class="pt-3 border-t border-slate-100 bg-rose-50/50 p-3.5 rounded-2xl border border-rose-100">
+                <h4 class="text-xs font-black uppercase tracking-wider text-rose-800 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-user-clock"></i> 5. Bậc Thang Phạt Đi Trễ (VNĐ / lần)
+                </h4>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-rose-900 uppercase mb-1">Trễ 5 - 15p</label>
+                        <input type="number" id="pol-pen-t1" placeholder="20000" class="w-full border border-rose-200 rounded-xl p-2 text-xs font-black text-rose-700 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-rose-900 uppercase mb-1">Trễ 15 - 30p</label>
+                        <input type="number" id="pol-pen-t2" placeholder="50000" class="w-full border border-rose-200 rounded-xl p-2 text-xs font-black text-rose-700 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-rose-900 uppercase mb-1">Trễ 30 - 60p</label>
+                        <input type="number" id="pol-pen-t3" placeholder="100000" class="w-full border border-rose-200 rounded-xl p-2 text-xs font-black text-rose-700 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-rose-900 uppercase mb-1">Trễ > 60p</label>
+                        <input type="number" id="pol-pen-t4" placeholder="200000" class="w-full border border-rose-200 rounded-xl p-2 text-xs font-black text-rose-700 bg-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Kịch bản Phạt Về Sớm -->
+            <div class="pt-3 border-t border-slate-100 bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100">
+                <h4 class="text-xs font-black uppercase tracking-wider text-purple-800 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-door-open"></i> 6. Bậc Thang Phạt Về Sớm (VNĐ / lần)
+                </h4>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-purple-900 uppercase mb-1">Sớm 5 - 15p</label>
+                        <input type="number" id="pol-pen-early-1" placeholder="20000" class="w-full border border-purple-200 rounded-xl p-2 text-xs font-black text-purple-700 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-purple-900 uppercase mb-1">Sớm 15 - 30p</label>
+                        <input type="number" id="pol-pen-early-2" placeholder="50000" class="w-full border border-purple-200 rounded-xl p-2 text-xs font-black text-purple-700 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-purple-900 uppercase mb-1">Sớm 30 - 60p</label>
+                        <input type="number" id="pol-pen-early-3" placeholder="100000" class="w-full border border-purple-200 rounded-xl p-2 text-xs font-black text-purple-700 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-purple-900 uppercase mb-1">Sớm > 60p</label>
+                        <input type="number" id="pol-pen-early-4" placeholder="200000" class="w-full border border-purple-200 rounded-xl p-2 text-xs font-black text-purple-700 bg-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Phạt tích lũy & Không phép -->
+            <div class="pt-3 border-t border-slate-100 bg-amber-50/50 p-3.5 rounded-2xl border border-amber-100">
+                <h4 class="text-xs font-black uppercase tracking-wider text-amber-800 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-exclamation-triangle"></i> 7. Phạt Tích Lũy & Nghỉ Không Phép
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">Phạt Tích Lũy Trễ >= 5 lần/tháng</label>
+                        <input type="number" id="pol-pen-acc" placeholder="200000" class="w-full border border-amber-200 rounded-xl p-2 text-xs font-black text-amber-700 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1">Phạt Nghỉ Không Phép (VNĐ/ngày)</label>
+                        <input type="number" id="pol-pen-unauth" placeholder="200000" class="w-full border border-amber-200 rounded-xl p-2 text-xs font-black text-amber-700 bg-white">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button onclick="window.modAtt.closeModal('att-policy-modal')" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs">Hủy</button>
+                <button onclick="window.modAtt.savePolicy()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+                    Lưu Toàn Bộ Chính Sách
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.modAtt = {
+    activeTab: 'monthly',
+    employees: [],
+    dailyRecords: [],
+    monthlyRecords: [],
+    holidays: [],
+    policy: null,
+    cloudMonths: [],
+
+    load: async () => {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+
+        if (!document.getElementById('att-filter-period').value) {
+            document.getElementById('att-filter-period').value = `${yyyy}-${mm}`;
+        }
+        if (!document.getElementById('att-filter-from').value) {
+            document.getElementById('att-filter-from').value = `${yyyy}-${mm}-01`;
+        }
+        if (!document.getElementById('att-filter-to').value) {
+            document.getElementById('att-filter-to').value = `${yyyy}-${mm}-${dd}`;
+        }
+
+        await window.modAtt.loadCloudStatus();
+        await window.modAtt.loadEmployees();
+        await window.modAtt.loadPolicy();
+        await window.modAtt.loadMonthly();
+        await window.modAtt.loadDaily();
+    },
+
+    loadCloudStatus: async () => {
+        try {
+            const res = await fetch('/api/attendance/yunatt/status');
+            const data = await res.json();
+            if (data.success) {
+                window.modAtt.cloudMonths = data.months || [];
+                const monthSel = document.getElementById('att-cloud-month-sel');
+                if (data.months && data.months.length > 0) {
+                    monthSel.innerHTML = data.months.map(m => `<option value="${m.period_key}">${m.period_key}</option>`).join('');
+                }
+
+                if (data.devices && data.devices.length > 0) {
+                    const devStr = data.devices.map(d => `<b>${d.model}</b> (${d.ip})`).join(' • ');
+                    document.getElementById('att-cloud-devices').innerHTML = `<i class="fas fa-microchip text-slate-400"></i> Máy: ${devStr}`;
+                }
+            }
+        } catch(e){}
+    },
+
+    triggerCloudSync: async () => {
+        const selMonth = document.getElementById('att-cloud-month-sel').value || '2026-08';
+        const btn = document.getElementById('btn-cloud-sync');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin text-amber-400"></i> Đang tải dữ liệu từ máy chấm công...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/attendance/yunatt/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ period_key: selMonth })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                document.getElementById('att-filter-period').value = selMonth;
+                await window.modAtt.loadMonthly();
+                await window.modAtt.loadDaily();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch(err) {
+            alert('Lỗi kết nối: ' + err.message);
+        } finally {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    },
+
+    loadEmployees: async () => {
+        try {
+            const res = await fetch('/api/hr/employees');
+            const data = await res.json();
+            if (data.success) {
+                window.modAtt.employees = data.data;
+                const quickSel = document.getElementById('quick-emp-id');
+                const adjSel = document.getElementById('adj-emp-id');
+                let opt = '<option value="">-- Chọn nhân viên --</option>';
+                data.data.forEach(e => {
+                    opt += `<option value="${e.id}">${e.full_name} (${e.emp_code})</option>`;
+                });
+                if (quickSel) quickSel.innerHTML = opt;
+                if (adjSel) adjSel.innerHTML = opt;
+            }
+        } catch(e) {}
+    },
+
+    loadPolicy: async () => {
+        try {
+            const res = await fetch('/api/attendance/policies');
+            const data = await res.json();
+            if (data.success && data.data) {
+                window.modAtt.policy = data.data;
+                const p = data.data;
+                document.getElementById('pol-start').value = p.work_start_time || '08:30';
+                document.getElementById('pol-end').value = p.work_end_time || '17:00';
+                document.getElementById('pol-lunch-start').value = p.lunch_start_time || '12:00';
+                document.getElementById('pol-lunch-end').value = p.lunch_end_time || '13:00';
+                document.getElementById('pol-daily-hours').value = p.standard_daily_hours || 7.5;
+                document.getElementById('pol-grace').value = p.grace_period_minutes || 5;
+                document.getElementById('pol-free-late').value = p.free_late_count || 3;
+
+                // Thứ Bảy & Nghỉ Lễ
+                document.getElementById('pol-sat-mode').value = p.saturday_work_mode || 'OFF_AFTERNOON';
+                document.getElementById('pol-sat-start').value = p.saturday_start_time || '08:30';
+                document.getElementById('pol-sat-end').value = p.saturday_end_time || '12:00';
+                document.getElementById('pol-sat-dayval').value = p.saturday_day_value !== undefined ? p.saturday_day_value : 1.0;
+                document.getElementById('pol-sat-ot-rate').value = p.saturday_ot_rate || 1.5;
+                document.getElementById('pol-sun-ot-rate').value = p.sunday_ot_rate || 2.0;
+                document.getElementById('pol-hol-ot-rate').value = p.holiday_ot_rate || 3.0;
+
+                // Thưởng & OT
+                document.getElementById('pol-bonus-punctual').value = p.bonus_perfect_punctuality || 300000;
+                document.getElementById('pol-bonus-att').value = p.bonus_attendance_amount || 500000;
+                document.getElementById('pol-ot-rate').value = p.ot_rate_multiplier || 1.5;
+                document.getElementById('pol-ot-min').value = p.ot_min_minutes !== undefined && p.ot_min_minutes !== null ? p.ot_min_minutes : 0;
+                document.getElementById('pol-ot-fixed').value = p.ot_fixed_rate_per_hour || 0;
+
+                // Phạt
+                document.getElementById('pol-pen-t1').value = p.penalty_late_tier1 || 20000;
+                document.getElementById('pol-pen-t2').value = p.penalty_late_tier2 || 50000;
+                document.getElementById('pol-pen-t3').value = p.penalty_late_tier3 || 100000;
+                document.getElementById('pol-pen-t4').value = p.penalty_late_tier4 || 200000;
+                document.getElementById('pol-pen-early-1').value = p.penalty_early_tier1 || 20000;
+                document.getElementById('pol-pen-early-2').value = p.penalty_early_tier2 || 50000;
+                document.getElementById('pol-pen-early-3').value = p.penalty_early_tier3 || 100000;
+                document.getElementById('pol-pen-early-4').value = p.penalty_early_tier4 || 200000;
+                document.getElementById('pol-pen-acc').value = p.penalty_accumulated_late_5 || 200000;
+                document.getElementById('pol-pen-unauth').value = p.penalty_unauthorized_absent || 200000;
+
+                const lbl = document.getElementById('att-shift-info-label');
+                if (lbl) {
+                    lbl.innerHTML = `T2-T6: <b class="text-slate-800">${p.work_start_time || '08:30'} - ${p.work_end_time || '17:00'}</b> (${p.standard_daily_hours || 7.5}h) • Thứ 7: <b class="text-indigo-700">${p.saturday_start_time || '08:30'} - ${p.saturday_end_time || '12:00'}</b> (Nghỉ chiều)`;
+                }
+            }
+        } catch(e){}
+    },
+
+    savePolicy: async () => {
+        const payload = {
+            work_start_time: document.getElementById('pol-start').value.trim(),
+            work_end_time: document.getElementById('pol-end').value.trim(),
+            lunch_start_time: document.getElementById('pol-lunch-start').value.trim(),
+            lunch_end_time: document.getElementById('pol-lunch-end').value.trim(),
+            standard_daily_hours: parseFloat(document.getElementById('pol-daily-hours').value) || 7.5,
+            grace_period_minutes: parseInt(document.getElementById('pol-grace').value, 10) || 5,
+            free_late_count: parseInt(document.getElementById('pol-free-late').value, 10) || 3,
+
+            saturday_work_mode: document.getElementById('pol-sat-mode').value,
+            saturday_start_time: document.getElementById('pol-sat-start').value.trim(),
+            saturday_end_time: document.getElementById('pol-sat-end').value.trim(),
+            saturday_standard_hours: 3.5,
+            saturday_day_value: parseFloat(document.getElementById('pol-sat-dayval').value) || 1.0,
+            saturday_ot_rate: parseFloat(document.getElementById('pol-sat-ot-rate').value) || 1.5,
+            sunday_ot_rate: parseFloat(document.getElementById('pol-sun-ot-rate').value) || 2.0,
+            holiday_ot_rate: parseFloat(document.getElementById('pol-hol-ot-rate').value) || 3.0,
+
+            bonus_perfect_punctuality: parseFloat(document.getElementById('pol-bonus-punctual').value) || 0,
+            bonus_attendance_amount: parseFloat(document.getElementById('pol-bonus-att').value) || 0,
+            ot_rate_multiplier: parseFloat(document.getElementById('pol-ot-rate').value) || 1.5,
+            ot_min_minutes: parseInt(document.getElementById('pol-ot-min').value, 10) || 0,
+            ot_fixed_rate_per_hour: parseFloat(document.getElementById('pol-ot-fixed').value) || 0,
+
+            penalty_late_tier1: parseFloat(document.getElementById('pol-pen-t1').value) || 0,
+            penalty_late_tier2: parseFloat(document.getElementById('pol-pen-t2').value) || 0,
+            penalty_late_tier3: parseFloat(document.getElementById('pol-pen-t3').value) || 0,
+            penalty_late_tier4: parseFloat(document.getElementById('pol-pen-t4').value) || 0,
+            penalty_early_tier1: parseFloat(document.getElementById('pol-pen-early-1').value) || 0,
+            penalty_early_tier2: parseFloat(document.getElementById('pol-pen-early-2').value) || 0,
+            penalty_early_tier3: parseFloat(document.getElementById('pol-pen-early-3').value) || 0,
+            penalty_early_tier4: parseFloat(document.getElementById('pol-pen-early-4').value) || 0,
+            penalty_accumulated_late_5: parseFloat(document.getElementById('pol-pen-acc').value) || 0,
+            penalty_unauthorized_absent: parseFloat(document.getElementById('pol-pen-unauth').value) || 0
+        };
+
+        try {
+            const res = await fetch('/api/attendance/policies', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ ' + data.message);
+                window.modAtt.closeModal('att-policy-modal');
+                await window.modAtt.loadPolicy();
+                await window.modAtt.loadMonthly();
+                await window.modAtt.loadDaily();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch(err) {
+            alert('Lỗi lưu chính sách: ' + err.message);
+        }
+    },
+
+    openHolidaysModal: async () => {
+        document.getElementById('att-holidays-modal').classList.remove('hidden');
+        document.getElementById('att-holidays-modal').classList.add('flex');
+        await window.modAtt.loadHolidays();
+    },
+
+    loadHolidays: async () => {
+        try {
+            const res = await fetch('/api/attendance/holidays');
+            const data = await res.json();
+            if (data.success) {
+                window.modAtt.holidays = data.data;
+                const tbody = document.getElementById('att-holidays-tbody');
+                if (data.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Chưa có ngày nghỉ lễ nào được khai báo.</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = data.data.map(h => `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100">
+                        <td class="p-3 pl-4 font-mono font-bold text-amber-700">${h.holiday_date ? h.holiday_date.slice(0, 10) : ''}</td>
+                        <td class="p-3 font-bold text-slate-800">${h.holiday_name}</td>
+                        <td class="p-3 text-center">
+                            ${h.is_paid ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">100% Lương</span>' : '<span class="text-slate-400">Không lương</span>'}
+                        </td>
+                        <td class="p-3 text-center font-black text-purple-700">x${h.ot_rate || 3.0}</td>
+                        <td class="p-3 text-center pr-4">
+                            <button onclick="window.modAtt.deleteHoliday(${h.id})" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-[10px]">
+                                <i class="fas fa-trash-alt"></i> Xóa
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch(e){}
+    },
+
+    submitNewHoliday: async () => {
+        const d = document.getElementById('new-hol-date').value;
+        const n = document.getElementById('new-hol-name').value.trim();
+        const ot = parseFloat(document.getElementById('new-hol-ot').value) || 3.0;
+        const paid = document.getElementById('new-hol-paid').checked;
+
+        if (!d || !n) {
+            alert('Vui lòng nhập Ngày và Tên ngày nghỉ lễ!');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/attendance/holidays', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ holiday_date: d, holiday_name: n, ot_rate: ot, is_paid: paid })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ ' + data.message);
+                document.getElementById('new-hol-name').value = '';
+                await window.modAtt.loadHolidays();
+                await window.modAtt.loadDaily();
+                await window.modAtt.loadMonthly();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch(err) {
+            alert('Lỗi lưu ngày lễ: ' + err.message);
+        }
+    },
+
+    deleteHoliday: async (id) => {
+        if (!confirm('Bạn có chắc muốn xóa ngày nghỉ lễ này?')) return;
+        try {
+            const res = await fetch(`/api/attendance/holidays/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                await window.modAtt.loadHolidays();
+                await window.modAtt.loadDaily();
+                await window.modAtt.loadMonthly();
+            }
+        } catch(e){}
+    },
+
+    switchTab: (tab) => {
+        window.modAtt.activeTab = tab;
+        const btnDaily = document.getElementById('tab-btn-daily');
+        const btnMonthly = document.getElementById('tab-btn-monthly');
+        const conDaily = document.getElementById('tab-content-daily');
+        const conMonthly = document.getElementById('tab-content-monthly');
+
+        if (tab === 'daily') {
+            btnDaily.className = 'px-4 py-2.5 text-xs font-black border-b-2 border-blue-600 text-blue-700 flex items-center gap-1.5';
+            btnMonthly.className = 'px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center gap-1.5';
+            conDaily.classList.remove('hidden');
+            conDaily.classList.add('flex');
+            conMonthly.classList.add('hidden');
+        } else {
+            btnMonthly.className = 'px-4 py-2.5 text-xs font-black border-b-2 border-blue-600 text-blue-700 flex items-center gap-1.5';
+            btnDaily.className = 'px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center gap-1.5';
+            conMonthly.classList.remove('hidden');
+            conMonthly.classList.add('flex');
+            conDaily.classList.add('hidden');
+        }
+    },
+
+    loadDaily: async () => {
+        const from = document.getElementById('att-filter-from').value;
+        const to = document.getElementById('att-filter-to').value;
+        try {
+            const res = await fetch(`/api/attendance/daily?from_date=${from}&to_date=${to}`);
+            const data = await res.json();
+            if (data.success) {
+                window.modAtt.dailyRecords = data.data;
+                window.modAtt.applyDailyFilter();
+            }
+        } catch(e){}
+    },
+
+    applyDailyFilter: () => {
+        const status = document.getElementById('att-filter-status').value;
+        const search = (document.getElementById('att-filter-search').value || '').toLowerCase().trim();
+
+        const filtered = window.modAtt.dailyRecords.filter(r => {
+            if (status && r.status !== status) return false;
+            if (search) {
+                const text = `${r.emp_code} ${r.full_name} ${r.dept_name || ''}`.toLowerCase();
+                if (!text.includes(search)) return false;
+            }
+            return true;
+        });
+
+        const tbody = document.getElementById('att-daily-tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-slate-400 font-bold">Không có bản ghi chấm công nào phù hợp.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(r => {
+            let statusBadge = '';
+            if (r.status === 'ON_TIME') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">Đúng giờ</span>';
+            } else if (r.status === 'LATE') {
+                statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">Trễ ${r.late_minutes}p</span>`;
+            } else if (r.status === 'EARLY_OUT') {
+                statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200">Về sớm ${r.early_minutes}p</span>`;
+            } else if (r.status === 'ADJUSTED') {
+                statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200" title="Đã duyệt: ${r.adjustment_reason || ''}"><i class="fas fa-check"></i> Đã sửa</span>`;
+            } else if (r.status === 'HOLIDAY') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">Nghỉ Lễ</span>';
+            } else if (r.status === 'HOLIDAY_WORK') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300">Đi làm ngày Lễ</span>';
+            } else if (r.status === 'SUNDAY_WORK') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-300">OT Chủ Nhật</span>';
+            } else if (r.status === 'WEEKEND') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">Nghỉ cuối tuần</span>';
+            } else {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">Vắng mặt</span>';
+            }
+
+            const inTime = r.first_check_in ? new Date(r.first_check_in).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+            const outTime = r.last_check_out ? new Date(r.last_check_out).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+            const penalty = parseFloat(r.penalty_amount) || 0;
+            const otHours = parseFloat(r.ot_hours) || 0;
+
+            const recJson = JSON.stringify(r).replace(/"/g, '&quot;');
+
+            return `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="p-3.5 pl-4 font-bold text-slate-700">${r.work_date ? r.work_date.slice(0, 10) : ''}</td>
+                    <td class="p-3.5 font-black text-amber-600 font-mono">${r.emp_code}</td>
+                    <td class="p-3.5 font-bold text-slate-800">
+                        ${r.full_name}
+                        ${r.adjusted_by ? `<span class="block text-[9px] text-purple-600 font-medium"><i class="fas fa-user-shield"></i> ${r.adjusted_by}: ${r.adjustment_reason || 'Đã sửa'}</span>` : ''}
+                    </td>
+                    <td class="p-3.5 text-center font-mono font-black ${r.late_minutes > 0 ? 'text-rose-600' : 'text-emerald-600'}">${inTime}</td>
+                    <td class="p-3.5 text-center font-mono font-bold ${r.early_minutes > 0 ? 'text-amber-600' : 'text-slate-700'}">${outTime}</td>
+                    <td class="p-3.5 text-center font-bold text-blue-700">${r.working_hours}h</td>
+                    <td class="p-3.5 text-center font-bold ${otHours > 0 ? 'text-purple-600' : 'text-slate-400'}">
+                        ${otHours > 0 ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200">+${otHours}h</span>` : '--'}
+                    </td>
+                    <td class="p-3.5 text-center">
+                        ${r.late_minutes > 0 ? `<span class="text-rose-600 font-bold block">+${r.late_minutes}p trễ</span>` : ''}
+                        ${r.early_minutes > 0 ? `<span class="text-purple-600 font-bold block">-${r.early_minutes}p sớm</span>` : ''}
+                        ${r.late_minutes === 0 && r.early_minutes === 0 ? '<span class="text-slate-400">--</span>' : ''}
+                    </td>
+                    <td class="p-3.5 text-center font-black text-indigo-700">${r.working_day_value} công</td>
+                    <td class="p-3.5 text-center">${statusBadge}</td>
+                    <td class="p-3.5 text-right font-mono font-black ${penalty > 0 ? 'text-rose-600' : 'text-slate-400'}">
+                        ${penalty > 0 ? `-${penalty.toLocaleString('vi-VN')} đ` : '0 đ'}
+                    </td>
+                    <td class="p-3.5 text-center pr-4">
+                        <button onclick="window.modAtt.openAdjustModalFromRow(${recJson})" class="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-black text-[11px] transition shadow-2xs flex items-center gap-1 mx-auto">
+                            <i class="fas fa-edit"></i> Sửa
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    loadMonthly: async () => {
+        const period = document.getElementById('att-filter-period').value || '2026-08';
+        try {
+            const res = await fetch(`/api/attendance/monthly-summary?period_key=${period}`);
+            const data = await res.json();
+            if (data.success) {
+                window.modAtt.monthlyRecords = data.data;
+
+                // Cập nhật thẻ chỉ số KPI
+                let totalActualDays = 0;
+                let bonusEmpsCount = 0;
+                let totalBonusAmt = 0;
+                let totalOtHours = 0;
+                let totalOtBonus = 0;
+                let totalLateCount = 0;
+                let totalPenalties = 0;
+                let activeEmpWithDays = 0;
+
+                data.data.forEach(m => {
+                    totalActualDays += parseFloat(m.total_actual_days) || 0;
+                    if (m.total_actual_days > 0) activeEmpWithDays++;
+
+                    const bTotal = parseFloat(m.total_bonus_amount) || 0;
+                    if (bTotal > 0) {
+                        bonusEmpsCount++;
+                        totalBonusAmt += bTotal;
+                    }
+
+                    const otH = parseFloat(m.total_ot_hours) || 0;
+                    const otB = parseFloat(m.ot_bonus_amount) || 0;
+                    totalOtHours += otH;
+                    totalOtBonus += otB;
+
+                    totalLateCount += parseInt(m.total_late_count, 10) || 0;
+                    totalPenalties += parseFloat(m.total_attendance_penalty) || 0;
+                });
+
+                document.getElementById('att-stat-total-days').innerText = `${totalActualDays.toFixed(1)} ngày công`;
+                document.getElementById('att-stat-total-emps').innerText = `${activeEmpWithDays} nhân sự có ngày công`;
+                document.getElementById('att-stat-bonus-amount').innerText = `+${totalBonusAmt.toLocaleString('vi-VN')} đ`;
+                document.getElementById('att-stat-bonus-emps').innerText = `${bonusEmpsCount} nhân sự nhận thưởng`;
+                document.getElementById('att-stat-ot-hours').innerText = `${totalOtHours.toFixed(1)} giờ`;
+                document.getElementById('att-stat-ot-amount').innerText = `Tiền OT: +${totalOtBonus.toLocaleString('vi-VN')} đ`;
+                document.getElementById('att-stat-penalty-amount').innerText = `-${totalPenalties.toLocaleString('vi-VN')} đ`;
+                document.getElementById('att-stat-late-count').innerText = `${totalLateCount} lượt vi phạm trễ/sớm`;
+
+                // Render bảng Monthly Summary
+                const tbody = document.getElementById('att-monthly-tbody');
+                if (data.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-slate-400 font-bold">Chưa có dữ liệu tổng hợp công tháng ${period}. Hãy bấm nút "Đồng bộ từ Máy Chấm Công".</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = data.data.map(m => {
+                    const puncAmt = parseFloat(m.punctual_bonus_amount) || 0;
+                    const attAmt = parseFloat(m.attendance_bonus_amount) || 0;
+                    const otAmt = parseFloat(m.ot_bonus_amount) || 0;
+                    const totBonus = parseFloat(m.total_bonus_amount) || (puncAmt + attAmt + otAmt);
+                    const penAmt = parseFloat(m.total_attendance_penalty) || 0;
+                    const otH = parseFloat(m.total_ot_hours) || 0;
+                    const lateCount = parseInt(m.total_late_count, 10) || 0;
+
+                    let puncTag = m.is_punctual_bonus_awarded
+                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">+${puncAmt.toLocaleString('vi-VN')} đ</span>`
+                        : '<span class="text-slate-400 font-medium">--</span>';
+
+                    let attTag = m.is_attendance_bonus_awarded
+                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-800 border border-teal-300">+${attAmt.toLocaleString('vi-VN')} đ</span>`
+                        : '<span class="text-slate-400 font-medium">--</span>';
+
+                    let otTag = otAmt > 0
+                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-300">+${otAmt.toLocaleString('vi-VN')} đ</span>`
+                        : '<span class="text-slate-400 font-medium">--</span>';
+
+                    let totBonusTag = totBonus > 0
+                        ? `<span class="font-black text-emerald-600">+${totBonus.toLocaleString('vi-VN')} đ</span>`
+                        : '<span class="text-slate-400 font-medium">0 đ</span>';
+
+                    let evalTag = m.is_attendance_bonus_awarded
+                        ? '<span class="text-emerald-700 font-black text-[10px]"><i class="fas fa-crown text-amber-500"></i> Xuất Sắc (Chuyên Cần)</span>'
+                        : (m.is_punctual_bonus_awarded
+                            ? '<span class="text-emerald-600 font-black text-[10px]"><i class="fas fa-award text-emerald-500"></i> Đúng Giờ Tuyệt Đối</span>'
+                            : (lateCount >= 3 ? `<span class="text-rose-600 font-bold text-[10px]"><i class="fas fa-exclamation-triangle"></i> Vi phạm (${lateCount} lần trễ)</span>` : (m.total_actual_days > 0 ? '<span class="text-blue-700 text-[10px] font-bold">Bình thường</span>' : '<span class="text-slate-400 text-[10px]">Chưa có công</span>')));
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                            <td class="p-3.5 pl-4 font-black text-amber-600 font-mono">${m.emp_code}</td>
+                            <td class="p-3.5 font-bold text-slate-800">${m.full_name}</td>
+                            <td class="p-3.5 text-slate-600">${m.dept_name || 'Phòng Ban'} - ${m.position || 'NV'}</td>
+                            <td class="p-3.5 text-center font-black text-blue-700">${m.total_actual_days} / ${m.standard_working_days}</td>
+                            <td class="p-3.5 text-center font-bold ${otH > 0 ? 'text-purple-700 font-black' : 'text-slate-400'}">${otH > 0 ? `${otH}h` : '--'}</td>
+                            <td class="p-3.5 text-center font-black ${lateCount > 0 ? 'text-rose-600' : 'text-emerald-600'}">
+                                ${lateCount > 0 ? `${lateCount} lần (${m.total_late_minutes}p)` : (m.total_early_count > 0 ? `${m.total_early_count} lần sớm` : '0')}
+                            </td>
+                            <td class="p-3.5 text-right">${puncTag}</td>
+                            <td class="p-3.5 text-right">${attTag}</td>
+                            <td class="p-3.5 text-right">${otTag}</td>
+                            <td class="p-3.5 text-right font-black">${totBonusTag}</td>
+                            <td class="p-3.5 text-right font-mono font-black ${penAmt > 0 ? 'text-rose-600' : 'text-slate-400'}">
+                                ${penAmt > 0 ? `-${penAmt.toLocaleString('vi-VN')} đ` : '0 đ'}
+                            </td>
+                            <td class="p-3.5 text-center pr-4">${evalTag}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        } catch(e){}
+    },
+
+    syncToPayroll: async () => {
+        const period = document.getElementById('att-filter-period').value || '2026-08';
+        if (!confirm(`Bạn có chắc chắn muốn đồng bộ toàn bộ ngày công, thưởng đúng giờ, thưởng chuyên cần, tiền làm thêm OT và phạt đi trễ tháng ${period} sang Bảng Lương không?`)) return;
+
+        try {
+            const res = await fetch('/api/attendance/sync-monthly', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ period_key: period })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ ${data.message}\n\nHãy vào phân hệ "Bảng Lương & Chi Trả" để kiểm tra phiếu lương tự động cập nhật.`);
+                window.modAtt.loadMonthly();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch(err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    openAdjustModal: () => {
+        const today = new Date().toISOString().slice(0, 10);
+        document.getElementById('adj-work-date').value = today;
+        document.getElementById('adj-checkin-time').value = `${today}T08:30`;
+        document.getElementById('adj-checkout-time').value = `${today}T17:00`;
+        document.getElementById('adj-reason').value = 'Quên quét vân tay';
+        document.getElementById('att-adjust-modal').classList.remove('hidden');
+        document.getElementById('att-adjust-modal').classList.add('flex');
+    },
+
+    openAdjustModalFromRow: (row) => {
+        if (!row) return;
+        document.getElementById('adj-emp-id').value = row.employee_id || '';
+        const dStr = row.work_date ? row.work_date.slice(0, 10) : new Date().toISOString().slice(0, 10);
+        document.getElementById('adj-work-date').value = dStr;
+
+        if (row.first_check_in) {
+            const inD = new Date(row.first_check_in);
+            inD.setMinutes(inD.getMinutes() - inD.getTimezoneOffset());
+            document.getElementById('adj-checkin-time').value = inD.toISOString().slice(0, 16);
+        } else {
+            document.getElementById('adj-checkin-time').value = `${dStr}T08:30`;
+        }
+
+        if (row.last_check_out) {
+            const outD = new Date(row.last_check_out);
+            outD.setMinutes(outD.getMinutes() - outD.getTimezoneOffset());
+            document.getElementById('adj-checkout-time').value = outD.toISOString().slice(0, 16);
+        } else {
+            document.getElementById('adj-checkout-time').value = `${dStr}T17:00`;
+        }
+
+        document.getElementById('adj-reason').value = row.adjustment_reason || 'Quên quét vân tay';
+        document.getElementById('att-adjust-modal').classList.remove('hidden');
+        document.getElementById('att-adjust-modal').classList.add('flex');
+    },
+
+    fillQuickShift: (type) => {
+        const dateVal = document.getElementById('adj-work-date').value || new Date().toISOString().slice(0, 10);
+        const p = window.modAtt.policy || {};
+        if (type === 'SATURDAY') {
+            const st = p.saturday_start_time || '08:30';
+            const et = p.saturday_end_time || '12:00';
+            document.getElementById('adj-checkin-time').value = `${dateVal}T${st}`;
+            document.getElementById('adj-checkout-time').value = `${dateVal}T${et}`;
+            document.getElementById('adj-reason').value = 'Ca sáng Thứ 7 (Nghỉ chiều)';
+        } else {
+            const st = p.work_start_time || '08:30';
+            const et = p.work_end_time || '17:00';
+            document.getElementById('adj-checkin-time').value = `${dateVal}T${st}`;
+            document.getElementById('adj-checkout-time').value = `${dateVal}T${et}`;
+            document.getElementById('adj-reason').value = 'Ca chuẩn T2-T6 (08:30 - 17:00)';
+        }
+    },
+
+    submitAdjust: async () => {
+        const empId = document.getElementById('adj-emp-id').value;
+        const workDate = document.getElementById('adj-work-date').value;
+        const checkIn = document.getElementById('adj-checkin-time').value;
+        const checkOut = document.getElementById('adj-checkout-time').value;
+        const reason = document.getElementById('adj-reason').value.trim();
+        const adjustedBy = document.getElementById('adj-by').value.trim() || 'Kế toán';
+
+        if (!empId) {
+            alert('Vui lòng chọn nhân viên cần điều chỉnh!');
+            return;
+        }
+        if (!workDate) {
+            alert('Vui lòng chọn ngày làm việc!');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/attendance/adjust', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    employee_id: empId,
+                    work_date: workDate,
+                    first_check_in: checkIn ? new Date(checkIn) : null,
+                    last_check_out: checkOut ? new Date(checkOut) : null,
+                    adjustment_reason: reason,
+                    adjusted_by: adjustedBy
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                window.modAtt.closeModal('att-adjust-modal');
+                await window.modAtt.loadDaily();
+                await window.modAtt.loadMonthly();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch(err) {
+            alert('Lỗi điều chỉnh: ' + err.message);
+        }
+    },
+
+    openQuickCheckinModal: () => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('quick-scan-time').value = now.toISOString().slice(0, 16);
+        document.getElementById('att-quick-modal').classList.remove('hidden');
+        document.getElementById('att-quick-modal').classList.add('flex');
+    },
+
+    submitQuickCheckin: async (scanType) => {
+        const empId = document.getElementById('quick-emp-id').value;
+        const scanTime = document.getElementById('quick-scan-time').value;
+
+        if (!empId) {
+            alert('Vui lòng chọn nhân viên chấm công!');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/attendance/checkin-log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    employee_id: empId,
+                    scan_time: scanTime ? new Date(scanTime) : new Date(),
+                    scan_type: scanType,
+                    source: 'WEB_ONLINE'
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ Chấm công thành công!\nTrạng thái: ${data.data.status} (Giờ làm: ${data.data.working_hours}h, OT: ${data.data.ot_hours}h)`);
+                window.modAtt.closeModal('att-quick-modal');
+                window.modAtt.loadDaily();
+                window.modAtt.loadMonthly();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch(err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    openImportModal: () => {
+        document.getElementById('att-import-modal').classList.remove('hidden');
+        document.getElementById('att-import-modal').classList.add('flex');
+    },
+
+    submitImport: async () => {
+        const text = document.getElementById('import-raw-text').value.trim();
+        if (!text) {
+            alert('Vui lòng dán danh sách quét vân tay!');
+            return;
+        }
+
+        const lines = text.split('\n');
+        const logs = [];
+        lines.forEach(line => {
+            const clean = line.trim();
+            if (!clean) return;
+            const parts = clean.split(/[,;\t]+/);
+            if (parts.length >= 2) {
+                logs.push({
+                    emp_code: parts[0].trim(),
+                    scan_time: parts[1].trim()
+                });
+            }
+        });
+
+        if (logs.length === 0) {
+            alert('Không thể nhận diện định dạng dòng dữ liệu. Vui lòng nhập: [Mã NV], [Năm-Tháng-Ngày Giờ:Phút:Giây]');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/attendance/import-logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ logs, source: 'EXCEL_IMPORT' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                window.modAtt.closeModal('att-import-modal');
+                window.modAtt.loadDaily();
+                window.modAtt.loadMonthly();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch(err) {
+            alert('Lỗi import: ' + err.message);
+        }
+    },
+
+    openPolicyModal: () => {
+        document.getElementById('att-policy-modal').classList.remove('hidden');
+        document.getElementById('att-policy-modal').classList.add('flex');
+    },
+
+    closeModal: (id) => {
+        const m = document.getElementById(id);
+        if (m) {
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+    }
+};
+
+// Tự động tải dữ liệu khi mở module
+window.modAtt.load();
+</script>

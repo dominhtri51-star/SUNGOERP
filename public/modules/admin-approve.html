@@ -1,106 +1,117 @@
-<div class="space-y-6">
+<div class="w-full min-h-full flex flex-col space-y-4 font-sans pb-28 md:pb-6">
     <!-- TIÊU ĐỀ & THỐNG KÊ NHANH -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <div>
-            <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
-                <i class="fas fa-check-double text-amber-500"></i> DUYỆT BÁO GIÁ DỰ ÁN & CHẠM SÀN
-            </h2>
-            <p class="text-xs text-slate-500 mt-1">Kiểm soát biên lợi nhuận, chiết khấu vượt sàn và phê duyệt báo giá trước khi gửi khách hàng.</p>
-        </div>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs shrink-0">
         <div class="flex items-center gap-3">
-            <button onclick="window.modAdminApprove.loadData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md shadow-amber-500/20 shrink-0">
+                <i class="fas fa-check-double text-lg"></i>
+            </div>
+            <div>
+                <h2 class="text-base sm:text-xl font-black text-slate-900 flex items-center gap-2">
+                    DUYỆT BÁO GIÁ DỰ ÁN & CHẠM SÀN
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">Kiểm soát biên lợi nhuận, chiết khấu và duyệt báo giá trước khi gửi khách.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+            <button onclick="window.modAdminApprove.loadData()" class="flex-1 md:flex-initial bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer whitespace-nowrap">
                 <i class="fas fa-sync-alt"></i> Làm Mới
             </button>
-            <button onclick="loadModule('boq-list', 'Danh Sách BOQ')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-sm">
+            <button onclick="loadModule('boq-list', 'Danh Sách BOQ')" class="flex-1 md:flex-initial bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer whitespace-nowrap">
                 <i class="fas fa-list"></i> Xem Toàn Bộ BOQ
             </button>
         </div>
     </div>
 
     <!-- CARDS THỐNG KÊ -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-200 shadow-sm">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-3.5 sm:p-4 rounded-2xl border border-amber-200 shadow-2xs">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold text-amber-800 uppercase tracking-wider">Cần Phê Duyệt</p>
-                    <h3 class="text-2xl font-black text-amber-900 mt-1" id="stat-pending-count">0</h3>
+                    <p class="text-[10px] font-black text-amber-800 uppercase tracking-wider">Cần Phê Duyệt</p>
+                    <h3 class="text-lg sm:text-2xl font-black text-amber-900 mt-0.5" id="stat-pending-count">0</h3>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-600 text-xl font-bold">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-600 text-base font-bold shrink-0">
                     <i class="fas fa-clock"></i>
                 </div>
             </div>
-            <p class="text-[11px] text-amber-700 font-medium mt-2">Báo giá chạm sàn hoặc sale xin giá đặc biệt</p>
+            <p class="text-[10px] text-amber-700 font-medium mt-1 truncate">Chạm sàn hoặc sale xin giá đặc biệt</p>
         </div>
 
-        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-2xl border border-blue-200 shadow-sm">
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-3.5 sm:p-4 rounded-2xl border border-blue-200 shadow-2xs">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold text-blue-800 uppercase tracking-wider">Tổng Giá Trị Chờ Duyệt</p>
-                    <h3 class="text-2xl font-black text-blue-900 mt-1" id="stat-pending-value">0 đ</h3>
+                    <p class="text-[10px] font-black text-blue-800 uppercase tracking-wider">Tổng Giá Trị Chờ Duyệt</p>
+                    <h3 class="text-lg sm:text-2xl font-black text-blue-900 mt-0.5 truncate" id="stat-pending-value">0 đ</h3>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-600 text-xl font-bold">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-600 text-base font-bold shrink-0">
                     <i class="fas fa-coins"></i>
                 </div>
             </div>
-            <p class="text-[11px] text-blue-700 font-medium mt-2">Tổng doanh số dự kiến từ các đơn đang chờ</p>
+            <p class="text-[10px] text-blue-700 font-medium mt-1 truncate">Doanh số dự kiến đang chờ</p>
         </div>
 
-        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-5 rounded-2xl border border-emerald-200 shadow-sm">
+        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 sm:p-4 rounded-2xl border border-emerald-200 shadow-2xs">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Đã Duyệt Tuần Này</p>
-                    <h3 class="text-2xl font-black text-emerald-900 mt-1" id="stat-approved-count">0</h3>
+                    <p class="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Đã Duyệt Tuần Này</p>
+                    <h3 class="text-lg sm:text-2xl font-black text-emerald-900 mt-0.5" id="stat-approved-count">0</h3>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-600 text-xl font-bold">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-600 text-base font-bold shrink-0">
                     <i class="fas fa-check-circle"></i>
                 </div>
             </div>
-            <p class="text-[11px] text-emerald-700 font-medium mt-2">Đã mở quyền phát hành gửi khách</p>
+            <p class="text-[10px] text-emerald-700 font-medium mt-1 truncate">Đã mở quyền phát hành gửi khách</p>
         </div>
     </div>
 
     <!-- BẢNG DANH SÁCH DUYỆT BÁO GIÁ -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden flex-1 flex flex-col">
         <!-- BỘ LỌC VÀ TÌM KIẾM -->
-        <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-                <button onclick="window.modAdminApprove.setTab('PENDING')" id="tab-btn-pending" class="px-4 py-2 rounded-xl font-bold text-xs bg-amber-500 text-slate-900 shadow-sm transition">
+        <div class="p-3 sm:p-3.5 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 shrink-0">
+            <div class="flex items-center gap-1.5">
+                <button onclick="window.modAdminApprove.setTab('PENDING')" id="tab-btn-pending" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-amber-500 text-slate-900 shadow-2xs transition cursor-pointer whitespace-nowrap">
                     <i class="fas fa-exclamation-circle mr-1"></i> Chờ Duyệt (<span id="badge-pending-num">0</span>)
                 </button>
-                <button onclick="window.modAdminApprove.setTab('ALL')" id="tab-btn-all" class="px-4 py-2 rounded-xl font-bold text-xs bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 shadow-sm transition">
-                    <i class="fas fa-history mr-1"></i> Tất Cả Lịch Sử
+                <button onclick="window.modAdminApprove.setTab('ALL')" id="tab-btn-all" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs transition cursor-pointer whitespace-nowrap">
+                    <i class="fas fa-history mr-1"></i> Tất Cả
                 </button>
             </div>
             <div class="relative w-full md:w-72">
-                <i class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
-                <input type="text" id="approve-search" oninput="window.modAdminApprove.filterData()" placeholder="Tìm mã đơn, sale, khách hàng..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:border-amber-500 transition">
+                <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="approve-search" oninput="window.modAdminApprove.filterData()" placeholder="Tìm mã đơn, sale, khách hàng..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs font-medium outline-none focus:border-amber-500 transition">
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-100 text-slate-600 uppercase font-black tracking-wider border-b border-slate-200">
+        <!-- 1. Desktop Table -->
+        <div class="hidden md:block overflow-x-auto flex-1">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+                <thead class="bg-slate-100 text-slate-600 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
                     <tr>
-                        <th class="p-3.5 pl-5">Mã Báo Giá / Ngày</th>
-                        <th class="p-3.5">Sale Phụ Trách</th>
-                        <th class="p-3.5">Khách Hàng & Dự Án</th>
-                        <th class="p-3.5 text-center">Hệ Thống</th>
-                        <th class="p-3.5 text-right">Tổng Tiền (Bán)</th>
-                        <th class="p-3.5 text-right">Giá Vốn (Cost)</th>
-                        <th class="p-3.5 text-center">Biên Lợi Nhuận</th>
-                        <th class="p-3.5 text-center">Trạng Thái</th>
-                        <th class="p-3.5 pr-5 text-center">Thao Tác</th>
+                        <th class="p-3 pl-4">Mã Báo Giá / Ngày</th>
+                        <th class="p-3">Sale Phụ Trách</th>
+                        <th class="p-3">Khách Hàng & Dự Án</th>
+                        <th class="p-3 text-center">Hệ Thống</th>
+                        <th class="p-3 text-right">Tổng Tiền (Bán)</th>
+                        <th class="p-3 text-right">Giá Vốn (Cost)</th>
+                        <th class="p-3 text-center">Biên Lợi Nhuận</th>
+                        <th class="p-3 text-center">Trạng Thái</th>
+                        <th class="p-3 pr-4 text-center">Thao Tác</th>
                     </tr>
                 </thead>
-                <tbody id="tbl-admin-approve" class="divide-y divide-slate-100 text-slate-700">
+                <tbody id="tbl-admin-approve" class="divide-y divide-slate-100 text-slate-700 font-medium">
                     <tr>
-                        <td colspan="9" class="p-8 text-center text-slate-400">
-                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                            <p>Đang tải danh sách báo giá...</p>
+                        <td colspan="9" class="p-8 text-center text-slate-400 font-bold">
+                            <i class="fas fa-spinner fa-spin text-xl mb-1 block"></i>
+                            Đang tải danh sách báo giá...
                         </td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- 2. Mobile Smart Cards -->
+        <div id="tbl-admin-approve-mobile" class="md:hidden p-3 space-y-2.5 pb-8">
+            <!-- Rendered by JS -->
         </div>
     </div>
 </div>
@@ -250,86 +261,164 @@ window.modAdminApprove = {
 
     renderTable: (list) => {
         const tbody = document.getElementById('tbl-admin-approve');
+        const mobContainer = document.getElementById('tbl-admin-approve-mobile');
         if (!list || list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">Không có báo giá nào trong danh mục này.</td></tr>`;
+            if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">Không có báo giá nào trong danh mục này.</td></tr>`;
+            if (mobContainer) mobContainer.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold text-xs">Không có báo giá nào trong danh mục này.</div>`;
             return;
         }
 
-        tbody.innerHTML = list.map(q => {
-            const dateStr = q.created_at ? new Date(q.created_at).toLocaleDateString('vi-VN') : '---';
-            const margin = parseFloat(q.profit_margin || 0);
+        if (tbody) {
+            tbody.innerHTML = list.map(q => {
+                const dateStr = q.created_at ? new Date(q.created_at).toLocaleDateString('vi-VN') : '---';
+                const margin = parseFloat(q.profit_margin || 0);
 
-            // Màu cảnh báo biên lợi nhuận
-            let marginBadge = '';
-            if (margin < 15.0) {
-                marginBadge = `<span class="px-2.5 py-1 rounded-lg bg-red-100 text-red-700 font-black text-[11px] border border-red-200 inline-block"><i class="fas fa-exclamation-triangle mr-1"></i>${margin}% (Thấp)</span>`;
-            } else if (margin < 20.0) {
-                marginBadge = `<span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-black text-[11px] border border-amber-200 inline-block">${margin}%</span>`;
-            } else {
-                marginBadge = `<span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 font-black text-[11px] border border-emerald-200 inline-block">${margin}% (Tốt)</span>`;
-            }
+                let marginBadge = '';
+                if (margin < 15.0) {
+                    marginBadge = `<span class="px-2.5 py-1 rounded-lg bg-red-100 text-red-700 font-black text-[11px] border border-red-200 inline-block"><i class="fas fa-exclamation-triangle mr-1"></i>${margin}% (Thấp)</span>`;
+                } else if (margin < 20.0) {
+                    marginBadge = `<span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-black text-[11px] border border-amber-200 inline-block">${margin}%</span>`;
+                } else {
+                    marginBadge = `<span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 font-black text-[11px] border border-emerald-200 inline-block">${margin}% (Tốt)</span>`;
+                }
 
-            // Trạng thái Badge
-            let statusBadge = '';
-            if (q.status === 'PENDING_APPROVAL') {
-                statusBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] uppercase tracking-wider animate-pulse">Chờ Duyệt</span>`;
-            } else if (q.status === 'APPROVED' || q.status === 'QUOTING') {
-                statusBadge = `<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 font-bold text-[10px] uppercase tracking-wider">Đã Duyệt</span>`;
-            } else if (q.status === 'WON') {
-                statusBadge = `<span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] uppercase tracking-wider">Đã Chốt</span>`;
-            } else if (q.status === 'REJECTED') {
-                statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 font-bold text-[10px] uppercase tracking-wider">Từ Chối</span>`;
-            } else {
-                statusBadge = `<span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px] uppercase tracking-wider">${q.status || 'Nháp'}</span>`;
-            }
+                let statusBadge = '';
+                if (q.status === 'PENDING_APPROVAL') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] uppercase tracking-wider animate-pulse">Chờ Duyệt</span>`;
+                } else if (q.status === 'APPROVED' || q.status === 'QUOTING') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 font-bold text-[10px] uppercase tracking-wider">Đã Duyệt</span>`;
+                } else if (q.status === 'WON') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] uppercase tracking-wider">Đã Chốt</span>`;
+                } else if (q.status === 'REJECTED') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 font-bold text-[10px] uppercase tracking-wider">Từ Chối</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px] uppercase tracking-wider">${q.status || 'Nháp'}</span>`;
+                }
 
-            // Hệ thống Badge
-            let sysBadge = '';
-            if (q.system_type === 'HYBRID') sysBadge = '<span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-bold text-[10px]">⚡ HYBRID</span>';
-            else if (q.system_type === 'PUMP') sysBadge = '<span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[10px]">💧 BƠM</span>';
-            else if (q.system_type === 'ONGRID') sysBadge = '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">☀️ BÁM TẢI</span>';
-            else sysBadge = '<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold text-[10px]">🔋 ĐỘC LẬP</span>';
+                let sysBadge = '';
+                if (q.system_type === 'HYBRID') sysBadge = '<span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-bold text-[10px]">⚡ HYBRID</span>';
+                else if (q.system_type === 'PUMP') sysBadge = '<span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[10px]">💧 BƠM</span>';
+                else if (q.system_type === 'ONGRID') sysBadge = '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">☀️ BÁM TẢI</span>';
+                else sysBadge = '<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold text-[10px]">🔋 ĐỘC LẬP</span>';
 
-            const qId = q.quotation_id || q.id;
+                const qId = q.quotation_id || q.id;
 
-            return `
-            <tr class="hover:bg-amber-50/50 transition">
-                <td class="p-3.5 pl-5 font-bold">
-                    <p class="font-mono text-blue-600 text-[13px]">${q.quotation_code}</p>
-                    <p class="text-[10px] text-slate-400 font-normal mt-0.5"><i class="fas fa-calendar-alt mr-1"></i>${dateStr}</p>
-                </td>
-                <td class="p-3.5 font-bold text-slate-800">
-                    <i class="fas fa-user-tie text-slate-400 mr-1"></i>${q.sale_name || 'Sale'}
-                </td>
-                <td class="p-3.5">
-                    <p class="font-bold text-slate-800">${q.customer_name}</p>
-                    <p class="text-[11px] text-slate-500 truncate max-w-xs">${q.project_name || 'Dự án điện mặt trời'}</p>
-                </td>
-                <td class="p-3.5 text-center">${sysBadge}</td>
-                <td class="p-3.5 text-right font-black text-slate-900">${window.modAdminApprove.fmt(q.total_amount)} đ</td>
-                <td class="p-3.5 text-right font-semibold text-slate-500">${window.modAdminApprove.fmt(q.total_cost)} đ</td>
-                <td class="p-3.5 text-center">${marginBadge}</td>
-                <td class="p-3.5 text-center">${statusBadge}</td>
-                <td class="p-3.5 pr-5 text-center">
-                    <div class="flex items-center justify-center gap-1.5">
-                        <button onclick="window.modAdminApprove.openDetail(${qId})" title="Xem Chi Tiết Vật Tư" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-bold text-xs transition">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        ${q.status === 'PENDING_APPROVAL' || q.status === 'DRAFT' || q.is_below_floor && q.status !== 'APPROVED' ? `
-                            <button onclick="window.modAdminApprove.approve(${qId})" title="Duyệt Báo Giá" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm transition flex items-center gap-1">
-                                <i class="fas fa-check"></i> Duyệt
+                return `
+                <tr class="hover:bg-amber-50/50 transition">
+                    <td class="p-3.5 pl-4 font-bold">
+                        <p class="font-mono text-blue-600 text-[13px]">${q.quotation_code}</p>
+                        <p class="text-[10px] text-slate-400 font-normal mt-0.5"><i class="fas fa-calendar-alt mr-1"></i>${dateStr}</p>
+                    </td>
+                    <td class="p-3.5 font-bold text-slate-800">
+                        <i class="fas fa-user-tie text-slate-400 mr-1"></i>${q.sale_name || 'Sale'}
+                    </td>
+                    <td class="p-3.5">
+                        <p class="font-bold text-slate-800">${q.customer_name}</p>
+                        <p class="text-[11px] text-slate-500 truncate max-w-xs">${q.project_name || 'Dự án điện mặt trời'}</p>
+                    </td>
+                    <td class="p-3.5 text-center">${sysBadge}</td>
+                    <td class="p-3.5 text-right font-black text-slate-900">${window.modAdminApprove.fmt(q.total_amount)} đ</td>
+                    <td class="p-3.5 text-right font-semibold text-slate-500">${window.modAdminApprove.fmt(q.total_cost)} đ</td>
+                    <td class="p-3.5 text-center">${marginBadge}</td>
+                    <td class="p-3.5 text-center">${statusBadge}</td>
+                    <td class="p-3.5 pr-4 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="window.modAdminApprove.openDetail(${qId})" title="Xem Chi Tiết Vật Tư" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer">
+                                <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="window.modAdminApprove.reject(${qId})" title="Từ Chối" class="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1.5 rounded-lg font-bold text-xs shadow-sm transition">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        ` : `
-                            <span class="text-[10px] text-slate-400 italic">Đã xử lý</span>
-                        `}
+                            ${q.status === 'PENDING_APPROVAL' || q.status === 'DRAFT' || q.is_below_floor && q.status !== 'APPROVED' ? `
+                                <button onclick="window.modAdminApprove.approve(${qId})" title="Duyệt Báo Giá" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-2xs transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fas fa-check"></i> Duyệt
+                                </button>
+                                <button onclick="window.modAdminApprove.reject(${qId})" title="Từ Chối" class="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1.5 rounded-lg font-bold text-xs shadow-2xs transition cursor-pointer">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : `
+                                <span class="text-[10px] text-slate-400 italic">Đã xử lý</span>
+                            `}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        if (mobContainer) {
+            mobContainer.innerHTML = list.map(q => {
+                const dateStr = q.created_at ? new Date(q.created_at).toLocaleDateString('vi-VN') : '---';
+                const margin = parseFloat(q.profit_margin || 0);
+                const qId = q.quotation_id || q.id;
+
+                let marginBadge = '';
+                if (margin < 15.0) {
+                    marginBadge = `<span class="px-2 py-0.5 rounded bg-red-100 text-red-700 font-bold text-[10px]">LN: ${margin}% (Thấp)</span>`;
+                } else if (margin < 20.0) {
+                    marginBadge = `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px]">LN: ${margin}%</span>`;
+                } else {
+                    marginBadge = `<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[10px]">LN: ${margin}% (Tốt)</span>`;
+                }
+
+                let statusBadge = '';
+                if (q.status === 'PENDING_APPROVAL') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] uppercase">Chờ Duyệt</span>`;
+                } else if (q.status === 'APPROVED' || q.status === 'QUOTING') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold text-[10px] uppercase">Đã Duyệt</span>`;
+                } else if (q.status === 'WON') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] uppercase">Đã Chốt</span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px] uppercase">${q.status || 'Nháp'}</span>`;
+                }
+
+                return `
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-black font-mono text-[10px] border border-blue-200">
+                                ${q.quotation_code}
+                            </span>
+                            <span class="text-[10px] text-slate-500 font-bold truncate">👤 ${q.sale_name || 'Sale'}</span>
+                        </div>
+                        ${statusBadge}
                     </div>
-                </td>
-            </tr>
-            `;
-        }).join('');
+
+                    <div>
+                        <h4 class="font-black text-slate-900 text-xs sm:text-sm leading-snug cursor-pointer hover:text-blue-600" onclick="window.modAdminApprove.openDetail(${qId})">
+                            ${q.customer_name}
+                        </h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5 truncate">${q.project_name || 'Dự án điện mặt trời'}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Giá bán:</span>
+                            <b class="text-slate-900 font-black">${window.modAdminApprove.fmt(q.total_amount)} đ</b>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 block text-[10px]">Giá vốn:</span>
+                            <span class="text-slate-600 font-semibold">${window.modAdminApprove.fmt(q.total_cost)} đ</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                        <div>${marginBadge}</div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="window.modAdminApprove.openDetail(${qId})" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${q.status === 'PENDING_APPROVAL' || q.status === 'DRAFT' || q.is_below_floor && q.status !== 'APPROVED' ? `
+                                <button type="button" onclick="window.modAdminApprove.approve(${qId})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
+                                    <i class="fas fa-check"></i> Duyệt
+                                </button>
+                                <button type="button" onclick="window.modAdminApprove.reject(${qId})" class="px-2.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold transition border border-red-200 cursor-pointer">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : `
+                                <span class="text-[10px] text-slate-400 italic">Đã xử lý</span>
+                            `}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
     },
 
     openDetail: async (id) => {

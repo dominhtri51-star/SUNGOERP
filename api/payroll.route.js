@@ -88,7 +88,14 @@ router.post('/generate', async (req, res) => {
             payrollId = newPayroll.rows[0].id;
         }
 
-        // 2. Lấy toàn bộ nhân sự đang làm việc (ACTIVE)
+        // 2. Lấy cấu hình tỷ lệ bảo hiểm xã hội hiện hành
+        const insPolRes = await client.query("SELECT * FROM insurance_policies WHERE id = 1");
+        const insPol = insPolRes.rows[0] || {
+            rate_bhxh_emp: 8.0, rate_bhyt_emp: 1.5, rate_bhtn_emp: 1.0,
+            rate_bhxh_comp: 17.5, rate_bhyt_comp: 3.0, rate_bhtn_comp: 1.0, rate_kpcd_comp: 2.0
+        };
+
+        // 3. Lấy toàn bộ nhân sự đang làm việc (ACTIVE)
         const employeesRes = await client.query(`
             SELECT e.*, 
                    ins.has_bhxh, ins.has_bhyt, ins.has_bhtn, ins.has_kpcd, ins.status AS ins_status
@@ -108,9 +115,30 @@ router.post('/generate', async (req, res) => {
         let grandNet = 0;
 
         for (const emp of employeesRes.rows) {
-            const actualDays = standard_working_days; // Mặc định đủ công
+            // 0. Tích hợp Dữ Liệu Chấm Công & Thưởng Chuyên Cần / Phạt Đi Trễ
+            const attRes = await client.query(
+                "SELECT * FROM attendance_monthly_summary WHERE period_key = $1 AND employee_id = $2",
+                [period_key, emp.id]
+            );
+            let actualDays = standard_working_days;
+            let paidLeaveDays = 0;
+            let unpaidLeaveDays = 0;
+            let attendanceBonus = 0;
+            let attendancePenalty = 0;
+
+            if (attRes.rows.length > 0) {
+                const att = attRes.rows[0];
+                actualDays = parseFloat(att.total_actual_days) || 0;
+                paidLeaveDays = parseFloat(att.total_paid_leave_days) || 0;
+                unpaidLeaveDays = parseFloat(att.total_unpaid_leave_days) || 0;
+                attendanceBonus = parseFloat(att.total_bonus_amount) || ((parseFloat(att.attendance_bonus_amount) || 0) + (parseFloat(att.punctual_bonus_amount) || 0) + (parseFloat(att.ot_bonus_amount) || 0));
+                attendancePenalty = parseFloat(att.total_attendance_penalty) || 0;
+            }
+
             const baseSalary = parseFloat(emp.base_salary) || 0;
-            const salaryByDays = Math.round((baseSalary / standard_working_days) * actualDays);
+            // Ngày tính lương = Ngày làm thực tế + Ngày nghỉ phép hưởng lương (paid_leave_days)
+            const payableDays = Math.min(standard_working_days, actualDays + paidLeaveDays);
+            const salaryByDays = Math.round((baseSalary / standard_working_days) * payableDays);
 
             // Phụ cấp mặc định
             const mealAllowance = 730000;
@@ -118,29 +146,68 @@ router.post('/generate', async (req, res) => {
             const respAllowance = emp.position.includes('Trưởng') || emp.position.includes('Giám Đốc') ? 1500000 : 0;
             const totalAllowance = mealAllowance + phoneGasAllowance + respAllowance;
 
-            // 1. Kéo hoa hồng ĐỦ ĐIỀU KIỆN (ELIGIBLE) có kiểm tra Ngưỡng Lợi Nhuận Gộp Tối Thiểu
-            const gpRes = await client.query(
-                "SELECT COALESCE(SUM(gross_profit), 0) AS total_gp FROM sales_commissions WHERE employee_id = $1 AND paid_status = 'ELIGIBLE'",
+            // 1. Kéo hoa hồng ĐỦ ĐIỀU KIỆN (ELIGIBLE) chỉ tính trên PHẦN VƯỢT ĐIỂM HÒA VỐN (Marginal Break-Even Threshold)
+            // 1.1. Hoa hồng bán hàng trực tiếp của cá nhân:
+            const directGpRes = await client.query(
+                "SELECT COALESCE(SUM(gross_profit), 0) AS direct_gp, COALESCE(SUM(commission_amount), 0) AS raw_direct_comm FROM sales_commissions WHERE employee_id = $1 AND commission_type = 'DIRECT' AND paid_status = 'ELIGIBLE'",
                 [emp.id]
             );
-            const totalGp = parseFloat(gpRes.rows[0].total_gp) || 0;
+            const directGp = parseFloat(directGpRes.rows[0].direct_gp) || 0;
+            const rawDirectComm = parseFloat(directGpRes.rows[0].raw_direct_comm) || 0;
             const minThreshold = parseFloat(emp.min_gross_profit_threshold) || 0;
 
-            let totalCommission = 0;
-            // Nếu không có ngưỡng hoặc LN gộp đạt ngưỡng -> Mới được nhận hoa hồng (an toàn chi phí lương cứng)
-            if (minThreshold === 0 || totalGp >= minThreshold) {
-                const commRes = await client.query(
-                    "SELECT COALESCE(SUM(commission_amount), 0) AS total_comm FROM sales_commissions WHERE employee_id = $1 AND paid_status = 'ELIGIBLE'",
-                    [emp.id]
-                );
-                totalCommission = parseFloat(commRes.rows[0].total_comm) || 0;
-
-                if (totalCommission > 0) {
-                    await client.query(
-                        "UPDATE sales_commissions SET paid_status = 'INCLUDED_PAYROLL', payroll_period = $1 WHERE employee_id = $2 AND paid_status = 'ELIGIBLE'",
-                        [period_key, emp.id]
-                    );
+            let effectiveDirectComm = 0;
+            if (directGp > 0) {
+                if (minThreshold === 0) {
+                    effectiveDirectComm = rawDirectComm;
+                } else if (directGp > minThreshold) {
+                    const excessRatio = (directGp - minThreshold) / directGp;
+                    effectiveDirectComm = Math.round(rawDirectComm * excessRatio);
                 }
+            }
+
+            // 1.2. Hoa hồng quản lý đội nhóm (hưởng trên phần vượt điểm hòa vốn của từng cấp dưới):
+            let effectiveMgrComm = 0;
+            const mgrCommsRes = await client.query(
+                `SELECT sc.id, sc.subordinate_id, sc.commission_amount, sc.gross_profit,
+                        sub.min_gross_profit_threshold AS sub_threshold,
+                        COALESCE((
+                            SELECT SUM(sub_sc.gross_profit)
+                            FROM sales_commissions sub_sc
+                            WHERE sub_sc.employee_id = sc.subordinate_id
+                              AND sub_sc.commission_type = 'DIRECT'
+                              AND sub_sc.paid_status = 'ELIGIBLE'
+                        ), 0) AS sub_total_direct_gp
+                 FROM sales_commissions sc
+                 JOIN employees sub ON sc.subordinate_id = sub.id
+                 WHERE sc.employee_id = $1
+                   AND sc.commission_type = 'MANAGER_OVERRIDE'
+                   AND sc.paid_status = 'ELIGIBLE'`,
+                [emp.id]
+            );
+
+            for (const mc of mgrCommsRes.rows) {
+                const subTotalGp = parseFloat(mc.sub_total_direct_gp) || 0;
+                const subThreshold = parseFloat(mc.sub_threshold) || 0;
+                const rawSubMgrComm = parseFloat(mc.commission_amount) || 0;
+
+                if (subTotalGp > 0) {
+                    if (subThreshold === 0) {
+                        effectiveMgrComm += rawSubMgrComm;
+                    } else if (subTotalGp > subThreshold) {
+                        const subExcessRatio = (subTotalGp - subThreshold) / subTotalGp;
+                        effectiveMgrComm += Math.round(rawSubMgrComm * subExcessRatio);
+                    }
+                }
+            }
+
+            const totalCommission = effectiveDirectComm + effectiveMgrComm;
+
+            if (totalCommission > 0 || (rawDirectComm > 0 || mgrCommsRes.rows.length > 0)) {
+                await client.query(
+                    "UPDATE sales_commissions SET paid_status = 'INCLUDED_PAYROLL', payroll_period = $1 WHERE employee_id = $2 AND paid_status = 'ELIGIBLE'",
+                    [period_key, emp.id]
+                );
             }
 
             // 2. Kéo Thưởng / Phạt KPI Thu Hồi Công Nợ (Debt KPI Incentive Tiered Bonus)
@@ -163,7 +230,11 @@ router.post('/generate', async (req, res) => {
                 );
             }
 
-            const grossIncome = salaryByDays + totalAllowance + totalCommission + kpiBonus;
+            // Tổng Thưởng (KPI nợ + Thưởng chuyên cần) & Tổng Phạt (Kỷ luật nợ + Phạt đi trễ / vắng mặt)
+            const totalBonus = kpiBonus + attendanceBonus;
+            const totalPenalty = kpiPenalty + attendancePenalty;
+
+            const grossIncome = salaryByDays + totalAllowance + totalCommission + totalBonus;
 
             // Tính Bảo hiểm
             let insBhxhEmp = 0, insBhytEmp = 0, insBhtnEmp = 0;
@@ -174,19 +245,19 @@ router.post('/generate', async (req, res) => {
 
             if (isInsActive && insSalary > 0) {
                 if (emp.has_bhxh !== false) {
-                    insBhxhEmp = Math.round(insSalary * 0.08); // 8%
-                    insBhxhComp = Math.round(insSalary * 0.175); // 17.5%
+                    insBhxhEmp = Math.round(insSalary * (parseFloat(insPol.rate_bhxh_emp) || 8.0) / 100);
+                    insBhxhComp = Math.round(insSalary * (parseFloat(insPol.rate_bhxh_comp) || 17.5) / 100);
                 }
                 if (emp.has_bhyt !== false) {
-                    insBhytEmp = Math.round(insSalary * 0.015); // 1.5%
-                    insBhytComp = Math.round(insSalary * 0.03); // 3%
+                    insBhytEmp = Math.round(insSalary * (parseFloat(insPol.rate_bhyt_emp) || 1.5) / 100);
+                    insBhytComp = Math.round(insSalary * (parseFloat(insPol.rate_bhyt_comp) || 3.0) / 100);
                 }
                 if (emp.has_bhtn !== false) {
-                    insBhtnEmp = Math.round(insSalary * 0.01); // 1%
-                    insBhtnComp = Math.round(insSalary * 0.01); // 1%
+                    insBhtnEmp = Math.round(insSalary * (parseFloat(insPol.rate_bhtn_emp) || 1.0) / 100);
+                    insBhtnComp = Math.round(insSalary * (parseFloat(insPol.rate_bhtn_comp) || 1.0) / 100);
                 }
                 if (emp.has_kpcd !== false) {
-                    insKpcdComp = Math.round(insSalary * 0.02); // 2% KPCĐ
+                    insKpcdComp = Math.round(insSalary * (parseFloat(insPol.rate_kpcd_comp) || 2.0) / 100);
                 }
             }
 
@@ -194,14 +265,13 @@ router.post('/generate', async (req, res) => {
             const totalInsComp = insBhxhComp + insBhytComp + insBhtnComp + insKpcdComp;
 
             const advanceAmount = 0;
-            const penaltyAmount = kpiPenalty;
             const taxAmount = 0;
-            const netSalary = Math.max(0, grossIncome - totalInsEmp - advanceAmount - penaltyAmount - taxAmount);
+            const netSalary = Math.max(0, grossIncome - totalInsEmp - advanceAmount - totalPenalty - taxAmount);
 
             grandGross += grossIncome;
             grandCommission += totalCommission;
             grandAllowance += totalAllowance;
-            grandBonus += kpiBonus;
+            grandBonus += totalBonus;
             grandInsEmp += totalInsEmp;
             grandInsComp += totalInsComp;
             grandNet += netSalary;
@@ -222,35 +292,37 @@ router.post('/generate', async (req, res) => {
                         ins_bhxh_comp, ins_bhyt_comp, ins_bhtn_comp, ins_kpcd_comp, total_ins_comp,
                         advance_amount, deduction_penalty, personal_tax, net_salary, payment_status
                     ) VALUES (
-                        $1, $2, $3, 0, 0,
-                        $4, $5, $6, $7, $8,
-                        $9, $10, $11,
-                        $12, $13, $14, $15,
-                        $16, $17, $18, $19, $20,
-                        $21, $22, $23, $24, 'UNPAID'
+                        $1, $2, $3, $4, $5,
+                        $6, $7, $8, $9, $10,
+                        $11, $12, $13,
+                        $14, $15, $16, $17,
+                        $18, $19, $20, $21, $22,
+                        $23, $24, $25, $26, 'UNPAID'
                     )
                 `, [
-                    payrollId, emp.id, actualDays,
+                    payrollId, emp.id, actualDays, paidLeaveDays, unpaidLeaveDays,
                     baseSalary, salaryByDays, mealAllowance, phoneGasAllowance, respAllowance,
-                    totalCommission, kpiBonus, grossIncome,
+                    totalCommission, totalBonus, grossIncome,
                     insBhxhEmp, insBhytEmp, insBhtnEmp, totalInsEmp,
                     insBhxhComp, insBhytComp, insBhtnComp, insKpcdComp, totalInsComp,
-                    advanceAmount, penaltyAmount, taxAmount, netSalary
+                    advanceAmount, totalPenalty, taxAmount, netSalary
                 ]);
             } else {
                 await client.query(`
                     UPDATE payroll_items SET
-                        actual_working_days = $1, base_salary = $2, salary_by_days = $3,
-                        allowance_meal = $4, allowance_phone_gas = $5, allowance_responsibility = $6,
-                        total_commission = $7, bonus_amount = $8, deduction_penalty = $9, gross_income = $10,
-                        ins_bhxh_emp = $11, ins_bhyt_emp = $12, ins_bhtn_emp = $13, total_ins_emp = $14,
-                        ins_bhxh_comp = $15, ins_bhyt_comp = $16, ins_bhtn_comp = $17, ins_kpcd_comp = $18, total_ins_comp = $19,
-                        net_salary = $20
-                    WHERE id = $21
+                        actual_working_days = $1, paid_leave_days = $2, unpaid_leave_days = $3,
+                        base_salary = $4, salary_by_days = $5,
+                        allowance_meal = $6, allowance_phone_gas = $7, allowance_responsibility = $8,
+                        total_commission = $9, bonus_amount = $10, deduction_penalty = $11, gross_income = $12,
+                        ins_bhxh_emp = $13, ins_bhyt_emp = $14, ins_bhtn_emp = $15, total_ins_emp = $16,
+                        ins_bhxh_comp = $17, ins_bhyt_comp = $18, ins_bhtn_comp = $19, ins_kpcd_comp = $20, total_ins_comp = $21,
+                        net_salary = $22
+                    WHERE id = $23
                 `, [
-                    actualDays, baseSalary, salaryByDays,
+                    actualDays, paidLeaveDays, unpaidLeaveDays,
+                    baseSalary, salaryByDays,
                     mealAllowance, phoneGasAllowance, respAllowance,
-                    totalCommission, kpiBonus, penaltyAmount, grossIncome,
+                    totalCommission, totalBonus, totalPenalty, grossIncome,
                     insBhxhEmp, insBhytEmp, insBhtnEmp, totalInsEmp,
                     insBhxhComp, insBhytComp, insBhtnComp, insKpcdComp, totalInsComp,
                     netSalary, checkItem.rows[0].id

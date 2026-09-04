@@ -72,8 +72,35 @@ function enrichQuotation(q) {
 }
 
 // [GET] Lấy danh sách Báo giá (Đã đồng bộ đầy đủ thông số Lợi nhuận & Trạng thái)
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
     try {
+        if (pool && typeof pool.query === 'function') {
+            try {
+                const dbRes = await pool.query("SELECT * FROM quotations ORDER BY id DESC");
+                if (dbRes.rows.length > 0) {
+                    const data = dbRes.rows.map(row => {
+                        let items = row.items;
+                        if (typeof items === 'string') {
+                            try { items = JSON.parse(items); } catch(e) { items = []; }
+                        }
+                        let laborItems = row.labor_items;
+                        if (typeof laborItems === 'string') {
+                            try { laborItems = JSON.parse(laborItems); } catch(e) { laborItems = []; }
+                        }
+                        return enrichQuotation({
+                            ...row,
+                            quotation_id: row.id,
+                            items: items || [],
+                            labor_items: laborItems || []
+                        });
+                    });
+                    writeDB(data);
+                    return res.json({ success: true, data: data });
+                }
+            } catch(dbErr) {
+                console.warn("Lỗi đọc DB quotations, fallback sang JSON:", dbErr.message);
+            }
+        }
         const rawData = readDB();
         const data = rawData.map(enrichQuotation);
         res.json({ success: true, data: data });
@@ -83,7 +110,7 @@ router.get('/', (req, res) => {
 });
 
 // [POST] Tạo Báo giá mới
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const data = readDB();
         const payload = req.body;
@@ -131,6 +158,30 @@ router.post('/', (req, res) => {
             status: status,
             created_at: new Date().toISOString()
         };
+
+        // Lưu vào PostgreSQL DB
+        if (pool && typeof pool.query === 'function') {
+            try {
+                await pool.query(`
+                    INSERT INTO quotations (
+                        quotation_code, store_id, brand_name, project_name, customer_name,
+                        phone, sale_name, created_by, emp_id, system_type, monthly_bill,
+                        system_kwp, total_amount, total_cost, profit_margin, is_below_floor,
+                        payback_years, npv_amount, roe_percent, status, items, labor_items,
+                        created_at, updated_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, NOW(), NOW())
+                    ON CONFLICT (quotation_code) DO NOTHING
+                `, [
+                    newQuotation.quotation_code, newQuotation.store_id || 1, newQuotation.brand_name, newQuotation.project_name, newQuotation.customer_name,
+                    newQuotation.phone, newQuotation.sale_name, newQuotation.created_by, newQuotation.emp_id, newQuotation.system_type, newQuotation.monthly_bill || 0,
+                    newQuotation.system_kwp || 0, newQuotation.total_amount || 0, newQuotation.total_cost || 0, newQuotation.profit_margin || 0, newQuotation.is_below_floor || false,
+                    newQuotation.payback_years || 0, newQuotation.npv_amount || 0, newQuotation.roe_percent || 0, newQuotation.status || 'QUOTING',
+                    JSON.stringify(newQuotation.items || []), JSON.stringify(newQuotation.labor_items || [])
+                ]);
+            } catch (dbErr) {
+                console.error("Lỗi insert DB quotations:", dbErr.message);
+            }
+        }
         
         // Lưu vào đầu danh sách
         data.unshift(newQuotation);
@@ -193,7 +244,7 @@ router.get('/:id', (req, res) => {
 });
 
 // [PUT] Cập nhật / Sửa Báo Giá Toàn Diện
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
         const data = readDB();
         const idx = findQuotationIndex(data, req.params.id);
@@ -232,6 +283,33 @@ router.put('/:id', (req, res) => {
             updated_at: new Date().toISOString()
         };
 
+        if (pool && typeof pool.query === 'function') {
+            try {
+                await pool.query(`
+                    UPDATE quotations 
+                    SET 
+                        brand_name = COALESCE($1, brand_name),
+                        project_name = COALESCE($2, project_name),
+                        customer_name = COALESCE($3, customer_name),
+                        phone = COALESCE($4, phone),
+                        total_amount = $5,
+                        total_cost = $6,
+                        profit_margin = $7,
+                        is_below_floor = $8,
+                        status = $9,
+                        items = $10,
+                        labor_items = $11,
+                        updated_at = NOW()
+                    WHERE quotation_code = $12 OR id = $13
+                `, [
+                    data[idx].brand_name, data[idx].project_name, data[idx].customer_name, data[idx].phone,
+                    totalAmount, Math.round(totalCost), profitMargin, isBelowFloor, status,
+                    JSON.stringify(data[idx].items || []), JSON.stringify(data[idx].labor_items || []),
+                    data[idx].quotation_code, parseInt(req.params.id) || 0
+                ]);
+            } catch(dbErr) {}
+        }
+
         writeDB(data);
         console.log(`✅ Đã cập nhật thành công báo giá: ${data[idx].quotation_code} [${status}]`);
         res.json({ success: true, quotation: enrichQuotation(data[idx]) });
@@ -241,7 +319,7 @@ router.put('/:id', (req, res) => {
 });
 
 // [PUT] Cập nhật Trạng Thái Báo Giá (Duyệt / Từ Chối / Đang Báo Giá / Khách Chốt)
-router.put('/:id/status', (req, res) => {
+router.put('/:id/status', async (req, res) => {
     try {
         const data = readDB();
         const idx = findQuotationIndex(data, req.params.id);
@@ -265,6 +343,28 @@ router.put('/:id/status', (req, res) => {
             data[idx].rejected_at = new Date().toISOString();
         }
         if (notes) data[idx].admin_notes = notes;
+
+        if (pool && typeof pool.query === 'function') {
+            try {
+                await pool.query(`
+                    UPDATE quotations 
+                    SET 
+                        status = $1,
+                        approved_by = $2,
+                        approved_at = $3,
+                        reject_reason = $4,
+                        rejected_by = $5,
+                        rejected_at = $6,
+                        admin_notes = $7,
+                        updated_at = NOW()
+                    WHERE quotation_code = $8 OR id = $9
+                `, [
+                    data[idx].status, data[idx].approved_by || null, data[idx].approved_at || null,
+                    data[idx].reject_reason || null, data[idx].rejected_by || null, data[idx].rejected_at || null,
+                    data[idx].admin_notes || null, data[idx].quotation_code, parseInt(req.params.id) || 0
+                ]);
+            } catch(dbErr) {}
+        }
 
         writeDB(data);
 
@@ -347,8 +447,8 @@ router.post('/:id/convert-to-order', async (req, res) => {
     }
 });
 
-// [DELETE] Xóa báo giá
-router.delete('/:id', (req, res) => {
+// [DELETE] Xóa Báo Giá & Tiêu Hủy Đồng Bộ Đơn Hàng, Sổ Quỹ, Hợp Đồng & Công Nợ Liên Quan
+router.delete('/:id', async (req, res) => {
     try {
         let data = readDB();
         const idx = findQuotationIndex(data, req.params.id);
@@ -357,10 +457,119 @@ router.delete('/:id', (req, res) => {
             return res.status(404).json({ success: false, error: 'Không tìm thấy báo giá để xóa' });
         }
 
+        const q = data[idx];
+        const qCode = (q.quotation_code || q.code || '').trim();
+        const convOrderCode = (q.converted_order_code || '').trim();
+        const convOrderId = q.converted_order_id || null;
+
+        // Xử lý dọn dẹp liên kết trong PostgreSQL nếu có DB
+        if (pool && typeof pool.query === 'function') {
+            try {
+                // 1. Tìm các đơn hàng liên quan đến Báo Giá này
+                let linkedOrders = [];
+                try {
+                    const ordQuery = `
+                        SELECT id, customer_id, order_code, status, total_amount, paid_amount 
+                        FROM orders 
+                        WHERE (order_code = $1 AND $1 != '') 
+                           OR (order_code = $2 AND $2 != '') 
+                           OR (order_code LIKE $3 AND $3 != '')
+                           OR (notes LIKE $4 AND $4 != '')
+                    `;
+                    const ordRes = await pool.query(ordQuery, [
+                        convOrderCode, 
+                        'DH-' + qCode, 
+                        '%' + qCode + '%', 
+                        '%' + qCode + '%'
+                    ]);
+                    linkedOrders = ordRes.rows || [];
+                } catch (ordFindErr) {
+                    console.warn("Lỗi tìm đơn hàng liên quan báo giá:", ordFindErr.message);
+                }
+
+                // 2. Dọn dẹp từng đơn hàng liên quan
+                const affectedCustIds = new Set();
+                for (const ord of linkedOrders) {
+                    if (ord.customer_id) affectedCustIds.add(ord.customer_id);
+
+                    // Khôi phục tồn kho nếu đơn đã xuất hàng
+                    if (['PACKED', 'SHIPPING_CMD', 'SHIPPED', 'COMPLETED'].includes(ord.status)) {
+                        try {
+                            const itemsRes = await pool.query('SELECT product_id, quantity FROM order_items WHERE order_id = $1', [ord.id]);
+                            for (let item of itemsRes.rows) {
+                                if (item.product_id) {
+                                    await pool.query('UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2', [item.quantity, item.product_id]);
+                                }
+                            }
+                        } catch(stkErr) {}
+                    }
+
+                    // Dọn dẹp các chứng từ / bảng con của đơn
+                    try { await pool.query('DELETE FROM cash_transactions WHERE order_id = $1 OR order_code = $2 OR notes LIKE $3', [ord.id, ord.order_code, '%' + ord.order_code + '%']); } catch(e) {}
+                    try { await pool.query('DELETE FROM order_docs WHERE order_id = $1', [ord.id]); } catch(e) {}
+                    try { await pool.query('DELETE FROM order_items WHERE order_id = $1', [ord.id]); } catch(e) {}
+                    try { await pool.query('DELETE FROM return_items WHERE return_order_id IN (SELECT id FROM return_orders WHERE order_id = $1)', [ord.id]); } catch(e) {}
+                    try { await pool.query('DELETE FROM return_orders WHERE order_id = $1', [ord.id]); } catch(e) {}
+                    try { await pool.query('DELETE FROM orders WHERE id = $1', [ord.id]); } catch(e) {}
+                }
+
+                // 3. Dọn dẹp các phiếu thu / chi trong Sổ Quỹ (cash_transactions) liên quan trực tiếp đến mã BOQ
+                if (qCode) {
+                    try {
+                        await pool.query("DELETE FROM cash_transactions WHERE notes LIKE $1 OR ref_code LIKE $1", ['%' + qCode + '%']);
+                    } catch(e) {}
+                }
+
+                // 4. Dọn dẹp Hợp đồng & Thanh toán Hợp đồng (contracts & contract_payments) liên quan đến mã BOQ
+                if (qCode) {
+                    try {
+                        const contractRes = await pool.query("SELECT id FROM contracts WHERE contract_code LIKE $1", ['%' + qCode + '%']);
+                        for (let c of contractRes.rows) {
+                            try { await pool.query("DELETE FROM contract_payments WHERE contract_id = $1", [c.id]); } catch(e) {}
+                            try { await pool.query("DELETE FROM contracts WHERE id = $1", [c.id]); } catch(e) {}
+                        }
+                    } catch(e) {}
+                }
+
+                // 5. Dọn dẹp Bảo Hành / O&M nếu có liên quan
+                if (qCode) {
+                    try { await pool.query("DELETE FROM warranties WHERE notes LIKE $1", ['%' + qCode + '%']); } catch(e) {}
+                    try { await pool.query("DELETE FROM om_schedules WHERE notes LIKE $1", ['%' + qCode + '%']); } catch(e) {}
+                }
+
+                // 6. Cập nhật lại Công Nợ & Doanh Số cho các Khách Hàng bị ảnh hưởng
+                for (const custId of affectedCustIds) {
+                    try {
+                        await pool.query(`
+                            UPDATE customers 
+                            SET 
+                                current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
+                                total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                            WHERE id = $1
+                        `, [custId]);
+                    } catch (custErr) {}
+                }
+
+                // 7. Xóa khỏi bảng PostgreSQL quotations
+                try {
+                    await pool.query("DELETE FROM quotations WHERE quotation_code = $1 OR id = $2", [qCode, parseInt(req.params.id) || 0]);
+                } catch (qDelErr) {}
+            } catch (dbErr) {
+                console.error("Lỗi dọn dẹp liên kết CSDL khi xóa báo giá:", dbErr);
+            }
+        }
+
+        // Xóa Báo Giá khỏi danh sách
         data.splice(idx, 1);
         writeDB(data);
-        res.json({ success: true, message: 'Đã xóa báo giá thành công' });
+
+        console.log(`🗑️ Đã xóa hoàn toàn Báo Giá ${qCode} và toàn bộ chứng từ nợ, đơn hàng, sổ quỹ liên quan!`);
+        res.json({ 
+            success: true, 
+            message: `Đã xóa thành công Báo Giá ${qCode} và tự động dọn dẹp các chứng từ, đơn hàng, công nợ & sổ quỹ liên quan!` 
+        });
     } catch (e) {
+        console.error("Lỗi API DELETE /api/quotations:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });

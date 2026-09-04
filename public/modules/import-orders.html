@@ -1,27 +1,35 @@
-<div class="h-full flex flex-col space-y-6">
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col relative overflow-hidden">
+<div class="w-full min-h-full flex flex-col space-y-4 pb-28 md:pb-6">
+    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3.5 sm:p-5 flex-1 flex flex-col relative">
         
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 shrink-0 gap-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 shrink-0 gap-3">
             <div>
-                <h3 class="font-bold text-slate-900 text-lg"><i class="fas fa-ship text-blue-600"></i> Quản Lý Đơn Nhập Khẩu & Chứng Từ</h3>
-                <p class="text-xs text-slate-500 mt-1">Lưu trữ Tờ khai Hải quan, Form E, C/O, C/Q, B/L để đối soát Thuế.</p>
+                <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-2"><i class="fas fa-ship text-blue-600"></i> Quản Lý Đơn Nhập Khẩu & Chứng Từ</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lưu trữ Tờ khai Hải quan, Form E, C/O, C/Q, B/L để đối soát Thuế.</p>
             </div>
-            <button onclick="window.modImport.openCreate()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow"><i class="fas fa-plus mr-1"></i> Tạo Lô Hàng Mới</button>
+            <button onclick="window.modImport.openCreate()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-2 px-4 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                <i class="fas fa-plus"></i> Tạo Lô Hàng Mới
+            </button>
         </div>
         
-        <div class="overflow-y-auto flex-1 border rounded-lg">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 text-xs uppercase text-slate-600 sticky top-0 shadow-sm z-10">
+        <!-- 1. Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto flex-1 border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+                <thead class="bg-slate-100 text-[10px] uppercase text-slate-600 font-black sticky top-0 shadow-2xs z-10">
                     <tr>
-                        <th class="p-4 font-bold border-b w-1/3">Mã Lô Hàng (PO) & Ghi Chú</th>
-                        <th class="p-4 font-bold border-b">Nhà Cung Cấp</th>
-                        <th class="p-4 font-bold border-b text-right">Tổng Tiền</th>
-                        <th class="p-4 font-bold border-b text-center">Trạng Thái</th>
-                        <th class="p-4 font-bold border-b text-center w-32">Thao Tác</th>
+                        <th class="p-3 pl-4 border-b w-1/3">Mã Lô Hàng (PO) & Ghi Chú</th>
+                        <th class="p-3 border-b">Nhà Cung Cấp</th>
+                        <th class="p-3 border-b text-right">Tổng Tiền</th>
+                        <th class="p-3 border-b text-center">Trạng Thái</th>
+                        <th class="p-3 pr-4 border-b text-center w-32">Thao Tác</th>
                     </tr>
                 </thead>
-                <tbody id="tbl-imports" class="divide-y text-slate-700"></tbody>
+                <tbody id="tbl-imports" class="divide-y divide-slate-100 text-slate-700"></tbody>
             </table>
+        </div>
+
+        <!-- 2. Mobile Smart Cards -->
+        <div id="tbl-imports-mobile" class="md:hidden space-y-2.5 pb-8">
+            <!-- Rendered by JS -->
         </div>
     </div>
 </div>
@@ -170,38 +178,85 @@
 
                     tbody.innerHTML = data.data.map(i => {
                         let statusColor = 'bg-slate-100 text-slate-600';
-                        if (i.status === 'Đang Sản Xuất') statusColor = 'bg-blue-100 text-blue-700';
-                        if (i.status === 'Đã Lên Tàu (ETD)') statusColor = 'bg-amber-100 text-amber-700';
-                        if (i.status === 'Đang Làm Thủ Tục HQ') statusColor = 'bg-red-100 text-red-700';
-                        if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700';
+                        if (i.status === 'Đang Sản Xuất') statusColor = 'bg-blue-100 text-blue-700 border-blue-200';
+                        if (i.status === 'Đã Lên Tàu (ETD)') statusColor = 'bg-amber-100 text-amber-700 border-amber-200';
+                        if (i.status === 'Đang Làm Thủ Tục HQ') statusColor = 'bg-red-100 text-red-700 border-red-200';
+                        if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
 
                         return `
                             <tr class="hover:bg-blue-50/50 transition">
-                                <td class="p-4">
-                                    <p onclick="window.modImport.openDocs(${i.id})" class="font-mono font-bold text-blue-700 text-sm cursor-pointer hover:text-blue-500 hover:underline flex items-center gap-2">
+                                <td class="p-3 pl-4">
+                                    <p onclick="window.modImport.openDocs(${i.id})" class="font-mono font-bold text-blue-700 text-xs cursor-pointer hover:text-blue-500 hover:underline flex items-center gap-1.5">
                                         <i class="fas fa-file-contract text-slate-400"></i> ${i.po_code}
                                     </p>
-                                    ${i.note ? `<p class="text-[11px] text-slate-600 bg-amber-50 p-1.5 rounded mt-1.5 line-clamp-2 border border-amber-100 shadow-sm"><i class="fas fa-comment-dots text-amber-400 mr-1"></i>${i.note}</p>` : ''}
+                                    ${i.note ? `<p class="text-[10px] text-slate-600 bg-amber-50 p-1 rounded mt-1 line-clamp-2 border border-amber-100"><i class="fas fa-comment-dots text-amber-400 mr-1"></i>${i.note}</p>` : ''}
                                 </td>
-                                <td class="p-4 font-bold text-slate-800">
+                                <td class="p-3 font-bold text-slate-800 text-xs">
                                     ${i.supplier_name}
-                                    ${i.eta_date ? `<p class="text-[10px] text-slate-400 font-normal mt-1"><i class="far fa-clock"></i> ETA: ${new Date(i.eta_date).toLocaleDateString('vi-VN')}</p>` : ''}
+                                    ${i.eta_date ? `<p class="text-[10px] text-slate-400 font-normal mt-0.5"><i class="far fa-clock"></i> ETA: ${new Date(i.eta_date).toLocaleDateString('vi-VN')}</p>` : ''}
                                 </td>
-                                <td class="p-4 text-right font-black text-slate-700">${new Intl.NumberFormat('vi-VN').format(i.total_value)} <span class="text-xs text-slate-400">${i.currency}</span></td>
-                                <td class="p-4 text-center"><span class="${statusColor} px-2.5 py-1 rounded-md text-[10px] font-black uppercase border shadow-sm">${i.status || 'Chờ Thanh Toán'}</span></td>
-                                <td class="p-4 text-center">
-                                    <div class="flex flex-col gap-2">
-                                        <button onclick="window.modImport.openDocs(${i.id})" class="bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 px-3 py-1.5 rounded-lg font-bold transition shadow-sm border border-amber-200 text-xs flex items-center justify-center gap-2 mx-auto w-full">
-                                            <i class="fas fa-folder-open text-lg"></i> Mở Két Chứng Từ
+                                <td class="p-3 text-right font-black text-slate-700 text-xs">${new Intl.NumberFormat('vi-VN').format(i.total_value)} <span class="text-[10px] text-slate-400">${i.currency}</span></td>
+                                <td class="p-3 text-center"><span class="${statusColor} px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase border">${i.status || 'Chờ Thanh Toán'}</span></td>
+                                <td class="p-3 pr-4 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button onclick="window.modImport.openDocs(${i.id})" class="bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 px-2.5 py-1 rounded-lg font-bold transition shadow-2xs border border-amber-200 text-xs flex items-center gap-1 cursor-pointer">
+                                            <i class="fas fa-folder-open"></i> Két HQ
                                         </button>
-                                        <button onclick="window.modImport.openEdit(${i.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1 rounded-lg font-bold transition shadow-sm border text-[11px] flex items-center justify-center gap-2 mx-auto w-full">
-                                            <i class="fas fa-edit text-blue-500"></i> Sửa Thông Tin
+                                        <button onclick="window.modImport.openEdit(${i.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded-lg font-bold transition border text-xs cursor-pointer">
+                                            <i class="fas fa-edit text-blue-500"></i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                         `;
                     }).join('');
+
+                    // Render Mobile Cards
+                    const mobEl = document.getElementById('tbl-imports-mobile');
+                    if (mobEl) {
+                        mobEl.innerHTML = data.data.map(i => {
+                            let statusColor = 'bg-slate-100 text-slate-600 border-slate-200';
+                            if (i.status === 'Đang Sản Xuất') statusColor = 'bg-blue-100 text-blue-700 border-blue-200';
+                            if (i.status === 'Đã Lên Tàu (ETD)') statusColor = 'bg-amber-100 text-amber-700 border-amber-200';
+                            if (i.status === 'Đang Làm Thủ Tục HQ') statusColor = 'bg-red-100 text-red-700 border-red-200';
+                            if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+
+                            return `
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-mono font-bold text-blue-700 text-xs flex items-center gap-1.5" onclick="window.modImport.openDocs(${i.id})">
+                                        <i class="fas fa-file-contract text-slate-400"></i> ${i.po_code}
+                                    </span>
+                                    <span class="${statusColor} px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase border">
+                                        ${i.status || 'Chờ Thanh Toán'}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-xs sm:text-sm">${i.supplier_name}</h4>
+                                    ${i.note ? `<p class="text-[11px] text-slate-600 bg-amber-50 p-1.5 rounded-lg mt-1 border border-amber-100 leading-snug">${i.note}</p>` : ''}
+                                </div>
+
+                                <div class="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                    <div class="text-slate-500 text-[10px]">
+                                        ${i.eta_date ? `ETA: <b>${new Date(i.eta_date).toLocaleDateString('vi-VN')}</b>` : 'Chưa có ETA'}
+                                    </div>
+                                    <div class="font-black text-slate-800 text-xs">
+                                        ${new Intl.NumberFormat('vi-VN').format(i.total_value)} ${i.currency}
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                                    <button type="button" onclick="window.modImport.openDocs(${i.id})" class="bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                        <i class="fas fa-folder-open text-amber-600"></i> Mở Két Chứng Từ
+                                    </button>
+                                    <button type="button" onclick="window.modImport.openEdit(${i.id})" class="p-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold cursor-pointer">
+                                        <i class="fas fa-edit text-blue-500"></i> Sửa
+                                    </button>
+                                </div>
+                            </div>`;
+                        }).join('');
+                    }
                 }
             } catch(e) {}
         },

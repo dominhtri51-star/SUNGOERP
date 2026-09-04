@@ -1,27 +1,35 @@
-<div class="h-full flex flex-col space-y-6">
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col relative overflow-hidden">
+<div class="w-full min-h-full flex flex-col space-y-4 pb-28 md:pb-6">
+    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3.5 sm:p-5 flex-1 flex flex-col relative">
         
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 shrink-0 gap-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 shrink-0 gap-3">
             <div>
-                <h3 class="font-bold text-slate-900 text-lg"><i class="fas fa-shopping-cart text-emerald-600"></i> Quản Lý Mua Hàng Nội Địa (PO)</h3>
-                <p class="text-xs text-slate-500 mt-1">Lập danh sách vật tư cần mua, trình duyệt và theo dõi tiến độ nhập kho.</p>
+                <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-2"><i class="fas fa-shopping-cart text-emerald-600"></i> Quản Lý Mua Hàng Nội Địa (PO)</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lập danh sách vật tư cần mua, trình duyệt và theo dõi tiến độ nhập kho.</p>
             </div>
-            <button onclick="window.modPurchase.openCreate()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition shadow"><i class="fas fa-plus mr-1"></i> Lập Đơn Mua Mới</button>
+            <button onclick="window.modPurchase.openCreate()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-2 px-4 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                <i class="fas fa-plus"></i> Lập Đơn Mua Mới
+            </button>
         </div>
         
-        <div class="overflow-y-auto flex-1 border rounded-lg">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 text-xs uppercase text-slate-600 sticky top-0 shadow-sm z-10">
+        <!-- 1. Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto flex-1 border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+                <thead class="bg-slate-100 text-[10px] uppercase text-slate-600 font-black sticky top-0 shadow-2xs z-10">
                     <tr>
-                        <th class="p-4 font-bold border-b w-1/4">Mã Đơn & Ngày Tạo</th>
-                        <th class="p-4 font-bold border-b w-1/4">Nhà Cung Cấp</th>
-                        <th class="p-4 font-bold border-b text-right">Tổng Tiền</th>
-                        <th class="p-4 font-bold border-b text-center">Trạng Thái</th>
-                        <th class="p-4 font-bold border-b text-center w-32">Thao Tác</th>
+                        <th class="p-3 pl-4 border-b w-1/4">Mã Đơn & Ngày Tạo</th>
+                        <th class="p-3 border-b w-1/4">Nhà Cung Cấp</th>
+                        <th class="p-3 border-b text-right">Tổng Tiền</th>
+                        <th class="p-3 border-b text-center">Trạng Thái</th>
+                        <th class="p-3 pr-4 border-b text-center w-32">Thao Tác</th>
                     </tr>
                 </thead>
-                <tbody id="tbl-purchases" class="divide-y text-slate-700"></tbody>
+                <tbody id="tbl-purchases" class="divide-y divide-slate-100 text-slate-700"></tbody>
             </table>
+        </div>
+
+        <!-- 2. Mobile Smart Cards -->
+        <div id="tbl-purchases-mobile" class="md:hidden space-y-2.5 pb-8">
+            <!-- Rendered by JS -->
         </div>
     </div>
 </div>
@@ -150,38 +158,85 @@
                     if(data.data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Chưa có đơn mua hàng nào.</td></tr>`;
 
                     tbody.innerHTML = data.data.map(i => {
-                        let statusColor = 'bg-slate-100 text-slate-600';
-                        if (i.status === 'Đã Duyệt - Đợi Giao') statusColor = 'bg-blue-100 text-blue-700';
-                        if (i.status === 'Đang Vận Chuyển') statusColor = 'bg-amber-100 text-amber-700';
-                        if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700';
-                        if (i.status === 'Đã Hủy') statusColor = 'bg-red-100 text-red-700';
+                        let statusColor = 'bg-slate-100 text-slate-600 border-slate-200';
+                        if (i.status === 'Đã Duyệt - Đợi Giao') statusColor = 'bg-blue-100 text-blue-700 border-blue-200';
+                        if (i.status === 'Đang Vận Chuyển') statusColor = 'bg-amber-100 text-amber-700 border-amber-200';
+                        if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                        if (i.status === 'Đã Hủy') statusColor = 'bg-red-100 text-red-700 border-red-200';
 
                         const dateStr = new Date(i.created_at).toLocaleDateString('vi-VN');
                         const itemCount = i.items ? i.items.length : 0;
 
                         return `
                             <tr class="hover:bg-emerald-50/50 transition">
-                                <td class="p-4">
-                                    <p class="font-mono font-bold text-emerald-700 text-sm"><i class="fas fa-file-invoice text-slate-400"></i> ${i.po_code}</p>
-                                    <p class="text-[10px] text-slate-400 font-normal mt-1"><i class="far fa-calendar-alt"></i> ${dateStr}</p>
+                                <td class="p-3 pl-4">
+                                    <p class="font-mono font-bold text-emerald-700 text-xs"><i class="fas fa-file-invoice text-slate-400"></i> ${i.po_code}</p>
+                                    <p class="text-[10px] text-slate-400 font-normal mt-0.5"><i class="far fa-calendar-alt"></i> ${dateStr}</p>
                                 </td>
-                                <td class="p-4">
-                                    <p class="font-bold text-slate-800">${i.supplier_name}</p>
-                                    ${i.note ? `<p class="text-[11px] text-slate-500 mt-1 line-clamp-1 italic"><i class="fas fa-comment-dots text-slate-400 mr-1"></i>${i.note}</p>` : ''}
+                                <td class="p-3">
+                                    <p class="font-bold text-slate-800 text-xs">${i.supplier_name}</p>
+                                    ${i.note ? `<p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1 italic"><i class="fas fa-comment-dots text-slate-400 mr-1"></i>${i.note}</p>` : ''}
                                 </td>
-                                <td class="p-4 text-right">
-                                    <p class="font-black text-red-600">${window.modPurchase.fmt(i.total_amount)} đ</p>
-                                    <p class="text-[10px] text-slate-500 font-bold">${itemCount} danh mục vật tư</p>
+                                <td class="p-3 text-right">
+                                    <p class="font-black text-red-600 text-xs">${window.modPurchase.fmt(i.total_amount)} đ</p>
+                                    <p class="text-[9.5px] text-slate-400 font-bold">${itemCount} danh mục</p>
                                 </td>
-                                <td class="p-4 text-center"><span class="${statusColor} px-2.5 py-1 rounded-md text-[10px] font-black uppercase border shadow-sm">${i.status || 'Chờ Duyệt'}</span></td>
-                                <td class="p-4 text-center">
-                                    <button onclick="window.modPurchase.openEdit(${i.id})" class="bg-white hover:bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg font-bold transition shadow-sm border text-[11px] flex items-center justify-center gap-2 mx-auto w-full">
+                                <td class="p-3 text-center"><span class="${statusColor} px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase border">${i.status || 'Chờ Duyệt'}</span></td>
+                                <td class="p-3 pr-4 text-center">
+                                    <button onclick="window.modPurchase.openEdit(${i.id})" class="bg-white hover:bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold transition shadow-2xs border text-xs flex items-center justify-center gap-1 mx-auto cursor-pointer">
                                         <i class="fas fa-edit text-emerald-500"></i> Xem / Sửa
                                     </button>
                                 </td>
                             </tr>
                         `;
                     }).join('');
+
+                    // Render Mobile Cards
+                    const mobEl = document.getElementById('tbl-purchases-mobile');
+                    if (mobEl) {
+                        mobEl.innerHTML = data.data.map(i => {
+                            let statusColor = 'bg-slate-100 text-slate-600 border-slate-200';
+                            if (i.status === 'Đã Duyệt - Đợi Giao') statusColor = 'bg-blue-100 text-blue-700 border-blue-200';
+                            if (i.status === 'Đang Vận Chuyển') statusColor = 'bg-amber-100 text-amber-700 border-amber-200';
+                            if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                            if (i.status === 'Đã Hủy') statusColor = 'bg-red-100 text-red-700 border-red-200';
+
+                            const dateStr = new Date(i.created_at).toLocaleDateString('vi-VN');
+                            const itemCount = i.items ? i.items.length : 0;
+
+                            return `
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-mono font-bold text-emerald-700 text-xs flex items-center gap-1.5" onclick="window.modPurchase.openEdit(${i.id})">
+                                        <i class="fas fa-file-invoice text-slate-400"></i> ${i.po_code}
+                                    </span>
+                                    <span class="${statusColor} px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase border">
+                                        ${i.status || 'Chờ Duyệt'}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-xs sm:text-sm">${i.supplier_name}</h4>
+                                    ${i.note ? `<p class="text-[11px] text-slate-600 bg-slate-50 p-1.5 rounded-lg mt-1 border border-slate-100 italic">${i.note}</p>` : ''}
+                                </div>
+
+                                <div class="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                    <div class="text-slate-500 text-[10px]">
+                                        ${dateStr} • ${itemCount} vật tư
+                                    </div>
+                                    <div class="font-black text-red-600 text-xs">
+                                        ${window.modPurchase.fmt(i.total_amount)} đ
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-end pt-1 border-t border-slate-100">
+                                    <button type="button" onclick="window.modPurchase.openEdit(${i.id})" class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                        <i class="fas fa-edit text-emerald-600"></i> Xem Chi Tiết / Sửa
+                                    </button>
+                                </div>
+                            </div>`;
+                        }).join('');
+                    }
                 }
             } catch(e) { console.log('Lỗi tải dữ liệu:', e); }
         },

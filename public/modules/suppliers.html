@@ -1,81 +1,100 @@
-<div class="h-full flex flex-col relative overflow-hidden text-sm bg-slate-50">
+<div class="w-full min-h-full flex flex-col relative text-sm bg-slate-50 pb-28 md:pb-6">
     
     <!-- ========================================== -->
     <!-- MÀN HÌNH 1: DANH SÁCH NHÀ CUNG CẤP         -->
     <!-- ========================================== -->
-    <div id="sup-main-view" class="flex-1 overflow-y-auto p-6 w-full h-full flex flex-col">
-        <div class="flex justify-between items-center mb-6 shrink-0">
+    <div id="sup-main-view" class="w-full flex-1 p-2.5 sm:p-4 md:p-6 flex flex-col space-y-3">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs shrink-0">
             <div>
-                <h3 class="font-bold text-slate-900 text-2xl"><i class="fas fa-building text-blue-600 mr-2"></i>Quản Lý Nhà Cung Cấp & Công Nợ</h3>
-                <p class="text-xs text-slate-500 mt-1">Quản lý hồ sơ, thiết lập hạn mức nợ và đối soát thanh toán.</p>
+                <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-2"><i class="fas fa-building text-blue-600"></i> Quản Lý Nhà Cung Cấp & Công Nợ</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Quản lý hồ sơ, thiết lập hạn mức nợ và đối soát thanh toán.</p>
             </div>
-            <button onclick="window.modSupplier.openForm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition shadow-md"><i class="fas fa-plus mr-1"></i> Thêm Nhà Cung Cấp</button>
+            <button onclick="window.modSupplier.openForm()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-2 px-4 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                <i class="fas fa-plus"></i> Thêm Nhà Cung Cấp
+            </button>
         </div>
         
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
-            <div class="overflow-y-auto flex-1">
-                <table class="w-full text-left text-sm whitespace-nowrap">
-                    <thead class="bg-[#f8f9fa] text-xs uppercase text-slate-500 sticky top-0 shadow-sm z-10 border-b border-slate-100">
-                        <tr>
-                            <th class="p-4 font-bold">Mã & Đơn Vị</th>
-                            <th class="p-4 font-bold">Liên Hệ</th>
-                            <th class="p-4 font-bold text-right">Hạn Mức Nợ Tối Đa</th>
-                            <th class="p-4 font-bold text-center">Chính Sách</th>
-                            <th class="p-4 font-bold text-center w-32">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbl-suppliers" class="divide-y divide-slate-50 text-slate-700"></tbody>
-                </table>
-            </div>
+        <!-- 1. Desktop Table View -->
+        <div class="hidden md:block bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-x-auto flex-1">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+                <thead class="bg-slate-100 text-[10px] uppercase text-slate-600 font-black sticky top-0 shadow-2xs z-10 border-b border-slate-200">
+                    <tr>
+                        <th class="p-3 pl-4">Mã & Đơn Vị</th>
+                        <th class="p-3">Liên Hệ</th>
+                        <th class="p-3 text-right">Hạn Mức Nợ Tối Đa</th>
+                        <th class="p-3 text-center">Chính Sách</th>
+                        <th class="p-3 pr-4 text-center w-32">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="tbl-suppliers" class="divide-y divide-slate-100 text-slate-700"></tbody>
+            </table>
+        </div>
+
+        <!-- 2. Mobile Smart Cards -->
+        <div id="tbl-suppliers-mobile" class="md:hidden space-y-2.5 pb-8">
+            <!-- Populated by JS -->
         </div>
     </div>
 
     <!-- ========================================== -->
     <!-- MÀN HÌNH 2: BẢNG ĐIỀU KHIỂN SỔ CÁI CÔNG NỢ -->
     <!-- ========================================== -->
-    <div id="sup-detail-view" class="absolute inset-0 bg-slate-50 z-20 flex-col hidden overflow-hidden transition-all transform translate-x-full">
-        <div class="bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm shrink-0">
-            <button onclick="window.modSupplier.hideDetail()" class="text-slate-500 hover:text-blue-600 font-black text-sm flex items-center gap-2"><i class="fas fa-arrow-left"></i> TRỞ VỀ DANH SÁCH</button>
-            <h2 class="font-black text-slate-800 text-lg flex items-center">
-                SỔ CÔNG NỢ: <span id="detail-sup-name" class="text-blue-600 ml-2">---</span> 
-                <span id="detail-terms" class="text-xs text-slate-500 font-medium ml-4 pl-4 border-l border-slate-300"></span>
-            </h2>
-            <button onclick="alert('Tính năng lập UNC nằm ở module Sổ Quỹ Kế Toán.')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded text-xs font-black shadow-sm transition"><i class="fas fa-money-check-alt mr-1"></i> LẬP PHIẾU CHI TRẢ TIỀN</button>
+    <div id="sup-detail-view" class="w-full flex-1 flex-col bg-slate-50 min-h-full hidden">
+        <div class="bg-white border-b border-slate-200 px-3 sm:px-4 py-2.5 sm:py-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-xs shrink-0 pt-safe">
+            <button onclick="window.modSupplier.hideDetail()" class="text-slate-600 hover:text-blue-600 font-bold text-xs flex items-center gap-1.5 bg-slate-100 active:bg-slate-200 px-3 py-1.5 rounded-xl transition cursor-pointer shrink-0">
+                <i class="fas fa-arrow-left"></i> TRỞ VỀ DANH SÁCH
+            </button>
+            <div class="text-center min-w-0">
+                <h2 class="font-black text-slate-800 text-xs sm:text-base truncate">
+                    SỔ CÔNG NỢ: <span id="detail-sup-name" class="text-blue-600 font-bold">---</span> 
+                </h2>
+                <p id="detail-terms" class="text-[10px] sm:text-xs text-slate-500"></p>
+            </div>
+            <button onclick="alert('Tính năng lập UNC nằm ở module Sổ Quỹ & Phải Trả NCC (331).')" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-black shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer">
+                <i class="fas fa-money-check-alt"></i> LẬP PHIẾU CHI TRẢ
+            </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6 max-w-6xl mx-auto w-full space-y-6">
+        <div class="w-full p-2.5 sm:p-4 md:p-6 max-w-6xl mx-auto space-y-4 pb-36 sm:pb-12">
             <!-- Thống kê tổng quan -->
-            <div class="grid grid-cols-3 gap-4">
-                <div class="bg-white p-4 rounded-xl border border-blue-200 shadow-sm flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl"><i class="fas fa-boxes"></i></div>
-                    <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Phát Sinh Nợ (Tiền Hàng)</p><p id="detail-total-payable" class="font-black text-slate-800 text-lg">0 đ</p></div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
+                <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-blue-200 shadow-2xs flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shrink-0"><i class="fas fa-boxes"></i></div>
+                    <div class="min-w-0"><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Phát Sinh Nợ (Tiền Hàng)</p><p id="detail-total-payable" class="font-black text-slate-800 text-base sm:text-lg truncate">0 đ</p></div>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xl"><i class="fas fa-money-check-alt"></i></div>
-                    <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Phát Sinh Có (Đã Trả)</p><p id="detail-total-paid" class="font-black text-emerald-600 text-lg">0 đ</p></div>
+                <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-emerald-200 shadow-2xs flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-black shrink-0"><i class="fas fa-money-check-alt"></i></div>
+                    <div class="min-w-0"><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Phát Sinh Có (Đã Trả)</p><p id="detail-total-paid" class="font-black text-emerald-600 text-base sm:text-lg truncate">0 đ</p></div>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-red-200 shadow-sm flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-xl"><i class="fas fa-exclamation-triangle"></i></div>
-                    <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Dư Nợ Hiện Tại (Phải Trả)</p><p id="detail-current-debt" class="font-black text-red-600 text-2xl">0 đ</p></div>
+                <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-red-200 shadow-2xs flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-lg font-black shrink-0"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="min-w-0"><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Dư Nợ Hiện Tại (Phải Trả)</p><p id="detail-current-debt" class="font-black text-red-600 text-base sm:text-xl truncate">0 đ</p></div>
                 </div>
             </div>
 
             <!-- Bảng Sổ Chi Tiết Công Nợ (Ledger) -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-slate-800 text-white px-4 py-3 font-bold text-xs uppercase flex justify-between items-center">
-                    <span><i class="fas fa-book mr-2"></i> Sổ Chi Tiết Giao Dịch & Công Nợ</span>
+            <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
+                <div class="bg-slate-900 text-white px-4 py-3 font-bold text-xs uppercase flex justify-between items-center">
+                    <span><i class="fas fa-book mr-2 text-amber-400"></i> Sổ Chi Tiết Giao Dịch & Công Nợ</span>
                 </div>
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-bold border-b border-slate-200">
-                        <tr>
-                            <th class="p-3 w-28 text-center">Ngày Ghi Sổ</th>
-                            <th class="p-3 w-40">Mã Chứng Từ</th>
-                            <th class="p-3">Diễn Giải Giao Dịch</th>
-                            <th class="p-3 text-center w-32">Trạng Thái</th>
-                            <th class="p-3 text-right text-slate-700 w-40">Phát Sinh Tăng (+)</th>
-                            <th class="p-3 text-right text-slate-700 w-40">Phát Sinh Giảm (-)</th>
-                        </tr>
-                    </thead>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
+                        <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold border-b border-slate-200">
+                            <tr>
+                                <th class="p-3 pl-4 w-28 text-center">Ngày Ghi Sổ</th>
+                                <th class="p-3 w-40">Mã Chứng Từ</th>
+                                <th class="p-3">Diễn Giải Giao Dịch</th>
+                                <th class="p-3 text-center w-28">Trạng Thái</th>
+                                <th class="p-3 text-right text-slate-700 w-36">Phát Sinh Tăng (+)</th>
+                                <th class="p-3 pr-4 text-right text-slate-700 w-36">Phát Sinh Giảm (-)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-ledger" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>             </thead>
                     <tbody id="detail-ledger" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
@@ -194,11 +213,54 @@ window.modSupplier = {
                             <span class="inline-block bg-amber-50 border border-amber-200 text-amber-800 text-[10px] px-2 py-1 rounded font-bold leading-tight">${termStr}</span>
                         </td>
                         <td class="p-4 text-center" onclick="event.stopPropagation()">
-                            <button onclick="window.modSupplier.openForm(${i.id})" class="text-slate-400 hover:text-blue-600 p-2 transition"><i class="fas fa-cog"></i></button>
-                            <button onclick="window.modSupplier.deleteSupplier(${i.id})" class="text-slate-400 hover:text-red-500 p-2 transition ml-1"><i class="fas fa-trash"></i></button>
+                            <button onclick="window.modSupplier.openForm(${i.id})" class="text-slate-400 hover:text-blue-600 p-2 transition cursor-pointer"><i class="fas fa-cog"></i></button>
+                            <button onclick="window.modSupplier.deleteSupplier(${i.id})" class="text-slate-400 hover:text-red-500 p-2 transition ml-1 cursor-pointer"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 `}).join('');
+
+                // Render Mobile Cards
+                const mobContainer = document.getElementById('tbl-suppliers-mobile');
+                if (mobContainer) {
+                    mobContainer.innerHTML = data.data.map(i => {
+                        const creditLimitStr = i.credit_limit > 0 ? `${window.modSupplier.fmtMoney(i.credit_limit)} đ` : 'Không giới hạn';
+                        return `
+                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                            <div class="flex items-start justify-between gap-2" onclick="window.modSupplier.showDetail(${i.id})">
+                                <div class="min-w-0">
+                                    <h4 class="font-black text-blue-700 text-xs sm:text-sm leading-tight hover:underline">${i.name}</h4>
+                                    <p class="text-[10px] text-slate-400 font-mono mt-0.5">Mã: ${i.supplier_code} ${i.tax_code ? '| MST: ' + i.tax_code : ''}</p>
+                                </div>
+                                <span class="bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md text-[10px] font-black shrink-0">
+                                    Nợ ${i.debt_days || 0} ngày
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                <div class="text-slate-600">
+                                    ${i.phone ? `<span class="mr-2"><i class="fas fa-phone text-slate-400"></i> ${i.phone}</span>` : ''}
+                                </div>
+                                <div class="text-right font-bold text-red-600 text-xs">
+                                    Hạn mức: ${creditLimitStr}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                                <button type="button" onclick="window.modSupplier.showDetail(${i.id})" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-xl font-bold text-xs border border-blue-200 transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fas fa-book"></i> Xem Sổ Nợ
+                                </button>
+                                <div class="flex items-center gap-1">
+                                    <button type="button" onclick="window.modSupplier.openForm(${i.id})" class="p-1.5 text-slate-500 hover:text-blue-600 bg-slate-100 rounded-lg text-xs transition cursor-pointer">
+                                        <i class="fas fa-cog"></i> Sửa
+                                    </button>
+                                    <button type="button" onclick="window.modSupplier.deleteSupplier(${i.id})" class="p-1.5 text-red-500 hover:text-red-700 bg-red-50 rounded-lg text-xs transition cursor-pointer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
             }
         } catch(e) {}
     },
@@ -274,7 +336,9 @@ window.modSupplier = {
         tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-slate-400 text-2xl"></i></td></tr>';
         
         document.getElementById('sup-main-view').classList.add('hidden');
-        document.getElementById('sup-detail-view').classList.remove('hidden', 'translate-x-full');
+        document.getElementById('sup-detail-view').classList.remove('hidden');
+        const mainEl = document.getElementById('main-content');
+        if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
 
         try {
             const [resPur, resPay] = await Promise.all([
@@ -380,8 +444,10 @@ window.modSupplier = {
     },
 
     hideDetail: () => {
-        document.getElementById('sup-detail-view').classList.add('translate-x-full');
-        setTimeout(() => { document.getElementById('sup-main-view').classList.remove('hidden'); }, 300);
+        document.getElementById('sup-detail-view').classList.add('hidden');
+        document.getElementById('sup-main-view').classList.remove('hidden');
+        const mainEl = document.getElementById('main-content');
+        if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
     }
 };
 

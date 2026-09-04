@@ -1,4 +1,4 @@
-<div class="p-4 md:p-6 max-w-7xl mx-auto h-full flex flex-col bg-slate-50">
+<div class="p-4 md:p-6 max-w-7xl mx-auto min-h-full flex flex-col bg-slate-50 pb-12">
     <div class="flex justify-between items-center mb-6 shrink-0">
         <div>
             <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
@@ -15,7 +15,13 @@
         <!-- Sidebar Menu -->
         <div class="w-full md:w-64 shrink-0 bg-white rounded-2xl shadow-sm border border-slate-200 p-3 h-fit space-y-1">
             <button id="btn-tab-general" onclick="window.modSettings.switchTab('general')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] bg-blue-50 text-blue-600 transition flex items-center gap-2.5">
-                <i class="fas fa-store w-5 text-center"></i> Thông Tin Chung
+                <i class="fas fa-building w-5 text-center text-blue-600"></i> Thông Tin Chung
+            </button>
+            <button id="btn-tab-order-quote" onclick="window.modSettings.switchTab('order-quote')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center gap-2.5">
+                <i class="fas fa-file-invoice w-5 text-center text-emerald-600"></i> Mẫu Báo Giá Đơn Hàng
+            </button>
+            <button id="btn-tab-quote" onclick="window.modSettings.switchTab('quote')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center gap-2.5">
+                <i class="fas fa-solar-panel w-5 text-center text-amber-500"></i> Mẫu Báo Giá BOQ Solar (4 Hệ)
             </button>
             <button id="btn-tab-warehouses" onclick="window.modSettings.switchTab('warehouses')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center gap-2.5">
                 <i class="fas fa-warehouse w-5 text-center"></i> Quản Lý Danh Sách Kho
@@ -23,9 +29,6 @@
             <button id="btn-tab-permissions" onclick="window.modSettings.switchTab('permissions')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center justify-between">
                 <span class="flex items-center gap-2.5"><i class="fas fa-user-shield w-5 text-center text-amber-500"></i> Phân Quyền (RBAC)</span>
                 <span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-black">Nâng cao</span>
-            </button>
-            <button id="btn-tab-quote" onclick="window.modSettings.switchTab('quote')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center gap-2.5">
-                <i class="fas fa-file-invoice-dollar w-5 text-center"></i> Mẫu Báo Giá
             </button>
             <button id="btn-tab-delivery" onclick="window.modSettings.switchTab('delivery')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center gap-2.5">
                 <i class="fas fa-truck-loading w-5 text-center"></i> Mẫu Phiếu Xuất Kho
@@ -38,29 +41,39 @@
             <!-- TAB: GENERAL -->
             <div id="tab-general" class="setting-tab space-y-5">
                 <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5 flex items-center gap-2">
-                    <i class="fas fa-building text-blue-600"></i> Thông Tin Doanh Nghiệp
+                    <i class="fas fa-building text-blue-600"></i> Thông Tin Doanh Nghiệp & Thương Hiệu
                 </h3>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Tên Công Ty / Cửa Hàng</label>
                     <input type="text" id="set-store-name" class="w-full border border-slate-300 rounded-xl p-3 text-sm font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Số Điện Thoại</label>
-                        <input type="text" id="set-store-phone" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Số Điện Thoại / Hotline</label>
+                        <input type="text" id="set-store-phone" class="w-full border border-slate-300 rounded-xl p-3 text-sm font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mã Số Thuế</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Mã Số Thuế (MST)</label>
                         <input type="text" id="set-store-tax" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Email Doanh Nghiệp</label>
+                        <input type="text" id="set-company-email" placeholder="contact@sungo.vn" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Website Công Ty</label>
+                        <input type="text" id="set-company-website" placeholder="www.sungo.vn" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Link Logo (URL Hình Ảnh)</label>
+                        <input type="text" id="set-store-logo" placeholder="https://domain.com/logo.png" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Địa Chỉ</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Địa Chỉ Trụ Sở / Văn Phòng</label>
                     <input type="text" id="set-store-address" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Link Logo (URL Hình Ảnh)</label>
-                    <input type="text" id="set-store-logo" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 mb-2">
                 </div>
             </div>
 
@@ -133,15 +146,18 @@
                                 </h4>
                                 <p class="text-xs text-slate-500 mt-0.5" id="selected-role-desc">Toàn quyền xem và thao tác tất cả module hệ thống.</p>
                             </div>
-                            <div class="flex items-center gap-2" id="role-quick-actions">
-                                <button onclick="window.modSettings.selectAllRoleModules(true)" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition">
-                                    <i class="fas fa-check-double text-emerald-600 mr-1"></i> Chọn Hết
+                            <div class="flex flex-wrap items-center gap-1.5" id="role-quick-actions">
+                                <button onclick="window.modSettings.selectAllRoleModules('EDIT')" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fas fa-edit"></i> Hết [Được Sửa]
                                 </button>
-                                <button onclick="window.modSettings.selectAllRoleModules(false)" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition">
-                                    <i class="fas fa-times text-red-500 mr-1"></i> Bỏ Chọn Hết
+                                <button onclick="window.modSettings.selectAllRoleModules('VIEW')" class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fas fa-eye"></i> Hết [Chỉ Xem]
                                 </button>
-                                <button onclick="window.modSettings.resetRoleToDefault()" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition">
-                                    <i class="fas fa-undo text-blue-600 mr-1"></i> Mặc Định
+                                <button onclick="window.modSettings.selectAllRoleModules('NONE')" class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fas fa-ban text-red-500"></i> Khóa Hết
+                                </button>
+                                <button onclick="window.modSettings.resetRoleToDefault()" class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fas fa-undo text-amber-600"></i> Mặc Định
                                 </button>
                             </div>
                         </div>
@@ -208,88 +224,100 @@
 
             </div>
 
-            <!-- TAB: QUOTE (TRÌNH TÙY BIẾN MẪU BÁO GIÁ & HÓA ĐƠN ĐA NĂNG) -->
-            <div id="tab-quote" class="setting-tab hidden space-y-5">
+            <!-- ============================================================== -->
+            <!-- TAB: ORDER QUOTE (TÙY CHỈNH MẪU BÁO GIÁ & HÓA ĐƠN CHO ĐƠN HÀNG) -->
+            <!-- ============================================================== -->
+            <div id="tab-order-quote" class="setting-tab hidden space-y-5">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-200 pb-4">
                     <div>
                         <h3 class="font-black text-slate-800 uppercase text-base flex items-center gap-2">
-                            <i class="fas fa-file-invoice-dollar text-amber-500"></i> Tùy Chỉnh Mẫu Báo Giá & Hóa Đơn Bán Hàng
+                            <i class="fas fa-file-invoice text-emerald-600"></i> Tùy Chỉnh Mẫu Báo Giá / Hóa Đơn Đơn Hàng
                         </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Tùy biến đa năng tiêu đề, logo, thông tin shop, số tài khoản ngân hàng, mã VietQR và điều khoản</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Cấu hình mẫu in hóa đơn bán lẻ, báo giá sản phẩm & phiếu bảo hành cho phân hệ Quản Lý Đơn Hàng (kèm mã VietQR NAPAS 24/7)</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="window.modSettings.printSampleQuote()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
-                            <i class="fas fa-print text-amber-400"></i> In Thử Mẫu Này
+                        <button type="button" onclick="window.modSettings.printSampleOrderQuote()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                            <i class="fas fa-print text-emerald-400"></i> In Thử Hóa Đơn
                         </button>
                     </div>
                 </div>
 
-                <!-- 2 CỘT: TRÁI LÀ FORM CẤU HÌNH, PHẢI LÀ LIVE PREVIEW A4 THỜI GIAN THỰC -->
+                <!-- 2 CỘT: TRÁI LÀ FORM CẤU HÌNH, PHẢI LÀ LIVE PREVIEW A4 -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                     
-                    <!-- CỘT TRÁI (7 CỘT): FORM CẤU HÌNH CHI TIẾT -->
+                    <!-- CỘT TRÁI (7 CỘT): FORM CẤU HÌNH -->
                     <div class="lg:col-span-7 space-y-4">
                         
-                        <!-- KHỐI 1: THÔNG TIN SHOP & NHẬN DIỆN THƯƠNG HIỆU -->
+                        <!-- KHỐI 1: THÔNG TIN PHÁP NHÂN / CỬA HÀNG IN TRÊN HÓA ĐƠN -->
                         <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
                             <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
-                                <i class="fas fa-store text-blue-600"></i> 1. Thông Tin Shop / Doanh Nghiệp (Góc Phải Trên)
+                                <i class="fas fa-store text-blue-600"></i> 1. Thông Tin Doanh Nghiệp In Trên Hóa Đơn Đơn Hàng
                             </h4>
                             
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Công Ty / Cửa Hàng In Trên Báo Giá</label>
-                                <input type="text" id="set-quote-store-name" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-200">
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Công Ty / Cửa Hàng</label>
+                                <input type="text" id="set-order-store-name" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200">
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mã Số Thuế (MST)</label>
-                                    <input type="text" id="set-quote-store-tax" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: 0315614349" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                    <input type="text" id="set-order-store-tax" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: 0315614349" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Hotline / Số Điện Thoại</label>
-                                    <input type="text" id="set-quote-store-phone" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: 0855.959.656" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Hotline / SĐT</label>
+                                    <input type="text" id="set-order-store-phone" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: 0937.039.889" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Email</label>
+                                    <input type="text" id="set-order-store-email" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="contact@sungo.vn" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-emerald-500">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Địa Chỉ Văn Phòng / Kho Hàng</label>
-                                <input type="text" id="set-quote-store-address" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: Tòa nhà Mộc Gia, Phường Tân Sơn Nhì, Tp.HCM" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-medium text-slate-800 outline-none focus:border-amber-500">
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Địa Chỉ Trụ Sở / Văn Phòng</label>
+                                <input type="text" id="set-order-store-address" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: 419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500">
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Link URL Logo Doanh Nghiệp</label>
-                                <input type="text" id="set-quote-store-logo" oninput="window.modSettings.updateQuotePreview()" placeholder="https://domain.com/logo.png" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-mono outline-none focus:border-amber-500">
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Logo Doanh Nghiệp In Trên Báo Giá / Hóa Đơn</label>
+                                <div class="flex items-center gap-3 bg-white border border-slate-300 rounded-xl p-2.5">
+                                    <div class="w-16 h-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                                        <img id="order-logo-preview" src="" alt="Logo" class="max-h-full max-w-full object-contain hidden" onerror="this.classList.add('hidden'); document.getElementById('order-logo-placeholder').classList.remove('hidden');" onload="this.classList.remove('hidden'); document.getElementById('order-logo-placeholder').classList.add('hidden');">
+                                        <span id="order-logo-placeholder" class="text-[10px] text-slate-400 font-bold">Chưa có</span>
+                                    </div>
+                                    <div class="flex-1 space-y-1">
+                                        <input type="text" id="set-order-store-logo" oninput="const p=document.getElementById('order-logo-preview'); if(p) p.src=this.value; window.modSettings.updateOrderQuotePreview();" placeholder="https://sungo.vn/wp-content/uploads/2023/11/logo-sungo.png" class="w-full text-xs font-mono outline-none border-b border-slate-200 pb-1 focus:border-emerald-500">
+                                        <p class="text-[10px] text-slate-400">Dán link ảnh logo .png / .jpg để hiển thị sắc nét góc trái trên cùng hóa đơn.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- KHỐI 2: TIÊU ĐỀ PHIẾU IN & GIAO DIỆN -->
+                        <!-- KHỐI 2: TIÊU ĐỀ & PHONG CÁCH HÓA ĐƠN ĐƠN HÀNG -->
                         <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
                             <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
-                                <i class="fas fa-heading text-purple-600"></i> 2. Tiêu Đề & Phong Cách Giao Diện
+                                <i class="fas fa-heading text-purple-600"></i> 2. Tiêu Đề Văn Bản & Phong Cách Màu Sắc
                             </h4>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Phiếu In Chính</label>
-                                <input type="text" id="set-quote-title" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-amber-500">
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Mẫu In Đơn Hàng</label>
+                                <input type="text" id="set-order-quote-title" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-emerald-500">
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mẫu Bố Cục In (Layout Theme)</label>
-                                    <select id="set-quote-template" onchange="window.modSettings.updateQuotePreview()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
-                                        <option value="tpl_sungo_modern">⭐ Mẫu 1: Hiện đại (Viền mềm + VietQR)</option>
-                                        <option value="tpl_sungo_corporate">💼 Mẫu 2: Doanh nghiệp chuẩn mực</option>
-                                        <option value="tpl_sungo_minimal">📄 Mẫu 3: Tối giản tiết kiệm mực</option>
-                                    </select>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tông Màu Điểm Nhấn (Theme Color)</label>
+                                    <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-xl p-1.5">
+                                        <input type="color" id="set-order-primary-color" oninput="document.getElementById('set-order-primary-color-text').value=this.value; window.modSettings.updateOrderQuotePreview();" value="#f59e0b" class="w-8 h-8 rounded-lg border-0 cursor-pointer p-0 bg-transparent">
+                                        <input type="text" id="set-order-primary-color-text" oninput="document.getElementById('set-order-primary-color').value=this.value; window.modSettings.updateOrderQuotePreview();" value="#f59e0b" class="flex-1 text-xs font-mono font-bold uppercase outline-none">
+                                    </div>
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tông Màu Điểm Nhấn</label>
-                                    <select id="set-quote-primary-color" onchange="window.modSettings.updateQuotePreview()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
-                                        <option value="#f59e0b">☀️ Cam Amber (Solar)</option>
-                                        <option value="#2563eb">🔷 Xanh Dương (Corporate)</option>
-                                        <option value="#10b981">🌿 Xanh Lá (Eco Energy)</option>
-                                        <option value="#0f172a">🖤 Đen Slate (Classic)</option>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mẫu Bố Cục</label>
+                                    <select id="set-order-quote-template" onchange="window.modSettings.updateOrderQuotePreview()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
+                                        <option value="tpl_order_standard">⭐ Mẫu Chuẩn (Kèm VietQR + Serial)</option>
+                                        <option value="tpl_order_minimal">📄 Mẫu Tối Giản (Tiết kiệm mực)</option>
                                     </select>
                                 </div>
                             </div>
@@ -302,20 +330,20 @@
                                     <i class="fas fa-qrcode text-emerald-600"></i> 3. Tài Khoản Ngân Hàng & Tự Động Tạo Mã VietQR
                                 </h4>
                                 <div class="flex items-center gap-1.5">
-                                    <input type="checkbox" id="set-quote-show-qr" onchange="window.modSettings.updateQuotePreview()" checked class="w-4 h-4 text-emerald-600 accent-emerald-600 cursor-pointer">
-                                    <label for="set-quote-show-qr" class="text-xs font-bold text-slate-700 cursor-pointer select-none">Bật VietQR</label>
+                                    <input type="checkbox" id="set-order-show-qr" onchange="window.modSettings.updateOrderQuotePreview()" checked class="w-4 h-4 text-emerald-600 accent-emerald-600 cursor-pointer">
+                                    <label for="set-order-show-qr" class="text-xs font-bold text-slate-700 cursor-pointer select-none">Bật VietQR NAPAS</label>
                                 </div>
                             </div>
 
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Khối Thanh Toán</label>
-                                <input type="text" id="set-quote-bank-title" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: Thanh toán tiền mặt hoặc chuyển khoản:" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                <input type="text" id="set-order-bank-title" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: Thanh toán tiền mặt hoặc chuyển khoản:" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Ngân Hàng (Tên & Mã VietQR)</label>
-                                    <select id="set-quote-bank-code" onchange="window.modSettings.onBankSelectChange()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                    <select id="set-order-bank-code" onchange="window.modSettings.onOrderBankSelectChange()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
                                         <option value="TCB" data-name="Techcombank">Techcombank (TCB)</option>
                                         <option value="VCB" data-name="Vietcombank">Vietcombank (VCB)</option>
                                         <option value="MB" data-name="MB Bank (Quân Đội)">MB Bank (MB)</option>
@@ -336,41 +364,172 @@
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Ngân Hàng Hiển Thị</label>
-                                    <input type="text" id="set-quote-bank-name" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: Techcombank" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                    <input type="text" id="set-order-bank-name" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: Techcombank" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Số Tài Khoản (STK)</label>
-                                    <input type="text" id="set-quote-bank-acc" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: 1903xxxxxxxx" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-amber-500">
+                                    <input type="text" id="set-order-bank-acc" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: 1903xxxxxxxx" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-emerald-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Chủ Tài Khoản</label>
-                                    <input type="text" id="set-quote-bank-holder" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold uppercase text-slate-900 outline-none focus:border-amber-500">
+                                    <input type="text" id="set-order-bank-holder" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold uppercase text-slate-900 outline-none focus:border-emerald-500">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- KHỐI 4: ĐIỀU KHOẢN & CHỮ KÝ -->
+                        <!-- KHỐI 4: GHI CHÚ BẢO HÀNH & CHỮ KÝ -->
                         <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
                             <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
-                                <i class="fas fa-file-contract text-indigo-600"></i> 4. Điều Khoản Bảo Hành & Chữ Ký Chân Trang
+                                <i class="fas fa-file-contract text-indigo-600"></i> 4. Ghi Chú Chân Trang & Chữ Ký
                             </h4>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Điều Khoản & Cam Kết Bảo Hành</label>
-                                <textarea id="set-quote-notes" rows="3" oninput="window.modSettings.updateQuotePreview()" placeholder="VD: Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của SUNGO! Bảo hành chính hãng theo số Serial/IMEI..." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-amber-500"></textarea>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Ghi Chú Bảo Hành / Cảm Ơn Khách Hàng</label>
+                                <textarea id="set-order-quote-notes" rows="3" oninput="window.modSettings.updateOrderQuotePreview()" placeholder="VD: Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của SUNGO SOLAR!..." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-emerald-500"></textarea>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Người Ký Trái</label>
-                                    <input type="text" id="set-quote-left-sign" oninput="window.modSettings.updateQuotePreview()" value="KHÁCH HÀNG" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                    <input type="text" id="set-order-left-sign" oninput="window.modSettings.updateOrderQuotePreview()" value="KHÁCH HÀNG" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Người Ký Phải</label>
-                                    <input type="text" id="set-quote-right-sign" oninput="window.modSettings.updateQuotePreview()" value="NGƯỜI BÁN" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                    <input type="text" id="set-order-right-sign" oninput="window.modSettings.updateOrderQuotePreview()" value="NGƯỜI BÁN" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CỘT PHẢI (5 CỘT): KHUNG XEM TRƯỚC LIVE PREVIEW HÓA ĐƠN ĐƠN HÀNG -->
+                    <div class="lg:col-span-5 sticky top-2">
+                        <div class="bg-slate-900 rounded-2xl p-3 border border-slate-800 shadow-xl space-y-2 text-white">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                                <span class="text-xs font-black uppercase text-emerald-400 flex items-center gap-1.5">
+                                    <i class="fas fa-eye"></i> Xem Trước Hóa Đơn Đơn Hàng
+                                </span>
+                                <span class="text-[9px] bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full font-black uppercase">ĐƠN HÀNG</span>
+                            </div>
+
+                            <!-- KHUNG TRANG GIẤY A4 MÔ PHỎNG -->
+                            <div id="order-quote-live-preview-box" class="bg-white text-slate-900 p-4 sm:p-5 rounded-xl shadow-inner font-sans text-[11px] leading-relaxed border border-slate-300 max-h-[620px] overflow-y-auto pos-scroll select-none">
+                                <!-- Dynamic Preview rendered by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- TAB: QUOTE (TÙY CHỈNH MẪU BÁO GIÁ BOQ SOLAR KỸ THUẬT - 4 HỆ) -->
+            <!-- ============================================================== -->
+            <div id="tab-quote" class="setting-tab hidden space-y-5">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                        <h3 class="font-black text-slate-800 uppercase text-base flex items-center gap-2">
+                            <i class="fas fa-solar-panel text-amber-500"></i> Tùy Chỉnh Mẫu Báo Giá BOQ Solar (4 Hệ)
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Tùy biến tiêu đề, tên giải pháp, màu sắc và điều khoản cam kết bảo hành riêng cho từng phân hệ (Hybrid, On-Grid, Off-Grid, Solar Pump)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="window.modSettings.printSampleQuote()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                            <i class="fas fa-print text-amber-400"></i> In Thử Mẫu BOQ Này
+                        </button>
+                    </div>
+                </div>
+
+                <!-- THANH CHỌN HỆ THỐNG CẦN TÙY BIẾN MẪU BÁO GIÁ -->
+                <div class="bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex flex-wrap items-center gap-1.5">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase px-2 hidden sm:inline"><i class="fas fa-sliders-h mr-1"></i>Chọn hệ:</span>
+                    <button type="button" id="btn-tpl-hybrid" onclick="window.modSettings.switchQuoteSystem('hybrid')" class="px-3.5 py-1.5 rounded-xl text-xs font-black transition bg-amber-500 text-slate-950 shadow-xs flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-bolt"></i> 1. Báo Giá Hybrid VIP
+                    </button>
+                    <button type="button" id="btn-tpl-ongrid" onclick="window.modSettings.switchQuoteSystem('ongrid')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-sun text-orange-500"></i> 2. Bám Tải On-Grid
+                    </button>
+                    <button type="button" id="btn-tpl-offgrid" onclick="window.modSettings.switchQuoteSystem('offgrid')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-battery-full text-emerald-500"></i> 3. Độc Lập Off-Grid
+                    </button>
+                    <button type="button" id="btn-tpl-pump" onclick="window.modSettings.switchQuoteSystem('pump')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-water text-blue-500"></i> 4. Bơm Nước Solar Pump
+                    </button>
+                </div>
+
+                <!-- 2 CỘT: TRÁI LÀ FORM CẤU HÌNH, PHẢI LÀ LIVE PREVIEW A4 THỜI GIAN THỰC -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    
+                    <!-- CỘT TRÁI (7 CỘT): FORM CẤU HÌNH CHI TIẾT -->
+                    <div class="lg:col-span-7 space-y-4">
+                        
+                        <!-- KHỐI 1: TIÊU ĐỀ BÁO GIÁ & GIẢI PHÁP THEO HỆ THỐNG -->
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                                <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2">
+                                    <i class="fas fa-heading text-purple-600"></i> 1. Tiêu Đề & Giải Pháp Kỹ Thuật (<span id="quote-system-title-badge" class="text-amber-600 font-black">HYBRID</span>)
+                                </h4>
+                                <span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Tùy biến theo hệ</span>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Báo Giá BOQ Chính</label>
+                                <input type="text" id="set-quote-title" oninput="window.modSettings.onQuoteFieldInput()" placeholder="VD: BẢNG BÁO GIÁ HỆ THỐNG ĐIỆN MẶT TRỜI HYBRID ATS BACKUP" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-amber-500">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Giải Pháp Công Nghệ</label>
+                                    <input type="text" id="set-quote-tech-solution" oninput="window.modSettings.onQuoteFieldInput()" placeholder="VD: HYBRID ATS BACKUP" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mô Tả Kỹ Thuật Ngắn</label>
+                                    <input type="text" id="set-quote-tech-desc" oninput="window.modSettings.onQuoteFieldInput()" placeholder="VD: Tự động chuyển nguồn 10ms" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mẫu Bố Cục In (Layout Theme)</label>
+                                    <select id="set-quote-template" onchange="window.modSettings.updateQuotePreview()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                        <option value="tpl_sungo_modern">⭐ Mẫu 1: Hiện đại (Viền mềm)</option>
+                                        <option value="tpl_sungo_corporate">💼 Mẫu 2: Doanh nghiệp chuẩn mực</option>
+                                        <option value="tpl_sungo_minimal">📄 Mẫu 3: Tối giản tiết kiệm mực</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tông Màu Điểm Nhấn</label>
+                                    <select id="set-quote-primary-color" onchange="window.modSettings.onQuoteFieldInput()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                        <option value="#f59e0b">☀️ Cam Amber (Solar Hybrid)</option>
+                                        <option value="#ea580c">🔥 Cam Đậm (On-Grid Bám Tải)</option>
+                                        <option value="#059669">🌿 Xanh Lá (Off-Grid Độc Lập)</option>
+                                        <option value="#0284c7">💧 Xanh Dương (Solar Pump Bơm Nước)</option>
+                                        <option value="#0f172a">🖤 Đen Slate (Classic)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KHỐI 2: ĐIỀU KHOẢN & CHỮ KÝ THEO HỆ THỐNG -->
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                            <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                <i class="fas fa-file-contract text-indigo-600"></i> 2. Điều Khoản Bảo Hành & Chữ Ký Chân Trang
+                            </h4>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Điều Khoản & Cam Kết Bảo Hành Riêng Cho Hệ Này</label>
+                                <textarea id="set-quote-notes" rows="5" oninput="window.modSettings.onQuoteFieldInput()" placeholder="VD: 1. Bảo hành tấm pin 12 năm... 2. Bảo hành biến tần..." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-amber-500"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Người Ký Trái</label>
+                                    <input type="text" id="set-quote-left-sign" oninput="window.modSettings.onQuoteFieldInput()" value="ĐẠI DIỆN KHÁCH HÀNG" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Người Ký Phải</label>
+                                    <input type="text" id="set-quote-right-sign" oninput="window.modSettings.onQuoteFieldInput()" value="ĐẠI DIỆN SUNGO SOLAR" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
                                 </div>
                             </div>
                         </div>
@@ -381,18 +540,16 @@
                         <div class="bg-slate-900 rounded-2xl p-3 border border-slate-800 shadow-xl space-y-2 text-white">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                                 <span class="text-xs font-black uppercase text-amber-400 flex items-center gap-1.5">
-                                    <i class="fas fa-eye"></i> Xem Trước Mẫu In (Live Preview)
+                                    <i class="fas fa-eye"></i> Xem Trước Mẫu In BOQ (Live Preview)
                                 </span>
-                                <span class="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-bold">A4 Tỷ lệ chuẩn</span>
+                                <span id="preview-sys-badge" class="text-[9px] bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full font-black uppercase">HYBRID</span>
                             </div>
 
                             <!-- KHUNG TRANG GIẤY A4 MÔ PHỎNG -->
                             <div id="quote-live-preview-box" class="bg-white text-slate-900 p-4 sm:p-5 rounded-xl shadow-inner font-sans text-[11px] leading-relaxed border border-slate-300 max-h-[620px] overflow-y-auto pos-scroll select-none">
                                 <!-- Dynamic Preview rendered by JS -->
-                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 
@@ -413,6 +570,18 @@
 
 <script>
 window.modSettings = {
+    isAdminUser: function() {
+        try {
+            var uStr = localStorage.getItem("sungo_user") || localStorage.getItem("currentUser") || sessionStorage.getItem("sungo_user");
+            if (!uStr) return false;
+            var u = JSON.parse(uStr);
+            var r = String(u.role || "").toUpperCase().trim();
+            var adminRoles = ["ADMIN", "SUPER_ADMIN", "GIAM_DOC", "TONG_GIAM_DOC", "DIRECTOR"];
+            return adminRoles.indexOf(r) !== -1;
+        } catch(e) {
+            return false;
+        }
+    },
     warehouses: [], 
     rolePermissions: {},
     usersList: [],
@@ -435,131 +604,391 @@ window.modSettings = {
     ],
 
 
-    onBankSelectChange: () => {
-        const select = document.getElementById('set-quote-bank-code');
-        const nameInput = document.getElementById('set-quote-bank-name');
+    selectedQuoteSystem: 'hybrid',
+    quoteTemplates: {
+        hybrid: {
+            title: "BẢNG BÁO GIÁ HỆ THỐNG ĐIỆN MẶT TRỜI HYBRID ATS BACKUP",
+            tech_solution: "HYBRID ATS BACKUP",
+            tech_desc: "Tự động chuyển nguồn 10ms",
+            primary_color: "#f59e0b",
+            notes: "1. Bảo hành tấm pin mặt trời 12 năm vật lý, 30 năm hiệu suất trên 80%.\n2. Bảo hành biến tần Inverter Hybrid Cergy 05 năm chính hãng (1 đổi 1 trong 12 tháng đầu).\n3. Bảo hành Pin lưu trữ Lithium Apess 05 năm (6.000 chu kỳ nạp xả).\n4. Bảo hành toàn bộ hệ thống tủ điện ATS & cơ điện 02 năm trọn gói.",
+            left_sign: "ĐẠI DIỆN KHÁCH HÀNG",
+            right_sign: "ĐẠI DIỆN SUNGO SOLAR"
+        },
+        ongrid: {
+            title: "BẢNG BÁO GIÁ HỆ THỐNG ĐIỆN MẶT TRỜI HÒA LƯỚI BÁM TẢI (ZERO-EXPORT)",
+            tech_solution: "HÒA LƯỚI BÁM TẢI (ZERO-EXPORT)",
+            tech_desc: "Chống phát ngược lưới 100%",
+            primary_color: "#ea580c",
+            notes: "1. Bảo hành tấm pin mặt trời 12 năm vật lý, 30 năm hiệu suất trên 80%.\n2. Bảo hành biến tần Inverter On-Grid 05 năm chính hãng.\n3. Bảo hành đồng hồ đo Smart Meter bám tải 02 năm.\n4. Bảo hành hệ thống kết cấu nhôm và an toàn điện 02 năm.",
+            left_sign: "ĐẠI DIỆN KHÁCH HÀNG",
+            right_sign: "ĐẠI DIỆN SUNGO SOLAR"
+        },
+        offgrid: {
+            title: "BẢNG BÁO GIÁ HỆ THỐNG ĐIỆN MẶT TRỜI ĐỘC LẬP (OFF-GRID)",
+            tech_solution: "ĐỘC LẬP CHUYÊN DỤNG (OFF-GRID)",
+            tech_desc: "Tự chủ 100% nguồn điện 24/7",
+            primary_color: "#059669",
+            notes: "1. Bảo hành tấm pin mặt trời 12 năm vật lý, 30 năm hiệu suất trên 80%.\n2. Bảo hành biến tần Inverter Off-Grid 03 - 05 năm chính hãng.\n3. Bảo hành Pin lưu trữ Lithium 05 năm (BMS bảo vệ quá tải/quá nhiệt).\n4. Bảo hành hệ thống vận hành 02 năm trọn gói.",
+            left_sign: "ĐẠI DIỆN KHÁCH HÀNG",
+            right_sign: "ĐẠI DIỆN SUNGO SOLAR"
+        },
+        pump: {
+            title: "BẢNG BÁO GIÁ HỆ THỐNG BƠM NƯỚC NĂNG LƯỢNG MẶT TRỜI (SOLAR PUMP)",
+            tech_solution: "BƠM NĂNG LƯỢNG MẶT TRỜI (SOLAR PUMP)",
+            tech_desc: "Tự động bơm theo cường độ nắng",
+            primary_color: "#0284c7",
+            notes: "1. Bảo hành tấm pin năng lượng mặt trời 12 năm vật lý, 30 năm hiệu suất.\n2. Bảo hành biến tần bơm Solar Pump Inverter 02 - 03 năm chính hãng.\n3. Bảo hành cảm biến mực nước, phao điện chống cạn và chống sét 02 năm.\n4. Miễn phí hướng dẫn vận hành & hỗ trợ kỹ thuật trọn đời.",
+            left_sign: "ĐẠI DIỆN KHÁCH HÀNG",
+            right_sign: "ĐẠI DIỆN SUNGO SOLAR"
+        }
+    },
+
+    switchQuoteSystem: (sysKey) => {
+        // Lưu dữ liệu form hiện tại vào cache trước khi đổi tab
+        window.modSettings.saveCurrentQuoteFormToCache();
+        window.modSettings.selectedQuoteSystem = sysKey;
+
+        // Cập nhật giao diện nút tab
+        ['hybrid', 'ongrid', 'offgrid', 'pump'].forEach(k => {
+            const btn = document.getElementById('btn-tpl-' + k);
+            if (btn) {
+                if (k === sysKey) {
+                    btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-black transition bg-amber-500 text-slate-950 shadow-xs flex items-center gap-1.5 cursor-pointer';
+                } else {
+                    btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer';
+                }
+            }
+        });
+
+        // Cập nhật nhãn hệ thống
+        const badge = document.getElementById('quote-system-title-badge');
+        if (badge) {
+            const names = { hybrid: 'HYBRID VIP', ongrid: 'BÁM TẢI ON-GRID', offgrid: 'ĐỘC LẬP OFF-GRID', pump: 'BƠM SOLAR PUMP' };
+            badge.innerText = names[sysKey] || sysKey.toUpperCase();
+        }
+        const previewBadge = document.getElementById('preview-sys-badge');
+        if (previewBadge) {
+            const names = { hybrid: 'HYBRID', ongrid: 'ON-GRID', offgrid: 'OFF-GRID', pump: 'SOLAR PUMP' };
+            previewBadge.innerText = names[sysKey] || sysKey.toUpperCase();
+        }
+
+        // Tải thông tin của hệ thống được chọn vào form
+        const tpl = window.modSettings.quoteTemplates[sysKey] || {};
+        if (document.getElementById('set-quote-title')) document.getElementById('set-quote-title').value = tpl.title || '';
+        if (document.getElementById('set-quote-tech-solution')) document.getElementById('set-quote-tech-solution').value = tpl.tech_solution || '';
+        if (document.getElementById('set-quote-tech-desc')) document.getElementById('set-quote-tech-desc').value = tpl.tech_desc || '';
+        if (document.getElementById('set-quote-primary-color')) document.getElementById('set-quote-primary-color').value = tpl.primary_color || '#f59e0b';
+        if (document.getElementById('set-quote-notes')) document.getElementById('set-quote-notes').value = tpl.notes || '';
+        if (document.getElementById('set-quote-left-sign')) document.getElementById('set-quote-left-sign').value = tpl.left_sign || 'ĐẠI DIỆN KHÁCH HÀNG';
+        if (document.getElementById('set-quote-right-sign')) document.getElementById('set-quote-right-sign').value = tpl.right_sign || 'ĐẠI DIỆN SUNGO SOLAR';
+
+        window.modSettings.updateQuotePreview();
+    },
+
+    saveCurrentQuoteFormToCache: () => {
+        const cur = window.modSettings.selectedQuoteSystem;
+        if (!window.modSettings.quoteTemplates[cur]) window.modSettings.quoteTemplates[cur] = {};
+        window.modSettings.quoteTemplates[cur].title = document.getElementById('set-quote-title')?.value || '';
+        window.modSettings.quoteTemplates[cur].tech_solution = document.getElementById('set-quote-tech-solution')?.value || '';
+        window.modSettings.quoteTemplates[cur].tech_desc = document.getElementById('set-quote-tech-desc')?.value || '';
+        window.modSettings.quoteTemplates[cur].primary_color = document.getElementById('set-quote-primary-color')?.value || '#f59e0b';
+        window.modSettings.quoteTemplates[cur].notes = document.getElementById('set-quote-notes')?.value || '';
+        window.modSettings.quoteTemplates[cur].left_sign = document.getElementById('set-quote-left-sign')?.value || 'ĐẠI DIỆN KHÁCH HÀNG';
+        window.modSettings.quoteTemplates[cur].right_sign = document.getElementById('set-quote-right-sign')?.value || 'ĐẠI DIỆN SUNGO SOLAR';
+    },
+
+    onQuoteFieldInput: () => {
+        window.modSettings.saveCurrentQuoteFormToCache();
+        window.modSettings.updateQuotePreview();
+    },
+
+    onOrderBankSelectChange: () => {
+        const select = document.getElementById('set-order-bank-code');
+        const nameInput = document.getElementById('set-order-bank-name');
         if (select && nameInput && select.value !== 'CUSTOM') {
             const opt = select.options[select.selectedIndex];
             nameInput.value = opt.getAttribute('data-name') || opt.text;
         }
-        window.modSettings.updateQuotePreview();
+        window.modSettings.updateOrderQuotePreview();
+    },
+
+    updateOrderQuotePreview: () => {
+        const previewBox = document.getElementById('order-quote-live-preview-box');
+        if (!previewBox) return;
+
+        const storeName = document.getElementById('set-order-store-name')?.value || document.getElementById('set-store-name')?.value || 'CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO';
+        const storeTax = document.getElementById('set-order-store-tax')?.value || document.getElementById('set-store-tax')?.value || '0315614349';
+        const storePhone = document.getElementById('set-order-store-phone')?.value || document.getElementById('set-store-phone')?.value || '0937.039.889';
+        const storeEmail = document.getElementById('set-order-store-email')?.value || document.getElementById('set-company-email')?.value || 'contact@sungo.vn';
+        const storeAddr = document.getElementById('set-order-store-address')?.value || document.getElementById('set-store-address')?.value || '419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM';
+        const storeLogo = document.getElementById('set-order-store-logo')?.value || document.getElementById('set-store-logo')?.value || 'https://sungo.vn/wp-content/uploads/2023/11/logo-sungo.png';
+
+        const quoteTitle = document.getElementById('set-order-quote-title')?.value || 'HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH';
+        const primaryColor = document.getElementById('set-order-primary-color')?.value || '#f59e0b';
+        
+        const bankTitle = document.getElementById('set-order-bank-title')?.value || 'Thanh toán tiền mặt hoặc chuyển khoản:';
+        const bankName = document.getElementById('set-order-bank-name')?.value || 'Techcombank';
+        const bankCode = document.getElementById('set-order-bank-code')?.value || 'TCB';
+        const bankAcc = document.getElementById('set-order-bank-acc')?.value || '19036668888019';
+        const bankHolder = document.getElementById('set-order-bank-holder')?.value || storeName;
+        const showQr = document.getElementById('set-order-show-qr')?.checked !== false;
+
+        const notes = document.getElementById('set-order-quote-notes')?.value || 'Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của chúng tôi!';
+        const leftSign = document.getElementById('set-order-left-sign')?.value || 'KHÁCH HÀNG';
+        const rightSign = document.getElementById('set-order-right-sign')?.value || 'NGƯỜI BÁN';
+
+        const logoHtml = storeLogo 
+            ? `<img src="${storeLogo}" style="max-height:42px; max-width:130px; object-fit:contain;" alt="Logo">`
+            : `<div style="font-weight:900; font-size:16px; color:${primaryColor};">SUNGO SOLAR</div>`;
+
+        let qrImgHtml = '';
+        if (showQr && bankAcc) {
+            const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAcc}-compact2.png?amount=71306400&addInfo=TT%20DH-9181991797&accountName=${encodeURIComponent(bankHolder)}`;
+            qrImgHtml = `
+            <div style="text-align:center; padding-left:8px; border-left:1px dashed #e2e8f0; margin-left:8px;" class="shrink-0">
+                <img src="${qrUrl}" style="width:78px; height:78px; object-fit:contain; border-radius:6px; border:1px solid #e2e8f0;" alt="VietQR">
+                <span style="font-size:8px; font-weight:bold; color:#059669; display:block; margin-top:2px;">Quét VietQR</span>
+            </div>`;
+        }
+
+        const sampleItems = [
+            { name: 'Tấm pin năng lượng mặt trời Jinko 620wp Tiger Neo (SP0266)', sku: 'JK-620N', serial: 'JK260824001', qty: 18, price: '2.418.000 đ', total: '43.524.000 đ' },
+            { name: 'Biến tần Inverter hòa lưới bám tải Cergy 10kW 3 Pha', sku: 'CG-10KT', serial: 'CG10K2026889', qty: 1, price: '15.500.000 đ', total: '15.500.000 đ' },
+            { name: 'Đồng hồ đo thông minh Smart Meter 3 Pha Zero-Export', sku: 'SM-3P', serial: 'SM3P99201', qty: 1, price: '3.800.000 đ', total: '3.800.000 đ' },
+            { name: 'Tủ điện đóng cắt bảo vệ AC/DC 3 Pha tích hợp chống sét', sku: 'TD-3P10K', serial: '', qty: 1, price: '3.500.000 đ', total: '3.500.000 đ' }
+        ];
+
+        const itemsRowsHtml = sampleItems.map((item, idx) => `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:4px 6px; text-align:center;">${idx + 1}</td>
+                <td style="padding:4px 6px;">
+                    <strong>${item.name}</strong><br>
+                    <small style="color:#64748b; font-size:8.5px;">SKU: ${item.sku} ${item.serial ? '| SN: ' + item.serial : ''}</small>
+                </td>
+                <td style="padding:4px 6px; text-align:center;">Bộ</td>
+                <td style="padding:4px 6px; text-align:center; font-weight:bold;">${item.qty}</td>
+                <td style="padding:4px 6px; text-align:right;">${item.price}</td>
+                <td style="padding:4px 6px; text-align:right; font-weight:bold;">${item.total}</td>
+            </tr>
+        `).join('');
+
+        previewBox.innerHTML = `
+        <div style="border-bottom: 2px solid ${primaryColor}; padding-bottom: 6px; margin-bottom: 10px; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <div>${logoHtml}</div>
+            <div style="text-align:right; font-size:9.5px; line-height:1.3; color:#334155;">
+                <strong style="color:#0f172a; font-size:10.5px; text-transform:uppercase;">${storeName}</strong><br>
+                <span>MST: ${storeTax} | Hotline: <strong>${storePhone}</strong></span><br>
+                <span>Email: ${storeEmail}</span><br>
+                <span>Địa chỉ: ${storeAddr}</span>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin: 6px 0 8px 0;">
+            <h2 style="margin:0; font-size:13px; font-weight:900; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">${quoteTitle}</h2>
+            <p style="margin:2px 0 0 0; font-size:9px; color:#64748b;">Mã Đơn Hàng: <strong>DH-9181991797</strong> • Ngày lập: 27/08/2026</p>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:8px; font-size:9px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px;">
+                <span style="color:#64748b; font-weight:bold; font-size:8px; text-transform:uppercase; display:block;">👤 Khách hàng:</span>
+                <strong style="color:#0f172a;">Anh Nguyễn Văn An (Công ty Hoàng Long)</strong><br>
+                <span>SĐT: <strong style="color:#2563eb;">0909.123.456</strong></span><br>
+                <span>Địa chỉ: 128 Nguyễn Trãi, Q.5, TP.HCM</span>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px;">
+                <span style="color:#64748b; font-weight:bold; font-size:8px; text-transform:uppercase; display:block;">🚚 Thông tin đơn hàng:</span>
+                <span>Giao hàng: <strong>Giao xe tải tận nơi</strong></span><br>
+                <span>Trạng thái: <strong style="color:#059669;">Đã thanh toán 50%</strong></span><br>
+                <span>Kinh doanh: <strong>Trần Minh Trí</strong></span>
+            </div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; font-size:9px; margin-bottom:8px;">
+            <thead>
+                <tr style="background:#f1f5f9; border-top:1px solid #cbd5e1; border-bottom:1px solid #cbd5e1;">
+                    <th style="padding:4px 6px; text-align:center; width:24px;">STT</th>
+                    <th style="padding:4px 6px; text-align:left;">Sản Phẩm / Thiết Bị</th>
+                    <th style="padding:4px 6px; text-align:center; width:35px;">ĐVT</th>
+                    <th style="padding:4px 6px; text-align:center; width:30px;">SL</th>
+                    <th style="padding:4px 6px; text-align:right; width:65px;">Đơn Giá</th>
+                    <th style="padding:4px 6px; text-align:right; width:75px;">Thành Tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${itemsRowsHtml}
+            </tbody>
+        </table>
+
+        <div style="display:flex; justify-content:space-between; align-items:stretch; gap:8px; margin-bottom:8px;">
+            <div style="flex:1; border:1px dashed #cbd5e1; background:#f8fafc; border-radius:8px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:8.5px; line-height:1.35; flex:1;">
+                    <strong style="color:#0f172a; font-size:9px;">${bankTitle}</strong><br>
+                    <span>Ngân hàng: <strong>${bankName}</strong></span><br>
+                    <span>Số TK: <strong style="color:#2563eb; font-family:monospace; font-size:9.5px;">${bankAcc}</strong></span><br>
+                    <span>Chủ TK: <strong>${bankHolder}</strong></span><br>
+                    <span style="color:#64748b; font-size:8px;">Nội dung: <strong>TT DH-9181991797</strong></span>
+                </div>
+                ${qrImgHtml}
+            </div>
+
+            <div style="width:145px; text-align:right; font-size:9px; line-height:1.4; display:flex; flex-direction:column; justify-content:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 8px;">
+                <div style="display:flex; justify-content:space-between;"><span>Tiền hàng:</span> <strong>66.324.000 đ</strong></div>
+                <div style="display:flex; justify-content:space-between; color:#059669;"><span>Giảm trừ:</span> <strong>- 1.500.000 đ</strong></div>
+                <div style="display:flex; justify-content:space-between; color:#475569;"><span>VAT (10%):</span> <strong>6.482.400 đ</strong></div>
+                <div style="border-top:1.5px solid #0f172a; margin-top:2px; padding-top:2px; display:flex; justify-content:space-between;">
+                    <span style="font-weight:bold;">Tổng cộng:</span>
+                    <strong style="color:#dc2626; font-size:10.5px;">71.306.400 đ</strong>
+                </div>
+            </div>
+        </div>
+
+        <div style="font-size:8.5px; color:#475569; border-top:1px dashed #cbd5e1; padding-top:4px; margin-bottom:8px; font-style:italic;">
+            ${notes.replace(/\n/g, '<br>')}
+        </div>
+
+        <div style="display:flex; justify-content:space-around; text-align:center; font-size:9px; font-weight:bold; border-top:1px solid #e2e8f0; padding-top:6px;">
+            <div>${leftSign}<br><span style="font-size:8px; font-weight:normal; color:#64748b;">(Ký và ghi rõ họ tên)</span></div>
+            <div>${rightSign}<br><span style="font-size:8px; font-weight:normal; color:#64748b;">(Ký và đóng dấu)</span></div>
+        </div>
+        `;
+    },
+
+    printSampleOrderQuote: () => {
+        const previewBox = document.getElementById('order-quote-live-preview-box');
+        if (!previewBox) return;
+        const win = window.open('', '', 'width=900,height=800');
+        win.document.write('<html><head><title>IN THỬ HÓA ĐƠN ĐƠN HÀNG</title><style>body { font-family: Arial, sans-serif; padding: 25px; color:#000; }</style></head><body>' + previewBox.innerHTML + '<script>window.print();<\/script></body></html>');
+        win.document.close();
     },
 
     updateQuotePreview: () => {
         const previewBox = document.getElementById('quote-live-preview-box');
         if (!previewBox) return;
 
-        const storeName = document.getElementById('set-quote-store-name')?.value || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
-        const storeTax = document.getElementById('set-quote-store-tax')?.value || '0315614349';
-        const storePhone = document.getElementById('set-quote-store-phone')?.value || '0855.959.656';
-        const storeAddr = document.getElementById('set-quote-store-address')?.value || 'Tp. Hồ Chí Minh, Việt Nam';
-        const storeLogo = document.getElementById('set-quote-store-logo')?.value || '';
+        const storeName = document.getElementById('set-store-name')?.value || 'CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO';
+        const storeTax = document.getElementById('set-store-tax')?.value || '0315614349';
+        const storePhone = document.getElementById('set-store-phone')?.value || document.getElementById('set-company-hotline')?.value || '0937.039.889';
+        const storeEmail = document.getElementById('set-company-email')?.value || 'contact@sungo.vn';
+        const storeAddr = document.getElementById('set-store-address')?.value || '419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM';
+        const storeLogo = document.getElementById('set-store-logo')?.value || 'https://sungo.vn/wp-content/uploads/2023/11/logo-sungo.png';
 
-        const quoteTitle = document.getElementById('set-quote-title')?.value || 'HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH';
+        const quoteTitle = document.getElementById('set-quote-title')?.value || 'BẢNG BÁO GIÁ HỆ THỐNG ĐIỆN MẶT TRỜI';
+        const techSolution = document.getElementById('set-quote-tech-solution')?.value || 'HYBRID ATS BACKUP';
+        const techDesc = document.getElementById('set-quote-tech-desc')?.value || 'Tự động chuyển nguồn 10ms';
         const primaryColor = document.getElementById('set-quote-primary-color')?.value || '#f59e0b';
-        const bankTitle = document.getElementById('set-quote-bank-title')?.value || 'Thanh toán tiền mặt hoặc chuyển khoản:';
-        const bankName = document.getElementById('set-quote-bank-name')?.value || 'Techcombank';
-        const bankCode = document.getElementById('set-quote-bank-code')?.value || 'TCB';
-        const bankAcc = document.getElementById('set-quote-bank-acc')?.value || '19035678901234';
-        const bankHolder = document.getElementById('set-quote-bank-holder')?.value || storeName;
-        const showQr = document.getElementById('set-quote-show-qr')?.checked !== false;
-
+        
         const notes = document.getElementById('set-quote-notes')?.value || 'Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của chúng tôi!';
-        const leftSign = document.getElementById('set-quote-left-sign')?.value || 'KHÁCH HÀNG';
-        const rightSign = document.getElementById('set-quote-right-sign')?.value || 'NGƯỜI BÁN';
+        const leftSign = document.getElementById('set-quote-left-sign')?.value || 'ĐẠI DIỆN KHÁCH HÀNG';
+        const rightSign = document.getElementById('set-quote-right-sign')?.value || 'ĐẠI DIỆN SUNGO SOLAR';
 
         const logoHtml = storeLogo 
-            ? `<img src="${storeLogo}" style="max-height:48px; max-width:140px; object-contain;" alt="Logo">`
+            ? `<img src="${storeLogo}" style="max-height:48px; max-width:140px; object-fit:contain;" alt="Logo">`
             : `<div style="font-weight:900; font-size:18px; color:${primaryColor};">SUNGO SOLAR</div>`;
 
-        let qrImgHtml = '';
-        if (showQr && bankAcc) {
-            const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAcc}-compact2.png?amount=23621000&addInfo=TT%20DH-9181991797%20-%20Khach%20Le&accountName=${encodeURIComponent(bankHolder)}`;
-            qrImgHtml = `
-            <div style="text-align:center; padding-left:8px; border-left:1px dashed #e2e8f0; margin-left:8px;" class="shrink-0">
-                <img src="${qrUrl}" style="width:78px; height:78px; object-contain; border-radius:6px; border:1px solid #e2e8f0;" alt="VietQR">
-                <span style="font-size:8px; font-weight:bold; color:#059669; display:block; margin-top:2px;">Quét VietQR</span>
-            </div>`;
+        // Tạo danh sách thiết bị mẫu theo hệ đang chọn
+        const curSys = window.modSettings.selectedQuoteSystem;
+        let sampleItems = [];
+        if (curSys === 'hybrid') {
+            sampleItems = [
+                { name: 'Jinko 620wp 2 mặt kính N-type (SP0266)', qty: 27, unit: 'Tấm', price: '2.418.000 đ', total: '65.286.000 đ' },
+                { name: 'Inverter hybrid Cergy 6kw BH 5 năm (SP0155)', qty: 1, unit: 'Bộ', price: '12.500.000 đ', total: '12.500.000 đ' },
+                { name: 'Pin lưu trữ Apess 16kwh BH 5 năm (SP0165)', qty: 1, unit: 'Bộ', price: '41.000.000 đ', total: '41.000.000 đ' },
+                { name: 'Bộ Tủ điện đấu sẵn ats 125 khối 1 pha (SP0032)', qty: 1, unit: 'Bộ', price: '9.500.000 đ', total: '9.500.000 đ' }
+            ];
+        } else if (curSys === 'ongrid') {
+            sampleItems = [
+                { name: 'Jinko 620wp 2 mặt kính N-type (SP0266)', qty: 18, unit: 'Tấm', price: '2.418.000 đ', total: '43.524.000 đ' },
+                { name: 'Inverter On-Grid Bám Tải Cergy 10kW BH 5 năm', qty: 1, unit: 'Bộ', price: '15.500.000 đ', total: '15.500.000 đ' },
+                { name: 'Smart Meter 3 Pha Bám Tải Zero-Export', qty: 1, unit: 'Bộ', price: '3.800.000 đ', total: '3.800.000 đ' },
+                { name: 'Tủ điện đóng cắt AC/DC chống sét lan truyền', qty: 1, unit: 'Bộ', price: '3.500.000 đ', total: '3.500.000 đ' }
+            ];
+        } else if (curSys === 'offgrid') {
+            sampleItems = [
+                { name: 'Jinko 620wp 2 mặt kính N-type (SP0266)', qty: 10, unit: 'Tấm', price: '2.418.000 đ', total: '24.180.000 đ' },
+                { name: 'Inverter Độc Lập Off-Grid 5kW 48V Sóng Sin Chuẩn', qty: 1, unit: 'Bộ', price: '11.800.000 đ', total: '11.800.000 đ' },
+                { name: 'Pin lưu trữ Lithium LiFePO4 51.2V 100Ah (5.12kWh)', qty: 1, unit: 'Bộ', price: '21.500.000 đ', total: '21.500.000 đ' },
+                { name: 'Tủ điện bảo vệ phân phối nguồn điện độc lập', qty: 1, unit: 'Bộ', price: '2.500.000 đ', total: '2.500.000 đ' }
+            ];
+        } else {
+            sampleItems = [
+                { name: 'Jinko 620wp 2 mặt kính N-type (SP0266)', qty: 16, unit: 'Tấm', price: '2.418.000 đ', total: '38.688.000 đ' },
+                { name: 'Biến tần bơm Solar Pump Inverter 7.5HP 3 Pha 380V', qty: 1, unit: 'Bộ', price: '13.500.000 đ', total: '13.500.000 đ' },
+                { name: 'Bộ cảm biến phao điện chống cạn & chống tràn tự động', qty: 1, unit: 'Bộ', price: '1.200.000 đ', total: '1.200.000 đ' },
+                { name: 'Tủ điện chuyên dụng điều khiển bơm năng lượng mặt trời', qty: 1, unit: 'Bộ', price: '2.800.000 đ', total: '2.800.000 đ' }
+            ];
         }
+
+        const itemsRowsHtml = sampleItems.map((item, idx) => `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:4px 6px; text-align:center;">${idx + 1}</td>
+                <td style="padding:4px 6px;"><strong>${item.name}</strong></td>
+                <td style="padding:4px 6px; text-align:center;">${item.qty} ${item.unit}</td>
+                <td style="padding:4px 6px; text-align:right;">${item.price}</td>
+                <td style="padding:4px 6px; text-align:right; font-weight:bold;">${item.total}</td>
+            </tr>
+        `).join('');
 
         previewBox.innerHTML = `
         <div style="border-bottom: 2px solid ${primaryColor}; padding-bottom: 8px; margin-bottom: 12px; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
             <div>${logoHtml}</div>
             <div style="text-align:right; font-size:10px; line-height:1.3; color:#334155;">
                 <strong style="color:#0f172a; font-size:11px; text-transform:uppercase;">${storeName}</strong><br>
-                <span>MST: ${storeTax}</span><br>
-                <span>Địa chỉ: ${storeAddr}</span><br>
-                <span>SĐT: <strong>${storePhone}</strong></span>
+                <span>MST: ${storeTax} | Hotline: <strong>${storePhone}</strong></span><br>
+                <span>Email: ${storeEmail}</span><br>
+                <span>Địa chỉ: ${storeAddr}</span>
             </div>
         </div>
 
-        <div style="text-align:center; margin: 10px 0 12px 0;">
-            <h2 style="margin:0; font-size:14px; font-weight:900; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">${quoteTitle}</h2>
-            <p style="margin:2px 0 0 0; font-size:9px; color:#64748b;">Mã Đơn: DH-9181991797 - Ngày 27/08/2026</p>
+        <div style="text-align:center; margin: 8px 0 10px 0;">
+            <h2 style="margin:0; font-size:13px; font-weight:900; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">${quoteTitle}</h2>
+            <p style="margin:2px 0 0 0; font-size:9px; color:#64748b;">Mã Báo Giá: BOQ-${curSys.toUpperCase()}-2026 • Ngày: 27/08/2026</p>
         </div>
 
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; margin-bottom:10px; font-size:10px; line-height:1.4;">
-            <div><strong>Khách hàng:</strong> Khách Lẻ (Anh Minh) • <strong>SĐT:</strong> 0909.123.456</div>
-            <div><strong>Địa chỉ:</strong> Tân Sơn Nhì, Q.Tân Phú, Tp.HCM</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:10px; font-size:9.5px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px;">
+                <span style="color:#64748b; font-weight:bold; font-size:8.5px; text-transform:uppercase; display:block;">👤 Khách hàng:</span>
+                <strong style="color:#0f172a;">Anh Toàn (Tân Phú, TP.HCM)</strong><br>
+                <span style="color:#2563eb; font-weight:bold;">0908.776.889</span>
+            </div>
+            <div style="background:#fffbeb; border:1px solid #fef3c7; border-radius:6px; padding:5px 8px;">
+                <span style="color:#b45309; font-weight:bold; font-size:8.5px; text-transform:uppercase; display:block;">⚡ Giải pháp công nghệ:</span>
+                <strong style="color:#78350f;">${techSolution}</strong><br>
+                <span style="color:#64748b;">${techDesc}</span>
+            </div>
         </div>
 
-        <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:10px;">
+        <table style="width:100%; border-collapse:collapse; font-size:9.5px; margin-bottom:10px;">
             <thead>
                 <tr style="background:#f1f5f9; border-top:1px solid #cbd5e1; border-bottom:1px solid #cbd5e1;">
                     <th style="padding:4px 6px; text-align:center; width:24px;">STT</th>
-                    <th style="padding:4px 6px; text-align:left;">Sản Phẩm / Thiết Bị</th>
-                    <th style="padding:4px 6px; text-align:center; width:28px;">SL</th>
+                    <th style="padding:4px 6px; text-align:left;">Danh Mục Thiết Bị & Vật Tư</th>
+                    <th style="padding:4px 6px; text-align:center; width:50px;">SL</th>
                     <th style="padding:4px 6px; text-align:right; width:65px;">Đơn Giá</th>
                     <th style="padding:4px 6px; text-align:right; width:75px;">Thành Tiền</th>
                 </tr>
             </thead>
             <tbody>
-                <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:4px 6px; text-align:center;">1</td>
-                    <td style="padding:4px 6px;"><strong>Deye Hybrid 6kw GS04</strong></td>
-                    <td style="padding:4px 6px; text-align:center;">1</td>
-                    <td style="padding:4px 6px; text-align:right;">22.550.000 đ</td>
-                    <td style="padding:4px 6px; text-align:right; font-weight:bold;">22.550.000 đ</td>
-                </tr>
-                <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:4px 6px; text-align:center;">2</td>
-                    <td style="padding:4px 6px;"><strong>Jack MC4 Sunpeace (Cặp)</strong></td>
-                    <td style="padding:4px 6px; text-align:center;">10</td>
-                    <td style="padding:4px 6px; text-align:right;">25.000 đ</td>
-                    <td style="padding:4px 6px; text-align:right; font-weight:bold;">250.000 đ</td>
-                </tr>
+                ${itemsRowsHtml}
             </tbody>
         </table>
 
-        <div style="display:flex; justify-content:space-between; align-items:stretch; gap:8px; margin-bottom:12px;">
-            <div style="flex:1; border:1px dashed #cbd5e1; background:#f8fafc; border-radius:8px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:9.5px; line-height:1.35; flex:1;">
-                    <strong style="color:#0f172a; font-size:10px;">${bankTitle}</strong><br>
-                    <span>Ngân hàng: <strong>${bankName}</strong></span><br>
-                    <span>Số TK: <strong style="color:#2563eb; font-family:monospace; font-size:10.5px;">${bankAcc}</strong></span><br>
-                    <span>Chủ TK: <strong>${bankHolder}</strong></span><br>
-                    <span style="color:#dc2626; font-size:9px;">Nội dung: <em>TT DH-9181991797</em></span>
-                </div>
-                ${qrImgHtml}
-            </div>
-
-            <div style="width:135px; text-align:right; font-size:10px; line-height:1.4; display:flex; flex-direction:column; justify-content:center;">
-                <div>Tiền hàng: <strong>22.800.000 đ</strong></div>
-                <div style="color:#dc2626;">Giảm trừ: <strong>-0 đ</strong></div>
-                <div style="border-top:1.5px solid #0f172a; margin-top:3px; padding-top:3px;">
-                    <span style="font-size:9px; font-weight:bold; color:#0f172a;">TỔNG CỘNG:</span><br>
-                    <strong style="color:#dc2626; font-size:12px;">22.800.000 đ</strong>
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <div style="width:180px; text-align:right; font-size:9.5px; line-height:1.4; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 8px;">
+                <div style="border-top:1.5px solid #0f172a; margin-top:2px; padding-top:2px;">
+                    <span style="font-size:8.5px; font-weight:bold; color:#0f172a;">TỔNG ĐẦU TƯ TRỌN GÓI:</span><br>
+                    <strong style="color:#dc2626; font-size:12px;">167.289.840 đ</strong>
                 </div>
             </div>
         </div>
 
-        <div style="font-size:9px; color:#475569; border-top:1px dashed #cbd5e1; padding-top:4px; margin-bottom:12px; font-style:italic;">
+        <div style="font-size:8.5px; color:#475569; border-top:1px dashed #cbd5e1; padding-top:4px; margin-bottom:10px; font-style:italic;">
             ${notes.replace(/\n/g, '<br>')}
         </div>
 
-        <div style="display:flex; justify-content:space-around; text-align:center; font-size:10px; font-weight:bold;">
-            <div>${leftSign}<br><span style="font-size:8.5px; font-weight:normal; color:#64748b;">(Ký và ghi rõ họ tên)</span></div>
-            <div>${rightSign}<br><span style="font-size:8.5px; font-weight:normal; color:#64748b;">(Ký và ghi rõ họ tên)</span></div>
+        <div style="display:flex; justify-content:space-around; text-align:center; font-size:9.5px; font-weight:bold; border-top:1px solid #e2e8f0; padding-top:6px;">
+            <div>${leftSign}<br><span style="font-size:8px; font-weight:normal; color:#64748b;">(Ký và ghi rõ họ tên)</span></div>
+            <div>${rightSign}<br><span style="font-size:8px; font-weight:normal; color:#64748b;">(Ký và đóng dấu)</span></div>
         </div>
         `;
     },
@@ -578,41 +1007,62 @@ window.modSettings = {
             const json = await res.json();
             if(json.success && json.data) {
                 const d = json.data;
-                document.getElementById('set-store-name').value = d.store_name || '';
-                document.getElementById('set-store-phone').value = d.store_phone || '';
-                document.getElementById('set-store-address').value = d.store_address || '';
-                document.getElementById('set-store-tax').value = d.store_tax || '';
-                document.getElementById('set-store-logo').value = d.store_logo || '';
-                // Quote / Invoice customizer fields
-                const storeNameVal = d.quote_store_name || d.store_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
-                const storeTaxVal = d.quote_store_tax || d.store_tax || '0315614349';
-                const storePhoneVal = d.quote_store_phone || d.store_phone || '0855.959.656';
-                const storeAddrVal = d.quote_store_address || d.store_address || 'Tp. Hồ Chí Minh, Việt Nam';
-                const storeLogoVal = d.quote_store_logo || d.store_logo || '';
+                const storeNameVal = d.store_name || 'CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO';
+                const storeTaxVal = d.store_tax || '0315614349';
+                const storePhoneVal = d.store_phone || d.company_hotline || '0937.039.889';
+                const storeEmailVal = d.company_email || 'contact@sungo.vn';
+                const storeWebVal = d.company_website || 'www.sungo.vn';
+                const storeAddrVal = d.store_address || '419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM';
+                const storeLogoVal = d.store_logo || 'https://sungo.vn/wp-content/uploads/2023/11/logo-sungo.png';
 
-                if (document.getElementById('set-quote-store-name')) document.getElementById('set-quote-store-name').value = storeNameVal;
-                if (document.getElementById('set-quote-store-tax')) document.getElementById('set-quote-store-tax').value = storeTaxVal;
-                if (document.getElementById('set-quote-store-phone')) document.getElementById('set-quote-store-phone').value = storePhoneVal;
-                if (document.getElementById('set-quote-store-address')) document.getElementById('set-quote-store-address').value = storeAddrVal;
-                if (document.getElementById('set-quote-store-logo')) document.getElementById('set-quote-store-logo').value = storeLogoVal;
+                // Tab General
+                if (document.getElementById('set-store-name')) document.getElementById('set-store-name').value = storeNameVal;
+                if (document.getElementById('set-store-phone')) document.getElementById('set-store-phone').value = storePhoneVal;
+                if (document.getElementById('set-store-tax')) document.getElementById('set-store-tax').value = storeTaxVal;
+                if (document.getElementById('set-company-email')) document.getElementById('set-company-email').value = storeEmailVal;
+                if (document.getElementById('set-company-website')) document.getElementById('set-company-website').value = storeWebVal;
+                if (document.getElementById('set-store-address')) document.getElementById('set-store-address').value = storeAddrVal;
+                if (document.getElementById('set-store-logo')) document.getElementById('set-store-logo').value = storeLogoVal;
 
-                if (document.getElementById('set-quote-title')) document.getElementById('set-quote-title').value = d.quote_title || 'HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH';
-                if (document.getElementById('set-quote-template')) document.getElementById('set-quote-template').value = d.quote_template || 'tpl_sungo_modern';
-                if (document.getElementById('set-quote-primary-color')) document.getElementById('set-quote-primary-color').value = d.quote_primary_color || '#f59e0b';
+                // Tab Order Quote (Báo Giá & Hóa Đơn Đơn Hàng)
+                if (document.getElementById('set-order-store-name')) document.getElementById('set-order-store-name').value = d.quote_store_name || storeNameVal;
+                if (document.getElementById('set-order-store-tax')) document.getElementById('set-order-store-tax').value = d.quote_store_tax || storeTaxVal;
+                if (document.getElementById('set-order-store-phone')) document.getElementById('set-order-store-phone').value = d.quote_store_phone || storePhoneVal;
+                if (document.getElementById('set-order-store-email')) document.getElementById('set-order-store-email').value = d.quote_store_email || storeEmailVal;
+                if (document.getElementById('set-order-store-address')) document.getElementById('set-order-store-address').value = d.quote_store_address || storeAddrVal;
+                if (document.getElementById('set-order-store-logo')) {
+                    document.getElementById('set-order-store-logo').value = d.quote_store_logo || storeLogoVal;
+                    const prev = document.getElementById('order-logo-preview');
+                    if (prev && (d.quote_store_logo || storeLogoVal)) prev.src = d.quote_store_logo || storeLogoVal;
+                }
 
-                if (document.getElementById('set-quote-bank-title')) document.getElementById('set-quote-bank-title').value = d.quote_bank_title || 'Thanh toán tiền mặt hoặc chuyển khoản:';
-                if (document.getElementById('set-quote-bank-code')) document.getElementById('set-quote-bank-code').value = d.quote_bank_code || 'TCB';
-                if (document.getElementById('set-quote-bank-name')) document.getElementById('set-quote-bank-name').value = d.quote_bank_name || d.bank_name || 'Techcombank';
-                if (document.getElementById('set-quote-bank-acc')) document.getElementById('set-quote-bank-acc').value = d.quote_bank_account_number || d.bank_account_number || '';
-                if (document.getElementById('set-quote-bank-holder')) document.getElementById('set-quote-bank-holder').value = d.quote_bank_account_holder || d.bank_account_holder || storeNameVal;
-                if (document.getElementById('set-quote-show-qr')) document.getElementById('set-quote-show-qr').checked = d.quote_show_qr !== false;
+                if (document.getElementById('set-order-quote-title')) document.getElementById('set-order-quote-title').value = d.quote_title || 'HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH';
+                if (document.getElementById('set-order-primary-color')) document.getElementById('set-order-primary-color').value = d.quote_primary_color || '#f59e0b';
+                if (document.getElementById('set-order-primary-color-text')) document.getElementById('set-order-primary-color-text').value = d.quote_primary_color || '#f59e0b';
+                if (document.getElementById('set-order-quote-template')) document.getElementById('set-order-quote-template').value = d.quote_template || 'tpl_order_standard';
 
-                if (document.getElementById('set-quote-notes')) document.getElementById('set-quote-notes').value = d.quote_notes || 'Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của chúng tôi!';
-                if (document.getElementById('set-quote-left-sign')) document.getElementById('set-quote-left-sign').value = d.quote_left_sign_title || 'KHÁCH HÀNG';
-                if (document.getElementById('set-quote-right-sign')) document.getElementById('set-quote-right-sign').value = d.quote_right_sign_title || 'NGƯỜI BÁN';
+                if (document.getElementById('set-order-bank-title')) document.getElementById('set-order-bank-title').value = d.quote_bank_title || 'Thanh toán tiền mặt hoặc chuyển khoản:';
+                if (document.getElementById('set-order-bank-code')) document.getElementById('set-order-bank-code').value = d.quote_bank_code || 'TCB';
+                if (document.getElementById('set-order-bank-name')) document.getElementById('set-order-bank-name').value = d.quote_bank_name || d.bank_name || 'Techcombank';
+                if (document.getElementById('set-order-bank-acc')) document.getElementById('set-order-bank-acc').value = d.quote_bank_account_number || d.bank_account_number || '';
+                if (document.getElementById('set-order-bank-holder')) document.getElementById('set-order-bank-holder').value = d.quote_bank_account_holder || d.bank_account_holder || storeNameVal;
+                if (document.getElementById('set-order-show-qr')) document.getElementById('set-order-show-qr').checked = d.quote_show_qr !== false;
 
-                window.modSettings.updateQuotePreview();
-                document.getElementById('set-delivery-notes').value = d.delivery_notes || '';
+                if (document.getElementById('set-order-quote-notes')) document.getElementById('set-order-quote-notes').value = d.quote_notes || 'Cảm ơn Quý khách đã tin tưởng và sử dụng sản phẩm của chúng tôi!';
+                if (document.getElementById('set-order-left-sign')) document.getElementById('set-order-left-sign').value = d.quote_left_sign_title || 'KHÁCH HÀNG';
+                if (document.getElementById('set-order-right-sign')) document.getElementById('set-order-right-sign').value = d.quote_right_sign_title || 'NGƯỜI BÁN';
+
+                window.modSettings.updateOrderQuotePreview();
+
+                // Multi-System Quote Templates (BOQ)
+                if (d.quote_templates && typeof d.quote_templates === 'object') {
+                    window.modSettings.quoteTemplates = { ...window.modSettings.quoteTemplates, ...d.quote_templates };
+                }
+                
+                // Mặc định nạp mẫu Hybrid
+                window.modSettings.switchQuoteSystem('hybrid');
+
+                if (document.getElementById('set-delivery-notes')) document.getElementById('set-delivery-notes').value = d.delivery_notes || '';
                 
                 // Warehouses
                 let whData = [];
@@ -752,7 +1202,7 @@ window.modSettings = {
         document.getElementById('selected-role-desc').innerText = roleInfo.desc;
 
         const roleQuickActions = document.getElementById('role-quick-actions');
-        if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'GIAM_DOC') {
             if (roleQuickActions) roleQuickActions.classList.add('hidden');
         } else {
             if (roleQuickActions) roleQuickActions.classList.remove('hidden');
@@ -762,41 +1212,92 @@ window.modSettings = {
         if (!container) return;
 
         const allGroups = window.ALL_SYSTEM_GROUPS || [];
-        const currentPerms = window.modSettings.rolePermissions[role] || (window.DEFAULT_ROLE_PERMISSIONS ? window.DEFAULT_ROLE_PERMISSIONS[role] : []) || [];
-        const isAll = currentPerms.includes('*') || currentPerms.includes('all') || role === 'ADMIN' || role === 'SUPER_ADMIN';
+        const rolePerms = window.modSettings.rolePermissions[role] || (window.DEFAULT_ROLE_PERMISSIONS ? window.DEFAULT_ROLE_PERMISSIONS[role] : {}) || {};
+        const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'GIAM_DOC';
 
         let html = '';
         allGroups.forEach((group, gIdx) => {
             html += `
-                <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-xs space-y-2.5">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span> ${group.group}
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                        <span class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> ${group.group}
                         </span>
-                        ${!isAll ? `
-                        <button onclick="window.modSettings.toggleGroupModules('${group.group}')" class="text-[11px] font-bold text-blue-600 hover:text-blue-800 transition">
-                            Tích/Bỏ nhóm
-                        </button>
+                        ${!isAdmin ? `
+                        <div class="flex items-center gap-1">
+                            <span class="text-[10px] text-slate-400 font-bold mr-1">Cả nhóm:</span>
+                            <button type="button" onclick="window.modSettings.setGroupModulesPerm('${group.group}', 'EDIT')" class="text-[10px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md transition cursor-pointer">
+                                ✏️ Sửa
+                            </button>
+                            <button type="button" onclick="window.modSettings.setGroupModulesPerm('${group.group}', 'VIEW')" class="text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md transition cursor-pointer">
+                                👁️ Xem
+                            </button>
+                            <button type="button" onclick="window.modSettings.setGroupModulesPerm('${group.group}', 'NONE')" class="text-[10px] font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 px-2 py-0.5 rounded-md transition cursor-pointer">
+                                🚫 Khóa
+                            </button>
+                        </div>
                         ` : ''}
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
             `;
 
             group.items.forEach(m => {
-                const isChecked = isAll || currentPerms.includes(m.id);
-                const disabledAttr = (role === 'ADMIN' || role === 'SUPER_ADMIN') ? 'disabled' : '';
-                
+                let permLevel = 'NONE';
+                if (isAdmin) {
+                    permLevel = 'EDIT';
+                } else if (Array.isArray(rolePerms)) {
+                    if (rolePerms.includes('*') || rolePerms.includes('all')) permLevel = 'EDIT';
+                    else if (rolePerms.includes(`${m.id}:EDIT`) || rolePerms.includes(m.id)) permLevel = 'EDIT';
+                    else if (rolePerms.includes(`${m.id}:VIEW`)) permLevel = 'VIEW';
+                } else if (typeof rolePerms === 'object') {
+                    if (rolePerms['*']) permLevel = rolePerms['*'];
+                    else if (rolePerms[m.id]) permLevel = rolePerms[m.id];
+                }
+
+                let badgeHtml = '';
+                let cardBorderCls = 'border-slate-200 hover:border-slate-300';
+                if (permLevel === 'EDIT') {
+                    badgeHtml = '<span class="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0">✏️ Được Sửa</span>';
+                    cardBorderCls = 'border-emerald-300 bg-emerald-50/20';
+                } else if (permLevel === 'VIEW') {
+                    badgeHtml = '<span class="bg-blue-100 text-blue-800 border border-blue-200 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0">👁️ Chỉ Xem</span>';
+                    cardBorderCls = 'border-blue-300 bg-blue-50/20';
+                } else {
+                    badgeHtml = '<span class="bg-slate-100 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">🚫 Khóa</span>';
+                    cardBorderCls = 'border-slate-200 bg-white opacity-70';
+                }
+
                 html += `
-                    <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition cursor-pointer ${isChecked ? 'bg-blue-50/20 border-blue-100' : 'bg-white'}">
-                        <input type="checkbox" id="role-mod-${m.id}" value="${m.id}" ${isChecked ? 'checked' : ''} ${disabledAttr} onchange="window.modSettings.toggleRoleModule('${m.id}')" class="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-1.5">
-                                <i class="fas ${m.icon} text-xs text-amber-500"></i>
-                                <span class="text-xs font-bold text-slate-800 truncate">${m.title}</span>
+                    <div class="rounded-xl p-3 border ${cardBorderCls} transition flex flex-col justify-between gap-2.5">
+                        <div>
+                            <div class="flex items-start justify-between gap-1.5">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <div class="w-6 h-6 rounded-lg ${permLevel === 'EDIT' ? 'bg-emerald-100 text-emerald-700' : (permLevel === 'VIEW' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400')} flex items-center justify-center text-xs shrink-0">
+                                        <i class="fas ${m.icon}"></i>
+                                    </div>
+                                    <span class="text-xs font-black text-slate-800 truncate">${m.title}</span>
+                                </div>
+                                ${badgeHtml}
                             </div>
-                            <p class="text-[10px] text-slate-400 truncate mt-0.5">${m.desc || m.id}</p>
+                            <p class="text-[10px] text-slate-400 truncate mt-1">${m.desc || m.id}</p>
                         </div>
-                    </label>
+
+                        ${isAdmin ? `
+                        <div class="text-[10px] font-bold text-slate-400 bg-slate-100 p-1 rounded-lg text-center">Toàn quyền hệ thống</div>
+                        ` : `
+                        <div class="grid grid-cols-3 gap-1 bg-slate-100 p-0.5 rounded-lg select-none text-[11px] font-bold text-center">
+                            <button type="button" onclick="window.modSettings.setRoleModulePerm('${m.id}', 'NONE')" class="py-1 px-1 rounded-md transition cursor-pointer ${permLevel === 'NONE' ? 'bg-white text-slate-800 font-black shadow-xs' : 'text-slate-400 hover:text-slate-700'}">
+                                Khóa
+                            </button>
+                            <button type="button" onclick="window.modSettings.setRoleModulePerm('${m.id}', 'VIEW')" class="py-1 px-1 rounded-md transition cursor-pointer ${permLevel === 'VIEW' ? 'bg-blue-600 text-white font-black shadow-xs' : 'text-slate-500 hover:text-blue-700'}">
+                                Chỉ Xem
+                            </button>
+                            <button type="button" onclick="window.modSettings.setRoleModulePerm('${m.id}', 'EDIT')" class="py-1 px-1 rounded-md transition cursor-pointer ${permLevel === 'EDIT' ? 'bg-emerald-600 text-white font-black shadow-xs' : 'text-slate-500 hover:text-emerald-700'}">
+                                Được Sửa
+                            </button>
+                        </div>
+                        `}
+                    </div>
                 `;
             });
 
@@ -806,64 +1307,91 @@ window.modSettings = {
         container.innerHTML = html;
     },
 
-    toggleRoleModule: (moduleId) => {
+    setRoleModulePerm: (moduleId, level) => {
         const role = window.modSettings.selectedRole;
-        if (role === 'ADMIN' || role === 'SUPER_ADMIN') return;
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'GIAM_DOC') return;
 
-        let perms = window.modSettings.rolePermissions[role] || [];
-        if (perms.includes('*')) {
-            // Chuyển từ all sang mảng cụ thể
-            const allIds = [];
-            (window.ALL_SYSTEM_GROUPS || []).forEach(g => g.items.forEach(i => allIds.push(i.id)));
-            perms = allIds;
+        let rolePerms = window.modSettings.rolePermissions[role];
+        if (!rolePerms || typeof rolePerms !== 'object' || Array.isArray(rolePerms)) {
+            const obj = {};
+            if (Array.isArray(rolePerms)) {
+                rolePerms.forEach(item => {
+                    if (item.includes(':')) {
+                        const [k, v] = item.split(':');
+                        obj[k] = v;
+                    } else if (item === '*') {
+                        obj['*'] = 'EDIT';
+                    } else {
+                        obj[item] = 'EDIT';
+                    }
+                });
+            }
+            rolePerms = obj;
         }
 
-        const idx = perms.indexOf(moduleId);
-        if (idx >= 0) {
-            perms.splice(idx, 1);
+        if (level === 'NONE') {
+            delete rolePerms[moduleId];
+            delete rolePerms['*'];
         } else {
-            perms.push(moduleId);
+            rolePerms[moduleId] = level;
+            delete rolePerms['*'];
         }
 
-        window.modSettings.rolePermissions[role] = perms;
+        window.modSettings.rolePermissions[role] = rolePerms;
+        window.modSettings.renderRoleModules();
     },
 
-    toggleGroupModules: (groupName) => {
+    setGroupModulesPerm: (groupName, level) => {
         const role = window.modSettings.selectedRole;
-        if (role === 'ADMIN' || role === 'SUPER_ADMIN') return;
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'GIAM_DOC') return;
 
         const group = (window.ALL_SYSTEM_GROUPS || []).find(g => g.group === groupName);
         if (!group) return;
 
-        let perms = window.modSettings.rolePermissions[role] || [];
-        const groupItemIds = group.items.map(i => i.id);
-        const allGroupChecked = groupItemIds.every(id => perms.includes(id));
-
-        if (allGroupChecked) {
-            // Bỏ chọn toàn bộ nhóm
-            perms = perms.filter(id => !groupItemIds.includes(id));
-        } else {
-            // Thêm toàn bộ nhóm
-            groupItemIds.forEach(id => {
-                if (!perms.includes(id)) perms.push(id);
-            });
+        let rolePerms = window.modSettings.rolePermissions[role];
+        if (!rolePerms || typeof rolePerms !== 'object' || Array.isArray(rolePerms)) {
+            const obj = {};
+            if (Array.isArray(rolePerms)) {
+                rolePerms.forEach(item => {
+                    if (item.includes(':')) {
+                        const [k, v] = item.split(':');
+                        obj[k] = v;
+                    } else if (item === '*') {
+                        obj['*'] = 'EDIT';
+                    } else {
+                        obj[item] = 'EDIT';
+                    }
+                });
+            }
+            rolePerms = obj;
         }
 
-        window.modSettings.rolePermissions[role] = perms;
+        delete rolePerms['*'];
+        group.items.forEach(m => {
+            if (level === 'NONE') {
+                delete rolePerms[m.id];
+            } else {
+                rolePerms[m.id] = level;
+            }
+        });
+
+        window.modSettings.rolePermissions[role] = rolePerms;
         window.modSettings.renderRoleModules();
     },
 
-    selectAllRoleModules: (selectAll) => {
+    selectAllRoleModules: (level) => {
         const role = window.modSettings.selectedRole;
-        if (role === 'ADMIN' || role === 'SUPER_ADMIN') return;
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'GIAM_DOC') return;
 
-        if (selectAll) {
-            const allIds = [];
-            (window.ALL_SYSTEM_GROUPS || []).forEach(g => g.items.forEach(i => allIds.push(i.id)));
-            window.modSettings.rolePermissions[role] = allIds;
-        } else {
-            window.modSettings.rolePermissions[role] = [];
+        const obj = {};
+        if (level !== 'NONE') {
+            (window.ALL_SYSTEM_GROUPS || []).forEach(g => {
+                g.items.forEach(m => {
+                    obj[m.id] = level;
+                });
+            });
         }
+        window.modSettings.rolePermissions[role] = obj;
         window.modSettings.renderRoleModules();
     },
 
@@ -871,8 +1399,8 @@ window.modSettings = {
         const role = window.modSettings.selectedRole;
         if (!confirm(`Khôi phục quyền mặc định cho vai trò ${role}?`)) return;
 
-        const defaultPerms = window.DEFAULT_ROLE_PERMISSIONS ? window.DEFAULT_ROLE_PERMISSIONS[role] : [];
-        window.modSettings.rolePermissions[role] = JSON.parse(JSON.stringify(defaultPerms || []));
+        const defaultPerms = window.DEFAULT_ROLE_PERMISSIONS ? window.DEFAULT_ROLE_PERMISSIONS[role] : {};
+        window.modSettings.rolePermissions[role] = JSON.parse(JSON.stringify(defaultPerms || {}));
         window.modSettings.renderRoleModules();
     },
 
@@ -881,22 +1409,32 @@ window.modSettings = {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Đang lưu...';
         btn.classList.add('opacity-50', 'pointer-events-none');
 
+        let role = "ADMIN";
+        try {
+            const u = JSON.parse(localStorage.getItem("sungo_user") || localStorage.getItem("currentUser") || sessionStorage.getItem("sungo_user") || "{}");
+            if (u && u.role) role = u.role;
+        } catch(e) {}
+
         try {
             const res = await fetch('/api/settings', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-user-role': role
+                },
                 body: JSON.stringify({ role_permissions: window.modSettings.rolePermissions })
             });
 
-            if (res.ok) {
+            const json = await res.json().catch(() => ({}));
+            if (res.ok && (json.success !== false)) {
                 alert(`✅ Đã lưu cấu hình phân quyền cho vai trò ${window.modSettings.selectedRole} thành công!`);
                 window.__rolePermissions = window.modSettings.rolePermissions;
                 if (typeof window.reloadAppMenu === 'function') window.reloadAppMenu();
             } else {
-                alert('❌ Lỗi khi lưu cấu hình phân quyền!');
+                alert('❌ ' + (json.error || 'Lỗi khi lưu cấu hình phân quyền!'));
             }
         } catch(e) {
-            alert('❌ Lỗi kết nối máy chủ!');
+            alert('❌ Lỗi kết nối máy chủ: ' + e.message);
         } finally {
             btn.innerHTML = '<i class="fas fa-save"></i> <span>Lưu Phân Quyền Cho Vai Trò Này</span>';
             btn.classList.remove('opacity-50', 'pointer-events-none');
@@ -1003,7 +1541,7 @@ window.modSettings = {
                 </div>
             </div>
             <div class="mt-2.5 p-2.5 bg-blue-50/70 rounded-xl border border-blue-200/60 text-[11px] text-blue-900">
-                <i class="fas fa-info-circle mr-1 text-blue-600"></i> Các quyền được đánh dấu <span class="font-bold text-blue-700">[Vai Trò Gốc]</span> đã được mở mặc định. Bạn có thể <b>tích chọn thêm các module khác</b> bên dưới để cấp quyền xem bổ sung cho nhân viên này.
+                <i class="fas fa-info-circle mr-1 text-blue-600"></i> Bạn có thể tùy chỉnh quyền riêng cho nhân viên này: <b>[⚙️ Vai Trò]</b> (kế thừa vai trò), <b>[👁️ Xem]</b> (chỉ xem), <b>[✏️ Sửa]</b> (toàn quyền) hoặc <b>[🚫 Cấm]</b> (khóa hoàn toàn).
             </div>
         `;
 
@@ -1012,8 +1550,8 @@ window.modSettings = {
 
         // Danh sách module theo nhóm chức năng
         const allGroups = window.ALL_SYSTEM_GROUPS || [];
-        const rolePerms = window.modSettings.rolePermissions[user.role] || (window.DEFAULT_ROLE_PERMISSIONS ? window.DEFAULT_ROLE_PERMISSIONS[user.role] : []) || [];
-        const isRoleFull = rolePerms.includes('*') || rolePerms.includes('all') || user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+        const rolePerms = window.modSettings.rolePermissions[user.role] || (window.DEFAULT_ROLE_PERMISSIONS ? window.DEFAULT_ROLE_PERMISSIONS[user.role] : {}) || {};
+        const isRoleFull = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'GIAM_DOC';
         const userCustomMods = Array.isArray(user.custom_modules) ? user.custom_modules : [];
 
         let customCount = 0;
@@ -1021,46 +1559,92 @@ window.modSettings = {
 
         allGroups.forEach(group => {
             html += `
-                <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-xs space-y-2">
-                    <span class="text-[11px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> ${group.group}
+                <div class="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-xs space-y-2.5">
+                    <span class="text-[11px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> ${group.group}
                     </span>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             `;
 
             group.items.forEach(m => {
-                const isFromRole = isRoleFull || rolePerms.includes(m.id);
-                const isCustomChecked = userCustomMods.includes(m.id);
-                
-                if (!isFromRole && isCustomChecked) customCount++;
+                // Xác định quyền gốc của Role
+                let roleLevel = 'NONE';
+                if (isRoleFull) {
+                    roleLevel = 'EDIT';
+                } else if (Array.isArray(rolePerms)) {
+                    if (rolePerms.includes('*') || rolePerms.includes('all')) roleLevel = 'EDIT';
+                    else if (rolePerms.includes(`${m.id}:EDIT`) || rolePerms.includes(m.id)) roleLevel = 'EDIT';
+                    else if (rolePerms.includes(`${m.id}:VIEW`)) roleLevel = 'VIEW';
+                } else if (typeof rolePerms === 'object') {
+                    if (rolePerms['*']) roleLevel = rolePerms['*'];
+                    else if (rolePerms[m.id]) roleLevel = rolePerms[m.id];
+                }
+
+                // Xác định quyền tùy biến của User
+                let userLevel = 'DEFAULT';
+                for (let c of userCustomMods) {
+                    if (c === `${m.id}:NONE`) { userLevel = 'NONE'; break; }
+                    if (c === `${m.id}:VIEW`) { userLevel = 'VIEW'; break; }
+                    if (c === `${m.id}:EDIT` || c === m.id) { userLevel = 'EDIT'; break; }
+                }
+
+                if (userLevel !== 'DEFAULT') customCount++;
+
+                // Xác định hiệu lực thực tế (Effective level)
+                const effectiveLevel = userLevel === 'DEFAULT' ? roleLevel : userLevel;
 
                 let badgeHtml = '';
-                let isChecked = false;
-                let disabledAttr = '';
+                let cardBorderCls = 'border-slate-200';
 
-                if (isFromRole) {
-                    badgeHtml = '<span class="bg-blue-100 text-blue-700 text-[9px] px-1.5 py-0.5 rounded font-bold">Quyền Vai Trò</span>';
-                    isChecked = true;
-                    disabledAttr = 'disabled';
-                } else if (isCustomChecked) {
-                    badgeHtml = '<span class="bg-emerald-100 text-emerald-800 text-[9px] px-1.5 py-0.5 rounded font-black"><i class="fas fa-plus mr-0.5"></i> Cấp Riêng</span>';
-                    isChecked = true;
+                if (userLevel !== 'DEFAULT') {
+                    if (userLevel === 'EDIT') {
+                        badgeHtml = '<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] px-1.5 py-0.5 rounded font-black">✏️ Riêng: Sửa</span>';
+                        cardBorderCls = 'border-emerald-300 bg-emerald-50/20';
+                    } else if (userLevel === 'VIEW') {
+                        badgeHtml = '<span class="bg-blue-100 text-blue-800 border border-blue-300 text-[9px] px-1.5 py-0.5 rounded font-black">👁️ Riêng: Xem</span>';
+                        cardBorderCls = 'border-blue-300 bg-blue-50/20';
+                    } else {
+                        badgeHtml = '<span class="bg-red-100 text-red-700 border border-red-200 text-[9px] px-1.5 py-0.5 rounded font-black">🚫 Riêng: Cấm</span>';
+                        cardBorderCls = 'border-red-200 bg-red-50/20';
+                    }
                 } else {
-                    badgeHtml = '<span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded font-medium">Chưa có quyền</span>';
-                    isChecked = false;
+                    if (roleLevel === 'EDIT') {
+                        badgeHtml = '<span class="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] px-1.5 py-0.5 rounded font-bold">Vai trò: Sửa</span>';
+                    } else if (roleLevel === 'VIEW') {
+                        badgeHtml = '<span class="bg-blue-50 text-blue-700 border border-blue-100 text-[9px] px-1.5 py-0.5 rounded font-bold">Vai trò: Xem</span>';
+                    } else {
+                        badgeHtml = '<span class="bg-slate-100 text-slate-400 text-[9px] px-1.5 py-0.5 rounded">Vai trò: Khóa</span>';
+                    }
                 }
 
                 html += `
-                    <label class="flex items-start gap-2.5 p-2.5 rounded-xl border transition cursor-pointer ${isCustomChecked ? 'bg-emerald-50/40 border-emerald-300' : (isFromRole ? 'bg-blue-50/20 border-blue-100 opacity-90' : 'bg-white border-slate-200 hover:border-slate-300')}">
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} ${disabledAttr} onchange="window.modSettings.toggleUserCustomPerm('${m.id}')" class="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center justify-between gap-1">
-                                <span class="text-xs font-bold text-slate-800 truncate">${m.title}</span>
+                    <div class="rounded-xl p-2.5 border ${cardBorderCls} transition flex flex-col justify-between gap-2">
+                        <div>
+                            <div class="flex items-start justify-between gap-1">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <i class="fas ${m.icon} text-xs text-amber-500"></i>
+                                    <span class="text-xs font-bold text-slate-800 truncate">${m.title}</span>
+                                </div>
                                 ${badgeHtml}
                             </div>
                             <p class="text-[10px] text-slate-400 truncate mt-0.5">${m.desc || m.id}</p>
                         </div>
-                    </label>
+
+                        <div class="grid grid-cols-4 gap-0.5 bg-slate-100 p-0.5 rounded-lg select-none text-[10px] font-bold text-center">
+                            <button type="button" onclick="window.modSettings.setUserCustomModulePerm('${m.id}', 'DEFAULT')" class="py-1 rounded transition cursor-pointer ${userLevel === 'DEFAULT' ? 'bg-white text-slate-800 font-black shadow-xs' : 'text-slate-400 hover:text-slate-700'}">
+                                Mặc định
+                            </button>
+                            <button type="button" onclick="window.modSettings.setUserCustomModulePerm('${m.id}', 'VIEW')" class="py-1 rounded transition cursor-pointer ${userLevel === 'VIEW' ? 'bg-blue-600 text-white font-black shadow-xs' : 'text-slate-500 hover:text-blue-700'}">
+                                Xem
+                            </button>
+                            <button type="button" onclick="window.modSettings.setUserCustomModulePerm('${m.id}', 'EDIT')" class="py-1 rounded transition cursor-pointer ${userLevel === 'EDIT' ? 'bg-emerald-600 text-white font-black shadow-xs' : 'text-slate-500 hover:text-emerald-700'}">
+                                Sửa
+                            </button>
+                            <button type="button" onclick="window.modSettings.setUserCustomModulePerm('${m.id}', 'NONE')" class="py-1 rounded transition cursor-pointer ${userLevel === 'NONE' ? 'bg-red-600 text-white font-black shadow-xs' : 'text-slate-400 hover:text-red-700'}">
+                                Cấm
+                            </button>
+                        </div>
+                    </div>
                 `;
             });
 
@@ -1072,26 +1656,26 @@ window.modSettings = {
         if (countBadge) countBadge.innerText = customCount;
     },
 
-    toggleUserCustomPerm: (moduleId) => {
+    setUserCustomModulePerm: (moduleId, level) => {
         if (!window.modSettings.selectedUser) return;
         let customMods = window.modSettings.selectedUser.custom_modules || [];
         if (!Array.isArray(customMods)) customMods = [];
 
-        const idx = customMods.indexOf(moduleId);
-        if (idx >= 0) {
-            customMods.splice(idx, 1);
-        } else {
-            customMods.push(moduleId);
+        // Lọc bỏ thiết lập cũ của moduleId
+        customMods = customMods.filter(x => !x.startsWith(moduleId + ':') && x !== moduleId);
+
+        if (level !== 'DEFAULT') {
+            customMods.push(`${moduleId}:${level}`);
         }
 
         window.modSettings.selectedUser.custom_modules = customMods;
         window.modSettings.renderUserPermDetail();
     },
 
-    grantAllUserCustomPerms: () => {
+    grantAllUserCustomPerms: (level = 'EDIT') => {
         if (!window.modSettings.selectedUser) return;
         const allIds = [];
-        (window.ALL_SYSTEM_GROUPS || []).forEach(g => g.items.forEach(i => allIds.push(i.id)));
+        (window.ALL_SYSTEM_GROUPS || []).forEach(g => g.items.forEach(i => allIds.push(`${i.id}:${level}`)));
         window.modSettings.selectedUser.custom_modules = allIds;
         window.modSettings.renderUserPermDetail();
     },
@@ -1154,55 +1738,82 @@ window.modSettings = {
     // ============================================================
 
     save: async () => {
-        const quoteStoreName = document.getElementById('set-quote-store-name')?.value || document.getElementById('set-store-name').value;
-        const quoteStorePhone = document.getElementById('set-quote-store-phone')?.value || document.getElementById('set-store-phone').value;
-        const quoteStoreAddr = document.getElementById('set-quote-store-address')?.value || document.getElementById('set-store-address').value;
-        const quoteStoreTax = document.getElementById('set-quote-store-tax')?.value || document.getElementById('set-store-tax').value;
-        const quoteStoreLogo = document.getElementById('set-quote-store-logo')?.value || document.getElementById('set-store-logo').value;
+        // Đảm bảo dữ liệu form hiện tại được ghi nhận vào cache quoteTemplates
+        window.modSettings.saveCurrentQuoteFormToCache();
+
+        const storeName = document.getElementById('set-store-name')?.value || document.getElementById('set-order-store-name')?.value || 'CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO';
+        const storePhone = document.getElementById('set-store-phone')?.value || document.getElementById('set-order-store-phone')?.value || '0937.039.889';
+        const storeTax = document.getElementById('set-store-tax')?.value || document.getElementById('set-order-store-tax')?.value || '0315614349';
+        const companyEmail = document.getElementById('set-company-email')?.value || document.getElementById('set-order-store-email')?.value || 'contact@sungo.vn';
+        const companyWebsite = document.getElementById('set-company-website')?.value || 'www.sungo.vn';
+        const storeAddr = document.getElementById('set-store-address')?.value || document.getElementById('set-order-store-address')?.value || '419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM';
+        const storeLogo = document.getElementById('set-store-logo')?.value || document.getElementById('set-order-store-logo')?.value || 'https://sungo.vn/wp-content/uploads/2023/11/logo-sungo.png';
 
         const payload = {
-            store_name: quoteStoreName,
-            store_phone: quoteStorePhone,
-            store_address: quoteStoreAddr,
-            store_tax: quoteStoreTax,
-            store_logo: quoteStoreLogo,
+            store_name: storeName,
+            store_phone: storePhone,
+            company_hotline: storePhone,
+            company_email: companyEmail,
+            company_website: companyWebsite,
+            store_address: storeAddr,
+            store_tax: storeTax,
+            store_logo: storeLogo,
 
-            // Cấu hình Báo Giá & Hóa Đơn
-            quote_store_name: quoteStoreName,
-            quote_store_phone: quoteStorePhone,
-            quote_store_address: quoteStoreAddr,
-            quote_store_tax: quoteStoreTax,
-            quote_store_logo: quoteStoreLogo,
-            quote_title: document.getElementById('set-quote-title')?.value || 'HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH',
-            quote_template: document.getElementById('set-quote-template')?.value || 'tpl_sungo_modern',
-            quote_primary_color: document.getElementById('set-quote-primary-color')?.value || '#f59e0b',
-            quote_bank_title: document.getElementById('set-quote-bank-title')?.value || 'Thanh toán tiền mặt hoặc chuyển khoản:',
-            quote_bank_code: document.getElementById('set-quote-bank-code')?.value || 'TCB',
-            quote_bank_name: document.getElementById('set-quote-bank-name')?.value || 'Techcombank',
-            quote_bank_account_number: document.getElementById('set-quote-bank-acc')?.value || '',
-            quote_bank_account_holder: document.getElementById('set-quote-bank-holder')?.value || quoteStoreName,
-            quote_show_qr: document.getElementById('set-quote-show-qr') ? document.getElementById('set-quote-show-qr').checked : true,
-            quote_notes: document.getElementById('set-quote-notes')?.value || '',
-            quote_left_sign_title: document.getElementById('set-quote-left-sign')?.value || 'KHÁCH HÀNG',
-            quote_right_sign_title: document.getElementById('set-quote-right-sign')?.value || 'NGƯỜI BÁN',
+            // Cấu hình Báo Giá & Hóa Đơn Đơn Hàng (Order Management)
+            quote_store_name: document.getElementById('set-order-store-name')?.value || storeName,
+            quote_store_phone: document.getElementById('set-order-store-phone')?.value || storePhone,
+            quote_store_email: document.getElementById('set-order-store-email')?.value || companyEmail,
+            quote_store_address: document.getElementById('set-order-store-address')?.value || storeAddr,
+            quote_store_tax: document.getElementById('set-order-store-tax')?.value || storeTax,
+            quote_store_logo: document.getElementById('set-order-store-logo')?.value || storeLogo,
 
-            delivery_notes: document.getElementById('set-delivery-notes').value,
+            quote_title: document.getElementById('set-order-quote-title')?.value || 'HÓA ĐƠN BÁN HÀNG KIÊM PHIẾU BẢO HÀNH',
+            quote_template: document.getElementById('set-order-quote-template')?.value || 'tpl_order_standard',
+            quote_primary_color: document.getElementById('set-order-primary-color')?.value || '#f59e0b',
+            quote_bank_title: document.getElementById('set-order-bank-title')?.value || 'Thanh toán tiền mặt hoặc chuyển khoản:',
+            quote_bank_code: document.getElementById('set-order-bank-code')?.value || 'TCB',
+            quote_bank_name: document.getElementById('set-order-bank-name')?.value || 'Techcombank',
+            quote_bank_account_number: document.getElementById('set-order-bank-acc')?.value || '',
+            quote_bank_account_holder: document.getElementById('set-order-bank-holder')?.value || storeName,
+            quote_show_qr: document.getElementById('set-order-show-qr') ? document.getElementById('set-order-show-qr').checked : true,
+            quote_notes: document.getElementById('set-order-quote-notes')?.value || '',
+            quote_left_sign_title: document.getElementById('set-order-left-sign')?.value || 'KHÁCH HÀNG',
+            quote_right_sign_title: document.getElementById('set-order-right-sign')?.value || 'NGƯỜI BÁN',
+
+            // Tùy biến mẫu báo giá theo 4 hệ thống BOQ Solar (Hybrid, On-Grid, Off-Grid, Solar Pump)
+            quote_templates: window.modSettings.quoteTemplates,
+
+            delivery_notes: document.getElementById('set-delivery-notes')?.value || '',
             warehouses: window.modSettings.warehouses,
             role_permissions: window.modSettings.rolePermissions
         };
         const btn = document.getElementById('btn-save-settings');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang lưu...';
         btn.classList.add('opacity-50', 'pointer-events-none');
+        let role = "ADMIN";
+        try {
+            const u = JSON.parse(localStorage.getItem("sungo_user") || localStorage.getItem("currentUser") || sessionStorage.getItem("sungo_user") || "{}");
+            if (u && u.role) role = u.role;
+        } catch(e) {}
+
         try {
             const res = await fetch('/api/settings', {
-                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-user-role': role
+                },
+                body: JSON.stringify(payload)
             });
-            if(res.ok) {
-                alert('✅ Đã cập nhật Cấu Hình Hệ Thống & Phân Quyền thành công!');
+            const json = await res.json().catch(() => ({}));
+            if (res.ok && (json.success !== false)) {
+                alert('✅ Đã cập nhật Cấu Hình Doanh Nghiệp, Mẫu Báo Giá BOQ & Phân Quyền thành công!');
                 window.__rolePermissions = window.modSettings.rolePermissions;
                 if (typeof window.reloadAppMenu === 'function') window.reloadAppMenu();
-            } else alert('❌ Lỗi lưu dữ liệu!');
-        } catch(e) { alert('❌ Lỗi kết nối!'); }
+            } else {
+                alert('❌ ' + (json.error || 'Lỗi lưu dữ liệu!'));
+            }
+        } catch(e) { alert('❌ Lỗi kết nối: ' + e.message); }
         finally {
             btn.innerHTML = '<i class="fas fa-save mr-2"></i> Lưu Cấu Hình';
             btn.classList.remove('opacity-50', 'pointer-events-none');

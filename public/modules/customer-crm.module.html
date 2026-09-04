@@ -1,4 +1,4 @@
-<div class="space-y-4">
+<div class="w-full min-h-full flex flex-col space-y-4 font-sans pb-28 md:pb-6">
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-3.5 sm:p-5">
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3.5 gap-3">
             <div>
@@ -7,22 +7,6 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                <!-- BỘ LỌC QUÀ TẶNG & TRI ÂN -->
-                <div class="relative">
-                    <select id="crm-gift-filter" onchange="window.modCRM.render()" class="border border-slate-200 rounded-xl py-2 px-3 outline-none focus:border-amber-500 font-bold text-xs bg-slate-50 focus:bg-white text-slate-700 cursor-pointer transition shadow-2xs">
-                        <option value="all">🌟 Tất cả đối tác</option>
-                        <option value="has_gifts">🎁 Đã nhận quà tri ân</option>
-                        <option value="no_gifts">⚠️ Chưa từng được tặng quà</option>
-                        <option value="vip_no_recent">💎 VIP > 90 ngày chưa tặng quà</option>
-                    </select>
-                </div>
-
-                <!-- Ô TÌM KIẾM -->
-                <form autocomplete="off" onsubmit="event.preventDefault(); return false;" class="relative flex-1 sm:w-64">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search text-xs"></i></span>
-                    <input type="search" id="crm-search" name="crm_search_field_no_fill" autocomplete="off" data-lpignore="true" data-form-type="other" oninput="window.modCRM.render()" placeholder="🔍 Tìm tên, SĐT, Nickname..." class="w-full border border-slate-200 rounded-xl py-2 pl-9 pr-3 outline-none focus:border-amber-500 font-bold text-xs bg-slate-50 focus:bg-white transition">
-                </form>
-
                 <!-- NÚT UPLOAD NHANH EXCEL -->
                 <button type="button" onclick="window.modCRM.openUploadModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-black py-2 px-3.5 rounded-xl text-xs transition shadow-md shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer shrink-0" title="Nhập danh sách khách hàng từ file Excel">
                     <i class="fas fa-file-excel"></i> <span>Upload Nhanh Excel</span>
@@ -47,12 +31,130 @@
                 </div>
 
                 <!-- NÚT TẠO MỚI -->
-                <button type="button" onclick="window.modCRM.openDrawer()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl font-bold shadow-xs text-xs whitespace-nowrap transition flex items-center gap-1.5 shrink-0"><i class="fas fa-plus"></i> <span>Tạo Khách Mới</span></button>
+                <button type="button" onclick="window.modCRM.openDrawer()" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-3.5 py-2 rounded-xl font-bold shadow-xs text-xs whitespace-nowrap transition flex items-center gap-1.5 shrink-0 cursor-pointer"><i class="fas fa-plus"></i> <span>Tạo Khách Mới</span></button>
             </div>
         </div>
 
+        <!-- KPI STATS & QUICK FILTER BAR -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mb-3.5">
+            <div onclick="window.modCRM.resetFilters()" class="bg-slate-50 hover:bg-blue-50/60 p-3 rounded-xl border border-slate-200 hover:border-blue-300 transition cursor-pointer flex items-center gap-2.5 group">
+                <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-black shrink-0 group-hover:scale-105 transition">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng Đối Tác</p>
+                    <h4 class="text-sm sm:text-base font-black text-slate-800" id="crm-kpi-total">0</h4>
+                </div>
+            </div>
+
+            <div onclick="window.modCRM.quickFilter('tier', 'vip_group')" class="bg-slate-50 hover:bg-amber-50/60 p-3 rounded-xl border border-slate-200 hover:border-amber-300 transition cursor-pointer flex items-center gap-2.5 group">
+                <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm font-black shrink-0 group-hover:scale-105 transition">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Hạng VIP (4-6)</p>
+                    <h4 class="text-sm sm:text-base font-black text-amber-600" id="crm-kpi-vip">0</h4>
+                </div>
+            </div>
+
+            <div onclick="window.modCRM.quickFilter('debt', 'has_debt')" class="bg-slate-50 hover:bg-red-50/60 p-3 rounded-xl border border-slate-200 hover:border-red-300 transition cursor-pointer flex items-center gap-2.5 group">
+                <div class="w-9 h-9 rounded-lg bg-red-100 text-red-600 flex items-center justify-center text-sm font-black shrink-0 group-hover:scale-105 transition">
+                    <i class="fas fa-hand-holding-dollar"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Đang Có Nợ</p>
+                    <h4 class="text-sm sm:text-base font-black text-red-600" id="crm-kpi-debt">0</h4>
+                </div>
+            </div>
+
+            <div onclick="window.modCRM.quickFilter('sales', 'sales_gt_50m')" class="bg-slate-50 hover:bg-emerald-50/60 p-3 rounded-xl border border-slate-200 hover:border-emerald-300 transition cursor-pointer flex items-center gap-2.5 group">
+                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm font-black shrink-0 group-hover:scale-105 transition">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Doanh Số ≥ 50M</p>
+                    <h4 class="text-sm sm:text-base font-black text-emerald-600" id="crm-kpi-sales">0</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- BỘ LỌC ĐA TIÊU CHÍ (HẠNG 1-6, DOANH SỐ, CÔNG NỢ, QUÀ TẶNG, TÌM KIẾM) -->
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200 mb-3.5 space-y-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+                <!-- 1. Ô TÌM KIẾM -->
+                <div class="relative lg:col-span-1">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search text-xs"></i></span>
+                    <input type="search" id="crm-search" name="crm_search_field_no_fill" autocomplete="off" oninput="window.modCRM.render()" placeholder="Tìm tên, SĐT, Nickname, MST..." class="w-full border border-slate-200 rounded-xl py-2 pl-9 pr-3 outline-none focus:border-amber-500 font-bold bg-white transition shadow-2xs">
+                </div>
+
+                <!-- 2. BỘ LỌC HẠNG 1-6 -->
+                <div>
+                    <select id="crm-tier-filter" onchange="window.modCRM.render()" class="w-full border border-slate-200 rounded-xl py-2 px-2.5 outline-none focus:border-amber-500 font-bold text-xs bg-white text-slate-700 cursor-pointer transition shadow-2xs">
+                        <option value="all">👑 Tất cả phân hạng (1-6)</option>
+                        <option value="1">1️⃣ Hạng 1: Khách Lẻ</option>
+                        <option value="2">2️⃣ Hạng 2: Chốt Sale</option>
+                        <option value="3">3️⃣ Hạng 3: Đại Lý</option>
+                        <option value="4">4️⃣ Hạng 4: Sỉ C1</option>
+                        <option value="5">5️⃣ Hạng 5: Sỉ VIP</option>
+                        <option value="6">6️⃣ Hạng 6: NPP (Nhà Phân Phối)</option>
+                        <option value="vip_group">🌟 Nhóm VIP (Hạng 4, 5, 6)</option>
+                    </select>
+                </div>
+
+                <!-- 3. BỘ LỌC DOANH SỐ -->
+                <div>
+                    <select id="crm-sales-filter" onchange="window.modCRM.render()" class="w-full border border-slate-200 rounded-xl py-2 px-2.5 outline-none focus:border-amber-500 font-bold text-xs bg-white text-slate-700 cursor-pointer transition shadow-2xs">
+                        <option value="all">💰 Tất cả doanh số</option>
+                        <option value="sales_desc">📈 Doanh số: Cao ➔ Thấp</option>
+                        <option value="sales_asc">📉 Doanh số: Thấp ➔ Cao</option>
+                        <option value="sales_gt_1b">💎 Doanh số ≥ 1 Tỷ</option>
+                        <option value="sales_gt_500m">🥇 Doanh số ≥ 500 Triệu</option>
+                        <option value="sales_gt_100m">🥈 Doanh số ≥ 100 Triệu</option>
+                        <option value="sales_gt_50m">🥉 Doanh số ≥ 50 Triệu</option>
+                        <option value="sales_gt_0">🛒 Đã có đơn hàng (> 0 đ)</option>
+                        <option value="sales_zero">⚪ Chưa mua hàng (0 đ)</option>
+                    </select>
+                </div>
+
+                <!-- 4. BỘ LỌC CÔNG NỢ -->
+                <div>
+                    <select id="crm-debt-filter" onchange="window.modCRM.render()" class="w-full border border-slate-200 rounded-xl py-2 px-2.5 outline-none focus:border-amber-500 font-bold text-xs bg-white text-slate-700 cursor-pointer transition shadow-2xs">
+                        <option value="all">📊 Tất cả công nợ</option>
+                        <option value="has_debt">⚠️ Đang có nợ (> 0 đ)</option>
+                        <option value="debt_desc">🚨 Nợ nhiều nhất (Cao ➔ Thấp)</option>
+                        <option value="debt_over_limit">⛔ Vượt hạn mức cho phép</option>
+                        <option value="debt_gt_100m">🔴 Nợ ≥ 100 Triệu</option>
+                        <option value="debt_gt_50m">🟠 Nợ ≥ 50 Triệu</option>
+                        <option value="debt_gt_10m">🟡 Nợ ≥ 10 Triệu</option>
+                        <option value="no_debt">✅ Không nợ / Đã thanh toán</option>
+                    </select>
+                </div>
+
+                <!-- 5. BỘ LỌC QUÀ TẶNG & TRI ÂN -->
+                <div>
+                    <select id="crm-gift-filter" onchange="window.modCRM.render()" class="w-full border border-slate-200 rounded-xl py-2 px-2.5 outline-none focus:border-amber-500 font-bold text-xs bg-white text-slate-700 cursor-pointer transition shadow-2xs">
+                        <option value="all">🎁 Tất cả quà tặng</option>
+                        <option value="has_gifts">🎁 Đã nhận quà tri ân</option>
+                        <option value="no_gifts">⚠️ Chưa từng được tặng quà</option>
+                        <option value="vip_no_recent">💎 VIP > 90 ngày chưa tặng quà</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- DÒNG TRẠNG THÁI BỘ LỌC & NÚT RESET -->
+            <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-200/80">
+                <span class="text-slate-500 font-medium">
+                    Kết quả: <strong id="crm-filter-count" class="text-blue-700 font-black">0</strong> / <span id="crm-total-count">0</span> khách hàng
+                </span>
+                <button type="button" onclick="window.modCRM.resetFilters()" class="text-slate-500 hover:text-red-600 font-bold flex items-center gap-1 transition cursor-pointer">
+                    <i class="fas fa-rotate-left"></i> Xóa bộ lọc
+                </button>
+            </div>
+        </div>
+        </div>
+
         <!-- 1. MOBILE SMART CARDS (CHỈ HIỆN TRÊN MOBILE md:hidden) -->
-        <div id="crm-mobile-cards" class="md:hidden space-y-2.5 pb-4">
+        <div id="crm-mobile-cards" class="md:hidden space-y-2.5 pb-12">
             <!-- Rendered by JS -->
         </div>
 
@@ -61,6 +163,7 @@
             <table class="w-full text-left text-sm bg-white">
                 <thead class="bg-slate-100 text-[11px] uppercase text-slate-600 font-black border-b border-slate-200 sticky top-0 shadow-xs z-10">
                     <tr>
+                        <th class="p-4 border-b w-10 text-center"><input type="checkbox" id="crm-select-all" onchange="window.modCRM.toggleSelectAll(this.checked)" class="w-4 h-4 rounded text-blue-600 cursor-pointer accent-blue-600" title="Chọn tất cả"></th>
                         <th class="p-4 border-b w-[28%]">Hồ Sơ Đối Tác</th>
                         <th class="p-4 border-b w-[18%]">Thông Tin VAT</th>
                         <th class="p-4 border-b text-center">Hạng & Cấp Bậc</th>
@@ -77,23 +180,23 @@
 
 <!-- DRAWER QUẢN LÝ CHI TIẾT ĐỐI TÁC -->
 <div id="crm-drawer" onclick="if(event.target === this) window.modCRM.closeDrawer()" class="fixed inset-0 bg-slate-900/60 hidden z-[60] justify-end backdrop-blur-xs">
-    <div class="bg-white w-full md:w-[700px] h-full shadow-2xl flex flex-col animate-slide-in-right">
-        <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-4 sm:p-6 shrink-0 shadow-md relative flex justify-between items-center">
-            <div>
-                <h3 class="font-black text-lg sm:text-2xl text-amber-400" id="dr-title">Tạo Khách Hàng Mới</h3>
+    <div class="bg-white w-full md:w-[700px] min-h-full shadow-2xl flex flex-col animate-slide-in-right pb-12">
+        <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 sm:px-6 pb-3 sm:pb-4 pt-6 sm:pt-4 shrink-0 shadow-md relative flex justify-between items-center">
+            <div class="min-w-0 pr-3">
+                <h3 class="font-black text-base sm:text-xl text-amber-400 truncate" id="dr-title">Tạo Khách Hàng Mới</h3>
                 <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5" id="dr-subtitle">Nhập thông tin cơ bản và dữ liệu xuất hóa đơn.</p>
             </div>
-            <button onclick="window.modCRM.closeDrawer()" class="text-slate-400 hover:text-white transition w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-lg">&times;</button>
+            <button type="button" onclick="window.modCRM.closeDrawer()" class="text-white hover:bg-slate-700 active:scale-90 transition w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xl shrink-0 cursor-pointer shadow-md" title="Đóng">&times;</button>
             <input type="hidden" id="dr-id">
         </div>
-        <div id="drawer-tabs" class="flex bg-slate-100 border-b shrink-0 text-xs sm:text-sm font-bold text-slate-500 overflow-x-auto">
-            <button onclick="window.modCRM.switchTab('profile')" id="tab-btn-profile" class="flex-1 min-w-[80px] py-2.5 sm:py-3 border-b-2 border-amber-500 text-amber-600 bg-white whitespace-nowrap"><i class="fas fa-id-card mr-1"></i> Hồ Sơ</button>
-            <button onclick="window.modCRM.switchTab('tier')" id="tab-btn-tier" class="flex-1 min-w-[90px] py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-shield-alt mr-1"></i> Hạng & Hạn Mức</button>
-            <button onclick="window.modCRM.switchTab('orders')" id="tab-btn-orders" class="flex-1 min-w-[90px] py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-file-invoice-dollar mr-1"></i> Đơn & Sổ Nợ</button>
-            <button onclick="window.modCRM.switchTab('gifts')" id="tab-btn-gifts" class="flex-1 min-w-[80px] py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-gift mr-1"></i> Điểm & Quà</button>
-            <button onclick="window.modCRM.switchTab('logs')" id="tab-btn-logs" class="flex-1 min-w-[80px] py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-history mr-1"></i> Nhật Ký</button>
+        <div id="drawer-tabs" class="flex bg-slate-100 border-b shrink-0 text-xs sm:text-sm font-bold text-slate-500 overflow-x-auto no-scrollbar flex-nowrap">
+            <button type="button" onclick="window.modCRM.switchTab('profile')" id="tab-btn-profile" class="shrink-0 px-3.5 py-2.5 sm:py-3 border-b-2 border-amber-500 text-amber-600 bg-white whitespace-nowrap"><i class="fas fa-id-card mr-1"></i> Hồ Sơ</button>
+            <button type="button" onclick="window.modCRM.switchTab('tier')" id="tab-btn-tier" class="shrink-0 px-3.5 py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-shield-alt mr-1"></i> Hạng & Hạn Mức</button>
+            <button type="button" onclick="window.modCRM.switchTab('orders')" id="tab-btn-orders" class="shrink-0 px-3.5 py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-file-invoice-dollar mr-1"></i> Đơn & Sổ Nợ</button>
+            <button type="button" onclick="window.modCRM.switchTab('gifts')" id="tab-btn-gifts" class="shrink-0 px-3.5 py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-gift mr-1"></i> Điểm & Quà</button>
+            <button type="button" onclick="window.modCRM.switchTab('logs')" id="tab-btn-logs" class="shrink-0 px-3.5 py-2.5 sm:py-3 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap"><i class="fas fa-history mr-1"></i> Nhật Ký</button>
         </div>
-        <div class="flex-1 overflow-y-auto bg-slate-50 relative">
+        <div class="flex-1 overflow-y-auto bg-slate-50 relative pb-28 sm:pb-6">
             <!-- TAB 1: HỒ SƠ & VAT -->
             <div id="tab-profile" class="p-3.5 sm:p-6 space-y-3.5">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -181,8 +284,12 @@
                         </p>
                     </div>
 
+                    <div id="tier-permission-notice" class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-900 text-xs font-bold flex items-center gap-2 mb-3">
+                        <i class="fas fa-lock text-amber-600 text-base"></i>
+                        <span>Chỉ tài khoản Quản trị viên (Admin) hoặc Giám đốc mới có quyền điều chỉnh phân hạng và hạn mức tín dụng đối tác.</span>
+                    </div>
                     <div class="flex justify-end pt-2 border-t">
-                        <button onclick="window.modCRM.saveTier()" class="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-8 py-3 rounded-xl font-black shadow-md text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+                        <button id="btn-save-tier" onclick="window.modCRM.saveTier()" class="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-8 py-3 rounded-xl font-black shadow-md text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer">
                             <i class="fas fa-save"></i> CẬP NHẬT CẤP BẬC & HẠN MỨC
                         </button>
                     </div>
@@ -399,13 +506,38 @@
                 </div>
             </div>
 
-            <!-- TAB 4: NHẬT KÝ CHĂM SÓC -->
-            <div id="tab-logs" class="p-6 hidden flex-col h-full">
-                <div class="flex gap-2 mb-4 bg-white p-2 rounded-xl border shadow-sm shrink-0">
-                    <input type="text" id="l-note" placeholder="Ghi chú nội dung chăm sóc, khiếu nại..." class="flex-1 border-none px-3 py-2 text-sm outline-none font-medium">
-                    <button onclick="window.modCRM.addLog()" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-blue-700"><i class="fas fa-paper-plane"></i></button>
+            <!-- TAB 4: NHẬT KÝ CHĂM SÓC & THEO DÕI SỰ CỐ / BẢO HÀNH -->
+            <div id="tab-logs" class="p-4 sm:p-6 hidden flex-col h-full space-y-4">
+                <!-- Form tạo nhật ký mới -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3 shrink-0">
+                    <h4 class="font-black text-xs sm:text-sm text-slate-800 uppercase flex items-center gap-2">
+                        <i class="fas fa-comment-dots text-blue-600"></i> Ghi Nhận Nhật Ký Chăm Sóc & Theo Dõi Sự Cố
+                    </h4>
+                    <div class="space-y-2.5">
+                        <div>
+                            <textarea id="l-note" rows="2" placeholder="Nhập nội dung: VD: Khách phàn nàn inverter Deye bị lỗi cần bảo hành, gọi điện tư vấn thêm pin lưu trữ, hẹn lịch đối soát..." class="w-full border-2 border-slate-200 rounded-xl p-3 text-xs outline-none focus:border-blue-500 font-medium"></textarea>
+                        </div>
+                        <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 justify-between">
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <label class="text-[11px] font-bold text-slate-600 whitespace-nowrap">Trạng thái:</label>
+                                <select id="l-status" class="border border-slate-300 rounded-xl px-3 py-1.5 font-bold text-xs bg-slate-50 outline-none focus:border-blue-500 cursor-pointer text-slate-800">
+                                    <option value="PENDING">🔴 Chưa xử lý (Cần xử lý / Khiếu nại / Bảo hành)</option>
+                                    <option value="PROCESSING">🟡 Đang xử lý (Đang kiểm tra / Gửi hãng)</option>
+                                    <option value="RESOLVED">🟢 Đã hoàn thành (Đã giải quyết xong)</option>
+                                    <option value="NOTE">📝 Ghi chú chăm sóc thường</option>
+                                </select>
+                            </div>
+                            <button type="button" onclick="window.modCRM.addLog()" class="w-full sm:w-auto px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-paper-plane"></i> Lưu Nhật Ký
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div id="log-list" class="space-y-4 flex-1 overflow-y-auto bg-white p-4 rounded-xl border shadow-sm"></div>
+
+                <!-- Danh sách nhật ký -->
+                <div class="flex-1 overflow-y-auto space-y-3 custom-scrollbar" id="log-list">
+                    <!-- Rendered by JS -->
+                </div>
             </div>
         </div>
     </div>
@@ -567,6 +699,149 @@
     </div>
 </div>
 
+
+<!-- ==================== THANH TÁC VỤ HÀNG LOẠT (BULK ACTION BAR) ==================== -->
+<div id="crm-bulk-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-950/95 text-white backdrop-blur-md px-4 sm:px-6 py-3 rounded-2xl shadow-2xl border border-slate-700 flex flex-wrap items-center justify-between gap-3 animate-slide-up max-w-[95vw] sm:max-w-2xl">
+    <div class="flex items-center gap-2.5 pr-3 border-r border-slate-700">
+        <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow" id="crm-bulk-count">0</span>
+        <span class="text-xs font-black text-slate-200 whitespace-nowrap">Đang chọn</span>
+    </div>
+    
+    <div class="flex flex-wrap items-center gap-2">
+        <!-- Nút Nâng Hạng -->
+        <button type="button" onclick="window.modCRM.openBulkTierModal()" class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 active:scale-95 text-slate-950 font-black rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer shadow-md">
+            <i class="fas fa-crown"></i> <span>Nâng Hạng</span>
+        </button>
+
+        <!-- Nút Nhật Ký Nhanh -->
+        <button type="button" onclick="window.modCRM.openBulkLogModal()" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer shadow-md">
+            <i class="fas fa-comment-dots"></i> <span>Nhật Ký Nhanh</span>
+        </button>
+
+        <!-- Nút Xóa Hàng Loạt (Khách Rác: Hạng 1 & Không SĐT & Không VAT) -->
+        <button type="button" id="btn-crm-bulk-del-action" onclick="window.modCRM.openBulkDeleteModal()" class="px-3 py-1.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 active:scale-95 text-white font-black rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer shadow-md">
+            <i class="fas fa-trash-alt"></i> <span>Xóa Khách Rác</span>
+        </button>
+
+        <!-- Nút Bỏ Chọn -->
+        <button type="button" onclick="window.modCRM.clearSelection()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white font-bold rounded-xl text-xs transition flex items-center gap-1 cursor-pointer" title="Bỏ chọn tất cả">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+<!-- ==================== MODAL 1: NÂNG HẠNG HÀNG LOẠT ==================== -->
+<div id="modal-crm-bulk-tier" onclick="if(event.target === this) window.modCRM.closeBulkTierModal()" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-scale-up" onclick="event.stopPropagation()">
+        <div class="bg-gradient-to-r from-amber-500 to-yellow-500 p-4 text-slate-950 flex justify-between items-center">
+            <h3 class="font-black text-sm flex items-center gap-2">
+                <i class="fas fa-crown"></i> Nâng Hạng Khách Hàng Hàng Loạt
+            </h3>
+            <button type="button" onclick="window.modCRM.closeBulkTierModal()" class="w-7 h-7 rounded-full bg-black/10 hover:bg-black/20 text-slate-950 font-bold flex items-center justify-center text-sm cursor-pointer">&times;</button>
+        </div>
+        <div class="p-5 space-y-4 text-xs">
+            <p class="text-slate-600 font-medium">
+                Bạn đang chuyển đổi phân hạng cho <strong id="bulk-tier-count" class="text-amber-600 font-black">0</strong> khách hàng đã chọn:
+            </p>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1.5 uppercase tracking-wider text-[11px]">Chọn Phân Hạng Mới:</label>
+                <select id="bulk-tier-select" class="w-full border-2 border-amber-300 rounded-xl px-3 py-2.5 font-bold text-slate-800 text-sm bg-amber-50/40 outline-none focus:border-amber-500 cursor-pointer">
+                    <option value="1">1️⃣ Hạng 1: Khách Lẻ (Tier 1)</option>
+                    <option value="2">2️⃣ Hạng 2: Chốt Sale (Tier 2)</option>
+                    <option value="3">3️⃣ Hạng 3: Đại Lý (Tier 3)</option>
+                    <option value="4">4️⃣ Hạng 4: Sỉ C1 (Tier 4)</option>
+                    <option value="5">5️⃣ Hạng 5: Sỉ VIP (Tier 5)</option>
+                    <option value="6">6️⃣ Hạng 6: NPP - Nhà Phân Phối (Tier 6)</option>
+                </select>
+            </div>
+            <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+                💡 Sau khi cập nhật, toàn bộ đối tác đã chọn sẽ nhận ngay chính sách chiết khấu & đặc quyền tương ứng với hạng mới.
+            </div>
+        </div>
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+            <button type="button" onclick="window.modCRM.closeBulkTierModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs cursor-pointer">Hủy</button>
+            <button type="button" onclick="window.modCRM.submitBulkTier()" class="px-5 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 text-slate-950 font-black rounded-xl text-xs shadow transition cursor-pointer">Xác Nhận Nâng Hạng</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL 2: NHẬT KÝ CHĂM SÓC NHANH HÀNG LOẠT ==================== -->
+<div id="modal-crm-bulk-log" onclick="if(event.target === this) window.modCRM.closeBulkLogModal()" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-scale-up" onclick="event.stopPropagation()">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex justify-between items-center">
+            <h3 class="font-black text-sm flex items-center gap-2">
+                <i class="fas fa-comment-dots"></i> Thêm Nhật Ký Chăm Sóc Nhanh Hàng Loạt
+            </h3>
+            <button type="button" onclick="window.modCRM.closeBulkLogModal()" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold flex items-center justify-center text-sm cursor-pointer">&times;</button>
+        </div>
+        <div class="p-5 space-y-3.5 text-xs">
+            <p class="text-slate-600 font-medium">
+                Ghi nhật ký chăm sóc đồng thời cho <strong id="bulk-log-count" class="text-blue-600 font-black">0</strong> khách hàng đã chọn:
+            </p>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1 uppercase tracking-wider text-[11px]">Nội Dung Ghi Chú / Nhật Ký *</label>
+                <textarea id="bulk-log-note" rows="3" placeholder="Nhập nội dung: Gửi bảng giá mới, gọi điện chăm sóc, tư vấn thiết bị Solar..." class="w-full border-2 border-blue-200 rounded-xl p-3 font-medium text-slate-800 text-xs outline-none focus:border-blue-500 bg-blue-50/20"></textarea>
+            </div>
+            <!-- Quick Chips -->
+            <div class="space-y-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Mẫu Ghi Nhanh:</span>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="document.getElementById('bulk-log-note').value = 'Gửi bảng giá & catalogue thiết bị Solar mới'" class="px-2 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded-lg text-[10px] font-semibold transition cursor-pointer">📩 Gửi bảng giá</button>
+                    <button type="button" onclick="document.getElementById('bulk-log-note').value = 'Gọi điện chăm sóc định kỳ & hỏi thăm tiến độ dự án'" class="px-2 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded-lg text-[10px] font-semibold transition cursor-pointer">📞 Gọi định kỳ</button>
+                    <button type="button" onclick="document.getElementById('bulk-log-note').value = 'Nhắn tin Zalo tri ân & tặng quà sinh nhật / sự kiện'" class="px-2 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded-lg text-[10px] font-semibold transition cursor-pointer">🎁 Tri ân Zalo</button>
+                    <button type="button" onclick="document.getElementById('bulk-log-note').value = 'Hẹn lịch gặp trực tiếp đối soát công nợ & hợp đồng'" class="px-2 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded-lg text-[10px] font-semibold transition cursor-pointer">🤝 Hẹn gặp</button>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+            <button type="button" onclick="window.modCRM.closeBulkLogModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs cursor-pointer">Hủy</button>
+            <button type="button" onclick="window.modCRM.submitBulkLog()" class="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white font-bold rounded-xl text-xs shadow transition cursor-pointer">Lưu Nhật Ký</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL 3: XÓA HÀNG LOẠT KHÁCH HÀNG RÁC ==================== -->
+<div id="modal-crm-bulk-delete" onclick="if(event.target === this) window.modCRM.closeBulkDeleteModal()" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-scale-up" onclick="event.stopPropagation()">
+        <div class="bg-gradient-to-r from-rose-600 to-red-600 p-4 text-white flex justify-between items-center">
+            <h3 class="font-black text-sm flex items-center gap-2">
+                <i class="fas fa-trash-alt"></i> Xóa Khách Hàng Rác Hàng Loạt
+            </h3>
+            <button type="button" onclick="window.modCRM.closeBulkDeleteModal()" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold flex items-center justify-center text-sm cursor-pointer">&times;</button>
+        </div>
+        <div class="p-5 space-y-4 text-xs">
+            
+            <!-- Phân tích an toàn -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
+                    <span class="text-[10px] font-bold text-rose-600 uppercase block">Đủ Điều Kiện Xóa</span>
+                    <h4 class="text-lg font-black text-rose-700" id="bulk-del-valid-count">0</h4>
+                    <p class="text-[10px] text-rose-600 mt-0.5">Hạng 1, không SĐT, không VAT</p>
+                </div>
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                    <span class="text-[10px] font-bold text-emerald-600 uppercase block">Bảo Vệ An Toàn</span>
+                    <h4 class="text-lg font-black text-emerald-700" id="bulk-del-protected-count">0</h4>
+                    <p class="text-[10px] text-emerald-600 mt-0.5">Có SĐT / Có VAT / Hạng 2-6</p>
+                </div>
+            </div>
+
+            <div id="bulk-del-message-box" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 leading-relaxed text-xs">
+                <!-- Message dynamically populated -->
+            </div>
+
+            <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-950 text-[11px]">
+                ⚠️ <strong>Quy tắc hệ thống:</strong> Thao tác xóa khách hàng rác chỉ thực thi trên các bản ghi thuộc <b>Nhóm 1 (Khách Lẻ)</b>, <b>chưa có SĐT</b> và <b>chưa có thông tin VAT</b>. Tất cả đối tác có thông tin liên hệ hoặc giao dịch sẽ được bảo vệ tuyệt đối!
+            </div>
+        </div>
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+            <button type="button" onclick="window.modCRM.closeBulkDeleteModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs cursor-pointer">Hủy Bỏ</button>
+            <button type="button" id="btn-confirm-bulk-delete" onclick="window.modCRM.submitBulkDelete()" class="px-5 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 text-white font-black rounded-xl text-xs shadow transition cursor-pointer flex items-center gap-1.5">
+                <i class="fas fa-trash-alt"></i> <span>Xác Nhận Tiêu Hủy</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
     @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
     .animate-slide-in-right { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -575,7 +850,233 @@
 <script>
     window.modCRM = {
         list: [],
+        selectedIds: new Set(),
+
+        isAdminUser: () => {
+            try {
+                const uStr = localStorage.getItem("sungo_user") || localStorage.getItem("currentUser") || sessionStorage.getItem("sungo_user");
+                if (!uStr) return false;
+                const u = JSON.parse(uStr);
+                const r = String(u.role || "").toUpperCase().trim();
+                const adminRoles = ["ADMIN", "SUPER_ADMIN", "GIAM_DOC", "TONG_GIAM_DOC", "DIRECTOR"];
+                return adminRoles.includes(r);
+            } catch(e) {
+                return false;
+            }
+        },
+        getCurrentUserRole: () => {
+            try {
+                const uStr = localStorage.getItem("sungo_user") || localStorage.getItem("currentUser") || sessionStorage.getItem("sungo_user");
+                if (!uStr) return "GUEST";
+                const u = JSON.parse(uStr);
+                return u.role || "GUEST";
+            } catch(e) { return "GUEST"; }
+        },
+
         currentCustomerGifts: [],
+        
+        toggleSelectAll: (checked) => {
+            const cbs = document.querySelectorAll(".crm-cust-cb");
+            cbs.forEach(cb => {
+                cb.checked = checked;
+                const id = parseInt(cb.value);
+                if (checked) {
+                    window.modCRM.selectedIds.add(id);
+                } else {
+                    window.modCRM.selectedIds.delete(id);
+                }
+            });
+            window.modCRM.updateBulkBar();
+        },
+        toggleSelectRow: (id, checked) => {
+            const numId = parseInt(id);
+            if (checked) {
+                window.modCRM.selectedIds.add(numId);
+            } else {
+                window.modCRM.selectedIds.delete(numId);
+            }
+            const masterCb = document.getElementById("crm-select-all");
+            const cbs = document.querySelectorAll(".crm-cust-cb");
+            if (masterCb && cbs.length > 0) {
+                masterCb.checked = Array.from(cbs).every(cb => cb.checked);
+            }
+            window.modCRM.updateBulkBar();
+        },
+        clearSelection: () => {
+            window.modCRM.selectedIds.clear();
+            const masterCb = document.getElementById("crm-select-all");
+            if (masterCb) masterCb.checked = false;
+            document.querySelectorAll(".crm-cust-cb").forEach(cb => cb.checked = false);
+            window.modCRM.updateBulkBar();
+        },
+        updateBulkBar: () => {
+            const bar = document.getElementById("crm-bulk-bar");
+            const countEl = document.getElementById("crm-bulk-count");
+            const count = window.modCRM.selectedIds.size;
+            if (countEl) countEl.innerText = count;
+            if (bar) {
+                if (count > 0) {
+                    bar.classList.remove("hidden");
+                    const btnBulkDel = document.getElementById("btn-crm-bulk-del-action");
+                    if (btnBulkDel) {
+                        if (window.modCRM.isAdminUser()) {
+                            btnBulkDel.classList.remove("hidden");
+                        } else {
+                            btnBulkDel.classList.add("hidden");
+                        }
+                    }
+                } else {
+                    bar.classList.add("hidden");
+                }
+            }
+        },
+
+        // 1. Bulk Tier
+        openBulkTierModal: () => {
+            const count = window.modCRM.selectedIds.size;
+            if (count === 0) return alert("Vui lòng chọn ít nhất 1 khách hàng!");
+            const countEl = document.getElementById("bulk-tier-count");
+            if (countEl) countEl.innerText = count;
+            const modal = document.getElementById("modal-crm-bulk-tier");
+            if (modal) modal.classList.remove("hidden");
+        },
+        closeBulkTierModal: () => {
+            const modal = document.getElementById("modal-crm-bulk-tier");
+            if (modal) modal.classList.add("hidden");
+        },
+        submitBulkTier: async () => {
+            const ids = Array.from(window.modCRM.selectedIds);
+            const tier = document.getElementById("bulk-tier-select").value;
+            try {
+                const res = await fetch("/api/customers/bulk-tier", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ids, tier })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    window.modCRM.closeBulkTierModal();
+                    window.modCRM.clearSelection();
+                    await window.modCRM.load();
+                } else {
+                    alert("Lỗi: " + data.error);
+                }
+            } catch(e) { alert("Lỗi kết nối: " + e.message); }
+        },
+
+        // 2. Bulk Care Log
+        openBulkLogModal: () => {
+            const count = window.modCRM.selectedIds.size;
+            if (count === 0) return alert("Vui lòng chọn ít nhất 1 khách hàng!");
+            const countEl = document.getElementById("bulk-log-count");
+            if (countEl) countEl.innerText = count;
+            const noteEl = document.getElementById("bulk-log-note");
+            if (noteEl) noteEl.value = "";
+            const modal = document.getElementById("modal-crm-bulk-log");
+            if (modal) modal.classList.remove("hidden");
+        },
+        closeBulkLogModal: () => {
+            const modal = document.getElementById("modal-crm-bulk-log");
+            if (modal) modal.classList.add("hidden");
+        },
+        submitBulkLog: async () => {
+            const ids = Array.from(window.modCRM.selectedIds);
+            const note = (document.getElementById("bulk-log-note").value || "").trim();
+            if (!note) return alert("Vui lòng nhập nội dung ghi chú!");
+            try {
+                const res = await fetch("/api/customers/bulk-log", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ids, note })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    window.modCRM.closeBulkLogModal();
+                    window.modCRM.clearSelection();
+                } else {
+                    alert("Lỗi: " + data.error);
+                }
+            } catch(e) { alert("Lỗi kết nối: " + e.message); }
+        },
+
+        // 3. Bulk Delete
+        openBulkDeleteModal: () => {
+            if (!window.modCRM.isAdminUser()) {
+                alert("⛔ TỪ CHỐI: Chỉ tài khoản Quản trị viên (Admin) mới có quyền xóa khách hàng!");
+                return;
+            }
+            const ids = Array.from(window.modCRM.selectedIds);
+            if (ids.length === 0) return alert("Vui lòng chọn ít nhất 1 khách hàng!");
+            
+            const allList = window.modCRM.list || [];
+            const selectedCusts = allList.filter(c => ids.includes(parseInt(c.id)));
+
+            const deletable = [];
+            const protectedList = [];
+
+            selectedCusts.forEach(c => {
+                const hasPhone = c.phone && c.phone.trim() !== "" && c.phone.trim() !== "---";
+                const hasVat = (c.vat_company && c.vat_company.trim() !== "") || (c.vat_taxcode && c.vat_taxcode.trim() !== "");
+                const isTier1 = parseInt(c.customer_tier || c.tier || c.vip_level || 1) === 1;
+                const hasSales = (parseFloat(c.total_sales) || 0) > 0;
+
+                if (isTier1 && !hasPhone && !hasVat && !hasSales) {
+                    deletable.push(c);
+                } else {
+                    protectedList.push(c);
+                }
+            });
+
+            document.getElementById("bulk-del-valid-count").innerText = deletable.length;
+            document.getElementById("bulk-del-protected-count").innerText = protectedList.length;
+
+            const msgBox = document.getElementById("bulk-del-message-box");
+            const btnConfirm = document.getElementById("btn-confirm-bulk-delete");
+
+            if (deletable.length === 0) {
+                msgBox.innerHTML = "<span class='text-red-600 font-bold'>⛔ Không thể xóa: Toàn bộ " + ids.length + " khách hàng đã chọn đều có SĐT, VAT, hoặc thuộc Hạng 2-6 nên được hệ thống bảo vệ an toàn!</span>";
+                if (btnConfirm) btnConfirm.disabled = true;
+                if (btnConfirm) btnConfirm.classList.add("opacity-50", "cursor-not-allowed");
+            } else {
+                msgBox.innerHTML = "<p class='font-bold text-slate-800 mb-1'>Bạn đã chọn tổng cộng <strong>" + ids.length + "</strong> đối tác:</p>" +
+                    "<p class='text-emerald-700 font-medium'>🛡️ <strong>" + protectedList.length + "</strong> khách hàng được bảo vệ nguyên vẹn.</p>" +
+                    "<p class='text-rose-600 font-bold mt-1'>🗑️ Hệ thống sẽ xóa vĩnh viễn <strong>" + deletable.length + "</strong> khách hàng rác (Hạng 1, không SĐT, không VAT).</p>";
+                if (btnConfirm) btnConfirm.disabled = false;
+                if (btnConfirm) btnConfirm.classList.remove("opacity-50", "cursor-not-allowed");
+            }
+
+            const modal = document.getElementById("modal-crm-bulk-delete");
+            if (modal) modal.classList.remove("hidden");
+        },
+        closeBulkDeleteModal: () => {
+            const modal = document.getElementById("modal-crm-bulk-delete");
+            if (modal) modal.classList.add("hidden");
+        },
+        submitBulkDelete: async () => {
+            const ids = Array.from(window.modCRM.selectedIds);
+            try {
+                const res = await fetch("/api/customers/bulk-delete", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "x-user-role": window.modCRM.getCurrentUserRole()
+                    },
+                    body: JSON.stringify({ ids, role: window.modCRM.getCurrentUserRole() })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    window.modCRM.closeBulkDeleteModal();
+                    window.modCRM.clearSelection();
+                    await window.modCRM.load();
+                } else {
+                    alert("Lỗi: " + data.error);
+                }
+            } catch(e) { alert("Lỗi kết nối: " + e.message); }
+        },
+
         load: async () => {
             const tbody = document.getElementById('tbl-crm');
             if (tbody) {
@@ -599,66 +1100,183 @@
                 }
             }
         },
+        quickFilter: (type, val) => {
+            if (type === "tier") {
+                const el = document.getElementById("crm-tier-filter");
+                if (el) el.value = val;
+            } else if (type === "debt") {
+                const el = document.getElementById("crm-debt-filter");
+                if (el) el.value = val;
+            } else if (type === "sales") {
+                const el = document.getElementById("crm-sales-filter");
+                if (el) el.value = val;
+            }
+            window.modCRM.render();
+        },
+        resetFilters: () => {
+            const s = document.getElementById("crm-search");
+            const t = document.getElementById("crm-tier-filter");
+            const sal = document.getElementById("crm-sales-filter");
+            const d = document.getElementById("crm-debt-filter");
+            const g = document.getElementById("crm-gift-filter");
+            if (s) s.value = "";
+            if (t) t.value = "all";
+            if (sal) sal.value = "all";
+            if (d) d.value = "all";
+            if (g) g.value = "all";
+            window.modCRM.render();
+        },
         render: () => {
-            const searchEl = document.getElementById('crm-search');
-            const term = searchEl ? searchEl.value.trim().toLowerCase() : '';
-            const giftFilterEl = document.getElementById('crm-gift-filter');
-            const giftFilter = giftFilterEl ? giftFilterEl.value : 'all';
-            const tbody = document.getElementById('tbl-crm');
+            const searchEl = document.getElementById("crm-search");
+            const term = searchEl ? searchEl.value.trim().toLowerCase() : "";
+            const tierFilterEl = document.getElementById("crm-tier-filter");
+            const tierFilter = tierFilterEl ? tierFilterEl.value : "all";
+            const salesFilterEl = document.getElementById("crm-sales-filter");
+            const salesFilter = salesFilterEl ? salesFilterEl.value : "all";
+            const debtFilterEl = document.getElementById("crm-debt-filter");
+            const debtFilter = debtFilterEl ? debtFilterEl.value : "all";
+            const giftFilterEl = document.getElementById("crm-gift-filter");
+            const giftFilter = giftFilterEl ? giftFilterEl.value : "all";
+            const tbody = document.getElementById("tbl-crm");
             if (!tbody) return;
 
-            let filtered = (window.modCRM.list || []).filter(c => {
+            const allList = window.modCRM.list || [];
+
+            // Update KPI stats
+            const kpiTotalEl = document.getElementById("crm-kpi-total");
+            const kpiVipEl = document.getElementById("crm-kpi-vip");
+            const kpiDebtEl = document.getElementById("crm-kpi-debt");
+            const kpiSalesEl = document.getElementById("crm-kpi-sales");
+            const totalCountEl = document.getElementById("crm-total-count");
+
+            if (kpiTotalEl) kpiTotalEl.innerText = allList.length;
+            if (totalCountEl) totalCountEl.innerText = allList.length;
+            if (kpiVipEl) kpiVipEl.innerText = allList.filter(c => (parseInt(c.customer_tier || c.tier || c.vip_level || 1)) >= 4).length;
+            if (kpiDebtEl) kpiDebtEl.innerText = allList.filter(c => (parseFloat(c.current_debt) || 0) > 0).length;
+            if (kpiSalesEl) kpiSalesEl.innerText = allList.filter(c => (parseFloat(c.total_sales) || 0) >= 50000000).length;
+
+            let filtered = allList.filter(c => {
                 // 1. Lọc theo từ khóa tìm kiếm
                 if (term) {
-                    const name = String(c.name || c.full_name || '').toLowerCase();
-                    const nickname = String(c.nickname || '').toLowerCase();
-                    const phone = String(c.phone || '');
-                    const code = String(c.customer_code || '').toLowerCase();
-                    const tax = String(c.vat_taxcode || '').toLowerCase();
-                    const company = String(c.vat_company || '').toLowerCase();
-                    const addr = String(c.address || '').toLowerCase();
+                    const name = String(c.name || c.full_name || "").toLowerCase();
+                    const nickname = String(c.nickname || "").toLowerCase();
+                    const phone = String(c.phone || "");
+                    const code = String(c.customer_code || "").toLowerCase();
+                    const tax = String(c.vat_taxcode || "").toLowerCase();
+                    const company = String(c.vat_company || "").toLowerCase();
+                    const addr = String(c.address || "").toLowerCase();
                     const matchText = name.includes(term) || nickname.includes(term) || phone.includes(term) || code.includes(term) || tax.includes(term) || company.includes(term) || addr.includes(term);
                     if (!matchText) return false;
                 }
 
-                // 2. Lọc theo trạng thái quà tặng & tri ân
-                const giftCount = parseInt(c.total_gifts_count) || 0;
+                // 2. Lọc theo Hạng (1, 2, 3, 4, 5, 6, VIP)
                 const tierVal = parseInt(c.customer_tier || c.tier || c.vip_level || 1);
-                
-                if (giftFilter === 'has_gifts') {
+                if (tierFilter !== "all") {
+                    if (tierFilter === "vip_group") {
+                        if (tierVal < 4) return false;
+                    } else if (tierVal !== parseInt(tierFilter)) {
+                        return false;
+                    }
+                }
+
+                // 3. Lọc theo Doanh Số đạt được
+                const salesVal = parseFloat(c.total_sales) || 0;
+                if (salesFilter === "sales_gt_1b") {
+                    if (salesVal < 1000000000) return false;
+                } else if (salesFilter === "sales_gt_500m") {
+                    if (salesVal < 500000000) return false;
+                } else if (salesFilter === "sales_gt_100m") {
+                    if (salesVal < 100000000) return false;
+                } else if (salesFilter === "sales_gt_50m") {
+                    if (salesVal < 50000000) return false;
+                } else if (salesFilter === "sales_gt_0") {
+                    if (salesVal <= 0) return false;
+                } else if (salesFilter === "sales_zero") {
+                    if (salesVal > 0) return false;
+                }
+
+                // 4. Lọc theo Công Nợ
+                const debtVal = parseFloat(c.current_debt) || 0;
+                const limitVal = parseFloat(c.debt_limit) || 0;
+                if (debtFilter === "has_debt" || debtFilter === "debt_desc") {
+                    if (debtVal <= 0) return false;
+                } else if (debtFilter === "debt_over_limit") {
+                    if (debtVal <= limitVal || limitVal <= 0) return false;
+                } else if (debtFilter === "debt_gt_100m") {
+                    if (debtVal < 100000000) return false;
+                } else if (debtFilter === "debt_gt_50m") {
+                    if (debtVal < 50000000) return false;
+                } else if (debtFilter === "debt_gt_10m") {
+                    if (debtVal < 10000000) return false;
+                } else if (debtFilter === "no_debt") {
+                    if (debtVal > 0) return false;
+                }
+
+                // 5. Lọc theo trạng thái quà tặng & tri ân
+                const giftCount = parseInt(c.total_gifts_count) || 0;
+                if (giftFilter === "has_gifts") {
                     if (giftCount <= 0) return false;
-                } else if (giftFilter === 'no_gifts') {
+                } else if (giftFilter === "no_gifts") {
                     if (giftCount > 0) return false;
-                } else if (giftFilter === 'vip_no_recent') {
+                } else if (giftFilter === "vip_no_recent") {
                     if (tierVal < 3) return false;
                     if (c.last_gift_date) {
                         const daysSinceLastGift = Math.floor((new Date() - new Date(c.last_gift_date)) / 86400000);
                         if (daysSinceLastGift <= 90) return false;
                     }
                 }
+
                 return true;
             });
+
+            // Sắp xếp dữ liệu (Sorting)
+            if (debtFilter === "debt_desc") {
+                filtered.sort((a, b) => (parseFloat(b.current_debt) || 0) - (parseFloat(a.current_debt) || 0));
+            } else if (salesFilter === "sales_desc") {
+                filtered.sort((a, b) => (parseFloat(b.total_sales) || 0) - (parseFloat(a.total_sales) || 0));
+            } else if (salesFilter === "sales_asc") {
+                filtered.sort((a, b) => (parseFloat(a.total_sales) || 0) - (parseFloat(b.total_sales) || 0));
+            }
+
+            const filterCountEl = document.getElementById("crm-filter-count");
+            if (filterCountEl) filterCountEl.innerText = filtered.length;
             
-            const mobileContainer = document.getElementById('crm-mobile-cards');
+            const mobileContainer = document.getElementById("crm-mobile-cards");
             
             if (filtered.length === 0) {
-                if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold">Không có dữ liệu đối tác phù hợp với bộ lọc.</td></tr>';
-                if (mobileContainer) mobileContainer.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold bg-white rounded-2xl border border-slate-200">Không có dữ liệu đối tác phù hợp.</div>';
+                if (tbody) tbody.innerHTML = "<tr><td colspan='6' class='p-10 text-center text-slate-400 font-bold'>Không có dữ liệu đối tác phù hợp với bộ lọc. Hãy thử chọn lại bộ lọc.</td></tr>";
+                if (mobileContainer) mobileContainer.innerHTML = "<div class='p-8 text-center text-slate-400 font-bold bg-white rounded-2xl border border-slate-200'>Không có dữ liệu đối tác phù hợp với bộ lọc.</div>";
                 return;
             }
 
-            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(parseFloat(num) || 0);
+            const fmt = (num) => new Intl.NumberFormat("vi-VN").format(parseFloat(num) || 0);
+            const isAdmin = window.modCRM.isAdminUser();
+
+            // Update Master Checkbox in table header
+            const theadEl = document.querySelector("#tbl-crm")?.closest("table")?.querySelector("thead");
+            if (theadEl) {
+                const headerRow = theadEl.querySelector("tr");
+                if (headerRow) {
+                    headerRow.innerHTML = (isAdmin ? '<th class="p-4 border-b w-10 text-center"><input type="checkbox" id="crm-select-all" onchange="window.modCRM.toggleSelectAll(this.checked)" class="w-4 h-4 rounded text-blue-600 cursor-pointer accent-blue-600" title="Chọn tất cả"></th>' : '') +
+                        '<th class="p-4 border-b w-[28%]">Hồ Sơ Đối Tác</th>' +
+                        '<th class="p-4 border-b w-[18%]">Thông Tin VAT</th>' +
+                        '<th class="p-4 border-b text-center">Hạng & Cấp Bậc</th>' +
+                        '<th class="p-4 border-b text-right">Doanh Số / Nợ</th>' +
+                        '<th class="p-4 border-b text-center text-amber-600 w-[20%]">Điểm & Quà Tri Ân</th>' +
+                        '<th class="p-4 border-b text-center w-24">Thao Tác</th>';
+                }
+            }
             const tiers = {
-                1: { n: '1. Khách Lẻ', c: 'bg-slate-100 text-slate-600' },
-                2: { n: '2. Chốt Sale', c: 'bg-emerald-50 text-emerald-700' },
-                3: { n: '3. Đại Lý', c: 'bg-blue-50 text-blue-700' },
-                4: { n: '4. Sỉ C1', c: 'bg-amber-50 text-amber-700' },
-                5: { n: '5. Sỉ VIP', c: 'bg-orange-50 text-orange-700' },
-                6: { n: '6. NPP', c: 'bg-purple-100 text-purple-800 font-black' }
+                1: { n: "1. Khách Lẻ", c: "bg-slate-100 text-slate-600" },
+                2: { n: "2. Chốt Sale", c: "bg-emerald-50 text-emerald-700" },
+                3: { n: "3. Đại Lý", c: "bg-blue-50 text-blue-700" },
+                4: { n: "4. Sỉ C1", c: "bg-amber-50 text-amber-700" },
+                5: { n: "5. Sỉ VIP", c: "bg-orange-50 text-orange-700" },
+                6: { n: "6. NPP", c: "bg-purple-100 text-purple-800 font-black" }
             };
 
-            let desktopHtml = '';
-            let mobileHtml = '';
+            let desktopHtml = "";
+            let mobileHtml = "";
 
             filtered.forEach(c => {
                 const tierVal = c.customer_tier || c.tier || c.vip_level || 1;
@@ -708,6 +1326,7 @@
                 // Desktop row
                 desktopHtml += `
                 <tr class="hover:bg-amber-50/30 transition">
+                    ${isAdmin ? `<td class="p-4 text-center border-b"><input type="checkbox" value="${c.id}" onchange="window.modCRM.toggleSelectRow(${c.id}, this.checked)" class="crm-cust-cb w-4 h-4 rounded text-blue-600 cursor-pointer accent-blue-600" ${window.modCRM.selectedIds.has(c.id) ? "checked" : ""}></td>` : ""} 
                     <td class="p-4 border-b">
                         <p class="font-black text-slate-800 text-sm">${displayName} ${nicknameHTML}</p>
                         <p class="text-[11px] font-mono font-bold text-slate-500 mt-1 whitespace-nowrap"><i class="fas fa-phone-alt opacity-50 mr-1"></i> ${c.phone || '---'} ${addressHTML}</p>
@@ -731,7 +1350,9 @@
                 // Mobile Card
                 mobileHtml += `
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-3.5 space-y-2.5">
-                    <div class="flex justify-between items-start">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="flex items-start gap-2.5 min-w-0">
+                            ${isAdmin ? `<input type="checkbox" value="${c.id}" onchange="window.modCRM.toggleSelectRow(${c.id}, this.checked)" class="crm-cust-cb w-4 h-4 rounded text-blue-600 cursor-pointer accent-blue-600 mt-1 shrink-0" ${window.modCRM.selectedIds.has(c.id) ? "checked" : ""}>` : ""}
                         <div>
                             <h4 class="font-black text-slate-900 text-sm flex items-center gap-1">
                                 ${displayName} ${nicknameHTML}
@@ -816,7 +1437,13 @@
                 document.getElementById('dr-title').innerText = "Hồ Sơ Đối Tác";
                 document.getElementById('dr-subtitle').innerText = "ID Hệ thống: #" + c.id;
                 if (tabs) tabs.classList.remove('hidden');
-                if (btnDel) btnDel.classList.remove('hidden');
+                if (btnDel) {
+                    if (window.modCRM.isAdminUser()) {
+                        btnDel.classList.remove('hidden');
+                    } else {
+                        btnDel.classList.add('hidden');
+                    }
+                }
                 if (btnSave) btnSave.innerHTML = '<i class="fas fa-save mr-1"></i> CẬP NHẬT HỒ SƠ';
                 
                 document.getElementById('dr-id').value = c.id; 
@@ -840,6 +1467,32 @@
                 window.modCRM.loadCustomerTransactions(id);
                 window.modCRM.loadLogs(id);
                 window.modCRM.loadGifts(id);
+
+                // Check Admin permissions for Tab 2 (Tier & Debt Limit)
+                const isAdmin = window.modCRM.isAdminUser();
+                const drTier = document.getElementById("dr-tier");
+                const drDebtLimit = document.getElementById("dr-debt-limit");
+                const drPoints = document.getElementById("dr-points");
+                const btnSaveTier = document.getElementById("btn-save-tier");
+                const tierNotice = document.getElementById("tier-permission-notice");
+
+                if (drTier) drTier.disabled = !isAdmin;
+                if (drDebtLimit) drDebtLimit.disabled = !isAdmin;
+                if (drPoints) drPoints.disabled = !isAdmin;
+                if (btnSaveTier) {
+                    if (isAdmin) {
+                        btnSaveTier.classList.remove("hidden");
+                    } else {
+                        btnSaveTier.classList.add("hidden");
+                    }
+                }
+                if (tierNotice) {
+                    if (!isAdmin) {
+                        tierNotice.classList.remove("hidden");
+                    } else {
+                        tierNotice.classList.add("hidden");
+                    }
+                }
             } else {
                 document.getElementById('dr-title').innerText = "Tạo Khách Hàng Mới";
                 document.getElementById('dr-subtitle').innerText = "Vui lòng nhập thông tin cơ bản để lưu vào CSDL.";
@@ -1132,6 +1785,10 @@
             }).join('');
         },
         deleteCustomer: () => {
+            if (!window.modCRM.isAdminUser()) {
+                alert("⛔ TỪ CHỐI: Chỉ tài khoản Quản trị viên (Admin) mới có quyền xóa khách hàng!");
+                return;
+            }
             const modal = document.getElementById('modal-delete-crm-customer');
             if (modal) {
                 modal.classList.remove('hidden');
@@ -1152,6 +1809,10 @@
             if (passInput) passInput.value = '';
         },
         confirmDeleteCustomer: async () => {
+            if (!window.modCRM.isAdminUser()) {
+                alert("⛔ TỪ CHỐI TRUY CẬP: Chỉ tài khoản Quản trị viên (Admin) mới có quyền xóa khách hàng!");
+                return;
+            }
             const pass = document.getElementById('admin-del-crm-pass').value;
             if (pass !== 'sungo123') {
                 alert('❌ Mật khẩu Admin không chính xác!');
@@ -1162,7 +1823,13 @@
 
             const id = document.getElementById('dr-id').value;
             try {
-                const res = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/customers/${id}`, { 
+                    method: 'DELETE',
+                    headers: {
+                        "x-user-role": window.modCRM.getCurrentUserRole(),
+                        "x-admin-password": pass
+                    }
+                });
                 const data = await res.json();
                 
                 if (data.success !== false) { 
@@ -1178,46 +1845,123 @@
             }
         },
         loadLogs: async (id) => {
-            const logContainer = document.getElementById('log-list');
+            const logContainer = document.getElementById("log-list");
             if (!logContainer) return;
             try {
-                const res = await fetch(`/api/customers/${id}/logs?t=` + Date.now());
+                const res = await fetch("/api/customers/" + id + "/logs?t=" + Date.now());
                 const data = await res.json();
-                if (data.success && data.data && data.data.length > 0) {
-                    logContainer.innerHTML = data.data.map(l => `
-                        <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-sm">
-                            <p class="font-medium text-slate-800">${l.note}</p>
-                            <p class="text-[10px] text-blue-500 mt-2 font-bold"><i class="far fa-clock mr-1"></i>${new Date(l.created_at).toLocaleString('vi-VN')}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    logContainer.innerHTML = '<p class="text-xs text-center py-6 text-slate-400">Chưa có nhật ký chăm sóc nào.</p>';
+                const logs = (data.success && data.data) ? data.data : [];
+
+                if (logs.length === 0) {
+                    logContainer.innerHTML = "<div class='text-center py-8 text-slate-400 bg-slate-50/60 rounded-2xl border border-dashed border-slate-200'>" +
+                        "<i class='fas fa-comment-dots text-3xl mb-2 text-slate-300'></i>" +
+                        "<p class='text-xs font-bold text-slate-600'>Chưa có nhật ký chăm sóc hoặc yêu cầu xử lý nào.</p>" +
+                        "<p class='text-[11px] text-slate-400 mt-0.5'>Nhập nội dung ở khung phía trên để ghi nhận mốc làm việc với khách hàng.</p>" +
+                    "</div>";
+                    return;
                 }
+
+                const getStatusBadge = (status) => {
+                    if (status === "PENDING") {
+                        return "<span class='px-2.5 py-0.5 bg-rose-100 text-rose-800 border border-rose-200 rounded-lg text-[10px] font-black uppercase inline-flex items-center gap-1'><i class='fas fa-exclamation-circle text-rose-600'></i> Chưa Xử Lý</span>";
+                    } else if (status === "PROCESSING") {
+                        return "<span class='px-2.5 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[10px] font-black uppercase inline-flex items-center gap-1'><i class='fas fa-spinner fa-spin text-amber-600'></i> Đang Xử Lý</span>";
+                    } else if (status === "RESOLVED") {
+                        return "<span class='px-2.5 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[10px] font-black uppercase inline-flex items-center gap-1'><i class='fas fa-check-circle text-emerald-600'></i> Đã Hoàn Thành</span>";
+                    }
+                    return "<span class='px-2 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-[10px] font-bold inline-flex items-center gap-1'><i class='fas fa-sticky-note text-slate-400'></i> Ghi Chú</span>";
+                };
+
+                logContainer.innerHTML = logs.map(l => {
+                    const status = l.status || "NOTE";
+                    const dateStr = l.created_at ? new Date(l.created_at).toLocaleString("vi-VN") : "";
+                    const handlerStr = l.handler ? ("Người ghi: <strong>" + l.handler + "</strong>") : "";
+
+                    return "<div class='bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5 transition hover:border-blue-300'>" +
+                        "<div class='flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2'>" +
+                            "<div class='flex items-center gap-2'>" +
+                                getStatusBadge(status) +
+                                "<span class='text-[11px] text-slate-400 font-mono'><i class='far fa-clock mr-1'></i>" + dateStr + "</span>" +
+                            "</div>" +
+                            "<div class='flex items-center gap-1.5'>" +
+                                "<select onchange='window.modCRM.updateLogStatus(" + id + ", " + l.id + ", this.value)' class='text-[11px] font-bold px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg outline-none cursor-pointer focus:border-blue-500 text-slate-700'>" +
+                                    "<option value='PENDING' " + (status === "PENDING" ? "selected" : "") + ">🔴 Chưa xử lý</option>" +
+                                    "<option value='PROCESSING' " + (status === "PROCESSING" ? "selected" : "") + ">🟡 Đang xử lý</option>" +
+                                    "<option value='RESOLVED' " + (status === "RESOLVED" ? "selected" : "") + ">🟢 Đã hoàn thành</option>" +
+                                    "<option value='NOTE' " + (status === "NOTE" ? "selected" : "") + ">📝 Ghi chú thường</option>" +
+                                "</select>" +
+                                "<button type='button' onclick='window.modCRM.deleteLog(" + id + ", " + l.id + ")' class='text-slate-400 hover:text-red-500 p-1 rounded-md text-xs transition cursor-pointer' title='Xóa ghi chú'><i class='fas fa-trash-alt'></i></button>" +
+                            "</div>" +
+                        "</div>" +
+                        "<p class='text-xs text-slate-800 font-medium leading-relaxed'>" + l.note + "</p>" +
+                        (handlerStr ? ("<p class='text-[10px] text-slate-400 text-right'>" + handlerStr + "</p>") : "") +
+                    "</div>";
+                }).join("");
             } catch (e) {
-                logContainer.innerHTML = '<p class="text-xs text-center py-6 text-slate-400">Chưa có nhật ký</p>';
+                logContainer.innerHTML = "<p class='text-xs text-center py-6 text-red-500 font-bold'>Lỗi đọc nhật ký chăm sóc!</p>";
             }
         },
         addLog: async () => {
-            const id = document.getElementById('dr-id').value;
-            const noteInput = document.getElementById('l-note');
-            const note = noteInput ? noteInput.value.trim() : '';
-            if (!note) return alert('Vui lòng nhập nội dung ghi chú!');
+            const id = document.getElementById("dr-id").value;
+            const noteInput = document.getElementById("l-note");
+            const statusSelect = document.getElementById("l-status");
+            const note = noteInput ? noteInput.value.trim() : "";
+            const status = statusSelect ? statusSelect.value : "NOTE";
+            if (!note) return alert("Vui lòng nhập nội dung nhật ký!");
+
+            let handler = "Nhân viên";
             try {
-                const res = await fetch(`/api/customers/${id}/logs`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ note })
+                const u = JSON.parse(localStorage.getItem("sungo_user") || "{}");
+                handler = u.name || u.full_name || "Nhân viên";
+            } catch(e) {}
+
+            try {
+                const res = await fetch("/api/customers/" + id + "/logs", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ note, status, handler })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    if (noteInput) noteInput.value = '';
+                    if (noteInput) noteInput.value = "";
                     window.modCRM.loadLogs(id);
                 } else {
-                    alert('❌ Lỗi lưu ghi chú: ' + (data.error || ''));
+                    alert("❌ Lỗi: " + (data.error || ""));
                 }
             } catch (e) {
-                alert('❌ Lỗi kết nối máy chủ!');
+                alert("❌ Lỗi kết nối máy chủ!");
             }
+        },
+        updateLogStatus: async (customerId, logId, newStatus) => {
+            let handler = "";
+            try {
+                const u = JSON.parse(localStorage.getItem("sungo_user") || "{}");
+                handler = u.name || u.full_name || "";
+            } catch(e) {}
+
+            try {
+                const res = await fetch("/api/customers/" + customerId + "/logs/" + logId + "/status", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: newStatus, handler })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.modCRM.loadLogs(customerId);
+                } else {
+                    alert("❌ Lỗi: " + data.error);
+                }
+            } catch(e) { alert("❌ Lỗi cập nhật trạng thái!"); }
+        },
+        deleteLog: async (customerId, logId) => {
+            if (!confirm("Bạn có chắc muốn xóa dòng nhật ký này?")) return;
+            try {
+                const res = await fetch("/api/customers/" + customerId + "/logs/" + logId, { method: "DELETE" });
+                const data = await res.json();
+                if (data.success) {
+                    window.modCRM.loadLogs(customerId);
+                }
+            } catch(e) {}
         },
 
         // --- XỬ LÝ QUÀ TẶNG & TRI ÂN NÂNG CAO ---
