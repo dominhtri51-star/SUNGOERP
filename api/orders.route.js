@@ -4,6 +4,7 @@ const pool = require('../config/database');
 const fs = require('fs');
 const path = require('path');
 const googleDriveService = require('../services/googleDrive.service');
+const { recalculateAllOrders, recalculateOrderProfit } = require('../services/orderProfit.service');
 
 const parseSafeNum = (val) => {
     if (val === null || val === undefined || val === '') return 0;
@@ -62,17 +63,47 @@ router.get('/', async (req, res) => {
         const orders = result.rows;
         if (orders.length > 0) {
             const orderIds = orders.map(o => o.id);
-            // Tối ưu hóa: Chỉ lấy các cột cần thiết cho hiển thị tóm tắt danh sách, giảm tải mạng
+            // Tối ưu hóa: Lấy thông tin thiết bị kèm giá vốn để kiểm tra cảnh báo lời ảo
             const itemsRes = await pool.query(`
-                SELECT oi.id, oi.order_id, COALESCE(oi.product_name, p.product_name, 'Thiết bị') as product_name, COALESCE(oi.sku, p.sku, 'N/A') as sku, oi.price, COALESCE(oi.quantity, 1) as quantity, oi.product_id
+                SELECT oi.id, oi.order_id, COALESCE(oi.product_name, p.product_name, 'Thiết bị') as product_name, 
+                       COALESCE(oi.sku, p.sku, 'N/A') as sku, oi.price, COALESCE(oi.quantity, 1) as quantity, oi.product_id,
+                       COALESCE(p.import_price, 0)::numeric as import_price
                 FROM order_items oi 
                 LEFT JOIN products p ON oi.product_id = p.id 
                 WHERE oi.order_id = ANY($1)
             `, [orderIds]);
-            orders.forEach(o => { o.items = itemsRes.rows.filter(i => i.order_id === o.id); });
+            orders.forEach(o => { 
+                o.items = itemsRes.rows.filter(i => i.order_id === o.id);
+                // Đánh dấu nếu đơn hàng có bất kỳ sản phẩm nào chưa nhập giá vốn
+                o.has_zero_cost = o.items.length > 0 && o.items.some(i => parseFloat(i.import_price) <= 0);
+            });
         }
         res.json({ success: true, data: orders, count: orders.length });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// POST: TỰ ĐỘNG TÍNH TOÁN VÀ ĐỒNG BỘ LẠI LỢI NHUẬN CHO TOÀN BỘ ĐƠN HÀNG (Hoặc theo đơn cụ thể)
+router.post('/recalculate-profits', async (req, res) => {
+    try {
+        const { order_id } = req.body;
+        if (order_id) {
+            const result = await recalculateOrderProfit(order_id);
+            return res.json({ 
+                success: true, 
+                message: `Đã cập nhật lại giá vốn và lợi nhuận cho đơn hàng ${result?.orderCode || order_id}!`, 
+                data: result 
+            });
+        }
+        const results = await recalculateAllOrders();
+        res.json({ 
+            success: true, 
+            message: `Đã tính toán và đồng bộ lại lợi nhuận chuẩn xác cho ${results.length} đơn hàng theo giá vốn hiện hành!`, 
+            count: results.length, 
+            data: results 
+        });
+    } catch (err) { 
+        res.status(500).json({ success: false, error: err.message }); 
+    }
 });
 
 // GET: LẤY CHI TIẾT 1 ĐƠN HÀNG

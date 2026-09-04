@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
+const { recalculateOrdersByProduct } = require('../services/orderProfit.service');
 
 // Đảm bảo Unique Index và Defaults trên bảng products để hỗ trợ Bulk Upsert siêu tốc
 (async () => {
@@ -294,6 +295,14 @@ router.put('/:id', async (req, res) => {
                 req.params.id
             ]
         );
+
+        // Tự động cập nhật lại lợi nhuận của toàn bộ đơn hàng có chứa sản phẩm này
+        try {
+            await recalculateOrdersByProduct(req.params.id);
+        } catch (recalcErr) {
+            console.warn('Cảnh báo tự động tính lại lợi nhuận đơn hàng:', recalcErr.message);
+        }
+
         res.json({ success: true });
     } catch (err) { 
         if (err.code === '23505') {
@@ -340,7 +349,21 @@ router.put('/:id/cost', async (req, res) => {
         }
         const numPrice = Math.max(0, parseFloat(import_price) || 0);
         await pool.query('UPDATE products SET import_price = $1 WHERE id = $2', [numPrice, req.params.id]);
-        res.json({ success: true, message: 'Đã cập nhật giá vốn thành công!', import_price: numPrice });
+        
+        // Tự động cập nhật lại Giá vốn & Lợi nhuận chuẩn xác cho toàn bộ đơn hàng có chứa thiết bị này
+        let updatedOrders = [];
+        try {
+            updatedOrders = await recalculateOrdersByProduct(req.params.id);
+        } catch (recalcErr) {
+            console.warn('Cảnh báo tự động tính lại lợi nhuận sau khi sửa giá vốn:', recalcErr.message);
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Đã cập nhật giá vốn và chuẩn hóa lại lợi nhuận các đơn hàng thành công!', 
+            import_price: numPrice,
+            updated_orders_count: updatedOrders.length
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

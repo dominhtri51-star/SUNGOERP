@@ -118,6 +118,12 @@
                 <i class="fas fa-check-double text-amber-600"></i>
                 <span>Tích Nhanh Đơn Chờ Xác Nhận</span>
             </button>
+
+            <!-- Nút Đồng bộ Lợi nhuận toàn bộ đơn (Chỉ Admin) -->
+            <button type="button" id="btn-recalc-profits-quick" onclick="window.modOrders.recalculateAllProfits()" class="hidden px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 active:scale-95 border border-emerald-200 text-emerald-800 font-bold rounded-xl text-xs whitespace-nowrap transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs" title="Tính toán và đồng bộ lại Giá vốn & Lợi nhuận cho toàn bộ đơn hàng theo giá vốn mới nhất">
+                <i class="fas fa-sync-alt text-emerald-600"></i>
+                <span>Đồng Bộ Lợi Nhuận</span>
+            </button>
         </div>
         
         <!-- CONTAINER DANH SÁCH: MOBILE CARD VIEW (HIỆN TRÊN MOBILE) VÀ TABLE VIEW (HIỆN TRÊN DESKTOP) -->
@@ -1229,6 +1235,38 @@ window.modOrders = {
         }
     },
 
+    recalculateAllProfits: async () => {
+        if (!confirm("Hệ thống sẽ quét toàn bộ đơn hàng và tự động cập nhật lại Giá vốn & Lợi nhuận chuẩn xác dựa trên Giá vốn mới nhất trong Danh mục sản phẩm.\n\nBạn có muốn thực hiện ngay bây giờ?")) {
+            return;
+        }
+        const btn = document.getElementById('btn-recalc-profits-quick');
+        const oldHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-emerald-600"></i> Đang đồng bộ...';
+        }
+        try {
+            const res = await fetch('/api/orders/recalculate-profits', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' } 
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert("✅ " + json.message);
+                window.modOrders.loadData();
+            } else {
+                alert("Lỗi: " + (json.error || 'Không thể đồng bộ lợi nhuận'));
+            }
+        } catch (e) {
+            alert("Lỗi kết nối khi đồng bộ lợi nhuận!");
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = oldHtml;
+            }
+        }
+    },
+
     bulkDeletePending: async () => {
         if (!window.modOrders.isAdmin()) {
             alert('❌ Bạn không có quyền Admin để thực hiện xóa đơn hàng!');
@@ -1679,15 +1717,18 @@ window.modOrders = {
 
         window.modOrders.currentRenderedOrders = list;
 
-        // Bật / tắt hiển thị cột chọn hàng loạt theo quyền Admin
+        // Bật / tắt hiển thị cột chọn hàng loạt và nút đồng bộ theo quyền Admin
         const thBulkList = document.querySelectorAll('.th-bulk-col');
         const btnQuickPending = document.getElementById('btn-select-pending-quick');
+        const btnRecalcProfits = document.getElementById('btn-recalc-profits-quick');
         if (isAdminUser) {
             thBulkList.forEach(th => th.classList.remove('hidden'));
             if (btnQuickPending) btnQuickPending.classList.remove('hidden');
+            if (btnRecalcProfits) btnRecalcProfits.classList.remove('hidden');
         } else {
             thBulkList.forEach(th => th.classList.add('hidden'));
             if (btnQuickPending) btnQuickPending.classList.add('hidden');
+            if (btnRecalcProfits) btnRecalcProfits.classList.add('hidden');
             window.modOrders.clearSelection();
         }
 
@@ -1788,7 +1829,12 @@ window.modOrders = {
                     <div class="${percent === 100 ? 'bg-emerald-500' : (percent > 0 ? 'bg-blue-500' : 'bg-rose-400')} h-1.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
                 </div>
                 <div class="flex justify-between items-center text-[9px] text-slate-500 mt-0.5 font-bold">
-                    ${isAdminUser ? `<span class="${netProfitVal >= 0 ? 'text-emerald-600' : 'text-rose-600'}">Lãi ròng: ${netProfitVal >= 0 ? '+' : ''}${fmt(netProfitVal)} đ</span>` : '<span></span>'}
+                    ${isAdminUser ? `
+                        <span class="${netProfitVal >= 0 ? 'text-emerald-600' : 'text-rose-600'} inline-flex items-center gap-1">
+                            <span>Lãi ròng: ${netProfitVal >= 0 ? '+' : ''}${fmt(netProfitVal)} đ</span>
+                            ${o.has_zero_cost ? '<span class="text-[8px] bg-red-100 text-red-700 px-1 py-0.2 rounded font-black border border-red-200" title="Có sản phẩm chưa nhập giá vốn! Lời ảo.">⚠️ Thiếu vốn</span>' : ''}
+                        </span>
+                    ` : '<span></span>'}
                     <span>${percent > 0 && percent < 100 ? percent.toFixed(1) : Math.round(percent)}%</span>
                 </div>`;
 
@@ -1882,7 +1928,12 @@ window.modOrders = {
                     <div>
                         <span class="text-[9px] uppercase font-bold text-slate-400 block">Tổng thanh toán</span>
                         <strong class="text-sm font-black text-slate-900">${fmt(total)} đ</strong>
-                        ${isAdminUser ? `<span class="text-[10px] font-bold ${netProfitVal >= 0 ? 'text-emerald-600' : 'text-rose-600'} block">Lãi ròng: ${netProfitVal >= 0 ? '+' : ''}${fmt(netProfitVal)} đ</span>` : ''}
+                        ${isAdminUser ? `
+                            <span class="text-[10px] font-bold ${netProfitVal >= 0 ? 'text-emerald-600' : 'text-rose-600'} flex items-center gap-1 mt-0.5">
+                                <span>Lãi ròng: ${netProfitVal >= 0 ? '+' : ''}${fmt(netProfitVal)} đ</span>
+                                ${o.has_zero_cost ? '<span class="text-[8px] bg-red-100 text-red-700 px-1 py-0.2 rounded font-black border border-red-200">⚠️ Thiếu vốn</span>' : ''}
+                            </span>
+                        ` : ''}
                     </div>
                     <div class="text-right">
                         ${debt > 0 
