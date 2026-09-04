@@ -652,9 +652,11 @@ router.put('/:id/status', async (req, res) => {
         const isDispatchedStatus = ['PACKED', 'SHIPPING_CMD', 'SHIPPED', 'COMPLETED'].includes(status);
 
         if (isDispatchedStatus) {
+            const curOrd = await pool.query("SELECT dispatched_by, gross_profit, total_amount, cost_of_goods FROM orders WHERE id = $1", [orderId]);
+            const ordData = curOrd.rows[0] || {};
+
             if (!finalDispatchedBy) {
-                const curOrd = await pool.query("SELECT dispatched_by FROM orders WHERE id = $1", [orderId]);
-                finalDispatchedBy = curOrd.rows[0]?.dispatched_by;
+                finalDispatchedBy = ordData.dispatched_by;
                 if (!finalDispatchedBy && req.user) {
                     const userEmp = await pool.query("SELECT id FROM employees WHERE user_id = $1 LIMIT 1", [req.user.id]);
                     if (userEmp.rows.length > 0) finalDispatchedBy = userEmp.rows[0].id;
@@ -665,8 +667,20 @@ router.put('/:id/status', async (req, res) => {
                 }
             }
 
-            const polRes = await pool.query("SELECT rate_per_order FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
-            const ratePerOrder = polRes.rows[0] ? parseFloat(polRes.rows[0].rate_per_order) || 20000 : 20000;
+            const polRes = await pool.query("SELECT rate_per_order, profit_percent FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
+            const ratePerOrder = polRes.rows[0] ? parseFloat(polRes.rows[0].rate_per_order) || 0 : 20000;
+            const profitPercent = polRes.rows[0] ? parseFloat(polRes.rows[0].profit_percent) || 0 : 0;
+
+            let orderGp = parseFloat(ordData.gross_profit);
+            if (isNaN(orderGp)) {
+                const tot = parseFloat(ordData.total_amount) || 0;
+                const cog = parseFloat(ordData.cost_of_goods) || 0;
+                orderGp = Math.max(0, tot - cog);
+            }
+            orderGp = Math.max(0, orderGp || 0);
+
+            const profitComm = Math.round(orderGp * (profitPercent / 100));
+            const calculatedWhCommission = ratePerOrder + profitComm;
 
             await pool.query(`
                 UPDATE orders 
@@ -675,7 +689,7 @@ router.put('/:id/status', async (req, res) => {
                     dispatched_at = COALESCE(dispatched_at, NOW()),
                     warehouse_commission = COALESCE(NULLIF(warehouse_commission, 0), $3)
                 WHERE id = $4
-            `, [status, finalDispatchedBy, ratePerOrder, orderId]);
+            `, [status, finalDispatchedBy, calculatedWhCommission, orderId]);
         } else {
             await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [status, orderId]);
         }
@@ -1022,9 +1036,11 @@ router.put('/:id/wms-out', async (req, res) => {
 
         // Xử lý Người xuất kho & Mức hoa hồng xuất kho
         let finalDispatchedBy = dispatched_by ? parseInt(dispatched_by, 10) : null;
+        const curOrd = await client.query("SELECT dispatched_by, gross_profit, total_amount, cost_of_goods FROM orders WHERE id = $1", [id]);
+        const ordData = curOrd.rows[0] || {};
+
         if (!finalDispatchedBy) {
-            const curOrd = await client.query("SELECT dispatched_by FROM orders WHERE id = $1", [id]);
-            finalDispatchedBy = curOrd.rows[0]?.dispatched_by;
+            finalDispatchedBy = ordData.dispatched_by;
             if (!finalDispatchedBy && req.user) {
                 const userEmp = await client.query("SELECT id FROM employees WHERE user_id = $1 LIMIT 1", [req.user.id]);
                 if (userEmp.rows.length > 0) finalDispatchedBy = userEmp.rows[0].id;
@@ -1035,8 +1051,20 @@ router.put('/:id/wms-out', async (req, res) => {
             }
         }
 
-        const polRes = await client.query("SELECT rate_per_order FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
-        const ratePerOrder = polRes.rows[0] ? parseFloat(polRes.rows[0].rate_per_order) || 20000 : 20000;
+        const polRes = await client.query("SELECT rate_per_order, profit_percent FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
+        const ratePerOrder = polRes.rows[0] ? parseFloat(polRes.rows[0].rate_per_order) || 0 : 20000;
+        const profitPercent = polRes.rows[0] ? parseFloat(polRes.rows[0].profit_percent) || 0 : 0;
+
+        let orderGp = parseFloat(ordData.gross_profit);
+        if (isNaN(orderGp)) {
+            const tot = parseFloat(ordData.total_amount) || 0;
+            const cog = parseFloat(ordData.cost_of_goods) || 0;
+            orderGp = Math.max(0, tot - cog);
+        }
+        orderGp = Math.max(0, orderGp || 0);
+
+        const profitComm = Math.round(orderGp * (profitPercent / 100));
+        const rateWhCommission = ratePerOrder + profitComm;
 
         // Xử lý Upload Ảnh Giao Hàng
         let proofUrls = [];
@@ -1093,7 +1121,7 @@ router.put('/:id/wms-out', async (req, res) => {
             delivery_company, driver_name, license_plate, notes, status, proofsJson,
             carrier_address, recipient_name, recipient_phone, vehicle_plate, shipping_note,
             shipFee, stnFee, packFee, handFee, othFee, othFeeNote, fundSource,
-            finalDispatchedBy, ratePerOrder,
+            finalDispatchedBy, rateWhCommission,
             id
         ]);
 

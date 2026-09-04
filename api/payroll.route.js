@@ -225,7 +225,8 @@ router.post('/generate', async (req, res) => {
             const whEndDate = `${period_key}-${String(whLastDay).padStart(2, '0')} 23:59:59`;
 
             const whOrdRes = await client.query(`
-                SELECT COUNT(id) AS dispatched_count
+                SELECT COUNT(id) AS dispatched_count,
+                       COALESCE(SUM(COALESCE(NULLIF(regexp_replace(gross_profit::text, '[^0-9.-]', '', 'g'), '')::numeric, 0)), 0) AS total_gross_profit
                 FROM orders
                 WHERE dispatched_by = $1
                   AND status IN ('SHIPPED', 'COMPLETED')
@@ -234,13 +235,20 @@ router.post('/generate', async (req, res) => {
             `, [emp.id, whStartDate, whEndDate]);
 
             const whDispatchedCount = parseInt(whOrdRes.rows[0]?.dispatched_count, 10) || 0;
+            const whTotalGp = Math.max(0, parseFloat(whOrdRes.rows[0]?.total_gross_profit) || 0);
+
             if (whDispatchedCount > 0) {
                 const whPolRes = await client.query("SELECT * FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
-                const whPol = whPolRes.rows[0] || { rate_per_order: 20000, min_orders_threshold: 0, bonus_target_orders: 50, bonus_tier_amount: 500000 };
-                const whRate = parseFloat(whPol.rate_per_order) || 20000;
+                const whPol = whPolRes.rows[0] || { rate_per_order: 20000, profit_percent: 0, min_orders_threshold: 0, bonus_target_orders: 50, bonus_tier_amount: 500000 };
+                const whRate = parseFloat(whPol.rate_per_order) || 0;
+                const whProfitPercent = parseFloat(whPol.profit_percent) || 0;
                 const whMinThresh = parseInt(whPol.min_orders_threshold, 10) || 0;
                 const whEligibleCount = Math.max(0, whDispatchedCount - whMinThresh);
-                warehouseCommission = whEligibleCount * whRate;
+
+                const fixedComm = whEligibleCount * whRate;
+                const profitComm = Math.round(whTotalGp * (whProfitPercent / 100));
+                warehouseCommission = fixedComm + profitComm;
+
                 if (whPol.bonus_target_orders > 0 && whDispatchedCount >= whPol.bonus_target_orders) {
                     warehouseCommission += (parseFloat(whPol.bonus_tier_amount) || 0);
                 }

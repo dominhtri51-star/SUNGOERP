@@ -8,8 +8,8 @@ router.get('/policy', async (req, res) => {
         const polRes = await pool.query("SELECT * FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
         if (polRes.rows.length === 0) {
             await pool.query(`
-                INSERT INTO warehouse_kpi_policies (id, policy_name, rate_per_order, min_orders_threshold, bonus_target_orders, bonus_tier_amount, is_active)
-                VALUES (1, 'Chính sách KPI Xuất Kho Mặc Định', 20000, 0, 50, 500000, TRUE)
+                INSERT INTO warehouse_kpi_policies (id, policy_name, rate_per_order, profit_percent, min_orders_threshold, bonus_target_orders, bonus_tier_amount, is_active)
+                VALUES (1, 'Chính sách KPI Xuất Kho Mặc Định', 20000, 0, 0, 50, 500000, TRUE)
                 ON CONFLICT (id) DO NOTHING
             `);
             const fallback = await pool.query("SELECT * FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
@@ -25,20 +25,22 @@ router.get('/policy', async (req, res) => {
 // 2. Cập nhật Chính Sách KPI Xuất Kho (Dành cho Admin / Quản lý)
 router.put('/policy', async (req, res) => {
     try {
-        const { rate_per_order, min_orders_threshold, bonus_target_orders, bonus_tier_amount, is_active, notes } = req.body;
+        const { rate_per_order, profit_percent, min_orders_threshold, bonus_target_orders, bonus_tier_amount, is_active, notes } = req.body;
         const result = await pool.query(`
             UPDATE warehouse_kpi_policies SET
                 rate_per_order = COALESCE($1, rate_per_order),
-                min_orders_threshold = COALESCE($2, min_orders_threshold),
-                bonus_target_orders = COALESCE($3, bonus_target_orders),
-                bonus_tier_amount = COALESCE($4, bonus_tier_amount),
-                is_active = COALESCE($5, is_active),
-                notes = COALESCE($6, notes),
+                profit_percent = COALESCE($2, profit_percent),
+                min_orders_threshold = COALESCE($3, min_orders_threshold),
+                bonus_target_orders = COALESCE($4, bonus_target_orders),
+                bonus_tier_amount = COALESCE($5, bonus_tier_amount),
+                is_active = COALESCE($6, is_active),
+                notes = COALESCE($7, notes),
                 updated_at = NOW()
             WHERE id = 1
             RETURNING *
         `, [
             rate_per_order !== undefined ? parseFloat(rate_per_order) : null,
+            profit_percent !== undefined ? parseFloat(profit_percent) : null,
             min_orders_threshold !== undefined ? parseInt(min_orders_threshold, 10) : null,
             bonus_target_orders !== undefined ? parseInt(bonus_target_orders, 10) : null,
             bonus_tier_amount !== undefined ? parseFloat(bonus_tier_amount) : null,
@@ -70,12 +72,14 @@ router.get('/summary', async (req, res) => {
         const polRes = await pool.query("SELECT * FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
         const policy = polRes.rows[0] || {
             rate_per_order: 20000,
+            profit_percent: 0,
             min_orders_threshold: 0,
             bonus_target_orders: 50,
             bonus_tier_amount: 500000
         };
 
-        const ratePerOrder = parseFloat(policy.rate_per_order) || 20000;
+        const ratePerOrder = parseFloat(policy.rate_per_order) || 0;
+        const profitPercent = parseFloat(policy.profit_percent) || 0;
         const minThreshold = parseInt(policy.min_orders_threshold, 10) || 0;
         const bonusTarget = parseInt(policy.bonus_target_orders, 10) || 50;
         const bonusTierAmount = parseFloat(policy.bonus_tier_amount) || 500000;
@@ -98,7 +102,8 @@ router.get('/summary', async (req, res) => {
             const ordRes = await pool.query(`
                 SELECT 
                     COUNT(id) AS dispatched_count,
-                    COALESCE(SUM(warehouse_commission), 0) AS raw_commission
+                    COALESCE(SUM(warehouse_commission), 0) AS raw_commission,
+                    COALESCE(SUM(COALESCE(NULLIF(regexp_replace(gross_profit::text, '[^0-9.-]', '', 'g'), '')::numeric, 0)), 0) AS total_gross_profit
                 FROM orders
                 WHERE dispatched_by = $1
                   AND status IN ('SHIPPED', 'COMPLETED')
@@ -108,8 +113,13 @@ router.get('/summary', async (req, res) => {
 
             const row = ordRes.rows[0];
             const count = parseInt(row.dispatched_count, 10) || 0;
+            const totalGrossProfit = Math.max(0, parseFloat(row.total_gross_profit) || 0);
+
             const eligibleCount = Math.max(0, count - minThreshold);
-            const baseCommission = eligibleCount * ratePerOrder;
+            const fixedCommission = eligibleCount * ratePerOrder;
+            const profitCommission = Math.round(totalGrossProfit * (profitPercent / 100));
+            const baseCommission = fixedCommission + profitCommission;
+
             const hasBonus = count >= bonusTarget && bonusTarget > 0;
             const tierBonus = hasBonus ? bonusTierAmount : 0;
             const totalPayout = baseCommission + tierBonus;
@@ -125,6 +135,10 @@ router.get('/summary', async (req, res) => {
                 dept_name: emp.dept_name,
                 dispatched_count: count,
                 rate_per_order: ratePerOrder,
+                profit_percent: profitPercent,
+                total_gross_profit: totalGrossProfit,
+                fixed_commission: fixedCommission,
+                profit_commission: profitCommission,
                 base_commission: baseCommission,
                 has_target_bonus: hasBonus,
                 target_bonus_amount: tierBonus,
@@ -137,6 +151,7 @@ router.get('/summary', async (req, res) => {
             period_key: periodKey,
             policy: {
                 rate_per_order: ratePerOrder,
+                profit_percent: profitPercent,
                 min_orders_threshold: minThreshold,
                 bonus_target_orders: bonusTarget,
                 bonus_tier_amount: bonusTierAmount
@@ -165,7 +180,7 @@ router.get('/orders', async (req, res) => {
 
         const ords = await pool.query(`
             SELECT id, order_code, customer_name, customer_phone, status, 
-                   total_amount, delivery_company, driver_name, license_plate,
+                   total_amount, cost_of_goods, gross_profit, delivery_company, driver_name, license_plate,
                    dispatched_at, warehouse_commission, created_at
             FROM orders
             WHERE dispatched_by = $1

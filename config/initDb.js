@@ -902,6 +902,7 @@ async function autoInitDatabase() {
                     id SERIAL PRIMARY KEY,
                     policy_name VARCHAR(255) DEFAULT 'Chính sách KPI Xuất Kho',
                     rate_per_order NUMERIC DEFAULT 20000,
+                    profit_percent NUMERIC DEFAULT 0,
                     min_orders_threshold INTEGER DEFAULT 0,
                     bonus_target_orders INTEGER DEFAULT 50,
                     bonus_tier_amount NUMERIC DEFAULT 500000,
@@ -910,8 +911,10 @@ async function autoInitDatabase() {
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
 
-                INSERT INTO warehouse_kpi_policies (id, policy_name, rate_per_order, min_orders_threshold, bonus_target_orders, bonus_tier_amount, is_active)
-                VALUES (1, 'Chính sách KPI Xuất Kho Mặc Định', 20000, 0, 50, 500000, TRUE)
+                ALTER TABLE warehouse_kpi_policies ADD COLUMN IF NOT EXISTS profit_percent NUMERIC DEFAULT 0;
+
+                INSERT INTO warehouse_kpi_policies (id, policy_name, rate_per_order, profit_percent, min_orders_threshold, bonus_target_orders, bonus_tier_amount, is_active)
+                VALUES (1, 'Chính sách KPI Xuất Kho Mặc Định', 20000, 0, 0, 50, 500000, TRUE)
                 ON CONFLICT (id) DO NOTHING;
 
                 ALTER TABLE orders ADD COLUMN IF NOT EXISTS dispatched_by INTEGER REFERENCES employees(id);
