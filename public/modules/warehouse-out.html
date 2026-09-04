@@ -197,6 +197,51 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- THẺ CHI PHÍ GIAO VẬN & BỐC XẾP (CTY CHI) -->
+                    <div class="bg-amber-50/40 rounded-2xl shadow-2xs border border-amber-200/80 p-4 sm:p-5 space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-amber-200/60">
+                            <h3 class="font-black text-amber-800 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fas fa-truck-loading text-amber-600"></i> CHI PHÍ GIAO VẬN & BỐC XẾP (CTY CHI)
+                            </h3>
+                            <span class="text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold border border-amber-200">Kho Cập Nhật</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 text-xs">
+                            <div>
+                                <label class="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase mb-0.5">PHÍ VẬN CHUYỂN / CƯỚC XE</label>
+                                <input type="text" id="wms-shipping-fee" value="0" inputmode="numeric" oninput="this.value = window.modWmsOut.formatMoney(this.value);" placeholder="0" class="w-full border border-slate-300 rounded-xl p-2 sm:p-2.5 text-xs text-right font-black text-slate-800 outline-none focus:border-amber-500 bg-white shadow-2xs">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase mb-0.5">PHÍ GỬI RA CHÀNH XE</label>
+                                <input type="text" id="wms-station-fee" value="0" inputmode="numeric" oninput="this.value = window.modWmsOut.formatMoney(this.value);" placeholder="0" class="w-full border border-slate-300 rounded-xl p-2 sm:p-2.5 text-xs text-right font-black text-slate-800 outline-none focus:border-amber-500 bg-white shadow-2xs">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase mb-0.5">PHÍ ĐÓNG GÓI (PALLET/KIỆN)</label>
+                                <input type="text" id="wms-packaging-fee" value="0" inputmode="numeric" oninput="this.value = window.modWmsOut.formatMoney(this.value);" placeholder="0" class="w-full border border-slate-300 rounded-xl p-2 sm:p-2.5 text-xs text-right font-black text-slate-800 outline-none focus:border-amber-500 bg-white shadow-2xs">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase mb-0.5">PHÍ BỐC XẾP / NÂNG HẠ</label>
+                                <input type="text" id="wms-handling-fee" value="0" inputmode="numeric" oninput="this.value = window.modWmsOut.formatMoney(this.value);" placeholder="0" class="w-full border border-slate-300 rounded-xl p-2 sm:p-2.5 text-xs text-right font-black text-slate-800 outline-none focus:border-amber-500 bg-white shadow-2xs">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase mb-0.5">CHI PHÍ PHÁT SINH KHÁC</label>
+                                <input type="text" id="wms-other-fee" value="0" inputmode="numeric" oninput="this.value = window.modWmsOut.formatMoney(this.value);" placeholder="0" class="w-full border border-slate-300 rounded-xl p-2 sm:p-2.5 text-xs text-right font-black text-slate-800 outline-none focus:border-amber-500 bg-white shadow-2xs">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase mb-0.5">GHI CHÚ CHI PHÍ KHÁC</label>
+                                <input type="text" id="wms-other-fee-note" placeholder="VD: Phí bến bãi, bảo hiểm..." class="w-full border border-slate-300 rounded-xl p-2 sm:p-2.5 text-xs font-medium text-slate-800 outline-none focus:border-amber-500 bg-white shadow-2xs">
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-amber-100 flex items-center justify-between gap-2 text-xs">
+                            <label class="font-bold text-slate-500 text-[10px] uppercase">Nguồn quỹ chi:</label>
+                            <select id="wms-cost-fund-source" class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 bg-white outline-none focus:border-amber-500">
+                                <option value="TIEN_MAT_QUY">💵 Tiền Mặt Quỹ</option>
+                                <option value="CHUYEN_KHOAN">💳 Chuyển Khoản</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -235,6 +280,18 @@ window.modWmsOut = {
     currentItems: [],
     currentProofs: [],
     activeStatuses: ['SHIPPING_CMD'],
+
+    formatMoney: (val) => {
+        if (val === null || val === undefined || val === '') return '0';
+        let clean = String(val).replace(/\D/g, '');
+        if (!clean) return '0';
+        return new Intl.NumberFormat('vi-VN').format(parseInt(clean, 10));
+    },
+    parseMoney: (val) => {
+        if (!val) return 0;
+        let clean = String(val).replace(/\D/g, '');
+        return clean ? parseFloat(clean) : 0;
+    },
 
     init: () => { window.modWmsOut.loadData(); },
 
@@ -449,6 +506,30 @@ window.modWmsOut = {
                 document.getElementById('wms-address').value = o.license_plate || o.customer_address || o.address || '';
                 document.getElementById('wms-shipping-note').value = o.shipping_note || o.notes || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
 
+                // Nạp chi phí giao vận & bốc xếp
+                const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+                if (document.getElementById('wms-shipping-fee')) {
+                    document.getElementById('wms-shipping-fee').value = fmt(o.shipping_fee || 0);
+                }
+                if (document.getElementById('wms-station-fee')) {
+                    document.getElementById('wms-station-fee').value = fmt(o.station_fee || 0);
+                }
+                if (document.getElementById('wms-packaging-fee')) {
+                    document.getElementById('wms-packaging-fee').value = fmt(o.packaging_fee || 0);
+                }
+                if (document.getElementById('wms-handling-fee')) {
+                    document.getElementById('wms-handling-fee').value = fmt(o.handling_fee || 0);
+                }
+                if (document.getElementById('wms-other-fee')) {
+                    document.getElementById('wms-other-fee').value = fmt(o.other_fee || 0);
+                }
+                if (document.getElementById('wms-other-fee-note')) {
+                    document.getElementById('wms-other-fee-note').value = o.other_fee_note || '';
+                }
+                if (document.getElementById('wms-cost-fund-source')) {
+                    document.getElementById('wms-cost-fund-source').value = o.cost_fund_source || 'TIEN_MAT_QUY';
+                }
+
                 const actionBtn = document.getElementById('btn-wms-save');
                 if (o.status === 'PROCESSING') {
                      actionBtn.innerHTML = '<i class="fas fa-spinner mr-1"></i> CHỜ SALE PHÁT LỆNH';
@@ -574,6 +655,13 @@ window.modWmsOut = {
             shipping_note: document.getElementById('wms-shipping-note')?.value || '',
             notes: document.getElementById('wms-shipping-note').value,
             status: targetStatus,
+            shipping_fee: window.modWmsOut.parseMoney(document.getElementById('wms-shipping-fee')?.value),
+            station_fee: window.modWmsOut.parseMoney(document.getElementById('wms-station-fee')?.value),
+            packaging_fee: window.modWmsOut.parseMoney(document.getElementById('wms-packaging-fee')?.value),
+            handling_fee: window.modWmsOut.parseMoney(document.getElementById('wms-handling-fee')?.value),
+            other_fee: window.modWmsOut.parseMoney(document.getElementById('wms-other-fee')?.value),
+            other_fee_note: document.getElementById('wms-other-fee-note')?.value || '',
+            cost_fund_source: document.getElementById('wms-cost-fund-source')?.value || 'TIEN_MAT_QUY',
             delivery_proofs: window.modWmsOut.currentProofs,
             items: window.modWmsOut.currentItems.map(i => ({
                 product_id: i.product_id,

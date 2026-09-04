@@ -971,8 +971,18 @@ router.put('/:id/wms-out', async (req, res) => {
         const { id } = req.params;
         const { 
             delivery_company, carrier_address, driver_name, vehicle_plate, license_plate, 
-            recipient_name, recipient_phone, shipping_note, notes, status, items, delivery_proofs 
+            recipient_name, recipient_phone, shipping_note, notes, status, items, delivery_proofs,
+            shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note, cost_fund_source
         } = req.body;
+
+        const hasFeeUpdate = shipping_fee !== undefined || station_fee !== undefined || packaging_fee !== undefined || handling_fee !== undefined || other_fee !== undefined;
+        const shipFee = shipping_fee !== undefined ? parseSafeNum(shipping_fee) : null;
+        const stnFee = station_fee !== undefined ? parseSafeNum(station_fee) : null;
+        const packFee = packaging_fee !== undefined ? parseSafeNum(packaging_fee) : null;
+        const handFee = handling_fee !== undefined ? parseSafeNum(handling_fee) : null;
+        const othFee = other_fee !== undefined ? parseSafeNum(other_fee) : null;
+        const othFeeNote = other_fee_note !== undefined ? other_fee_note : null;
+        const fundSource = cost_fund_source !== undefined ? cost_fund_source : null;
 
         // Xử lý Upload Ảnh Giao Hàng
         let proofUrls = [];
@@ -1000,7 +1010,7 @@ router.put('/:id/wms-out', async (req, res) => {
         }
         const proofsJson = JSON.stringify(proofUrls);
 
-        // Update thông tin (TUYỆT ĐỐI KHÔNG CHẠM VÀO GIÁ TIỀN)
+        // Update thông tin giao vận, tình trạng và chi phí giao vận do kho cập nhật
         await client.query(`
             UPDATE orders 
             SET delivery_company = COALESCE($1, delivery_company),
@@ -1013,13 +1023,89 @@ router.put('/:id/wms-out', async (req, res) => {
                 recipient_name = COALESCE($8, recipient_name),
                 recipient_phone = COALESCE($9, recipient_phone),
                 vehicle_plate = COALESCE($10, vehicle_plate),
-                shipping_note = COALESCE($11, shipping_note)
-            WHERE id = $12
+                shipping_note = COALESCE($11, shipping_note),
+                shipping_fee = COALESCE($12, shipping_fee),
+                station_fee = COALESCE($13, station_fee),
+                packaging_fee = COALESCE($14, packaging_fee),
+                handling_fee = COALESCE($15, handling_fee),
+                other_fee = COALESCE($16, other_fee),
+                other_fee_note = COALESCE($17, other_fee_note),
+                cost_fund_source = COALESCE($18, cost_fund_source)
+            WHERE id = $19
         `, [
             delivery_company, driver_name, license_plate, notes, status, proofsJson,
             carrier_address, recipient_name, recipient_phone, vehicle_plate, shipping_note,
+            shipFee, stnFee, packFee, handFee, othFee, othFeeNote, fundSource,
             id
         ]);
+
+        // Tự động tính lại lợi nhuận chuẩn xác nếu kho cập nhật chi phí
+        if (hasFeeUpdate) {
+            try {
+                await recalculateOrderProfit(id, client);
+            } catch (recalcErr) {
+                console.warn('Cảnh báo tính lại lợi nhuận sau khi kho cập nhật chi phí:', recalcErr.message);
+            }
+
+            // Đồng bộ sang Sổ Quỹ Kế Toán (cash_transactions)
+            try {
+                const ordRes = await client.query('SELECT order_code, customer_name, cost_fund_source, sync_accounting FROM orders WHERE id = $1', [id]);
+                const ord = ordRes.rows[0];
+                if (ord && ord.sync_accounting !== false) {
+                    const orderCode = ord.order_code;
+                    const custName = ord.customer_name || 'Khách Lẻ';
+                    const fSource = ord.cost_fund_source || 'TIEN_MAT_QUY';
+                    const pMethod = (fSource === 'TIEN_MAT_QUY' || fSource === 'Tiền Mặt') ? 'Tiền Mặt' : 'Chuyển Khoản';
+                    const orderIdInt = parseInt(id, 10);
+
+                    await client.query("DELETE FROM cash_transactions WHERE order_id = $1 AND cost_type IS NOT NULL", [orderIdInt]);
+
+                    const fRes = await client.query(`
+                        SELECT COALESCE(NULLIF(shipping_fee, '')::numeric, 0) as s_fee,
+                               COALESCE(NULLIF(station_fee, '')::numeric, 0) as st_fee,
+                               COALESCE(NULLIF(packaging_fee, '')::numeric, 0) as p_fee,
+                               COALESCE(NULLIF(handling_fee, '')::numeric, 0) as h_fee,
+                               COALESCE(NULLIF(other_fee, '')::numeric, 0) as o_fee,
+                               other_fee_note
+                        FROM orders WHERE id = $1
+                    `, [orderIdInt]);
+                    const fees = fRes.rows[0];
+
+                    if (fees.s_fee > 0) {
+                        await client.query(`
+                            INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                            VALUES ($1, 'CHI', $2, $3, $4, 'Phí vận chuyển giao hàng', 'KHONG_HOA_DON', $5, $6, $7, $8, 'SHIPPING', NOW())
+                        `, ['PC-VC-' + orderCode, delivery_company || 'Đơn vị vận chuyển', fees.s_fee, pMethod, fSource, `Cước vận chuyển đơn hàng ${orderCode} (${custName})`, orderIdInt, orderCode]);
+                    }
+                    if (fees.st_fee > 0) {
+                        await client.query(`
+                            INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                            VALUES ($1, 'CHI', 'Xe trung chuyển chành', $2, $3, 'Phí gửi hàng ra chành', 'KHONG_HOA_DON', $4, $5, $6, $7, 'STATION', NOW())
+                        `, ['PC-CH-' + orderCode, fees.st_fee, pMethod, fSource, `Phí gửi hàng ra chành xe cho đơn ${orderCode} (${custName})`, orderIdInt, orderCode]);
+                    }
+                    if (fees.p_fee > 0) {
+                        await client.query(`
+                            INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                            VALUES ($1, 'CHI', 'Đóng gói / Pallet', $2, $3, 'Phí đóng gói hàng hóa', 'KHONG_HOA_DON', $4, $5, $6, $7, 'PACKAGING', NOW())
+                        `, ['PC-DG-' + orderCode, fees.p_fee, pMethod, fSource, `Phí đóng gói pallet, kiện gỗ cho đơn ${orderCode} (${custName})`, orderIdInt, orderCode]);
+                    }
+                    if (fees.h_fee > 0) {
+                        await client.query(`
+                            INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                            VALUES ($1, 'CHI', 'Đội bốc xếp / Xe cẩu', $2, $3, 'Phí bốc xếp & nâng hạ', 'KHONG_HOA_DON', $4, $5, $6, $7, 'HANDLING', NOW())
+                        `, ['PC-BX-' + orderCode, fees.h_fee, pMethod, fSource, `Phí bốc vác, nâng hạ thiết bị cho đơn ${orderCode} (${custName})`, orderIdInt, orderCode]);
+                    }
+                    if (fees.o_fee > 0) {
+                        await client.query(`
+                            INSERT INTO cash_transactions (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, order_id, order_code, cost_type, created_at)
+                            VALUES ($1, 'CHI', 'Chi phí khác', $2, $3, 'Chi phí phụ trợ đơn hàng', 'KHONG_HOA_DON', $4, $5, $6, $7, 'OTHER', NOW())
+                        `, ['PC-KP-' + orderCode, fees.o_fee, pMethod, fSource, `${fees.other_fee_note || 'Chi phí ngoài'} cho đơn hàng ${orderCode} (${custName})`, orderIdInt, orderCode]);
+                    }
+                }
+            } catch (cashErr) {
+                console.warn('Cảnh báo đồng bộ Sổ Quỹ từ kho:', cashErr.message);
+            }
+        }
 
         // Lấy tên khách hàng trước khi chạy vòng lặp
         const custNameRes = await client.query('SELECT customer_name FROM orders WHERE id=$1', [id]);
