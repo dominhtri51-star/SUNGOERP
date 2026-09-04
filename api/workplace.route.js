@@ -470,6 +470,27 @@ router.post('/messages', async (req, res) => {
 
         const shouldPin = is_pinned && isAdmin;
 
+        // Chống spam / gửi lặp tin nhắn (Deduplication trong 2.5 giây)
+        const dupCheck = await pool.query(`
+            SELECT id, channel_id, recipient_id, content, created_at
+            FROM workplace_messages
+            WHERE sender_id = $1
+              AND (channel_id = $2 OR (channel_id IS NULL AND $2 IS NULL))
+              AND (recipient_id = $3 OR (recipient_id IS NULL AND $3 IS NULL))
+              AND content = $4
+              AND created_at >= NOW() - INTERVAL '2.5 seconds'
+            ORDER BY id DESC LIMIT 1
+        `, [
+            currentUserId,
+            channel_id ? parseInt(channel_id, 10) : null,
+            direct_user_id ? parseInt(direct_user_id, 10) : null,
+            cleanContent
+        ]);
+
+        if (dupCheck.rows.length > 0) {
+            return res.json({ success: true, data: dupCheck.rows[0], message: 'Tin nhắn đã được gửi thành công!' });
+        }
+
         // Chèn tin nhắn mới
         const insertRes = await pool.query(`
             INSERT INTO workplace_messages (

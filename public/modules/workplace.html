@@ -154,7 +154,7 @@
 
             <!-- Thanh soạn thảo và gửi tin nhắn (Footer Input) -->
             <div class="bg-white border-t border-slate-200 p-2 sm:p-4 shrink-0">
-                <form id="wp-message-form" onsubmit="window.modWorkplace.handleSendMessage(event)" class="flex items-end gap-1.5 sm:gap-2">
+                <div id="wp-message-form" class="flex items-end gap-1.5 sm:gap-2">
                     
                     <!-- Nút đính kèm ảnh & tài liệu (hỗ trợ chụp camera trên di động) -->
                     <input type="file" id="wp-file-input" onchange="window.modWorkplace.handleFileSelected(event)" class="hidden" multiple accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.zip">
@@ -168,10 +168,10 @@
                     </div>
 
                     <!-- Nút gửi tin nhắn -->
-                    <button type="submit" id="wp-btn-send" class="w-10 h-9 sm:w-11 sm:h-10 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center text-sm shadow-xs transition transform active:scale-95 shrink-0" title="Gửi tin nhắn">
+                    <button type="button" onclick="window.modWorkplace.handleSendMessage(event)" id="wp-btn-send" class="w-10 h-9 sm:w-11 sm:h-10 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center text-sm shadow-xs transition transform active:scale-95 shrink-0" title="Gửi tin nhắn">
                         <i class="fas fa-paper-plane"></i>
                     </button>
-                </form>
+                </div>
                 
                 <div id="wp-announcement-lock-notice" class="hidden text-center py-2 text-xs font-bold text-amber-700 bg-amber-50 rounded-xl border border-amber-200">
                     <i class="fas fa-lock mr-1.5"></i> Kênh Thông Báo chỉ dành riêng cho Ban Giám Đốc và Quản Trị Viên đăng tin.
@@ -349,6 +349,7 @@ window.modWorkplace = {
     isAdmin: false,
     mobileTab: 'LIST', // 'LIST' (danh sách kênh) | 'CHAT' (khung chat)
     filterTab: 'ALL',  // 'ALL' | 'CHANNELS' | 'DIRECT'
+    isSending: false,  // Khóa chống gửi kép / duplicate message
     _onResize: null,
 
     // Chuyển đổi màn hình xem trên thiết bị di động
@@ -903,32 +904,69 @@ window.modWorkplace = {
         return `${hours}:${mins} • ${date}`;
     },
 
-    // 8. Xử lý sự kiện bàn phím (Enter để gửi trên desktop, xuống dòng trên mobile)
+    // 8. Xử lý sự kiện bàn phím (Enter để gửi trên desktop, Shift+Enter xuống dòng)
     handleKeydown: function(e) {
-        if (e.key === 'Enter' && !e.shiftKey && window.innerWidth >= 768) {
+        // 1. Chống gửi kép khi đang hoàn tất gõ tiếng Việt có dấu (IME composition / Unikey / EVKey / macOS Telex)
+        if (e.isComposing || e.keyCode === 229) {
+            return;
+        }
+
+        // 2. Chống lặp phím khi giữ phím Enter trên bàn phím (Key Repeat)
+        if (e.repeat) {
             e.preventDefault();
-            this.handleSendMessage(e);
+            return;
+        }
+
+        // 3. Nhấn Enter (không giữ Shift) trên máy tính để gửi tin nhắn
+        if (e.key === 'Enter' && !e.shiftKey) {
+            if (window.innerWidth >= 768) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.isSending) return;
+                this.handleSendMessage(e);
+            }
         }
     },
 
-    // 9. Gửi tin nhắn mới
+    // 9. Gửi tin nhắn mới (Triệt tiêu 100% tình trạng gửi lặp đúp tin nhắn)
     handleSendMessage: async function(e) {
-        if (e) e.preventDefault();
+        if (e) {
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        }
+
+        // Khóa chặn nếu đang có tiến trình gửi đang chạy
+        if (this.isSending) return;
+
         const inputEl = document.getElementById('wp-message-input');
+        if (!inputEl) return;
         const content = inputEl.value.trim();
 
         if (!content && this.stagedAttachments.length === 0) return;
 
+        // Bật khóa gửi tức thì
+        this.isSending = true;
+
+        // Lưu bản sao và dọn sạch ngay ô nhập liệu trên giao diện để triệt tiêu mọi race condition
+        const savedContent = inputEl.value;
+        const savedAttachments = [...this.stagedAttachments];
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        this.stagedAttachments = [];
+        this.renderAttachmentPreview();
+
         const btnSend = document.getElementById('wp-btn-send');
-        btnSend.disabled = true;
-        btnSend.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        if (btnSend) {
+            btnSend.disabled = true;
+            btnSend.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
 
         try {
             const payload = {
                 channel_id: this.activeType === 'CHANNEL' ? this.activeId : null,
                 direct_user_id: this.activeType === 'DIRECT' ? this.activeId : null,
                 content: content,
-                attachments: this.stagedAttachments
+                attachments: savedAttachments
             };
 
             const res = await fetch('/api/workplace/messages', {
@@ -939,19 +977,35 @@ window.modWorkplace = {
 
             const json = await res.json();
             if (json.success) {
-                inputEl.value = '';
-                this.stagedAttachments = [];
-                this.renderAttachmentPreview();
                 await this.loadMessages();
                 this.scrollToBottom(true);
             } else {
+                // Khôi phục nếu server trả lỗi
+                inputEl.value = savedContent;
+                this.stagedAttachments = savedAttachments;
+                this.renderAttachmentPreview();
                 alert('❌ ' + (json.error || 'Không thể gửi tin nhắn!'));
             }
         } catch(err) {
+            // Khôi phục nếu lỗi mạng
+            inputEl.value = savedContent;
+            this.stagedAttachments = savedAttachments;
+            this.renderAttachmentPreview();
             alert('⚠️ Lỗi gửi tin nhắn: ' + err.message);
         } finally {
-            btnSend.disabled = false;
-            btnSend.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            if (btnSend) {
+                btnSend.disabled = false;
+                btnSend.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+            // Giữ khóa tối thiểu 250ms để hấp thụ toàn bộ sự kiện bàn phím dư thừa
+            setTimeout(() => {
+                this.isSending = false;
+            }, 250);
+
+            // Tự động focus lại ô soạn thảo trên máy tính
+            if (window.innerWidth >= 768 && inputEl) {
+                inputEl.focus();
+            }
         }
     },
 
