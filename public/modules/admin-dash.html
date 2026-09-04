@@ -1,6 +1,6 @@
 <div class="min-h-full flex flex-col space-y-4 sm:space-y-6 relative pb-8">
-    <!-- HEADER & BỘ LỌC -->
-    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4">
+    <!-- HEADER & BỘ LỌC THỜI GIAN -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div>
             <h3 class="font-black text-slate-900 text-lg sm:text-2xl flex items-center gap-2">
                 <i class="fas fa-chart-line text-blue-600"></i> Báo Cáo Doanh Thu & Lợi Nhuận
@@ -8,11 +8,56 @@
             <p class="text-xs sm:text-sm text-slate-500 mt-0.5 sm:mt-1 font-medium">Toàn cảnh sức khỏe tài chính, dòng tiền và hiệu quả kinh doanh hệ thống.</p>
         </div>
         
-        <div class="w-full md:w-auto flex items-center gap-1 sm:gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto">
-            <button onclick="window.modDash.load('day')" id="btn-filter-day" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap">Hôm nay</button>
-            <button onclick="window.modDash.load('week')" id="btn-filter-week" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap">Tuần này</button>
-            <button onclick="window.modDash.load('month')" id="btn-filter-month" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-white shadow-xs text-blue-600 border border-blue-100 transition text-center whitespace-nowrap">Tháng này</button>
-            <button onclick="window.modDash.load('year')" id="btn-filter-year" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap">Năm nay</button>
+        <div class="w-full xl:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <!-- NÚT PRESET THỜI GIAN (Mặc định: Hôm nay) -->
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto">
+                <button onclick="window.modDash.load('day')" id="btn-filter-day" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-white shadow-xs text-blue-600 border border-blue-100 transition text-center whitespace-nowrap">Hôm nay</button>
+                <button onclick="window.modDash.load('week')" id="btn-filter-week" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap">Tuần này</button>
+                <button onclick="window.modDash.load('month')" id="btn-filter-month" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap">Tháng này</button>
+                <button onclick="window.modDash.load('year')" id="btn-filter-year" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap">Năm nay</button>
+                <button onclick="window.modDash.toggleCustomDate()" id="btn-filter-custom" class="dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-calendar-alt"></i> Khoảng thời gian
+                </button>
+            </div>
+
+            <!-- CHỌN KHOẢNG THỜI GIAN TÙY CHỌN (TỪ NGÀY - ĐẾN NGÀY) -->
+            <div id="dash-custom-range-box" class="hidden flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                <input type="date" id="dash-date-from" class="text-xs font-bold bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 outline-none focus:border-blue-500">
+                <span class="text-xs text-slate-400 font-bold">đến</span>
+                <input type="date" id="dash-date-to" class="text-xs font-bold bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 outline-none focus:border-blue-500">
+                <button onclick="window.modDash.applyCustomRange()" id="btn-dash-apply-custom" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-xs transition flex items-center gap-1 cursor-pointer">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BANNER CẢNH BÁO LỜI ẢO KHI THIẾU GIÁ VỐN (GIÁ VỐN = 0) -->
+    <div id="dash-zero-cost-banner" class="hidden bg-amber-50 border-l-4 border-amber-500 p-4 rounded-xl shadow-xs shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="flex items-start sm:items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-lg shadow-xs">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h5 class="font-black text-xs sm:text-sm text-amber-900 flex items-center gap-2">
+                    <span>CẢNH BÁO LỜI ẢO:</span> 
+                    <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-black" id="banner-zero-cost-count">0 sản phẩm</span> 
+                    <span>đã bán nhưng CHƯA NHẬP ĐỦ GIÁ VỐN (Giá vốn = 0 đ)!</span>
+                </h5>
+                <p class="text-[11px] sm:text-xs text-amber-800 mt-1">
+                    Số liệu lợi nhuận đang bị ảo khoảng <b id="banner-zero-cost-profit" class="text-red-600 font-black">0 đ</b> (doanh thu bị tính 100% thành lãi). 
+                    Lợi nhuận thực tế sau khi loại trừ phần ảo ước tính là <b id="banner-real-profit" class="text-emerald-700 font-black">0 đ</b>. 
+                    Vui lòng bấm <b class="underline">"Sửa Vốn"</b> trong bảng bên dưới để chuẩn hóa kịp thời!
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <button onclick="window.modDash.filterZeroCostOnly(true)" id="btn-filter-zero-cost-only" class="flex-1 sm:flex-initial px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fas fa-filter"></i> Chỉ Xem SP Thiếu Vốn
+            </button>
+            <button onclick="window.modDash.filterZeroCostOnly(false)" id="btn-show-all-products" class="hidden flex-1 sm:flex-initial px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fas fa-list"></i> Xem Tất Cả SP
+            </button>
         </div>
     </div>
 
@@ -33,9 +78,14 @@
             <i class="fas fa-chart-pie absolute -right-3 -bottom-3 text-7xl sm:text-8xl opacity-20"></i>
             <p class="text-emerald-100 font-bold text-xs sm:text-sm uppercase tracking-wider mb-1 sm:mb-2">Lợi Nhuận Gộp</p>
             <h2 id="d-profit" class="text-2xl sm:text-3xl font-black mb-1">0 đ</h2>
-            <p class="text-[11px] sm:text-xs text-emerald-200 flex items-center gap-1">
-                <i class="fas fa-percentage"></i> Tỷ suất: <span id="d-margin" class="font-bold">0%</span>
-            </p>
+            <div class="flex flex-col gap-0.5">
+                <p class="text-[11px] sm:text-xs text-emerald-200 flex items-center gap-1">
+                    <i class="fas fa-percentage"></i> Tỷ suất: <span id="d-margin" class="font-bold">0%</span>
+                </p>
+                <p id="d-zero-cost-alert" class="text-[10px] text-amber-200 font-bold hidden flex items-center gap-1">
+                    <i class="fas fa-exclamation-circle"></i> <span id="d-zero-cost-alert-text">Cảnh báo: Có sản phẩm vốn 0đ!</span>
+                </p>
+            </div>
         </div>
 
         <!-- Thu Chi -->
@@ -107,39 +157,107 @@
         </div>
     </div>
 
-    <!-- BẢNG TÓM TẮT TOP SẢN PHẨM & TÌNH TRẠNG ĐƠN HÀNG -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-        <!-- Danh sách Top 5 sản phẩm -->
-        <div class="lg:col-span-7 bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6">
-            <h4 class="font-black text-slate-800 text-sm sm:text-base mb-3 flex items-center gap-2">
-                <i class="fas fa-trophy text-amber-500"></i> Danh Sách Thiết Bị Bán Chạy Nhất Trong Kỳ
-            </h4>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="border-b border-slate-100 text-slate-400 uppercase text-[10px] font-bold">
-                            <th class="py-2.5 px-2">Sản phẩm</th>
-                            <th class="py-2.5 px-2 text-center">SL bán</th>
-                            <th class="py-2.5 px-2 text-right">Doanh thu</th>
-                            <th class="py-2.5 px-2 text-right">% Đóng góp</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-top-products" class="divide-y divide-slate-100 font-medium text-slate-700">
-                        <tr><td colspan="4" class="text-center py-6 text-slate-400">Đang tải dữ liệu...</td></tr>
-                    </tbody>
-                </table>
+    <!-- BẢNG BÁO CÁO DOANH THU, GIÁ VỐN & LỢI NHUẬN TỪNG SẢN PHẨM (CHI TIẾT TOÀN DIỆN) -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-slate-100">
+            <div>
+                <h4 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-2">
+                    <i class="fas fa-file-invoice-dollar text-emerald-600"></i> Báo Cáo Doanh Thu, Giá Vốn & Lợi Nhuận Từng Thiết Bị
+                </h4>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">Kiểm soát chặt chẽ giá vốn, phát hiện sai sót và điều chỉnh kịp thời tránh thất thoát.</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <!-- TÌM KIẾM SẢN PHẨM / SKU -->
+                <div class="relative flex-1 sm:w-64">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                    <input type="text" id="table-prod-search" oninput="window.modDash.onSearchProduct(this.value)" placeholder="Tìm tên thiết bị, SKU..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white font-medium">
+                </div>
+
+                <!-- CHỌN BỘ LỌC CẢNH BÁO -->
+                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+                    <button onclick="window.modDash.filterZeroCostOnly(false)" id="tab-all-prods" class="px-2.5 py-1 rounded font-bold bg-white text-blue-700 shadow-xs transition cursor-pointer">Tất Cả (<span id="count-all-prods">0</span>)</button>
+                    <button onclick="window.modDash.filterZeroCostOnly(true)" id="tab-zero-prods" class="px-2.5 py-1 rounded font-bold text-slate-600 hover:text-red-700 transition cursor-pointer">⚠️ Thiếu Vốn (<span id="count-zero-prods" class="text-red-600">0</span>)</button>
+                </div>
             </div>
         </div>
 
-        <!-- Phân bổ trạng thái đơn hàng -->
-        <div class="lg:col-span-5 bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 flex flex-col justify-between">
-            <div>
-                <h4 class="font-black text-slate-800 text-sm sm:text-base mb-3 flex items-center gap-2">
-                    <i class="fas fa-clipboard-list text-indigo-600"></i> Tình Trạng Đơn Hàng Trong Kỳ
-                </h4>
-                <div id="order-status-list" class="space-y-2.5">
-                    <div class="text-center py-6 text-slate-400 text-xs">Đang tải trạng thái...</div>
+        <div class="overflow-x-auto mt-4">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-200 bg-slate-50/70 text-slate-500 uppercase text-[10px] font-black tracking-wider">
+                        <th class="py-3 px-3 w-10 text-center">#</th>
+                        <th class="py-3 px-3 min-w-[260px]">Sản Phẩm & Mã SKU</th>
+                        <th class="py-3 px-3 text-center w-20">SL Bán</th>
+                        <th class="py-3 px-3 text-right w-32">Đơn Giá Vốn</th>
+                        <th class="py-3 px-3 text-right w-36">Doanh Thu</th>
+                        <th class="py-3 px-3 text-right w-36">Tổng Giá Vốn</th>
+                        <th class="py-3 px-3 text-right w-36">Lợi Nhuận Gộp</th>
+                        <th class="py-3 px-3 text-right w-24">Tỷ Suất (%)</th>
+                        <th class="py-3 px-3 text-center w-28">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="table-top-products" class="divide-y divide-slate-100 font-medium text-slate-700">
+                    <tr><td colspan="9" class="text-center py-8 text-slate-400">Đang tải dữ liệu báo cáo...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
+            <span id="table-prod-counter">Đang hiển thị 0 thiết bị</span>
+            <span class="text-[11px] text-slate-400 italic">* Bấm "Sửa Vốn" tại sản phẩm tương ứng để cập nhật lại giá vốn ngay lập tức.</span>
+        </div>
+    </div>
+
+    <!-- PHÂN BỔ TRẠNG THÁI ĐƠN HÀNG TRONG KỲ -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-6 shrink-0">
+        <h4 class="font-black text-slate-800 text-sm sm:text-base mb-3 flex items-center gap-2">
+            <i class="fas fa-clipboard-list text-indigo-600"></i> Tình Trạng Đơn Hàng Trong Kỳ
+        </h4>
+        <div id="order-status-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="text-center py-6 text-slate-400 text-xs col-span-full">Đang tải trạng thái đơn hàng...</div>
+        </div>
+    </div>
+
+    <!-- MODAL SỬA NHANH GIÁ VỐN SẢN PHẨM -->
+    <div id="modal-quick-cost" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-100 transform transition-all">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
+                    <i class="fas fa-coins text-amber-500"></i> Cập Nhật Giá Vốn Thiết Bị
+                </h3>
+                <button onclick="window.modDash.closeQuickCostModal()" class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="mt-4 space-y-3">
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <p class="text-[11px] text-slate-400 font-bold uppercase">Thiết bị</p>
+                    <p id="qc-product-name" class="text-xs font-black text-slate-800 mt-0.5">Tên sản phẩm</p>
+                    <p class="text-[11px] text-slate-500 font-mono mt-0.5">SKU: <span id="qc-sku" class="font-bold">--</span></p>
                 </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">
+                        Giá vốn hiện tại: <span id="qc-current-cost" class="font-black text-slate-900">0 đ</span>
+                    </label>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-blue-700 mb-1">
+                        Nhập Giá Vốn Mới (VNĐ): <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="qc-input-cost" oninput="window.modDash.onCostInputFormatted(this)" placeholder="Ví dụ: 15.000.000" class="w-full px-3 py-2.5 text-base font-black bg-amber-50/50 border-2 border-amber-300 rounded-xl text-slate-900 outline-none focus:border-amber-500 focus:bg-white transition">
+                    <p class="text-[10px] text-slate-400 mt-1">Hệ thống sẽ cập nhật trực tiếp vào danh mục sản phẩm và tự động tính toán lại toàn bộ doanh thu, giá vốn, lãi gộp trong báo cáo.</p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex items-center justify-end gap-2">
+                <button onclick="window.modDash.closeQuickCostModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">Hủy</button>
+                <button onclick="window.modDash.saveQuickCost()" id="btn-save-quick-cost" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-check"></i> Lưu Giá Vốn Ngay
+                </button>
             </div>
         </div>
     </div>
@@ -147,7 +265,14 @@
 
 <script>
     window.modDash = {
-        currentPeriod: 'month',
+        currentPeriod: 'day', // Mặc định là Hôm nay theo yêu cầu
+        customStartDate: null,
+        customEndDate: null,
+        cachedProducts: [],
+        cachedRevenue: 0,
+        filterZeroCostOnlyState: false,
+        searchQuery: '',
+        editingProductId: null,
         chartRev: null,
         chartTop: null,
 
@@ -161,33 +286,90 @@
                 window.modDash.chartTop = null;
             }
         },
+
+        toggleCustomDate: () => {
+            const box = document.getElementById('dash-custom-range-box');
+            if (!box) return;
+            const isHidden = box.classList.contains('hidden');
+            if (isHidden) {
+                box.classList.remove('hidden');
+                const todayStr = new Date().toISOString().slice(0, 10);
+                if (!document.getElementById('dash-date-from').value) {
+                    const firstDayMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
+                    document.getElementById('dash-date-from').value = firstDayMonth;
+                }
+                if (!document.getElementById('dash-date-to').value) {
+                    document.getElementById('dash-date-to').value = todayStr;
+                }
+            } else {
+                box.classList.add('hidden');
+            }
+        },
+
+        applyCustomRange: () => {
+            const from = document.getElementById('dash-date-from')?.value;
+            const to = document.getElementById('dash-date-to')?.value;
+            if (!from || !to) {
+                return alert("Vui lòng chọn đầy đủ Từ ngày và Đến ngày!");
+            }
+            if (from > to) {
+                return alert("Từ ngày không thể lớn hơn Đến ngày!");
+            }
+            window.modDash.customStartDate = from;
+            window.modDash.customEndDate = to;
+            window.modDash.load('custom');
+        },
         
-        load: async (period = 'month') => {
+        load: async (period = 'day') => {
             window.modDash.currentPeriod = period;
             
-            // UI Button Active State Update
+            // Cập nhật trạng thái Active của các nút lọc
             document.querySelectorAll('.dash-filter').forEach(btn => {
-                btn.className = 'dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap';
+                btn.className = 'dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-800 transition text-center whitespace-nowrap flex items-center justify-center gap-1.5';
             });
             const activeBtn = document.getElementById('btn-filter-' + period);
-            if(activeBtn) activeBtn.className = 'dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-white shadow-xs text-blue-600 border border-blue-100 transition text-center whitespace-nowrap';
+            if (activeBtn) {
+                activeBtn.className = 'dash-filter flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-white shadow-xs text-blue-600 border border-blue-100 transition text-center whitespace-nowrap flex items-center justify-center gap-1.5';
+            }
 
-            // Cập nhật Badge chu kỳ
+            // Hiện/Ẩn hộp ngày tùy chọn
+            const rangeBox = document.getElementById('dash-custom-range-box');
+            if (rangeBox) {
+                if (period === 'custom') rangeBox.classList.remove('hidden');
+                else rangeBox.classList.add('hidden');
+            }
+
+            // Cập nhật Badge chu kỳ trên biểu đồ
             const badgeEl = document.getElementById('chart-period-badge');
             if (badgeEl) {
-                const periodNames = { day: 'Hôm nay', week: 'Tuần này', month: 'Tháng này', year: 'Năm nay' };
-                badgeEl.innerText = periodNames[period] || 'Tháng này';
+                if (period === 'custom') {
+                    const from = window.modDash.customStartDate || '';
+                    const to = window.modDash.customEndDate || '';
+                    badgeEl.innerText = `Từ ${from} đến ${to}`;
+                } else {
+                    const periodNames = { day: 'Hôm nay', week: 'Tuần này', month: 'Tháng này', year: 'Năm nay' };
+                    badgeEl.innerText = periodNames[period] || 'Hôm nay';
+                }
+            }
+
+            // Xây dựng URL gọi API
+            let url = `/api/reports/quick?period=${period}`;
+            if (period === 'custom' && window.modDash.customStartDate && window.modDash.customEndDate) {
+                url += `&startDate=${window.modDash.customStartDate}&endDate=${window.modDash.customEndDate}`;
             }
 
             // Fetch Data
             try {
-                const res = await fetch(`/api/reports/quick?period=${period}`);
+                const res = await fetch(url);
                 const data = await res.json();
                 
                 if (data.success) {
                     const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
                     const rev = data.data.revenue || 0;
                     const prof = data.data.profit || 0;
+                    const zeroCount = data.data.zeroCostProductsCount || 0;
+                    const zeroProfit = data.data.zeroCostProfit || 0;
+                    const realProf = data.data.realProfit || 0;
                     
                     document.getElementById('d-revenue').innerText = fmt(rev) + ' đ';
                     if (document.getElementById('d-orders-count')) {
@@ -196,8 +378,7 @@
                     
                     const profitEl = document.getElementById('d-profit');
                     profitEl.innerText = fmt(prof) + ' đ';
-                    // Đổi màu nếu lỗ
-                    if(prof < 0) profitEl.classList.replace('text-white', 'text-red-300');
+                    if (prof < 0) profitEl.classList.replace('text-white', 'text-red-300');
                     else profitEl.classList.replace('text-red-300', 'text-white');
 
                     // Tỷ suất lợi nhuận
@@ -207,19 +388,259 @@
                         marginEl.innerText = margin + '%';
                     }
 
+                    // Cảnh báo vốn = 0 trong thẻ Lợi nhuận
+                    const zeroAlertEl = document.getElementById('d-zero-cost-alert');
+                    const zeroAlertText = document.getElementById('d-zero-cost-alert-text');
+                    if (zeroAlertEl && zeroAlertText) {
+                        if (zeroCount > 0) {
+                            zeroAlertEl.classList.remove('hidden');
+                            zeroAlertText.innerText = `⚠️ Gồm ${fmt(zeroProfit)} đ lời ảo do thiếu giá vốn!`;
+                        } else {
+                            zeroAlertEl.classList.add('hidden');
+                        }
+                    }
+
+                    // CẢNH BÁO BANNER LỜI ẢO
+                    const bannerEl = document.getElementById('dash-zero-cost-banner');
+                    if (bannerEl) {
+                        if (zeroCount > 0) {
+                            bannerEl.classList.remove('hidden');
+                            document.getElementById('banner-zero-cost-count').innerText = `${zeroCount} sản phẩm`;
+                            document.getElementById('banner-zero-cost-profit').innerText = `${fmt(zeroProfit)} đ`;
+                            document.getElementById('banner-real-profit').innerText = `${fmt(realProf)} đ`;
+                        } else {
+                            bannerEl.classList.add('hidden');
+                        }
+                    }
+
                     document.getElementById('d-inventory').innerText = fmt(data.data.inventoryValue) + ' đ';
-                    if(document.getElementById('d-inv-qty')) document.getElementById('d-inv-qty').innerText = fmt(data.data.inventoryQty) + ' thiết bị có sẵn';
+                    if (document.getElementById('d-inv-qty')) {
+                        document.getElementById('d-inv-qty').innerText = fmt(data.data.inventoryQty) + ' thiết bị có sẵn';
+                    }
                     document.getElementById('d-thu').innerText = fmt(data.data.thu) + ' đ';
                     document.getElementById('d-chi').innerText = fmt(data.data.chi) + ' đ';
 
-                    // VẼ 2 BIỂU ĐỒ
+                    // Lưu cache danh sách sản phẩm để lọc nhanh tại frontend
+                    window.modDash.cachedProducts = data.data.topProducts || [];
+                    window.modDash.cachedRevenue = rev;
+
+                    // Cập nhật số đếm tab
+                    const countAll = window.modDash.cachedProducts.length;
+                    const countZero = window.modDash.cachedProducts.filter(p => p.is_zero_cost).length;
+                    document.getElementById('count-all-prods').innerText = countAll;
+                    document.getElementById('count-zero-prods').innerText = countZero;
+
+                    // VẼ 2 BIỂU ĐỒ & BẢNG
                     window.modDash.renderRevenueProfitChart(data.data.timeline);
-                    window.modDash.renderTopProductsChart(data.data.topProducts, rev);
-                    window.modDash.renderTopProductsTable(data.data.topProducts, rev);
+                    window.modDash.renderTopProductsChart(data.data.topProducts.slice(0, 6), rev);
+                    window.modDash.renderTopProductsTable();
                     window.modDash.renderOrderStatusList(data.data.orderStatuses);
                 }
             } catch (e) {
                 console.error("Lỗi lấy báo cáo:", e);
+            }
+        },
+
+        reloadCurrent: () => {
+            window.modDash.load(window.modDash.currentPeriod);
+        },
+
+        onSearchProduct: (val) => {
+            window.modDash.searchQuery = (val || '').toLowerCase().trim();
+            window.modDash.renderTopProductsTable();
+        },
+
+        filterZeroCostOnly: (isOnlyZero) => {
+            window.modDash.filterZeroCostOnlyState = isOnlyZero;
+
+            const tabAll = document.getElementById('tab-all-prods');
+            const tabZero = document.getElementById('tab-zero-prods');
+            const btnBannerOnly = document.getElementById('btn-filter-zero-cost-only');
+            const btnBannerAll = document.getElementById('btn-show-all-products');
+
+            if (isOnlyZero) {
+                if (tabAll) tabAll.className = 'px-2.5 py-1 rounded font-bold text-slate-600 hover:text-blue-700 transition cursor-pointer';
+                if (tabZero) tabZero.className = 'px-2.5 py-1 rounded font-black bg-red-600 text-white shadow-xs transition cursor-pointer';
+                if (btnBannerOnly) btnBannerOnly.classList.add('hidden');
+                if (btnBannerAll) btnBannerAll.classList.remove('hidden');
+            } else {
+                if (tabAll) tabAll.className = 'px-2.5 py-1 rounded font-bold bg-white text-blue-700 shadow-xs transition cursor-pointer';
+                if (tabZero) tabZero.className = 'px-2.5 py-1 rounded font-bold text-slate-600 hover:text-red-700 transition cursor-pointer';
+                if (btnBannerOnly) btnBannerOnly.classList.remove('hidden');
+                if (btnBannerAll) btnBannerAll.classList.add('hidden');
+            }
+
+            window.modDash.renderTopProductsTable();
+        },
+
+        renderTopProductsTable: () => {
+            const tbody = document.getElementById('table-top-products');
+            const counter = document.getElementById('table-prod-counter');
+            if (!tbody) return;
+
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+            let items = [...(window.modDash.cachedProducts || [])];
+
+            // 1. Lọc chỉ xem SP thiếu vốn
+            if (window.modDash.filterZeroCostOnlyState) {
+                items = items.filter(p => p.is_zero_cost);
+            }
+
+            // 2. Lọc theo từ khóa tìm kiếm
+            if (window.modDash.searchQuery) {
+                items = items.filter(p => 
+                    (p.product_name || '').toLowerCase().includes(window.modDash.searchQuery) ||
+                    (p.sku || '').toLowerCase().includes(window.modDash.searchQuery)
+                );
+            }
+
+            if (counter) {
+                counter.innerText = `Đang hiển thị ${items.length} / ${window.modDash.cachedProducts.length} thiết bị đã bán ra`;
+            }
+
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400 font-medium">Không có sản phẩm nào phù hợp điều kiện lọc.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = items.map((p, idx) => {
+                const isZero = p.is_zero_cost;
+                const margin = p.margin_pct || 0;
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition ${isZero ? 'bg-red-50/20' : ''}">
+                        <td class="py-3 px-3 text-center">
+                            <span class="w-5 h-5 rounded-full ${idx < 3 && !isZero ? 'bg-amber-100 text-amber-700 font-black' : 'bg-slate-100 text-slate-500 font-bold'} inline-flex items-center justify-center text-[10px]">${idx + 1}</span>
+                        </td>
+                        <td class="py-3 px-3">
+                            <div class="flex flex-col gap-0.5">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="font-bold text-slate-900 hover:text-blue-600 transition" title="${p.product_name}">${p.product_name}</span>
+                                    ${isZero ? `
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-700 border border-red-200 shadow-xs" title="Chưa có giá vốn!">
+                                            <i class="fas fa-exclamation-triangle"></i> Giá vốn 0đ (Lời ảo)
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                <div class="text-[11px] text-slate-400 font-mono">
+                                    SKU: <span class="text-slate-600 font-bold">${p.sku || '--'}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-3 text-center font-black text-slate-700 text-xs">${fmt(p.total_qty)}</td>
+                        <td class="py-3 px-3 text-right">
+                            ${isZero ? `
+                                <span class="font-black text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded text-xs">0 đ</span>
+                            ` : `
+                                <span class="font-bold text-slate-700">${fmt(p.unit_cost)} đ</span>
+                            `}
+                        </td>
+                        <td class="py-3 px-3 text-right font-black text-blue-700 text-xs">${fmt(p.total_revenue)} đ</td>
+                        <td class="py-3 px-3 text-right font-bold text-slate-600">${fmt(p.total_cost)} đ</td>
+                        <td class="py-3 px-3 text-right">
+                            ${isZero ? `
+                                <div class="flex flex-col items-end">
+                                    <span class="font-black text-amber-700 text-xs">${fmt(p.total_profit)} đ</span>
+                                    <span class="text-[10px] font-bold text-red-600">⚠️ Lời ảo 100%</span>
+                                </div>
+                            ` : p.total_profit > 0 ? `
+                                <span class="font-black text-emerald-600 text-xs">+${fmt(p.total_profit)} đ</span>
+                            ` : p.total_profit < 0 ? `
+                                <span class="font-black text-rose-600 text-xs">${fmt(p.total_profit)} đ (Lỗ)</span>
+                            ` : `
+                                <span class="font-bold text-slate-400 text-xs">0 đ</span>
+                            `}
+                        </td>
+                        <td class="py-3 px-3 text-right">
+                            ${isZero ? `
+                                <span class="font-black text-red-600 text-xs bg-red-50 px-1.5 py-0.5 rounded border border-red-200">100% ⚠️</span>
+                            ` : `
+                                <span class="font-bold ${margin >= 15 ? 'text-emerald-700 font-black' : margin > 0 ? 'text-slate-700' : 'text-rose-600 font-bold'}">${margin}%</span>
+                            `}
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            <button onclick="window.modDash.openQuickCostModal(${p.id}, '${(p.product_name || '').replace(/'/g, "\\'")}', '${p.sku || ''}', ${p.unit_cost})" class="px-2.5 py-1 rounded-lg ${isZero ? 'bg-red-600 text-white hover:bg-red-700 shadow-xs font-black' : 'bg-amber-50 hover:bg-amber-600 text-amber-700 hover:text-white border border-amber-200 font-bold'} text-xs transition flex items-center justify-center gap-1 mx-auto cursor-pointer" title="Cập nhật giá vốn chính xác cho thiết bị này">
+                                <i class="fas fa-edit"></i> Sửa Vốn
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        openQuickCostModal: (productId, productName, sku, currentCost) => {
+            window.modDash.editingProductId = productId;
+            document.getElementById('qc-product-name').innerText = productName || 'Thiết bị';
+            document.getElementById('qc-sku').innerText = sku || '--';
+            document.getElementById('qc-current-cost').innerText = new Intl.NumberFormat('vi-VN').format(currentCost || 0) + ' đ';
+            
+            const costInput = document.getElementById('qc-input-cost');
+            costInput.value = currentCost > 0 ? new Intl.NumberFormat('vi-VN').format(currentCost) : '';
+            
+            const modal = document.getElementById('modal-quick-cost');
+            if (modal) {
+                if (modal.parentElement !== document.body) {
+                    modal.classList.add('teleported-module-modal');
+                    document.body.appendChild(modal);
+                }
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => costInput.focus(), 100);
+            }
+        },
+
+        closeQuickCostModal: () => {
+            const modal = document.getElementById('modal-quick-cost');
+            if (modal) {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
+            window.modDash.editingProductId = null;
+        },
+
+        onCostInputFormatted: (input) => {
+            let raw = input.value.replace(/\D/g, '');
+            if (!raw) {
+                input.value = '';
+                return;
+            }
+            input.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw, 10));
+        },
+
+        saveQuickCost: async () => {
+            const prodId = window.modDash.editingProductId;
+            if (!prodId) return;
+
+            const costInput = document.getElementById('qc-input-cost');
+            const rawVal = costInput.value.replace(/\D/g, '');
+            if (!rawVal) {
+                return alert("Vui lòng nhập giá vốn hợp lệ!");
+            }
+            const numVal = parseFloat(rawVal);
+
+            const btnSave = document.getElementById('btn-save-quick-cost');
+            btnSave.disabled = true;
+            btnSave.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang lưu...`;
+
+            try {
+                const res = await fetch(`/api/products/${prodId}/cost`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ import_price: numVal })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    if (window.showToast) window.showToast('success', '✅ Đã cập nhật giá vốn và làm mới báo cáo!');
+                    window.modDash.closeQuickCostModal();
+                    window.modDash.reloadCurrent();
+                } else {
+                    alert("Lỗi: " + json.error);
+                }
+            } catch (err) {
+                alert("Lỗi kết nối khi cập nhật giá vốn!");
+            } finally {
+                btnSave.disabled = false;
+                btnSave.innerHTML = `<i class="fas fa-check"></i> Lưu Giá Vốn Ngay`;
             }
         },
 
@@ -384,7 +805,6 @@
 
             // Render mini legend bên dưới Doughnut
             if (legendEl) {
-                const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
                 legendEl.innerHTML = topProducts.map((p, idx) => {
                     const color = colors[idx % colors.length];
                     const pct = totalRevenue > 0 ? ((p.total_revenue / totalRevenue) * 100).toFixed(1) : 0;
@@ -399,40 +819,6 @@
                     `;
                 }).join('');
             }
-        },
-
-        renderTopProductsTable: (topProducts, totalRevenue) => {
-            const tbody = document.getElementById('table-top-products');
-            if (!tbody) return;
-
-            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
-
-            if (!topProducts || topProducts.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 font-medium">Chưa có giao dịch bán hàng hoàn tất trong khoảng thời gian này.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = topProducts.map((p, idx) => {
-                const pct = totalRevenue > 0 ? ((p.total_revenue / totalRevenue) * 100).toFixed(1) : 0;
-                return `
-                    <tr class="hover:bg-slate-50/80 transition">
-                        <td class="py-2.5 px-2 flex items-center gap-2">
-                            <span class="w-5 h-5 rounded-full ${idx === 0 ? 'bg-amber-100 text-amber-600 font-black' : 'bg-slate-100 text-slate-500 font-bold'} flex items-center justify-center text-[10px] shrink-0">${idx + 1}</span>
-                            <span class="font-bold text-slate-800 truncate max-w-[220px] sm:max-w-xs" title="${p.product_name}">${p.product_name}</span>
-                        </td>
-                        <td class="py-2.5 px-2 text-center font-bold text-slate-600">${fmt(p.total_qty)}</td>
-                        <td class="py-2.5 px-2 text-right font-black text-blue-600">${fmt(p.total_revenue)} đ</td>
-                        <td class="py-2.5 px-2 text-right">
-                            <div class="flex items-center justify-end gap-1.5">
-                                <div class="w-12 bg-slate-100 h-1.5 rounded-full overflow-hidden hidden sm:block">
-                                    <div class="bg-blue-600 h-full rounded-full" style="width: ${Math.min(100, pct)}%"></div>
-                                </div>
-                                <span class="font-bold text-slate-700">${pct}%</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
         },
 
         renderOrderStatusList: (statuses) => {
@@ -453,14 +839,14 @@
             };
 
             if (!statuses || statuses.length === 0) {
-                listEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs font-medium">Không có đơn hàng nào trong khoảng thời gian này.</div>`;
+                listEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs font-medium col-span-full">Không có đơn hàng nào trong khoảng thời gian này.</div>`;
                 return;
             }
 
             listEl.innerHTML = statuses.map(s => {
                 const conf = statusConfig[s.status] || { label: s.status, color: 'slate', icon: 'fa-circle' };
                 return `
-                    <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition">
+                    <div class="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition shadow-2xs">
                         <div class="flex items-center gap-2.5">
                             <span class="w-8 h-8 rounded-lg bg-${conf.color}-50 text-${conf.color}-600 flex items-center justify-center text-xs shrink-0 border border-${conf.color}-100">
                                 <i class="fas ${conf.icon}"></i>
@@ -479,6 +865,6 @@
         }
     };
     
-    // Gọi hàm load mặc định là tháng này khi vừa mở module
-    window.modDash.load('month');
+    // Khởi tạo mặc định chu kỳ "Hôm nay"
+    window.modDash.load('day');
 </script>

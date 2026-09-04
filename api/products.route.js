@@ -331,6 +331,21 @@ router.put('/:id/stock', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
+// Endpoint cập nhật nhanh giá vốn (Hỗ trợ Dashboard & Kế toán sửa nhanh khi phát hiện giá vốn = 0 hoặc sai sót)
+router.put('/:id/cost', async (req, res) => {
+    try {
+        const { import_price } = req.body;
+        if (import_price === undefined || isNaN(import_price)) {
+            return res.status(400).json({ success: false, error: 'Giá vốn không hợp lệ' });
+        }
+        const numPrice = Math.max(0, parseFloat(import_price) || 0);
+        await pool.query('UPDATE products SET import_price = $1 WHERE id = $2', [numPrice, req.params.id]);
+        res.json({ success: true, message: 'Đã cập nhật giá vốn thành công!', import_price: numPrice });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 router.delete('/:id', async (req, res) => {
     try {
         await pool.query('DELETE FROM products WHERE id = $1', [req.params.id]);
