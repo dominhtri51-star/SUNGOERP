@@ -1,0 +1,191 @@
+const express = require('express');
+const router = express.Router();
+const pool = require('../config/database');
+
+// 1. Lấy cấu hình Chính Sách KPI Xuất Kho hiện tại
+router.get('/policy', async (req, res) => {
+    try {
+        const polRes = await pool.query("SELECT * FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
+        if (polRes.rows.length === 0) {
+            await pool.query(`
+                INSERT INTO warehouse_kpi_policies (id, policy_name, rate_per_order, min_orders_threshold, bonus_target_orders, bonus_tier_amount, is_active)
+                VALUES (1, 'Chính sách KPI Xuất Kho Mặc Định', 20000, 0, 50, 500000, TRUE)
+                ON CONFLICT (id) DO NOTHING
+            `);
+            const fallback = await pool.query("SELECT * FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
+            return res.json({ success: true, data: fallback.rows[0] });
+        }
+        res.json({ success: true, data: polRes.rows[0] });
+    } catch (err) {
+        console.error('Lỗi get warehouse KPI policy:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. Cập nhật Chính Sách KPI Xuất Kho (Dành cho Admin / Quản lý)
+router.put('/policy', async (req, res) => {
+    try {
+        const { rate_per_order, min_orders_threshold, bonus_target_orders, bonus_tier_amount, is_active, notes } = req.body;
+        const result = await pool.query(`
+            UPDATE warehouse_kpi_policies SET
+                rate_per_order = COALESCE($1, rate_per_order),
+                min_orders_threshold = COALESCE($2, min_orders_threshold),
+                bonus_target_orders = COALESCE($3, bonus_target_orders),
+                bonus_tier_amount = COALESCE($4, bonus_tier_amount),
+                is_active = COALESCE($5, is_active),
+                notes = COALESCE($6, notes),
+                updated_at = NOW()
+            WHERE id = 1
+            RETURNING *
+        `, [
+            rate_per_order !== undefined ? parseFloat(rate_per_order) : null,
+            min_orders_threshold !== undefined ? parseInt(min_orders_threshold, 10) : null,
+            bonus_target_orders !== undefined ? parseInt(bonus_target_orders, 10) : null,
+            bonus_tier_amount !== undefined ? parseFloat(bonus_tier_amount) : null,
+            is_active !== undefined ? is_active : null,
+            notes !== undefined ? notes : null
+        ]);
+
+        res.json({
+            success: true,
+            message: '✅ Đã cập nhật chính sách KPI hoa hồng xuất kho thành công!',
+            data: result.rows[0]
+        });
+    } catch (err) {
+        console.error('Lỗi update warehouse KPI policy:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. Lấy báo cáo tổng hợp KPI Xuất Kho theo tháng (period_key = 'YYYY-MM')
+router.get('/summary', async (req, res) => {
+    try {
+        const periodKey = req.query.period_key || new Date().toISOString().slice(0, 7);
+        const startDate = `${periodKey}-01 00:00:00`;
+        const parts = periodKey.split('-');
+        const lastDay = new Date(parseInt(parts[0]), parseInt(parts[1]), 0).getDate();
+        const endDate = `${periodKey}-${String(lastDay).padStart(2, '0')} 23:59:59`;
+
+        // Lấy chính sách hiện tại
+        const polRes = await pool.query("SELECT * FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
+        const policy = polRes.rows[0] || {
+            rate_per_order: 20000,
+            min_orders_threshold: 0,
+            bonus_target_orders: 50,
+            bonus_tier_amount: 500000
+        };
+
+        const ratePerOrder = parseFloat(policy.rate_per_order) || 20000;
+        const minThreshold = parseInt(policy.min_orders_threshold, 10) || 0;
+        const bonusTarget = parseInt(policy.bonus_target_orders, 10) || 50;
+        const bonusTierAmount = parseFloat(policy.bonus_tier_amount) || 500000;
+
+        // Lấy danh sách nhân sự kho hoặc có đơn xử lý
+        const empsRes = await pool.query(`
+            SELECT DISTINCT e.id, e.emp_code, e.full_name, e.position, d.dept_name
+            FROM employees e
+            LEFT JOIN departments d ON e.department_id = d.id
+            WHERE e.status = 'ACTIVE' 
+              AND (d.dept_name ILIKE '%kho%' OR e.position ILIKE '%kho%' OR e.emp_code = 'NVKHO')
+            ORDER BY e.id ASC
+        `);
+
+        const summary = [];
+        let grandOrders = 0;
+        let grandCommission = 0;
+
+        for (const emp of empsRes.rows) {
+            const ordRes = await pool.query(`
+                SELECT 
+                    COUNT(id) AS dispatched_count,
+                    COALESCE(SUM(warehouse_commission), 0) AS raw_commission
+                FROM orders
+                WHERE dispatched_by = $1
+                  AND status IN ('SHIPPED', 'COMPLETED')
+                  AND COALESCE(dispatched_at, created_at) >= $2
+                  AND COALESCE(dispatched_at, created_at) <= $3
+            `, [emp.id, startDate, endDate]);
+
+            const row = ordRes.rows[0];
+            const count = parseInt(row.dispatched_count, 10) || 0;
+            const eligibleCount = Math.max(0, count - minThreshold);
+            const baseCommission = eligibleCount * ratePerOrder;
+            const hasBonus = count >= bonusTarget && bonusTarget > 0;
+            const tierBonus = hasBonus ? bonusTierAmount : 0;
+            const totalPayout = baseCommission + tierBonus;
+
+            grandOrders += count;
+            grandCommission += totalPayout;
+
+            summary.push({
+                employee_id: emp.id,
+                emp_code: emp.emp_code,
+                full_name: emp.full_name,
+                position: emp.position,
+                dept_name: emp.dept_name,
+                dispatched_count: count,
+                rate_per_order: ratePerOrder,
+                base_commission: baseCommission,
+                has_target_bonus: hasBonus,
+                target_bonus_amount: tierBonus,
+                total_payout: totalPayout
+            });
+        }
+
+        res.json({
+            success: true,
+            period_key: periodKey,
+            policy: {
+                rate_per_order: ratePerOrder,
+                min_orders_threshold: minThreshold,
+                bonus_target_orders: bonusTarget,
+                bonus_tier_amount: bonusTierAmount
+            },
+            total_dispatched_orders: grandOrders,
+            total_warehouse_commission: grandCommission,
+            staff_summary: summary
+        });
+    } catch (err) {
+        console.error('Lỗi get warehouse KPI summary:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 4. Lấy chi tiết đơn hàng xuất kho của 1 nhân viên trong tháng
+router.get('/orders', async (req, res) => {
+    try {
+        const { period_key, employee_id } = req.query;
+        if (!employee_id) return res.status(400).json({ success: false, error: 'Thiếu employee_id' });
+
+        const pKey = period_key || new Date().toISOString().slice(0, 7);
+        const startDate = `${pKey}-01 00:00:00`;
+        const parts = pKey.split('-');
+        const lastDay = new Date(parseInt(parts[0]), parseInt(parts[1]), 0).getDate();
+        const endDate = `${pKey}-${String(lastDay).padStart(2, '0')} 23:59:59`;
+
+        const ords = await pool.query(`
+            SELECT id, order_code, customer_name, customer_phone, status, 
+                   total_amount, delivery_company, driver_name, license_plate,
+                   dispatched_at, warehouse_commission, created_at
+            FROM orders
+            WHERE dispatched_by = $1
+              AND status IN ('SHIPPED', 'COMPLETED')
+              AND COALESCE(dispatched_at, created_at) >= $2
+              AND COALESCE(dispatched_at, created_at) <= $3
+            ORDER BY COALESCE(dispatched_at, created_at) DESC
+        `, [employee_id, startDate, endDate]);
+
+        res.json({
+            success: true,
+            period_key: pKey,
+            employee_id: parseInt(employee_id, 10),
+            total_orders: ords.rows.length,
+            orders: ords.rows
+        });
+    } catch (err) {
+        console.error('Lỗi get warehouse KPI orders:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+module.exports = router;

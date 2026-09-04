@@ -298,9 +298,9 @@ window.modPayroll = {
         }
 
         if (tbody) {
-            tbody.innerHTML = window.modPayroll.items.map(item => {
                 const allowances = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
                 const bonusPenalty = (parseFloat(item.bonus_amount) || 0) - (parseFloat(item.deduction_penalty) || 0);
+                const whComm = parseFloat(item.warehouse_commission) || 0;
 
                 return `
                     <tr class="hover:bg-emerald-50/30 transition border-b border-slate-100">
@@ -313,7 +313,10 @@ window.modPayroll = {
                         <td class="p-3 text-right font-medium text-slate-600">${(parseFloat(item.base_salary) || 0).toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right font-bold text-slate-800">${(parseFloat(item.salary_by_days) || 0).toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right text-slate-600">${allowances.toLocaleString('vi-VN')} đ</td>
-                        <td class="p-3 text-right font-black text-amber-600">${(parseFloat(item.total_commission) || 0).toLocaleString('vi-VN')} đ</td>
+                        <td class="p-3 text-right font-black text-amber-600">
+                            ${(parseFloat(item.total_commission) || 0).toLocaleString('vi-VN')} đ
+                            ${whComm > 0 ? `<div class="text-[10px] text-purple-700 font-bold font-mono mt-0.5"><i class="fas fa-boxes-packing mr-0.5"></i>Kho: +${whComm.toLocaleString('vi-VN')}đ</div>` : ''}
+                        </td>
                         <td class="p-3 text-right font-medium ${bonusPenalty >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${bonusPenalty >= 0 ? '+' : ''}${bonusPenalty.toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right font-black text-blue-700">${(parseFloat(item.gross_income) || 0).toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right font-bold text-purple-600">-${(parseFloat(item.total_ins_emp) || 0).toLocaleString('vi-VN')} đ</td>
@@ -359,6 +362,7 @@ window.modPayroll = {
                         <div class="text-right">
                             <span class="text-slate-400 block text-[10px]">Hoa hồng:</span>
                             <b class="text-amber-600">${comm.toLocaleString('vi-VN')} đ</b>
+                            ${parseFloat(item.warehouse_commission) > 0 ? `<span class="text-[10px] text-purple-700 font-bold block"><i class="fas fa-boxes-packing mr-0.5"></i>Kho: +${(parseFloat(item.warehouse_commission) || 0).toLocaleString('vi-VN')}đ</span>` : ''}
                         </div>
                         <div>
                             <span class="text-slate-400 block text-[10px]">Trừ BH (10.5%):</span>
@@ -497,6 +501,10 @@ window.modPayroll = {
         document.getElementById('ps-period').innerText = `Kỳ Lương Tháng ${window.modPayroll.currentPeriod}`;
         const totalAllowance = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
 
+        const whComm = parseFloat(item.warehouse_commission) || 0;
+        const totalComm = parseFloat(item.total_commission) || 0;
+        const salesComm = Math.max(0, totalComm - whComm);
+
         document.getElementById('ps-body').innerHTML = `
             <div class="border-b border-slate-100 pb-3">
                 <p class="text-sm font-black text-slate-800">${item.full_name} <span class="text-amber-600 font-mono text-xs">(${item.emp_code})</span></p>
@@ -509,7 +517,12 @@ window.modPayroll = {
                 <div class="flex justify-between text-slate-600"><span>2. Ngày công làm việc:</span><span>${item.actual_working_days} / 26 ngày</span></div>
                 <div class="flex justify-between font-bold text-slate-700"><span>3. Lương theo ngày công:</span><span>${(parseFloat(item.salary_by_days) || 0).toLocaleString('vi-VN')} đ</span></div>
                 <div class="flex justify-between text-slate-600"><span>4. Phụ cấp (Ăn trưa, Xăng xe, Trách nhiệm):</span><span>${totalAllowance.toLocaleString('vi-VN')} đ</span></div>
-                <div class="flex justify-between font-black text-amber-600"><span>5. Hoa hồng bán hàng & dự án (Đạt ngưỡng):</span><span>+${(parseFloat(item.total_commission) || 0).toLocaleString('vi-VN')} đ</span></div>
+                ${whComm > 0 ? `
+                    ${salesComm > 0 ? `<div class="flex justify-between font-bold text-amber-600"><span>5a. Hoa hồng bán hàng & dự án:</span><span>+${salesComm.toLocaleString('vi-VN')} đ</span></div>` : ''}
+                    <div class="flex justify-between font-black text-purple-700 bg-purple-50 px-2 py-1 rounded"><span>5b. 📦 Hoa hồng KPI xử lý xuất kho:</span><span>+${whComm.toLocaleString('vi-VN')} đ</span></div>
+                ` : `
+                    <div class="flex justify-between font-black text-amber-600"><span>5. Hoa hồng bán hàng & dự án:</span><span>+${salesComm.toLocaleString('vi-VN')} đ</span></div>
+                `}
                 <div class="flex justify-between text-emerald-600 font-bold"><span>6. Thưởng KPI Thu Nợ & Hiệu Quả:</span><span>+${(parseFloat(item.bonus_amount) || 0).toLocaleString('vi-VN')} đ</span></div>
                 <div class="flex justify-between font-black text-blue-700 pt-1.5 border-t border-slate-100 text-sm"><span>TỔNG THU NHẬP (GROSS):</span><span>${(parseFloat(item.gross_income) || 0).toLocaleString('vi-VN')} đ</span></div>
             </div>

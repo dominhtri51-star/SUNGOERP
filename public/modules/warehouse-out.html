@@ -24,6 +24,42 @@
             </button>
         </div>
 
+        <!-- THANH THỐNG KÊ KPI HOA HỒNG XUẤT KHO -->
+        <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-2xl p-3 sm:p-4 text-white shadow-md border border-purple-800/40">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300 text-lg shrink-0">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-black text-sm sm:text-base text-white tracking-wide">KPI Hoa Hồng Xuất Kho</h3>
+                            <span id="wms-kpi-period" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-400/20 text-purple-200 border border-purple-400/30">Kỳ Tháng Đang Tải...</span>
+                        </div>
+                        <p class="text-[11px] text-purple-200/80 mt-0.5" id="wms-kpi-policy-desc">Đơn giá: <b class="text-amber-300">20.000 đ/đơn xuất</b> (Đạt mốc 50 đơn thưởng thêm 500k)</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                    <!-- Stats items -->
+                    <div class="bg-white/10 backdrop-blur-xs rounded-xl px-3 py-1.5 border border-white/10 text-right">
+                        <div class="text-[10px] uppercase font-bold text-purple-200">Đơn Đã Xuất</div>
+                        <div class="text-base sm:text-lg font-black text-amber-300 font-mono" id="wms-kpi-total-orders">0 đơn</div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-xs rounded-xl px-3 py-1.5 border border-white/10 text-right">
+                        <div class="text-[10px] uppercase font-bold text-purple-200">Tổng Quỹ KPI</div>
+                        <div class="text-base sm:text-lg font-black text-emerald-400 font-mono" id="wms-kpi-total-commission">0 đ</div>
+                    </div>
+                    <button type="button" onclick="window.modWmsOut.openKpiPolicyModal()" class="bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white px-3 py-2 rounded-xl text-xs font-black shadow-sm transition flex items-center gap-1.5 cursor-pointer shrink-0 border border-purple-400/40" title="Cài đặt định mức KPI xuất kho">
+                        <i class="fas fa-cog text-xs"></i> <span class="hidden sm:inline">Cài Đặt KPI</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Leaderboard / Nhân sự kho chi tiết -->
+            <div id="wms-kpi-staff-list" class="mt-2.5 pt-2.5 border-t border-purple-800/60 flex flex-wrap gap-2 text-xs"></div>
+        </div>
+
         <!-- THANH LỌC TRẠNG THÁI WMS OUTBOUND -->
         <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5" id="wms-filter-container">
             <button onclick="window.modWmsOut.toggleStatus('PROCESSING')" id="w-st-PROCESSING" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 whitespace-nowrap cursor-pointer shadow-2xs hover:bg-slate-100">
@@ -64,6 +100,7 @@
                             <th class="p-4 py-3">Khách Hàng / Nhận Hộ</th>
                             <th class="p-4 py-3">Danh Sách Hàng Hóa</th>
                             <th class="p-4 py-3">Thông tin Chành xe</th>
+                            <th class="p-4 py-3">NV Xuất & KPI</th>
                             <th class="p-4 py-3 text-center">Trạng Thái & Thao Tác</th>
                         </tr>
                     </thead>
@@ -152,6 +189,23 @@
 
                 <!-- CỘT PHẢI: GIAO HÀNG & CHÀNH XE -->
                 <div class="space-y-4">
+                    <!-- KHU VỰC GÁN NHÂN VIÊN XUẤT KHO & HOA HỒNG KPI -->
+                    <div class="bg-purple-50/70 rounded-2xl shadow-2xs border border-purple-200/80 p-4 sm:p-5 space-y-2.5">
+                        <div class="flex items-center justify-between pb-2 border-b border-purple-200/60">
+                            <h3 class="font-black text-purple-900 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fas fa-user-check text-purple-600"></i> NHÂN SỰ XUẤT KHO & HOA HỒNG
+                            </h3>
+                            <span class="text-[9px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md font-bold border border-purple-200" id="wms-badge-kpi-rate">+20.000 đ/đơn</span>
+                        </div>
+                        <div>
+                            <label class="block font-black text-purple-900 text-[10px] uppercase mb-1">Nhân viên đóng gói & xử lý xuất kho</label>
+                            <select id="wms-dispatched-by" class="w-full border border-purple-300 bg-white rounded-xl p-2.5 outline-none focus:border-purple-500 font-bold text-slate-800 shadow-2xs text-xs">
+                                <option value="">-- Đang nạp danh sách nhân sự kho --</option>
+                            </select>
+                            <p class="text-[10px] text-purple-700/80 mt-1">Đơn hàng sau khi xuất kho hoàn tất sẽ được ghi nhận KPI hoa hồng và kết chuyển trực tiếp vào bảng lương của nhân viên này.</p>
+                        </div>
+                    </div>
+
                     <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-4 sm:p-5 space-y-3">
                         <h3 class="font-black text-emerald-700 text-xs sm:text-sm pb-2 border-b border-slate-100 flex items-center gap-2">
                             <i class="fas fa-truck text-emerald-600"></i> Thông Tin Chành Xe & Nhận Hàng
@@ -269,12 +323,68 @@
         </div>
     </div>
 
+    <!-- MODAL CẤU HÌNH CHÍNH SÁCH KPI XUẤT KHO -->
+    <div id="modal-wms-kpi-policy" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 hidden">
+        <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-4 py-3.5 border-b border-slate-200 flex justify-between items-center bg-purple-900 text-white">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-sliders-h text-purple-300"></i>
+                    <h3 class="font-black text-sm text-white">Cấu Hình Chính Sách KPI Xuất Kho</h3>
+                </div>
+                <button type="button" onclick="window.modWmsOut.closeKpiPolicyModal()" class="w-8 h-8 rounded-xl bg-purple-800/60 hover:bg-purple-700 text-purple-200 flex items-center justify-center cursor-pointer transition">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-6 space-y-4 text-xs">
+                <div>
+                    <label class="block font-black text-slate-700 uppercase mb-1">Đơn Giá Hoa Hồng / Đơn Xuất Kho (VNĐ)</label>
+                    <input type="text" id="kpi-rate-per-order" inputmode="numeric" oninput="this.value = window.modWmsOut.formatMoney(this.value);" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm font-black text-purple-900 bg-purple-50/30 outline-none focus:border-purple-500 shadow-2xs">
+                    <p class="text-[10px] text-slate-400 mt-1">Mỗi đơn hàng chuyển sang "Đã giao", nhân viên đóng gói & xuất kho được cộng khoản này.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-black text-slate-700 uppercase mb-1">Ngưỡng đơn tối thiểu</label>
+                        <input type="number" id="kpi-min-threshold" value="0" min="0" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 outline-none focus:border-purple-500 shadow-2xs">
+                        <p class="text-[10px] text-slate-400 mt-1">Đơn vượt ngưỡng mới bắt đầu tính (Mặc định 0 = tính từ đơn đầu tiên).</p>
+                    </div>
+                    <div>
+                        <label class="block font-black text-slate-700 uppercase mb-1">Mốc Thưởng Vượt Chỉ Tiêu (Đơn)</label>
+                        <input type="number" id="kpi-bonus-target" value="50" min="0" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 outline-none focus:border-purple-500 shadow-2xs">
+                        <p class="text-[10px] text-slate-400 mt-1">Số đơn xuất trong tháng cần đạt để nhận thêm thưởng vượt mức.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-black text-emerald-700 uppercase mb-1">Tiền Thưởng Khi Đạt Mốc Vượt Chỉ Tiêu (VNĐ)</label>
+                    <input type="text" id="kpi-bonus-amount" inputmode="numeric" oninput="this.value = window.modWmsOut.formatMoney(this.value);" class="w-full border border-emerald-300 rounded-xl p-2.5 text-sm font-black text-emerald-800 bg-emerald-50/30 outline-none focus:border-emerald-500 shadow-2xs">
+                    <p class="text-[10px] text-slate-400 mt-1">Khoản thưởng cố định cộng thêm vào lương khi hoàn thành mốc chỉ tiêu tháng.</p>
+                </div>
+
+                <div>
+                    <label class="block font-black text-slate-700 uppercase mb-1">Ghi Chú / Diễn Giải Chính Sách</label>
+                    <textarea id="kpi-policy-notes" rows="2" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 shadow-2xs" placeholder="Ghi chú điều kiện áp dụng..."></textarea>
+                </div>
+            </div>
+
+            <div class="px-4 py-3 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">
+                <button type="button" onclick="window.modWmsOut.closeKpiPolicyModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer">Hủy</button>
+                <button type="button" onclick="window.modWmsOut.saveKpiPolicy()" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-black text-xs shadow-md transition cursor-pointer flex items-center gap-1.5">
+                    <i class="fas fa-save"></i> <span>Lưu Chính Sách</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <iframe id="wms-print-iframe" class="hidden" style="position:fixed;right:10000px;bottom:10000px;width:0;height:0;border:0;"></iframe>
 </div>
 
 <script>
 window.modWmsOut = {
     allOrders: [],
+    warehouseEmployees: [],
+    currentPolicy: null,
     currentDetailId: null,
     currentData: null,
     currentItems: [],
@@ -293,12 +403,150 @@ window.modWmsOut = {
         return clean ? parseFloat(clean) : 0;
     },
 
-    init: () => { window.modWmsOut.loadData(); },
+    init: () => { 
+        window.modWmsOut.loadData(); 
+        window.modWmsOut.loadWarehouseEmployees();
+        window.modWmsOut.loadKpiStats();
+    },
+
+    loadWarehouseEmployees: async () => {
+        try {
+            const res = await fetch('/api/hr/employees');
+            const data = await res.json();
+            if (data.success && Array.isArray(data.data)) {
+                window.modWmsOut.warehouseEmployees = data.data.filter(e => e.status === 'ACTIVE');
+                const sel = document.getElementById('wms-dispatched-by');
+                if (sel) {
+                    const khoEmps = window.modWmsOut.warehouseEmployees.filter(e => 
+                        (e.dept_name || '').toLowerCase().includes('kho') || 
+                        (e.position || '').toLowerCase().includes('kho') ||
+                        e.emp_code === 'NVKHO'
+                    );
+                    const otherEmps = window.modWmsOut.warehouseEmployees.filter(e => !khoEmps.includes(e));
+
+                    let html = '<option value="">-- Chọn nhân viên xử lý xuất kho --</option>';
+                    if (khoEmps.length > 0) {
+                        html += '<optgroup label="📦 Bộ Phận Kho Vận">';
+                        html += khoEmps.map(e => `<option value="${e.id}">[${e.emp_code}] ${e.full_name} - ${e.position || 'Thủ kho'}</option>`).join('');
+                        html += '</optgroup>';
+                    }
+                    if (otherEmps.length > 0) {
+                        html += '<optgroup label="👥 Nhân Sự Khác">';
+                        html += otherEmps.map(e => `<option value="${e.id}">[${e.emp_code}] ${e.full_name} - ${e.position || ''}</option>`).join('');
+                        html += '</optgroup>';
+                    }
+                    sel.innerHTML = html;
+                }
+            }
+        } catch(e) {
+            console.error('Lỗi load danh sách nhân viên kho:', e);
+        }
+    },
+
+    loadKpiStats: async () => {
+        try {
+            const now = new Date();
+            const pKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const res = await fetch(`/api/warehouse-kpi/summary?period_key=${pKey}&t=` + Date.now());
+            const data = await res.json();
+            if (data.success) {
+                window.modWmsOut.currentPolicy = data.policy || {};
+                const pol = data.policy || {};
+                const rate = parseFloat(pol.rate_per_order) || 20000;
+                const bonusTarget = parseInt(pol.bonus_target_orders, 10) || 50;
+                const bonusAmount = parseFloat(pol.bonus_tier_amount) || 500000;
+
+                const periodEl = document.getElementById('wms-kpi-period');
+                const descEl = document.getElementById('wms-kpi-policy-desc');
+                const ordersEl = document.getElementById('wms-kpi-total-orders');
+                const commEl = document.getElementById('wms-kpi-total-commission');
+                const rateBadge = document.getElementById('wms-badge-kpi-rate');
+                const staffList = document.getElementById('wms-kpi-staff-list');
+
+                if (periodEl) periodEl.innerText = `Kỳ Tháng ${pKey.split('-').reverse().join('/')}`;
+                if (descEl) descEl.innerHTML = `Đơn giá: <b class="text-amber-300">${rate.toLocaleString('vi-VN')} đ/đơn xuất</b> (Đạt mốc ${bonusTarget} đơn thưởng thêm ${(bonusAmount/1000).toLocaleString('vi-VN')}k)`;
+                if (ordersEl) ordersEl.innerText = `${data.total_dispatched_orders || 0} đơn`;
+                if (commEl) commEl.innerText = `${(data.total_warehouse_commission || 0).toLocaleString('vi-VN')} đ`;
+                if (rateBadge) rateBadge.innerText = `+${rate.toLocaleString('vi-VN')} đ/đơn`;
+
+                if (staffList && Array.isArray(data.staff_summary)) {
+                    staffList.innerHTML = data.staff_summary.map(s => `
+                        <div class="bg-white/10 hover:bg-white/20 transition px-2.5 py-1 rounded-xl border border-white/15 flex items-center gap-1.5 font-bold">
+                            <i class="fas fa-user-check text-purple-300 text-[10px]"></i>
+                            <span>${s.full_name}:</span>
+                            <span class="text-amber-300 font-mono">${s.dispatched_count} đơn</span>
+                            <span class="text-emerald-300 font-mono text-[11px]">(+${s.total_payout.toLocaleString('vi-VN')} đ)</span>
+                            ${s.has_target_bonus ? '<span class="text-[9px] bg-amber-400 text-slate-900 px-1 py-0.2 rounded font-black">⭐ ĐẠT MỐC</span>' : ''}
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch(e) {
+            console.error('Lỗi tải KPI xuất kho:', e);
+        }
+    },
+
+    openKpiPolicyModal: async () => {
+        try {
+            const res = await fetch('/api/warehouse-kpi/policy?t=' + Date.now());
+            const data = await res.json();
+            if (data.success && data.data) {
+                const pol = data.data;
+                document.getElementById('kpi-rate-per-order').value = window.modWmsOut.formatMoney(pol.rate_per_order || 20000);
+                document.getElementById('kpi-min-threshold').value = pol.min_orders_threshold || 0;
+                document.getElementById('kpi-bonus-target').value = pol.bonus_target_orders || 50;
+                document.getElementById('kpi-bonus-amount').value = window.modWmsOut.formatMoney(pol.bonus_tier_amount || 500000);
+                document.getElementById('kpi-policy-notes').value = pol.notes || '';
+            }
+            const modal = document.getElementById('modal-wms-kpi-policy');
+            if (modal) modal.classList.remove('hidden');
+        } catch(e) {
+            alert('Lỗi nạp cấu hình chính sách: ' + e.message);
+        }
+    },
+
+    closeKpiPolicyModal: () => {
+        const modal = document.getElementById('modal-wms-kpi-policy');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    saveKpiPolicy: async () => {
+        try {
+            const rate_per_order = window.modWmsOut.parseMoney(document.getElementById('kpi-rate-per-order').value);
+            const min_orders_threshold = parseInt(document.getElementById('kpi-min-threshold').value, 10) || 0;
+            const bonus_target_orders = parseInt(document.getElementById('kpi-bonus-target').value, 10) || 0;
+            const bonus_tier_amount = window.modWmsOut.parseMoney(document.getElementById('kpi-bonus-amount').value);
+            const notes = document.getElementById('kpi-policy-notes').value.trim();
+
+            const res = await fetch('/api/warehouse-kpi/policy', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    rate_per_order,
+                    min_orders_threshold,
+                    bonus_target_orders,
+                    bonus_tier_amount,
+                    notes
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ ' + (data.message || 'Cập nhật chính sách KPI thành công!'));
+                window.modWmsOut.closeKpiPolicyModal();
+                window.modWmsOut.loadKpiStats();
+                window.modWmsOut.loadData();
+            } else {
+                alert('❌ Lỗi: ' + data.error);
+            }
+        } catch(e) {
+            alert('Lỗi lưu chính sách: ' + e.message);
+        }
+    },
 
     loadData: async () => {
         const tbody = document.getElementById('wms-tbody');
         const mobileContainer = document.getElementById('wms-out-mobile-cards');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-orange-500"></i><br>Đang tải dữ liệu kho...</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-orange-500"></i><br>Đang tải dữ liệu kho...</td></tr>';
         if (mobileContainer) mobileContainer.innerHTML = '<div class="p-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl text-orange-500"></i></div>';
 
         try {
@@ -375,7 +623,7 @@ window.modWmsOut = {
 
         if(filtered.length === 0) { 
             const emptyMsg = '<div class="p-8 text-center text-slate-400 font-bold text-xs bg-white rounded-2xl border border-dashed border-slate-200"><i class="fas fa-dolly text-2xl mb-2 text-slate-300 block"></i>Không có lệnh xuất kho nào trong mục này.</div>';
-            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold">Không có Lệnh kho nào trong mục này.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold">Không có Lệnh kho nào trong mục này.</td></tr>';
             if (mobileContainer) mobileContainer.innerHTML = emptyMsg;
             return; 
         }
@@ -404,6 +652,16 @@ window.modWmsOut = {
                     quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'SHIPPED')" class="mt-1 text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg shadow-2xs transition cursor-pointer">👉 ĐÃ GIAO XE</button>`;
                 }
 
+                const whComm = parseFloat(o.warehouse_commission) || (window.modWmsOut.currentPolicy?.rate_per_order || 20000);
+                const whStaffCol = o.dispatched_by_name ? `
+                    <p class="font-bold text-slate-800 text-xs flex items-center gap-1">
+                        <i class="fas fa-user-check text-purple-600 text-[10px]"></i> <span>${o.dispatched_by_name}</span>
+                    </p>
+                    <span class="text-[10px] text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded-md font-black inline-block mt-0.5">
+                        +${whComm.toLocaleString('vi-VN')} đ
+                    </span>
+                ` : '<span class="text-[11px] text-slate-400 italic">Tự động / Chưa gán</span>';
+
                 return '<tr class="hover:bg-orange-50/60 cursor-pointer transition border-b border-slate-50" onclick="window.modWmsOut.openDetail(' + o.id + ')">' +
                     '<td class="p-4 py-3 font-mono font-black text-orange-600 text-xs">' + o.order_code + '</td>' +
                     '<td class="p-4 py-3"><p class="font-bold text-slate-900 text-xs">' + (o.customer_name || 'Khách Lẻ') + '</p><p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-phone-alt mr-1"></i>' + (o.phone || '---') + '</p></td>' +
@@ -413,6 +671,7 @@ window.modWmsOut = {
                         (o.carrier_address ? '<br><span class="text-[10px] text-amber-700 font-bold"><i class="fas fa-map-marker-alt mr-1 text-amber-600"></i>' + o.carrier_address + '</span>' : '') +
                         (o.driver_name ? '<br><span class="text-[10px] text-slate-500 font-bold"><i class="fas fa-phone-alt mr-1 text-slate-400"></i>' + o.driver_name + '</span>' : '') + 
                     '</td>' +
+                    '<td class="p-4 py-3">' + whStaffCol + '</td>' +
                     '<td class="p-4 py-3 text-center">' + stBadge + (quickActionBtn ? '<br>' + quickActionBtn : '') + '</td>' +
                 '</tr>';
             }).join('');
@@ -439,6 +698,16 @@ window.modWmsOut = {
                     quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'SHIPPED')" class="text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl shadow-2xs transition cursor-pointer">👉 ĐÃ GIAO XE</button>`;
                 }
 
+                const whComm = parseFloat(o.warehouse_commission) || (window.modWmsOut.currentPolicy?.rate_per_order || 20000);
+                const whStaffMobile = `
+                    <div class="flex justify-between items-center text-[10px] bg-purple-50/70 border border-purple-100 px-2.5 py-1 rounded-xl">
+                        <span class="text-purple-900 font-bold flex items-center gap-1">
+                            <i class="fas fa-user-check text-purple-600"></i> ${o.dispatched_by_name || 'Thủ kho xử lý'}
+                        </span>
+                        <span class="font-black text-purple-700 font-mono">+${whComm.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                `;
+
                 return `
                 <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs space-y-2.5 cursor-pointer active:bg-slate-50 transition" onclick="window.modWmsOut.openDetail(${o.id})">
                     <div class="flex justify-between items-start gap-2">
@@ -452,6 +721,8 @@ window.modWmsOut = {
                     <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
                         ${itemsHtml}
                     </div>
+
+                    ${whStaffMobile}
 
                     <div class="text-[10px] text-slate-600 space-y-0.5">
                         <div class="flex justify-between items-center">
@@ -482,7 +753,10 @@ window.modWmsOut = {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ status: nextStatus })
             });
-            if(res.ok) window.modWmsOut.loadData();
+            if(res.ok) {
+                window.modWmsOut.loadData();
+                window.modWmsOut.loadKpiStats();
+            }
         } catch(e) { alert("Lỗi mạng!"); }
     },
 
@@ -505,6 +779,25 @@ window.modWmsOut = {
                 document.getElementById('wms-recipient-phone').value = o.recipient_phone || o.customer_phone || o.phone || '';
                 document.getElementById('wms-address').value = o.license_plate || o.customer_address || o.address || '';
                 document.getElementById('wms-shipping-note').value = o.shipping_note || o.notes || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
+
+                // Nạp nhân viên xử lý xuất kho
+                const whDispSelect = document.getElementById('wms-dispatched-by');
+                if (whDispSelect) {
+                    if (o.dispatched_by) {
+                        whDispSelect.value = o.dispatched_by;
+                    } else {
+                        // Tự động gán nếu người dùng đang đăng nhập là nhân sự kho
+                        const curUser = JSON.parse(localStorage.getItem('sungo_user') || '{}');
+                        const matchedEmp = window.modWmsOut.warehouseEmployees.find(e => e.id === curUser.employee_id || e.full_name === curUser.full_name);
+                        if (matchedEmp) {
+                            whDispSelect.value = matchedEmp.id;
+                        } else {
+                            // Mặc định chọn Lâm Bình An (NVKHO) nếu có
+                            const defaultKho = window.modWmsOut.warehouseEmployees.find(e => e.emp_code === 'NVKHO');
+                            whDispSelect.value = defaultKho ? defaultKho.id : (window.modWmsOut.warehouseEmployees[0]?.id || '');
+                        }
+                    }
+                }
 
                 // Nạp chi phí giao vận & bốc xếp
                 const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
@@ -662,6 +955,7 @@ window.modWmsOut = {
             other_fee: window.modWmsOut.parseMoney(document.getElementById('wms-other-fee')?.value),
             other_fee_note: document.getElementById('wms-other-fee-note')?.value || '',
             cost_fund_source: document.getElementById('wms-cost-fund-source')?.value || 'TIEN_MAT_QUY',
+            dispatched_by: document.getElementById('wms-dispatched-by')?.value ? parseInt(document.getElementById('wms-dispatched-by').value, 10) : null,
             delivery_proofs: window.modWmsOut.currentProofs,
             items: window.modWmsOut.currentItems.map(i => ({
                 product_id: i.product_id,
@@ -678,6 +972,7 @@ window.modWmsOut = {
                 alert("✅ THAO TÁC THÀNH CÔNG!");
                 window.modWmsOut.showList();
                 window.modWmsOut.loadData();
+                window.modWmsOut.loadKpiStats();
             } else alert("❌ Lỗi: " + data.error);
         } catch (e) { alert("Lỗi mạng!"); } finally {
             btn.innerHTML = oldText;

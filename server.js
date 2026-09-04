@@ -73,6 +73,7 @@ try { app.use('/api/om-schedules', require('./api/om.route')); } catch(e) {}
 try { app.use('/api/crm', require('./api/customers.route')); } catch(e){}
 try { app.use('/api/imports', require('./api/imports.route')); } catch(e){}
 try { app.use('/api/vault', require('./api/vault.route')); } catch(e){}
+try { app.use('/api/warehouse-kpi', require('./api/warehouse-kpi.route')); } catch(e){}
 
 // ==========================================
 // CỔNG DỊCH VỤ CÔNG KHAI (BẢO HÀNH & KÝ HĐ)

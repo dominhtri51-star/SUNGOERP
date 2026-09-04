@@ -217,6 +217,37 @@ router.post('/generate', async (req, res) => {
                 );
             }
 
+            // 1.3. Hoa hồng KPI xử lý xuất kho (Warehouse Outbound Commission)
+            let warehouseCommission = 0;
+            const whStartDate = `${period_key}-01 00:00:00`;
+            const whParts = period_key.split('-');
+            const whLastDay = new Date(parseInt(whParts[0]), parseInt(whParts[1]), 0).getDate();
+            const whEndDate = `${period_key}-${String(whLastDay).padStart(2, '0')} 23:59:59`;
+
+            const whOrdRes = await client.query(`
+                SELECT COUNT(id) AS dispatched_count
+                FROM orders
+                WHERE dispatched_by = $1
+                  AND status IN ('SHIPPED', 'COMPLETED')
+                  AND COALESCE(dispatched_at, created_at) >= $2
+                  AND COALESCE(dispatched_at, created_at) <= $3
+            `, [emp.id, whStartDate, whEndDate]);
+
+            const whDispatchedCount = parseInt(whOrdRes.rows[0]?.dispatched_count, 10) || 0;
+            if (whDispatchedCount > 0) {
+                const whPolRes = await client.query("SELECT * FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
+                const whPol = whPolRes.rows[0] || { rate_per_order: 20000, min_orders_threshold: 0, bonus_target_orders: 50, bonus_tier_amount: 500000 };
+                const whRate = parseFloat(whPol.rate_per_order) || 20000;
+                const whMinThresh = parseInt(whPol.min_orders_threshold, 10) || 0;
+                const whEligibleCount = Math.max(0, whDispatchedCount - whMinThresh);
+                warehouseCommission = whEligibleCount * whRate;
+                if (whPol.bonus_target_orders > 0 && whDispatchedCount >= whPol.bonus_target_orders) {
+                    warehouseCommission += (parseFloat(whPol.bonus_tier_amount) || 0);
+                }
+            }
+
+            const combinedCommission = totalCommission + warehouseCommission;
+
             // 2. Kéo Thưởng / Phạt KPI Thu Hồi Công Nợ (Debt KPI Incentive Tiered Bonus)
             const debtKpiRes = await client.query(
                 "SELECT reward_penalty_amount, notes FROM debt_kpi_evaluations WHERE period_key = $1 AND employee_id = $2",
@@ -241,7 +272,7 @@ router.post('/generate', async (req, res) => {
             const totalBonus = kpiBonus + attendanceBonus;
             const totalPenalty = kpiPenalty + attendancePenalty;
 
-            const grossIncome = salaryByDays + totalAllowance + totalCommission + totalBonus;
+            const grossIncome = salaryByDays + totalAllowance + combinedCommission + totalBonus;
 
             // Tính Bảo hiểm
             let insBhxhEmp = 0, insBhytEmp = 0, insBhtnEmp = 0;
@@ -276,7 +307,7 @@ router.post('/generate', async (req, res) => {
             const netSalary = Math.max(0, grossIncome - totalInsEmp - advanceAmount - totalPenalty - taxAmount);
 
             grandGross += grossIncome;
-            grandCommission += totalCommission;
+            grandCommission += combinedCommission;
             grandAllowance += totalAllowance;
             grandBonus += totalBonus;
             grandInsEmp += totalInsEmp;
@@ -294,22 +325,22 @@ router.post('/generate', async (req, res) => {
                     INSERT INTO payroll_items (
                         payroll_id, employee_id, actual_working_days, paid_leave_days, unpaid_leave_days,
                         base_salary, salary_by_days, allowance_meal, allowance_phone_gas, allowance_responsibility,
-                        total_commission, bonus_amount, gross_income,
+                        total_commission, warehouse_commission, bonus_amount, gross_income,
                         ins_bhxh_emp, ins_bhyt_emp, ins_bhtn_emp, total_ins_emp,
                         ins_bhxh_comp, ins_bhyt_comp, ins_bhtn_comp, ins_kpcd_comp, total_ins_comp,
                         advance_amount, deduction_penalty, personal_tax, net_salary, payment_status
                     ) VALUES (
                         $1, $2, $3, $4, $5,
                         $6, $7, $8, $9, $10,
-                        $11, $12, $13,
-                        $14, $15, $16, $17,
-                        $18, $19, $20, $21, $22,
-                        $23, $24, $25, $26, 'UNPAID'
+                        $11, $12, $13, $14,
+                        $15, $16, $17, $18,
+                        $19, $20, $21, $22, $23,
+                        $24, $25, $26, $27, 'UNPAID'
                     )
                 `, [
                     payrollId, emp.id, actualDays, paidLeaveDays, unpaidLeaveDays,
                     baseSalary, salaryByDays, mealAllowance, phoneGasAllowance, respAllowance,
-                    totalCommission, totalBonus, grossIncome,
+                    combinedCommission, warehouseCommission, totalBonus, grossIncome,
                     insBhxhEmp, insBhytEmp, insBhtnEmp, totalInsEmp,
                     insBhxhComp, insBhytComp, insBhtnComp, insKpcdComp, totalInsComp,
                     advanceAmount, totalPenalty, taxAmount, netSalary
@@ -320,16 +351,16 @@ router.post('/generate', async (req, res) => {
                         actual_working_days = $1, paid_leave_days = $2, unpaid_leave_days = $3,
                         base_salary = $4, salary_by_days = $5,
                         allowance_meal = $6, allowance_phone_gas = $7, allowance_responsibility = $8,
-                        total_commission = $9, bonus_amount = $10, deduction_penalty = $11, gross_income = $12,
-                        ins_bhxh_emp = $13, ins_bhyt_emp = $14, ins_bhtn_emp = $15, total_ins_emp = $16,
-                        ins_bhxh_comp = $17, ins_bhyt_comp = $18, ins_bhtn_comp = $19, ins_kpcd_comp = $20, total_ins_comp = $21,
-                        net_salary = $22
-                    WHERE id = $23
+                        total_commission = $9, warehouse_commission = $10, bonus_amount = $11, deduction_penalty = $12, gross_income = $13,
+                        ins_bhxh_emp = $14, ins_bhyt_emp = $15, ins_bhtn_emp = $16, total_ins_emp = $17,
+                        ins_bhxh_comp = $18, ins_bhyt_comp = $19, ins_bhtn_comp = $20, ins_kpcd_comp = $21, total_ins_comp = $22,
+                        net_salary = $23
+                    WHERE id = $24
                 `, [
                     actualDays, paidLeaveDays, unpaidLeaveDays,
                     baseSalary, salaryByDays,
                     mealAllowance, phoneGasAllowance, respAllowance,
-                    totalCommission, totalBonus, totalPenalty, grossIncome,
+                    combinedCommission, warehouseCommission, totalBonus, totalPenalty, grossIncome,
                     insBhxhEmp, insBhytEmp, insBhtnEmp, totalInsEmp,
                     insBhxhComp, insBhytComp, insBhtnComp, insKpcdComp, totalInsComp,
                     netSalary, checkItem.rows[0].id

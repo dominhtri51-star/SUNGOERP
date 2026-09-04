@@ -26,10 +26,13 @@ router.get('/', async (req, res) => {
                    COALESCE(NULLIF(o.customer_phone, ''), c.phone, '') as customer_phone,
                    c.tier as customer_tier,
                    e.full_name as salesperson_name,
-                   e.emp_code as salesperson_code
+                   e.emp_code as salesperson_code,
+                   wh.full_name as dispatched_by_name,
+                   wh.emp_code as dispatched_by_code
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.id 
             LEFT JOIN employees e ON o.employee_id = e.id
+            LEFT JOIN employees wh ON o.dispatched_by = wh.id
         `;
         const params = [];
         const whereClauses = [];
@@ -117,10 +120,13 @@ router.get('/:id', async (req, res) => {
                    c.address as customer_address, 
                    c.tier as customer_tier,
                    e.full_name as salesperson_name,
-                   e.emp_code as salesperson_code
+                   e.emp_code as salesperson_code,
+                   wh.full_name as dispatched_by_name,
+                   wh.emp_code as dispatched_by_code
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.id 
             LEFT JOIN employees e ON o.employee_id = e.id
+            LEFT JOIN employees wh ON o.dispatched_by = wh.id
             WHERE o.id = $1
         `, [id]);
         if(orderRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
@@ -636,14 +642,43 @@ router.put('/:id', async (req, res) => {
     } finally { client.release(); }
 });
 
-// API ĐỔI TRẠNG THÁI NHANH (MỚI THÊM)
 router.put('/:id/status', async (req, res) => {
     try {
-        const { status } = req.body;
+        const { status, dispatched_by } = req.body;
         const orderId = req.params.id;
         
-        // 1. Cập nhật trạng thái đơn hàng
-        await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [status, orderId]);
+        // 1. Nếu chuyển sang trạng thái xuất kho (PACKED, SHIPPING_CMD, SHIPPED, COMPLETED)
+        let finalDispatchedBy = dispatched_by ? parseInt(dispatched_by, 10) : null;
+        const isDispatchedStatus = ['PACKED', 'SHIPPING_CMD', 'SHIPPED', 'COMPLETED'].includes(status);
+
+        if (isDispatchedStatus) {
+            if (!finalDispatchedBy) {
+                const curOrd = await pool.query("SELECT dispatched_by FROM orders WHERE id = $1", [orderId]);
+                finalDispatchedBy = curOrd.rows[0]?.dispatched_by;
+                if (!finalDispatchedBy && req.user) {
+                    const userEmp = await pool.query("SELECT id FROM employees WHERE user_id = $1 LIMIT 1", [req.user.id]);
+                    if (userEmp.rows.length > 0) finalDispatchedBy = userEmp.rows[0].id;
+                }
+                if (!finalDispatchedBy) {
+                    const defWh = await pool.query("SELECT id FROM employees WHERE emp_code = 'NVKHO' LIMIT 1");
+                    if (defWh.rows.length > 0) finalDispatchedBy = defWh.rows[0].id;
+                }
+            }
+
+            const polRes = await pool.query("SELECT rate_per_order FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
+            const ratePerOrder = polRes.rows[0] ? parseFloat(polRes.rows[0].rate_per_order) || 20000 : 20000;
+
+            await pool.query(`
+                UPDATE orders 
+                SET status = $1,
+                    dispatched_by = COALESCE($2, dispatched_by),
+                    dispatched_at = COALESCE(dispatched_at, NOW()),
+                    warehouse_commission = COALESCE(NULLIF(warehouse_commission, 0), $3)
+                WHERE id = $4
+            `, [status, finalDispatchedBy, ratePerOrder, orderId]);
+        } else {
+            await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [status, orderId]);
+        }
         
         // 2. Lấy customer_id & order_code để đồng bộ
         const orderInfo = await pool.query("SELECT customer_id, order_code FROM orders WHERE id = $1", [orderId]);
@@ -972,7 +1007,8 @@ router.put('/:id/wms-out', async (req, res) => {
         const { 
             delivery_company, carrier_address, driver_name, vehicle_plate, license_plate, 
             recipient_name, recipient_phone, shipping_note, notes, status, items, delivery_proofs,
-            shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note, cost_fund_source
+            shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note, cost_fund_source,
+            dispatched_by
         } = req.body;
 
         const hasFeeUpdate = shipping_fee !== undefined || station_fee !== undefined || packaging_fee !== undefined || handling_fee !== undefined || other_fee !== undefined;
@@ -983,6 +1019,24 @@ router.put('/:id/wms-out', async (req, res) => {
         const othFee = other_fee !== undefined ? parseSafeNum(other_fee) : null;
         const othFeeNote = other_fee_note !== undefined ? other_fee_note : null;
         const fundSource = cost_fund_source !== undefined ? cost_fund_source : null;
+
+        // Xử lý Người xuất kho & Mức hoa hồng xuất kho
+        let finalDispatchedBy = dispatched_by ? parseInt(dispatched_by, 10) : null;
+        if (!finalDispatchedBy) {
+            const curOrd = await client.query("SELECT dispatched_by FROM orders WHERE id = $1", [id]);
+            finalDispatchedBy = curOrd.rows[0]?.dispatched_by;
+            if (!finalDispatchedBy && req.user) {
+                const userEmp = await client.query("SELECT id FROM employees WHERE user_id = $1 LIMIT 1", [req.user.id]);
+                if (userEmp.rows.length > 0) finalDispatchedBy = userEmp.rows[0].id;
+            }
+            if (!finalDispatchedBy) {
+                const defWh = await client.query("SELECT id FROM employees WHERE emp_code = 'NVKHO' LIMIT 1");
+                if (defWh.rows.length > 0) finalDispatchedBy = defWh.rows[0].id;
+            }
+        }
+
+        const polRes = await client.query("SELECT rate_per_order FROM warehouse_kpi_policies WHERE id = 1 LIMIT 1");
+        const ratePerOrder = polRes.rows[0] ? parseFloat(polRes.rows[0].rate_per_order) || 20000 : 20000;
 
         // Xử lý Upload Ảnh Giao Hàng
         let proofUrls = [];
@@ -1030,12 +1084,16 @@ router.put('/:id/wms-out', async (req, res) => {
                 handling_fee = COALESCE($15, handling_fee),
                 other_fee = COALESCE($16, other_fee),
                 other_fee_note = COALESCE($17, other_fee_note),
-                cost_fund_source = COALESCE($18, cost_fund_source)
-            WHERE id = $19
+                cost_fund_source = COALESCE($18, cost_fund_source),
+                dispatched_by = COALESCE($19, dispatched_by),
+                dispatched_at = COALESCE(dispatched_at, NOW()),
+                warehouse_commission = COALESCE(NULLIF(warehouse_commission, 0), $20)
+            WHERE id = $21
         `, [
             delivery_company, driver_name, license_plate, notes, status, proofsJson,
             carrier_address, recipient_name, recipient_phone, vehicle_plate, shipping_note,
             shipFee, stnFee, packFee, handFee, othFee, othFeeNote, fundSource,
+            finalDispatchedBy, ratePerOrder,
             id
         ]);
 

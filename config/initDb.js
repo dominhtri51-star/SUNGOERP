@@ -895,6 +895,33 @@ async function autoInitDatabase() {
             `);
         } catch(insPolErr) {}
 
+        // 44. Đảm bảo bảng warehouse_kpi_policies và các trường KPI Kho tồn tại
+        try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS warehouse_kpi_policies (
+                    id SERIAL PRIMARY KEY,
+                    policy_name VARCHAR(255) DEFAULT 'Chính sách KPI Xuất Kho',
+                    rate_per_order NUMERIC DEFAULT 20000,
+                    min_orders_threshold INTEGER DEFAULT 0,
+                    bonus_target_orders INTEGER DEFAULT 50,
+                    bonus_tier_amount NUMERIC DEFAULT 500000,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    notes TEXT DEFAULT '',
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                INSERT INTO warehouse_kpi_policies (id, policy_name, rate_per_order, min_orders_threshold, bonus_target_orders, bonus_tier_amount, is_active)
+                VALUES (1, 'Chính sách KPI Xuất Kho Mặc Định', 20000, 0, 50, 500000, TRUE)
+                ON CONFLICT (id) DO NOTHING;
+
+                ALTER TABLE orders ADD COLUMN IF NOT EXISTS dispatched_by INTEGER REFERENCES employees(id);
+                ALTER TABLE orders ADD COLUMN IF NOT EXISTS dispatched_at TIMESTAMP;
+                ALTER TABLE orders ADD COLUMN IF NOT EXISTS warehouse_commission NUMERIC DEFAULT 0;
+
+                ALTER TABLE payroll_items ADD COLUMN IF NOT EXISTS warehouse_commission NUMERIC DEFAULT 0;
+            `);
+        } catch(whKpiErr) {}
+
         console.log("✅ Khởi tạo và đồng bộ toàn bộ CSDL Cổng Bảo Hành Điện Tử & ERP thành công!");
     } catch (err) {
         console.error("⚠️ Cảnh báo khởi tạo CSDL:", err.message);
