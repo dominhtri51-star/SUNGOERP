@@ -174,7 +174,15 @@ class YunAttService {
             const graceMins = parseInt(policy.grace_period_minutes, 10) || 5;
             const stdHours = parseFloat(policy.standard_daily_hours) || 8.0;
 
-            // 4. Lấy danh sách nhân viên hiện tại để map emp_code
+            // 4. Lấy danh sách ngày lễ trong CSDL
+            const holRes = await client.query("SELECT holiday_date::text, holiday_name, is_paid FROM holidays");
+            const holidayMap = {};
+            holRes.rows.forEach(h => {
+                const k = (h.holiday_date || '').slice(0, 10);
+                holidayMap[k] = h;
+            });
+
+            // 5. Lấy danh sách nhân viên hiện tại để map emp_code
             const empsRes = await client.query("SELECT id, emp_code, full_name FROM employees");
             const empMap = {};
             empsRes.rows.forEach(e => {
@@ -238,8 +246,7 @@ class YunAttService {
 
                     // Kiểm tra Ngày Nghỉ Lễ & Thứ trong tuần
                     const cleanDateStr = dateStr.slice(0, 10);
-                    const holRes = await client.query("SELECT * FROM holidays WHERE holiday_date = $1", [cleanDateStr]);
-                    const holiday = holRes.rows[0];
+                    const holiday = holidayMap[cleanDateStr];
                     const dayOfWeek = new Date(cleanDateStr + 'T00:00:00Z').getUTCDay();
 
                     let curStartMins = startTimeMins;
@@ -382,6 +389,7 @@ class YunAttService {
                             working_day_value = EXCLUDED.working_day_value,
                             status = CASE WHEN attendance_daily.status = 'ADJUSTED' THEN attendance_daily.status ELSE EXCLUDED.status END,
                             penalty_amount = EXCLUDED.penalty_amount,
+                            notes = EXCLUDED.notes
                     `, [
                         empId, dateStr, firstCheckIn, lastCheckOut,
                         workingHours, lateMinutes, earlyMinutes, otHours,
