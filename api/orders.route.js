@@ -339,7 +339,9 @@ router.put('/:id', async (req, res) => {
     try {
         await client.query('BEGIN');
         const { 
-            delivery_company, driver_name, license_plate, notes, paid_amount, status, payment_method, 
+            delivery_company, carrier_address, driver_name, vehicle_plate, license_plate, 
+            recipient_name, recipient_phone, shipping_note,
+            notes, paid_amount, status, payment_method, 
             items, cancel_reason, refund_amount,
             customer_id, customer_name, customer_phone, customer_address,
             shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note,
@@ -369,8 +371,13 @@ router.put('/:id', async (req, res) => {
         const finalCustomerPhone = customer_phone !== undefined ? customer_phone.trim() : (oldOrder.customer_phone || '');
         const finalCustomerAddress = customer_address !== undefined ? customer_address.trim() : (oldOrder.customer_address || '');
         const finalDeliveryCompany = delivery_company !== undefined ? delivery_company : (oldOrder.delivery_company || '');
+        const finalCarrierAddress = carrier_address !== undefined ? carrier_address.trim() : (oldOrder.carrier_address || '');
         const finalDriverName = driver_name !== undefined ? driver_name : (oldOrder.driver_name || '');
+        const finalVehiclePlate = vehicle_plate !== undefined ? vehicle_plate.trim() : (oldOrder.vehicle_plate || '');
+        const finalRecipientName = recipient_name !== undefined ? recipient_name.trim() : (oldOrder.recipient_name || '');
+        const finalRecipientPhone = recipient_phone !== undefined ? recipient_phone.trim() : (oldOrder.recipient_phone || '');
         const finalLicensePlate = license_plate !== undefined ? license_plate : (oldOrder.license_plate || '');
+        const finalShippingNote = shipping_note !== undefined ? shipping_note.trim() : (oldOrder.shipping_note || '');
         const finalPaidAmount = paid_amount !== undefined ? parseSafeNum(paid_amount) : parseSafeNum(oldOrder.paid_amount);
         const finalStatus = status || oldStatus || 'PENDING';
         const finalPaymentMethod = payment_method || oldOrder.payment_method || 'TIỀN MẶT';
@@ -460,8 +467,9 @@ router.put('/:id', async (req, res) => {
                 subtotal_amount=$12, total_amount=$13,
                 shipping_fee=$14, station_fee=$15, packaging_fee=$16, handling_fee=$17, other_fee=$18, other_fee_note=$19,
                 discount_amount=$20, points_discount=$21, cost_of_goods=$22, gross_profit=$23, net_profit=$24,
-                cost_fund_source=$25, sync_accounting=$26
-            WHERE id=$27
+                cost_fund_source=$25, sync_accounting=$26,
+                carrier_address=$27, recipient_name=$28, recipient_phone=$29, vehicle_plate=$30, shipping_note=$31
+            WHERE id=$32
         `, [
             finalCustomerId, finalCustomerName, finalCustomerPhone, finalCustomerAddress,
             finalDeliveryCompany, finalDriverName, finalLicensePlate, finalNotes, 
@@ -470,6 +478,7 @@ router.put('/:id', async (req, res) => {
             shipFee, stnFee, packFee, handFee, othFee, othNote,
             discAmount, ptsDiscount, newCogs, grossProfit, netProfit,
             fundSource, shouldSync,
+            finalCarrierAddress, finalRecipientName, finalRecipientPhone, finalVehiclePlate, finalShippingNote,
             parseInt(req.params.id, 10)
         ]);
         
@@ -929,7 +938,10 @@ router.put('/:id/wms-out', async (req, res) => {
     try {
         await client.query('BEGIN');
         const { id } = req.params;
-        const { delivery_company, driver_name, license_plate, notes, status, items, delivery_proofs } = req.body;
+        const { 
+            delivery_company, carrier_address, driver_name, vehicle_plate, license_plate, 
+            recipient_name, recipient_phone, shipping_note, notes, status, items, delivery_proofs 
+        } = req.body;
 
         // Xử lý Upload Ảnh Giao Hàng
         let proofUrls = [];
@@ -965,9 +977,18 @@ router.put('/:id/wms-out', async (req, res) => {
                 license_plate = COALESCE($3, license_plate),
                 notes = COALESCE($4, notes),
                 status = COALESCE($5, status),
-                delivery_proofs = $6
-            WHERE id = $7
-        `, [delivery_company, driver_name, license_plate, notes, status, proofsJson, id]);
+                delivery_proofs = $6,
+                carrier_address = COALESCE($7, carrier_address),
+                recipient_name = COALESCE($8, recipient_name),
+                recipient_phone = COALESCE($9, recipient_phone),
+                vehicle_plate = COALESCE($10, vehicle_plate),
+                shipping_note = COALESCE($11, shipping_note)
+            WHERE id = $12
+        `, [
+            delivery_company, driver_name, license_plate, notes, status, proofsJson,
+            carrier_address, recipient_name, recipient_phone, vehicle_plate, shipping_note,
+            id
+        ]);
 
         // Lấy tên khách hàng trước khi chạy vòng lặp
         const custNameRes = await client.query('SELECT customer_name FROM orders WHERE id=$1', [id]);

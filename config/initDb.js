@@ -843,7 +843,21 @@ async function autoInitDatabase() {
                     NULL;
                 END $$;
             `);
-        } catch(prodErr) {}
+        // 42. Thêm các cột lưu chi tiết chành xe & người nhận hàng trong bảng orders
+        try {
+            await pool.query(`
+                DO $$ 
+                BEGIN 
+                    ALTER TABLE orders ADD COLUMN IF NOT EXISTS carrier_address TEXT;
+                    ALTER TABLE orders ADD COLUMN IF NOT EXISTS recipient_name TEXT;
+                    ALTER TABLE orders ADD COLUMN IF NOT EXISTS recipient_phone TEXT;
+                    ALTER TABLE orders ADD COLUMN IF NOT EXISTS vehicle_plate TEXT;
+                    ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_note TEXT;
+                EXCEPTION WHEN OTHERS THEN 
+                    NULL;
+                END $$;
+            `);
+        } catch(ordShipColErr) {}
 
         console.log("✅ Khởi tạo và đồng bộ toàn bộ CSDL Cổng Bảo Hành Điện Tử & ERP thành công!");
     } catch (err) {

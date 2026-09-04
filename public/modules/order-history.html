@@ -402,6 +402,12 @@
                                     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Đơn vị VC / Tên Chành Xe</label>
                                     <input type="text" id="dt-delivery" placeholder="VD: Chành xe Quốc Trung..." class="w-full border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
                                 </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-emerald-700 uppercase mb-1 flex items-center gap-1">
+                                        <i class="fas fa-map-marker-alt text-emerald-600"></i> Địa chỉ chành xe (Kho gửi hàng về đâu)
+                                    </label>
+                                    <input type="text" id="dt-carrier-address" placeholder="VD: Bãi xe 343 Lê Hồng Phong, P.2, Q.10 hoặc Bến xe Miền Đông..." class="w-full border border-emerald-300 bg-emerald-50/40 rounded-lg p-2 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
+                                </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">SĐT Chành / Tài xế</label>
@@ -1970,8 +1976,23 @@ window.modOrders = {
                 }
                 
                 document.getElementById('dt-delivery').value = o.delivery_company || '';
+                if (document.getElementById('dt-carrier-address')) {
+                    document.getElementById('dt-carrier-address').value = o.carrier_address || '';
+                }
                 document.getElementById('dt-driver').value = o.driver_name || '';
+                if (document.getElementById('dt-vehicle-plate')) {
+                    document.getElementById('dt-vehicle-plate').value = o.vehicle_plate || '';
+                }
+                if (document.getElementById('dt-recipient-name')) {
+                    document.getElementById('dt-recipient-name').value = o.recipient_name || '';
+                }
+                if (document.getElementById('dt-recipient-phone')) {
+                    document.getElementById('dt-recipient-phone').value = o.recipient_phone || '';
+                }
                 document.getElementById('dt-plate').value = o.license_plate || '';
+                if (document.getElementById('dt-shipping-note')) {
+                    document.getElementById('dt-shipping-note').value = o.shipping_note || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
+                }
                 document.getElementById('dt-notes').value = o.notes || '';
 
                 // Nạp chi phí và giảm trừ
@@ -2682,8 +2703,13 @@ window.modOrders = {
             customer_phone: document.getElementById('dt-customer-phone-input').value.trim(),
             customer_address: document.getElementById('dt-customer-address-input').value.trim(),
             delivery_company: document.getElementById('dt-delivery').value,
+            carrier_address: document.getElementById('dt-carrier-address')?.value.trim() || '',
             driver_name: document.getElementById('dt-driver').value,
+            vehicle_plate: document.getElementById('dt-vehicle-plate')?.value.trim() || '',
+            recipient_name: document.getElementById('dt-recipient-name')?.value.trim() || '',
+            recipient_phone: document.getElementById('dt-recipient-phone')?.value.trim() || '',
             license_plate: document.getElementById('dt-plate').value,
+            shipping_note: document.getElementById('dt-shipping-note')?.value.trim() || '',
             notes: document.getElementById('dt-notes').value,
             paid_amount: parseMoney(document.getElementById('dt-paid-money').value),
             payment_method: document.getElementById('dt-payment-method').value,
@@ -3247,6 +3273,7 @@ window.modOrders = {
         const storePhone = sys.store_phone || '0848961212';
         
         const deliveryName = document.getElementById('dt-delivery').value || '........................................';
+        const carrierAddress = document.getElementById('dt-carrier-address')?.value.trim() || o.carrier_address || '';
         const driverEl = document.getElementById('dt-driver');
         const recPhoneEl = document.getElementById('dt-recipient-phone');
         
@@ -3279,6 +3306,7 @@ window.modOrders = {
             
             '<div class="box" style="text-align:center; font-size: 20px; font-weight: 900;">' +
             deliveryName + ' ' + deliveryPhone +
+            (carrierAddress ? '<div style="font-size: 14px; font-weight: normal; margin-top: 6px; color: #1e293b;">📍 <b>Đ/C Chành:</b> ' + carrierAddress + '</div>' : '') +
             '</div>' +
 
             '<div class="box">' +
@@ -3312,6 +3340,8 @@ window.modOrders = {
             const setRes = await setReq.json(); 
             sys = setRes.data || {};
         } catch(e) {}
+
+        const carrierAddress = document.getElementById('dt-carrier-address')?.value.trim() || o.carrier_address || '';
 
         let itemsRows = window.modOrders.currentItems.map((i, index) => {
             const qEl = document.getElementById('qty-input-' + i.id) || document.getElementById('m-qty-input-' + i.id);
@@ -3359,7 +3389,7 @@ window.modOrders = {
             '<strong>Khách hàng:</strong> ' + (o.customer_name || 'Khách Lẻ') + '<br>' +
             '<strong>Số điện thoại:</strong> ' + (o.customer_phone || o.phone || '') + '<br>' +
             '<strong>Địa chỉ:</strong> ' + (o.customer_address || o.address || '') + '<br>' +
-            '<strong>Vận chuyển:</strong> ' + (o.delivery_company || 'Tự vận chuyển') + ' - TX: ' + (o.driver_name || '___') + ' - BS: ' + (o.license_plate || '___') + '<br>' +
+            '<strong>Vận chuyển:</strong> ' + (o.delivery_company || 'Tự vận chuyển') + (carrierAddress ? ' (Đ/C Chành: ' + carrierAddress + ')' : '') + ' - TX: ' + (o.driver_name || '___') + ' - BS: ' + (o.license_plate || '___') + '<br>' +
             '<strong>Ghi chú đơn:</strong> ' + (o.notes || 'Không có') +
             '</div>' +
             

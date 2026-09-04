@@ -164,6 +164,13 @@
                             </div>
 
                             <div>
+                                <label class="block font-black text-emerald-700 text-[10px] uppercase mb-1 flex items-center gap-1">
+                                    <i class="fas fa-map-marker-alt text-emerald-600"></i> Địa chỉ chành xe (Kho gửi hàng về đâu)
+                                </label>
+                                <input type="text" id="wms-carrier-address" placeholder="VD: Bãi xe 343 Lê Hồng Phong, P.2, Q.10 hoặc Bến xe Miền Đông..." class="w-full border border-emerald-300 bg-emerald-50/40 rounded-xl p-2.5 outline-none focus:border-emerald-500 font-bold text-slate-800 shadow-2xs">
+                            </div>
+
+                            <div>
                                 <label class="block font-black text-slate-700 text-[10px] uppercase mb-1">SĐT Chành xe / Tài xế</label>
                                 <input type="text" id="wms-driver" placeholder="VD: 0932628656" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full border border-slate-300 rounded-xl p-2.5 outline-none focus:border-emerald-500 font-bold bg-white shadow-2xs">
                             </div>
@@ -344,7 +351,11 @@ window.modWmsOut = {
                     '<td class="p-4 py-3 font-mono font-black text-orange-600 text-xs">' + o.order_code + '</td>' +
                     '<td class="p-4 py-3"><p class="font-bold text-slate-900 text-xs">' + (o.customer_name || 'Khách Lẻ') + '</p><p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-phone-alt mr-1"></i>' + (o.phone || '---') + '</p></td>' +
                     '<td class="p-4 py-3 bg-slate-50/40 min-w-[200px] max-w-[300px] whitespace-normal border-l border-r border-slate-100">' + itemsHtml + '</td>' +
-                    '<td class="p-4 py-3 text-xs text-slate-700 font-medium whitespace-normal max-w-[200px]">' + (o.delivery_company || '<span class="text-slate-400 italic">Chưa có chành xe</span>') + (o.driver_name ? '<br><span class="text-[10px] text-slate-500 font-bold"><i class="fas fa-phone-alt mr-1 text-slate-400"></i>' + o.driver_name + '</span>' : '') + '</td>' +
+                    '<td class="p-4 py-3 text-xs text-slate-700 font-medium whitespace-normal max-w-[200px]">' + 
+                        (o.delivery_company ? '<strong class="text-emerald-700"><i class="fas fa-truck mr-1"></i>' + o.delivery_company + '</strong>' : '<span class="text-slate-400 italic">Chưa có chành xe</span>') + 
+                        (o.carrier_address ? '<br><span class="text-[10px] text-amber-700 font-bold"><i class="fas fa-map-marker-alt mr-1 text-amber-600"></i>' + o.carrier_address + '</span>' : '') +
+                        (o.driver_name ? '<br><span class="text-[10px] text-slate-500 font-bold"><i class="fas fa-phone-alt mr-1 text-slate-400"></i>' + o.driver_name + '</span>' : '') + 
+                    '</td>' +
                     '<td class="p-4 py-3 text-center">' + stBadge + (quickActionBtn ? '<br>' + quickActionBtn : '') + '</td>' +
                 '</tr>';
             }).join('');
@@ -385,9 +396,12 @@ window.modWmsOut = {
                         ${itemsHtml}
                     </div>
 
-                    <div class="text-[10px] text-slate-500 flex justify-between items-center">
-                        <span><i class="fas fa-truck text-slate-400 mr-1"></i>${o.delivery_company || 'Chưa chọn chành xe'}</span>
-                        ${o.phone ? `<span><i class="fas fa-phone-alt text-slate-400 mr-1"></i>${o.phone}</span>` : ''}
+                    <div class="text-[10px] text-slate-600 space-y-0.5">
+                        <div class="flex justify-between items-center">
+                            <span><i class="fas fa-truck text-emerald-600 mr-1"></i><b>${o.delivery_company || 'Chưa chọn chành xe'}</b></span>
+                            ${o.phone ? `<span><i class="fas fa-phone-alt text-slate-400 mr-1"></i>${o.phone}</span>` : ''}
+                        </div>
+                        ${o.carrier_address ? `<div class="text-amber-700 font-bold truncate"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i>${o.carrier_address}</div>` : ''}
                     </div>
 
                     <div class="flex justify-between items-center pt-2 border-t border-slate-100 gap-2">
@@ -426,11 +440,14 @@ window.modWmsOut = {
                 document.getElementById('wms-order-code').innerText = o.order_code;
                 
                 document.getElementById('wms-delivery').value = o.delivery_company || '';
+                if (document.getElementById('wms-carrier-address')) {
+                    document.getElementById('wms-carrier-address').value = o.carrier_address || '';
+                }
                 document.getElementById('wms-driver').value = o.driver_name || '';
-                document.getElementById('wms-recipient-name').value = o.customer_name || '';
-                document.getElementById('wms-recipient-phone').value = o.customer_phone || o.phone || '';
-                document.getElementById('wms-address').value = o.customer_address || o.address || '';
-                document.getElementById('wms-shipping-note').value = o.notes || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
+                document.getElementById('wms-recipient-name').value = o.recipient_name || o.customer_name || '';
+                document.getElementById('wms-recipient-phone').value = o.recipient_phone || o.customer_phone || o.phone || '';
+                document.getElementById('wms-address').value = o.license_plate || o.customer_address || o.address || '';
+                document.getElementById('wms-shipping-note').value = o.shipping_note || o.notes || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
 
                 const actionBtn = document.getElementById('btn-wms-save');
                 if (o.status === 'PROCESSING') {
@@ -549,7 +566,12 @@ window.modWmsOut = {
         
         const payload = {
             delivery_company: document.getElementById('wms-delivery').value,
+            carrier_address: document.getElementById('wms-carrier-address')?.value || '',
             driver_name: document.getElementById('wms-driver').value,
+            recipient_name: document.getElementById('wms-recipient-name')?.value || '',
+            recipient_phone: document.getElementById('wms-recipient-phone')?.value || '',
+            license_plate: document.getElementById('wms-address')?.value || '',
+            shipping_note: document.getElementById('wms-shipping-note')?.value || '',
             notes: document.getElementById('wms-shipping-note').value,
             status: targetStatus,
             delivery_proofs: window.modWmsOut.currentProofs,
@@ -624,6 +646,7 @@ window.modWmsOut = {
         try { const r = await fetch('/api/settings'); sys = (await r.json()).data || {}; } catch(e) {}
 
         const deliveryName = document.getElementById('wms-delivery').value || '........................................';
+        const carrierAddress = document.getElementById('wms-carrier-address')?.value || o.carrier_address || '';
         const deliveryPhone = document.getElementById('wms-driver').value || '....................';
         const notes = document.getElementById('wms-shipping-note').value || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
         
@@ -640,6 +663,7 @@ window.modWmsOut = {
 
                 <div style="border:2px solid #000;padding:12px;margin-bottom:15px;border-radius:8px;font-size:16px;text-align:center;background:#f8fafc;">
                     <strong style="font-size:18px;">🚚 CHÀNH XE: ${deliveryName}</strong>
+                    ${carrierAddress ? `<br><span style="font-size:14px;color:#0f172a;">📍 <b>Đ/C Chành:</b> ${carrierAddress}</span>` : ''}
                     ${deliveryPhone ? `<br><span>SĐT XE: <b>${deliveryPhone}</b></span>` : ''}
                 </div>
 
