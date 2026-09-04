@@ -1,51 +1,58 @@
-<div id="workplace-container" class="h-[calc(100vh-5rem)] flex flex-col bg-slate-100 -m-4 sm:-m-6 lg:-m-8">
+<div id="workplace-container" class="h-[calc(100dvh-8rem)] md:h-[calc(100vh-5rem)] flex flex-col bg-slate-100 -m-2 sm:-m-3 md:-m-6 lg:-m-8 overflow-hidden relative">
     <!-- Header Topbar của Workplace -->
-    <div class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-xs shrink-0 z-10">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white text-lg shadow-sm">
+    <div id="wp-topbar" class="bg-white border-b border-slate-200 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between shadow-2xs shrink-0 z-10 transition-all">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white text-sm sm:text-lg shadow-xs shrink-0">
                 <i class="fas fa-comments"></i>
             </div>
-            <div>
-                <div class="flex items-center gap-2">
-                    <h1 class="text-lg font-black text-slate-800 tracking-tight">SUNGO WORKPLACE</h1>
-                    <span class="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Nội Bộ Bảo Mật
+            <div class="min-w-0">
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                    <h1 class="text-sm sm:text-lg font-black text-slate-800 tracking-tight truncate">SUNGO WORKPLACE</h1>
+                    <span class="bg-emerald-100 text-emerald-700 text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> <span class="hidden sm:inline">Nội Bộ</span> Bảo Mật
                     </span>
                 </div>
-                <p class="text-xs text-slate-500 font-medium">Không gian trao đổi công việc, điều hành & cộng tác liên phòng ban</p>
+                <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate hidden sm:block">Không gian trao đổi công việc, điều hành & cộng tác liên phòng ban</p>
             </div>
         </div>
 
         <!-- Các nút hành động trên Header -->
-        <div class="flex items-center gap-2">
-            <button id="wp-btn-create-group" onclick="window.modWorkplace.openCreateGroupModal()" class="hidden bg-amber-500 hover:bg-amber-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 shadow-xs transition transform active:scale-95">
-                <i class="fas fa-plus-circle"></i> <span>Tạo Nhóm Phối Hợp Mới</span>
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button id="wp-btn-create-group" onclick="window.modWorkplace.openCreateGroupModal()" class="hidden bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition transform active:scale-95">
+                <i class="fas fa-plus-circle"></i> <span class="hidden sm:inline">Tạo Nhóm Phối Hợp Mới</span><span class="sm:hidden">+ Nhóm</span>
             </button>
-            <button onclick="window.modWorkplace.refresh()" title="Làm mới cuộc trò chuyện" class="w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition">
-                <i class="fas fa-sync-alt"></i>
+            <button onclick="window.modWorkplace.refresh()" title="Làm mới cuộc trò chuyện" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition">
+                <i class="fas fa-sync-alt text-xs sm:text-sm"></i>
             </button>
         </div>
     </div>
 
     <!-- Khung làm việc chính: 2 Cột (Sidebar Kênh & Khung Chat) -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex overflow-hidden relative">
         
         <!-- CỘT TRÁI: DANH SÁCH KÊNH & CUỘC TRÒ CHUYỆN -->
-        <div class="w-80 sm:w-88 md:w-96 bg-white border-r border-slate-200 flex flex-col shrink-0">
-            <!-- Ô tìm kiếm kênh & đồng nghiệp -->
-            <div class="p-3 border-b border-slate-100">
+        <div id="wp-col-sidebar" class="w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col shrink-0 transition-all duration-150">
+            <!-- Ô tìm kiếm & 3 Tab lọc nhanh trên mobile -->
+            <div class="p-2.5 sm:p-3 border-b border-slate-100 space-y-2">
                 <div class="relative">
-                    <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-                    <input type="text" id="wp-sidebar-search" oninput="window.modWorkplace.filterSidebar(this.value)" placeholder="Tìm kênh hoặc đồng nghiệp..." class="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-500 focus:bg-white transition">
+                    <i class="fas fa-search absolute left-3.5 top-2.5 sm:top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="wp-sidebar-search" oninput="window.modWorkplace.filterSidebar(this.value)" placeholder="Tìm kênh hoặc đồng nghiệp..." class="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-500 focus:bg-white transition">
+                </div>
+                
+                <!-- 3 Tab lọc tiện lợi cho màn hình di động -->
+                <div class="flex items-center bg-slate-100 p-0.5 rounded-xl text-[11px] font-bold">
+                    <button type="button" onclick="window.modWorkplace.setFilterTab('ALL')" id="wp-ftab-ALL" class="flex-1 py-1 rounded-lg text-center bg-white text-slate-800 shadow-2xs transition">Tất Cả</button>
+                    <button type="button" onclick="window.modWorkplace.setFilterTab('CHANNELS')" id="wp-ftab-CHANNELS" class="flex-1 py-1 rounded-lg text-center text-slate-500 hover:text-slate-800 transition">Kênh & Nhóm</button>
+                    <button type="button" onclick="window.modWorkplace.setFilterTab('DIRECT')" id="wp-ftab-DIRECT" class="flex-1 py-1 rounded-lg text-center text-slate-500 hover:text-slate-800 transition">Chat 1-1</button>
                 </div>
             </div>
 
             <!-- Danh sách cuộn -->
-            <div class="flex-1 overflow-y-auto divide-y divide-slate-100" id="wp-sidebar-list">
+            <div class="flex-1 overflow-y-auto divide-y divide-slate-100 pos-scroll" id="wp-sidebar-list">
                 
                 <!-- 1. KÊNH CÔNG TY & PHÒNG BAN -->
-                <div class="p-3">
-                    <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 px-1">
+                <div class="p-2.5 sm:p-3" id="wp-sec-public">
+                    <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">
                         <span>📢 Kênh Toàn Công Ty</span>
                         <span id="wp-count-public" class="text-slate-400">6</span>
                     </div>
@@ -55,8 +62,8 @@
                 </div>
 
                 <!-- 2. NHÓM PHỐI HỢP DO ADMIN PHÂN CÔNG (SALE + KHO...) -->
-                <div class="p-3">
-                    <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 px-1">
+                <div class="p-2.5 sm:p-3" id="wp-sec-groups">
+                    <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">
                         <span class="flex items-center gap-1.5 text-amber-600">
                             <i class="fas fa-handshake"></i> Nhóm Phối Hợp Liên Phòng
                         </span>
@@ -70,8 +77,8 @@
                 </div>
 
                 <!-- 3. NHẮN TIN RIÊNG 1-1 VỚI ĐỒNG NGHIỆP -->
-                <div class="p-3">
-                    <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 px-1">
+                <div class="p-2.5 sm:p-3" id="wp-sec-direct">
+                    <div class="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">
                         <span>💬 Nhắn Tin Riêng 1-1</span>
                         <span id="wp-count-direct" class="text-slate-400">0</span>
                     </div>
@@ -84,50 +91,55 @@
         </div>
 
         <!-- CỘT PHẢI: KHUNG TRÒ CHUYỆN CHÍNH (MAIN CHAT FEED) -->
-        <div class="flex-1 flex flex-col bg-slate-50 overflow-hidden relative">
+        <div id="wp-col-chat" class="hidden md:flex flex-1 flex-col bg-slate-50 overflow-hidden relative transition-all duration-150">
             
             <!-- Header của cuộc trò chuyện hiện tại -->
-            <div id="wp-chat-header" class="bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between shrink-0 shadow-2xs">
-                <div class="flex items-center gap-3">
-                    <div id="wp-header-icon" class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-base font-bold shadow-2xs">
+            <div id="wp-chat-header" class="bg-white border-b border-slate-200 px-3 sm:px-5 py-2 sm:py-3 flex items-center justify-between shrink-0 shadow-2xs">
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <!-- Nút quay lại danh sách trên di động -->
+                    <button type="button" onclick="window.modWorkplace.setMobileTab('LIST')" class="md:hidden w-8 h-8 -ml-1 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition shrink-0" title="Quay lại danh sách">
+                        <i class="fas fa-arrow-left text-sm"></i>
+                    </button>
+
+                    <div id="wp-header-icon" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-sm sm:text-base font-bold shadow-2xs shrink-0">
                         <i class="fas fa-bullhorn"></i>
                     </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h2 id="wp-header-title" class="text-sm sm:text-base font-black text-slate-800">Thông Báo Toàn Công Ty</h2>
-                            <span id="wp-header-badge" class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Chỉ đạo</span>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5 sm:gap-2">
+                            <h2 id="wp-header-title" class="text-xs sm:text-base font-black text-slate-800 truncate">Thông Báo Toàn Công Ty</h2>
+                            <span id="wp-header-badge" class="bg-amber-100 text-amber-700 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shrink-0">Chỉ đạo</span>
                         </div>
-                        <p id="wp-header-desc" class="text-xs text-slate-500 line-clamp-1 max-w-md sm:max-w-xl">Kênh phát hành các thông báo chỉ đạo, chính sách và quyết định từ Ban Giám Đốc</p>
+                        <p id="wp-header-desc" class="text-[10px] sm:text-xs text-slate-500 truncate max-w-[180px] sm:max-w-md lg:max-w-xl">Kênh phát hành các thông báo chỉ đạo...</p>
                     </div>
                 </div>
 
                 <!-- Nút thao tác quản lý nhóm nếu là Admin -->
-                <div id="wp-header-actions" class="flex items-center gap-2">
-                    <button id="wp-btn-manage-members" onclick="window.modWorkplace.openManageMembersModal()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 transition flex items-center gap-1.5">
-                        <i class="fas fa-user-cog"></i> <span>Quản Lý Thành Viên</span>
+                <div id="wp-header-actions" class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <button id="wp-btn-manage-members" onclick="window.modWorkplace.openManageMembersModal(window.modWorkplace.activeId)" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-300 transition flex items-center gap-1">
+                        <i class="fas fa-user-cog text-amber-600"></i> <span class="hidden sm:inline">Quản Lý Thành Viên</span><span class="sm:hidden">Thành Viên</span>
                     </button>
                 </div>
             </div>
 
             <!-- Banner Ghim Thông Báo Quan Trọng (Pinned Announcement) -->
-            <div id="wp-pinned-banner" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 px-5 py-2.5 flex items-start justify-between shrink-0 transition">
-                <div class="flex items-start gap-2.5">
-                    <span class="text-amber-600 mt-0.5 text-sm"><i class="fas fa-thumbtack"></i></span>
-                    <div>
+            <div id="wp-pinned-banner" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 px-3 sm:px-5 py-2 sm:py-2.5 flex items-start justify-between shrink-0 transition">
+                <div class="flex items-start gap-2 min-w-0">
+                    <span class="text-amber-600 mt-0.5 text-xs sm:text-sm shrink-0"><i class="fas fa-thumbtack"></i></span>
+                    <div class="min-w-0">
                         <div class="flex items-center gap-2">
-                            <span class="text-[11px] font-black uppercase text-amber-700 tracking-wider">Thông Báo Đang Ghim</span>
-                            <span id="wp-pinned-author" class="text-[11px] text-slate-500 font-medium">Bởi Ban Giám Đốc</span>
+                            <span class="text-[10px] sm:text-[11px] font-black uppercase text-amber-700 tracking-wider">Thông Báo Đang Ghim</span>
+                            <span id="wp-pinned-author" class="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate">Bởi Ban Giám Đốc</span>
                         </div>
                         <p id="wp-pinned-content" class="text-xs font-medium text-slate-800 line-clamp-2 mt-0.5"></p>
                     </div>
                 </div>
-                <button id="wp-btn-unpin-banner" onclick="window.modWorkplace.unpinCurrent()" class="hidden text-slate-400 hover:text-amber-700 text-xs p-1" title="Bỏ ghim">
+                <button id="wp-btn-unpin-banner" onclick="window.modWorkplace.unpinCurrent()" class="hidden text-slate-400 hover:text-amber-700 text-xs p-1 shrink-0 ml-2" title="Bỏ ghim">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
             <!-- Vùng cuộn danh sách tin nhắn -->
-            <div id="wp-message-stream" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+            <div id="wp-message-stream" class="flex-1 overflow-y-auto p-3 sm:p-6 space-y-3 sm:space-y-4 pos-scroll">
                 <!-- Tin nhắn được chèn động ở đây -->
                 <div class="text-center py-10 text-slate-400 text-xs">
                     <i class="fas fa-spinner fa-spin text-xl mb-2 text-amber-500"></i>
@@ -136,27 +148,27 @@
             </div>
 
             <!-- Vùng xem trước file / ảnh đang chuẩn bị gửi -->
-            <div id="wp-attachments-preview" class="hidden bg-slate-100 border-t border-slate-200 px-4 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
+            <div id="wp-attachments-preview" class="hidden bg-slate-100 border-t border-slate-200 px-3 sm:px-4 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
                 <!-- Preview items inserted dynamic -->
             </div>
 
             <!-- Thanh soạn thảo và gửi tin nhắn (Footer Input) -->
-            <div class="bg-white border-t border-slate-200 p-3 sm:p-4 shrink-0">
-                <form id="wp-message-form" onsubmit="window.modWorkplace.handleSendMessage(event)" class="flex items-end gap-2">
+            <div class="bg-white border-t border-slate-200 p-2 sm:p-4 shrink-0">
+                <form id="wp-message-form" onsubmit="window.modWorkplace.handleSendMessage(event)" class="flex items-end gap-1.5 sm:gap-2">
                     
-                    <!-- Nút đính kèm ảnh & tài liệu -->
+                    <!-- Nút đính kèm ảnh & tài liệu (hỗ trợ chụp camera trên di động) -->
                     <input type="file" id="wp-file-input" onchange="window.modWorkplace.handleFileSelected(event)" class="hidden" multiple accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.zip">
-                    <button type="button" onclick="document.getElementById('wp-file-input').click()" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm transition shrink-0" title="Đính kèm ảnh hoặc tài liệu">
+                    <button type="button" onclick="document.getElementById('wp-file-input').click()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm transition shrink-0" title="Đính kèm ảnh hoặc tài liệu">
                         <i class="fas fa-paperclip"></i>
                     </button>
 
-                    <!-- Khung nhập nội dung tin nhắn -->
-                    <div class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl p-2 focus-within:border-amber-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-100 transition">
-                        <textarea id="wp-message-input" rows="1" onkeydown="window.modWorkplace.handleKeydown(event)" placeholder="Nhập tin nhắn trao đổi... (Bấm Enter để gửi, Shift+Enter để xuống dòng)" class="w-full bg-transparent text-xs sm:text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-hidden max-h-32 leading-relaxed"></textarea>
+                    <!-- Khung nhập nội dung tin nhắn (tự động co giãn dòng trên mobile) -->
+                    <div class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-3 py-1.5 sm:p-2 focus-within:border-amber-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-100 transition">
+                        <textarea id="wp-message-input" rows="1" onkeydown="window.modWorkplace.handleKeydown(event)" placeholder="Nhập tin nhắn..." class="w-full bg-transparent text-xs sm:text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-hidden min-h-[28px] max-h-28 leading-relaxed"></textarea>
                     </div>
 
                     <!-- Nút gửi tin nhắn -->
-                    <button type="submit" id="wp-btn-send" class="w-11 h-10 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center text-sm shadow-sm transition transform active:scale-95 shrink-0" title="Gửi tin nhắn (Enter)">
+                    <button type="submit" id="wp-btn-send" class="w-10 h-9 sm:w-11 sm:h-10 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center text-sm shadow-xs transition transform active:scale-95 shrink-0" title="Gửi tin nhắn">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </form>
@@ -174,20 +186,20 @@
 <!-- ======================================================== -->
 <!-- MODAL: TẠO NHÓM PHỐI HỢP MỚI THEO PHÂN CÔNG CỦA ADMIN   -->
 <!-- ======================================================== -->
-<div id="wp-modal-create-group" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+<div id="wp-modal-create-group" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92dvh] animate-in fade-in zoom-in-95 duration-200">
         
-        <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 flex items-center justify-between text-white shrink-0">
+        <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between text-white shrink-0">
             <div class="flex items-center gap-2.5">
-                <i class="fas fa-handshake text-xl"></i>
-                <h3 class="font-black text-base">Tạo Nhóm Phối Hợp Mới</h3>
+                <i class="fas fa-handshake text-lg sm:text-xl"></i>
+                <h3 class="font-black text-sm sm:text-base">Tạo Nhóm Phối Hợp Mới</h3>
             </div>
             <button onclick="window.modWorkplace.closeCreateGroupModal()" class="text-white/80 hover:text-white text-lg">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
-        <form id="wp-form-create-group" onsubmit="window.modWorkplace.submitCreateGroup(event)" class="p-6 overflow-y-auto space-y-4 flex-1">
+        <form id="wp-form-create-group" onsubmit="window.modWorkplace.submitCreateGroup(event)" class="p-4 sm:p-6 overflow-y-auto space-y-3.5 sm:space-y-4 flex-1">
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Tên Nhóm Phối Hợp <span class="text-red-500">*</span></label>
                 <input type="text" id="wp-new-group-name" required placeholder="Ví dụ: Sale 🤝 Kho Vận (Xử Lý Hàng Gấp)" class="w-full text-xs sm:text-sm px-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 focus:outline-hidden">
@@ -247,9 +259,9 @@
 <!-- ======================================================== -->
 <!-- MODAL: QUẢN LÝ THÀNH VIÊN NHÓM CỦA ADMIN                 -->
 <!-- ======================================================== -->
-<div id="wp-modal-manage-members" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
-        <div class="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4 flex items-center justify-between text-white shrink-0">
+<div id="wp-modal-manage-members" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92dvh] animate-in fade-in zoom-in-95 duration-200">
+        <div class="bg-gradient-to-r from-slate-900 to-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between text-white shrink-0">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm">
                     <i class="fas fa-users-cog"></i>
@@ -264,7 +276,7 @@
             </button>
         </div>
 
-        <div class="p-5 overflow-y-auto flex-1 space-y-3">
+        <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-3">
             <!-- Banner hướng dẫn -->
             <div id="wp-manage-modal-desc" class="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-900 space-y-1">
                 <p class="font-bold flex items-center gap-1.5"><i class="fas fa-info-circle text-amber-600"></i> Hướng dẫn phân quyền:</p>
@@ -300,13 +312,13 @@
             </div>
         </div>
 
-        <div class="bg-slate-50 px-6 py-3.5 border-t border-slate-100 flex items-center justify-between shrink-0">
+        <div class="bg-slate-50 px-4 sm:px-6 py-3 sm:py-3.5 border-t border-slate-100 flex items-center justify-between shrink-0">
             <button type="button" onclick="window.modWorkplace.selectAllManageMembers(false)" class="text-xs text-slate-500 hover:text-slate-800">
                 <i class="fas fa-globe mr-1"></i> Mở cho toàn công ty
             </button>
             <div class="flex items-center gap-2">
-                <button type="button" onclick="document.getElementById('wp-modal-manage-members').classList.add('hidden')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Đóng</button>
-                <button type="button" onclick="window.modWorkplace.saveGroupMembers()" id="wp-btn-save-manage-members" class="px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm">Lưu Phân Công Thành Viên</button>
+                <button type="button" onclick="document.getElementById('wp-modal-manage-members').classList.add('hidden')" class="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Đóng</button>
+                <button type="button" onclick="window.modWorkplace.saveGroupMembers()" id="wp-btn-save-manage-members" class="px-4 sm:px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm">Lưu Phân Công</button>
             </div>
         </div>
     </div>
@@ -335,6 +347,76 @@ window.modWorkplace = {
     stagedAttachments: [],
     currentUser: null,
     isAdmin: false,
+    mobileTab: 'LIST', // 'LIST' (danh sách kênh) | 'CHAT' (khung chat)
+    filterTab: 'ALL',  // 'ALL' | 'CHANNELS' | 'DIRECT'
+    _onResize: null,
+
+    // Chuyển đổi màn hình xem trên thiết bị di động
+    setMobileTab: function(tab) {
+        this.mobileTab = tab;
+        const colSidebar = document.getElementById('wp-col-sidebar');
+        const colChat = document.getElementById('wp-col-chat');
+        const topbar = document.getElementById('wp-topbar');
+
+        if (window.innerWidth < 768) {
+            if (tab === 'CHAT') {
+                if (colSidebar) { colSidebar.classList.add('hidden'); colSidebar.classList.remove('flex'); }
+                if (colChat) { colChat.classList.remove('hidden'); colChat.classList.add('flex'); }
+                if (topbar) topbar.classList.add('hidden'); // Tối ưu không gian dọc tối đa cho khung chat trên điện thoại
+                this.scrollToBottom();
+            } else {
+                if (colSidebar) { colSidebar.classList.remove('hidden'); colSidebar.classList.add('flex'); }
+                if (colChat) { colChat.classList.add('hidden'); colChat.classList.remove('flex'); }
+                if (topbar) topbar.classList.remove('hidden');
+            }
+        } else {
+            // Màn hình Desktop (>= 768px): Luôn hiển thị cả 2 cột song song
+            if (colSidebar) { colSidebar.classList.remove('hidden'); colSidebar.classList.add('flex'); }
+            if (colChat) { colChat.classList.remove('hidden'); colChat.classList.add('flex'); }
+            if (topbar) topbar.classList.remove('hidden');
+        }
+    },
+
+    // Lọc danh mục bên sidebar: Tất cả / Kênh & Nhóm / Chat 1-1
+    setFilterTab: function(tab) {
+        this.filterTab = tab;
+        ['ALL', 'CHANNELS', 'DIRECT'].forEach(t => {
+            const btn = document.getElementById('wp-ftab-' + t);
+            if (btn) {
+                if (t === tab) {
+                    btn.className = "flex-1 py-1 rounded-lg text-center bg-white text-slate-800 shadow-2xs font-bold transition";
+                } else {
+                    btn.className = "flex-1 py-1 rounded-lg text-center text-slate-500 hover:text-slate-800 transition";
+                }
+            }
+        });
+
+        // Ẩn/hiện các phần tử theo filterTab
+        const secPublic = document.getElementById('wp-sec-public');
+        const secGroups = document.getElementById('wp-sec-groups');
+        const secDirect = document.getElementById('wp-sec-direct');
+
+        if (secPublic) secPublic.style.display = (tab === 'ALL' || tab === 'CHANNELS') ? 'block' : 'none';
+        if (secGroups) secGroups.style.display = (tab === 'ALL' || tab === 'CHANNELS') ? 'block' : 'none';
+        if (secDirect) secDirect.style.display = (tab === 'ALL' || tab === 'DIRECT') ? 'block' : 'none';
+    },
+
+    // Tự động cuộn xuống tin nhắn mới nhất
+    scrollToBottom: function(smooth = false) {
+        const stream = document.getElementById('wp-message-stream');
+        if (stream) {
+            setTimeout(() => {
+                try {
+                    stream.scrollTo({
+                        top: stream.scrollHeight,
+                        behavior: smooth ? 'smooth' : 'auto'
+                    });
+                } catch(e) {
+                    stream.scrollTop = stream.scrollHeight;
+                }
+            }, 60);
+        }
+    },
 
     // 1. Khởi tạo phân hệ
     init: async function() {
@@ -360,8 +442,25 @@ window.modWorkplace = {
         // Mặc định mở kênh Thông Báo Toàn Công Ty (#thong-bao)
         const defaultChan = this.channels.find(c => c.slug === 'thong-bao') || this.channels[0];
         if (defaultChan) {
-            this.selectChannel(defaultChan.id);
+            if (window.innerWidth >= 768) {
+                this.selectChannel(defaultChan.id);
+            } else {
+                // Trên di động, nạp sẵn dữ liệu nhưng giữ chế độ xem danh sách (LIST)
+                this.activeType = 'CHANNEL';
+                this.activeId = defaultChan.id;
+                this.activeChannel = defaultChan;
+                this.setMobileTab('LIST');
+            }
         }
+
+        // Lắng nghe thay đổi kích thước màn hình để tự căn chỉnh layout mượt mà
+        if (this._onResize) window.removeEventListener('resize', this._onResize);
+        this._onResize = () => {
+            if (window.modWorkplace && typeof window.modWorkplace.setMobileTab === 'function') {
+                window.modWorkplace.setMobileTab(window.modWorkplace.mobileTab);
+            }
+        };
+        window.addEventListener('resize', this._onResize);
 
         // Bắt đầu chu kỳ polling tin nhắn mới mỗi 3.5s
         this.startPolling();
@@ -509,7 +608,7 @@ window.modWorkplace = {
         if (btnManage) {
             if (this.isAdmin) {
                 btnManage.classList.remove('hidden');
-                btnManage.innerHTML = `<i class="fas fa-user-cog text-amber-600"></i> <span>Quản Lý Thành Viên (${memberStatusText})</span>`;
+                btnManage.innerHTML = `<i class="fas fa-user-cog text-amber-600"></i> <span class="hidden sm:inline">Quản Lý Thành Viên (${memberStatusText})</span><span class="sm:hidden">Thành Viên (${memberCount > 0 ? memberCount : 'Tất cả'})</span>`;
             } else {
                 btnManage.classList.add('hidden');
             }
@@ -527,6 +626,12 @@ window.modWorkplace = {
         }
 
         this.renderSidebar();
+        
+        // Tự động chuyển sang màn hình chat trên thiết bị di động
+        if (window.innerWidth < 768) {
+            this.setMobileTab('CHAT');
+        }
+
         await this.loadMessages();
     },
 
@@ -563,6 +668,12 @@ window.modWorkplace = {
         document.getElementById('wp-pinned-banner').classList.add('hidden');
 
         this.renderSidebar();
+
+        // Tự động chuyển sang màn hình chat trên thiết bị di động
+        if (window.innerWidth < 768) {
+            this.setMobileTab('CHAT');
+        }
+
         await this.loadMessages();
     },
 
@@ -584,6 +695,7 @@ window.modWorkplace = {
             if (json.success && json.data) {
                 this.messages = json.data.messages || [];
                 this.renderMessages();
+                this.scrollToBottom();
 
                 // Render Pinned Banner nếu có
                 const bannerEl = document.getElementById('wp-pinned-banner');
@@ -701,16 +813,16 @@ window.modWorkplace = {
                 // Tin nhắn của CHÍNH MÌNH (Bên Phải)
                 html += `
                     <div class="flex flex-col items-end group">
-                        <div class="flex items-end gap-2 max-w-[85%] sm:max-w-[75%]">
-                            <!-- Nút reaction & xóa hover -->
-                            <div class="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs mb-1">
+                        <div class="flex items-end gap-2 max-w-[88%] sm:max-w-[75%]">
+                            <!-- Nút reaction & xóa hover / touch -->
+                            <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs mb-1">
                                 <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1">👍</button>
                                 <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1">❤️</button>
                                 <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-1" title="Thu hồi tin nhắn"><i class="fas fa-trash-alt"></i></button>
                             </div>
                             
                             <!-- Bong bóng tin nhắn -->
-                            <div class="bg-amber-500 text-white rounded-2xl rounded-tr-xs p-3 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words">
+                            <div class="bg-amber-500 text-white rounded-2xl rounded-tr-xs p-2.5 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words">
                                 ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-200 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Đã Ghim</div>` : ''}
                                 <div>${this.formatContent(msg.content)}</div>
                                 ${attachmentHtml}
@@ -728,14 +840,14 @@ window.modWorkplace = {
                 // Tin nhắn của ĐỒNG NGHIỆP (Bên Trái)
                 html += `
                     <div class="flex flex-col items-start group">
-                        <div class="flex items-start gap-2.5 max-w-[85%] sm:max-w-[75%]">
+                        <div class="flex items-start gap-2 max-w-[88%] sm:max-w-[75%]">
                             <!-- Avatar -->
-                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-xs font-black shrink-0 shadow-2xs mt-0.5">
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 shadow-2xs mt-0.5">
                                 ${initials}
                             </div>
 
                             <!-- Thân tin nhắn -->
-                            <div>
+                            <div class="min-w-0">
                                 <div class="flex items-center gap-1.5 mb-1">
                                     <span class="text-xs font-black text-slate-800">${msg.sender_name}</span>
                                     ${roleBadge}
@@ -743,7 +855,7 @@ window.modWorkplace = {
                                 </div>
 
                                 <!-- Bong bóng tin nhắn -->
-                                <div class="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-3 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words">
+                                <div class="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-2.5 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words">
                                     ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-600 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Thông Báo Ghim</div>` : ''}
                                     <div>${this.formatContent(msg.content)}</div>
                                     ${attachmentHtml}
@@ -752,7 +864,7 @@ window.modWorkplace = {
                                 <!-- Reactions & Thanh thả biểu cảm nhanh -->
                                 <div class="flex items-center gap-1.5 mt-1">
                                     ${reactionPills}
-                                    <div class="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs ml-1">
+                                    <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs ml-1">
                                         <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-0.5">👍</button>
                                         <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-0.5">❤️</button>
                                         <button onclick="window.modWorkplace.quickReaction(${msg.id}, '🔥')" class="hover:text-orange-500 p-0.5">🔥</button>
@@ -791,9 +903,9 @@ window.modWorkplace = {
         return `${hours}:${mins} • ${date}`;
     },
 
-    // 8. Xử lý sự kiện bàn phím (Enter để gửi, Shift+Enter xuống dòng)
+    // 8. Xử lý sự kiện bàn phím (Enter để gửi trên desktop, xuống dòng trên mobile)
     handleKeydown: function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter' && !e.shiftKey && window.innerWidth >= 768) {
             e.preventDefault();
             this.handleSendMessage(e);
         }
@@ -831,6 +943,7 @@ window.modWorkplace = {
                 this.stagedAttachments = [];
                 this.renderAttachmentPreview();
                 await this.loadMessages();
+                this.scrollToBottom(true);
             } else {
                 alert('❌ ' + (json.error || 'Không thể gửi tin nhắn!'));
             }
