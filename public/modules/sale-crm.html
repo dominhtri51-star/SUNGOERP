@@ -151,7 +151,6 @@
                 </button>
             </div>
         </div>
-        </div>
 
         <!-- 1. MOBILE SMART CARDS (CHỈ HIỆN TRÊN MOBILE md:hidden) -->
         <div id="crm-mobile-cards" class="md:hidden space-y-2.5 pb-12">
@@ -1418,38 +1417,39 @@
                 mobileHtml += `
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-3.5 space-y-2.5">
                     <div class="flex justify-between items-start gap-2">
-                        <div class="flex items-start gap-2.5 min-w-0">
+                        <div class="flex items-start gap-2.5 min-w-0 flex-1">
                             ${isAdmin ? `<input type="checkbox" value="${c.id}" onchange="window.modCRM.toggleSelectRow(${c.id}, this.checked)" class="crm-cust-cb w-4 h-4 rounded text-blue-600 cursor-pointer accent-blue-600 mt-1 shrink-0" ${window.modCRM.selectedIds.has(c.id) ? "checked" : ""}>` : ""}
-                        <div>
-                            <h4 class="font-black text-slate-900 text-sm flex items-center gap-1">
-                                ${displayName} ${nicknameHTML}
-                            </h4>
-                            <p class="text-xs text-slate-500 font-mono mt-0.5">${c.phone || 'Chưa có SĐT'}</p>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="font-black text-slate-900 text-sm flex items-center gap-1">
+                                    ${displayName} ${nicknameHTML}
+                                </h4>
+                                <p class="text-xs text-slate-500 font-mono mt-0.5">${c.phone || 'Chưa có SĐT'}</p>
+                            </div>
                         </div>
-                        <span class="${t.c} px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase border">${t.n}</span>
+                        <span class="${t.c} px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase border shrink-0">${t.n}</span>
                     </div>
 
                     ${c.address ? `<p class="text-xs text-slate-500 truncate"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i>${c.address}</p>` : ''}
                     ${c.vat_company ? `<p class="text-xs text-blue-600 font-semibold truncate"><i class="fas fa-file-invoice mr-1"></i>${c.vat_company} (${c.vat_taxcode || 'MST'})</p>` : ''}
 
-                    <div class="bg-slate-50 p-2.5 rounded-xl flex justify-between items-center border border-slate-100 text-xs">
+                    <div class="bg-slate-50 p-2.5 rounded-xl grid grid-cols-3 gap-1 border border-slate-100 text-xs">
                         <div>
-                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Doanh số</span>
-                            <strong class="font-bold text-slate-800">${fmt(c.total_sales)} đ</strong>
+                            <span class="text-[9px] uppercase font-bold text-slate-400 block">Doanh số</span>
+                            <strong class="font-bold text-slate-800 text-[11px] truncate block">${fmt(c.total_sales)} đ</strong>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-[9px] uppercase font-bold text-slate-400 block">Công nợ</span>
+                            <strong class="font-black text-[11px] truncate block ${debt > 0 ? 'text-red-600' : 'text-slate-500'}">${debt > 0 ? fmt(debt) + ' đ' : '0 đ'}</strong>
                         </div>
                         <div class="text-right">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Công nợ</span>
-                            <strong class="font-black ${debt > 0 ? 'text-red-600' : 'text-slate-500'}">${debt > 0 ? fmt(debt) + ' đ' : '0 đ'}</strong>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[10px] uppercase font-bold text-rose-500 block">Quà tri ân</span>
-                            <strong class="font-black ${giftCount > 0 ? 'text-rose-600' : 'text-slate-400'}">${giftCount > 0 ? giftCount + ' quà' : 'Chưa có'}</strong>
+                            <span class="text-[9px] uppercase font-bold text-rose-500 block">Quà tri ân</span>
+                            <strong class="font-black text-[11px] truncate block ${giftCount > 0 ? 'text-rose-600' : 'text-slate-400'}">${giftCount > 0 ? giftCount + ' quà' : 'Chưa có'}</strong>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
                         ${c.phone ? `<a href="tel:${c.phone}" class="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 rounded-xl text-center text-xs flex items-center justify-center gap-1.5 transition border border-emerald-200"><i class="fas fa-phone-alt"></i> Gọi Điện</a>` : ''}
-                        <button onclick="window.modCRM.openDrawer(${c.id})" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition">
+                        <button onclick="window.modCRM.openDrawer(${c.id})" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer">
                             <i class="fas fa-edit"></i> Xem & Sửa
                         </button>
                     </div>
