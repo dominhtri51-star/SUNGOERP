@@ -166,13 +166,13 @@ class YunAttService {
                 return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
             };
 
-            const startTimeMins = timeToMinutes(policy.work_start_time || '08:00');
-            const endTimeMins = timeToMinutes(policy.work_end_time || '17:30');
+            const startTimeMins = timeToMinutes(policy.work_start_time || '08:30');
+            const endTimeMins = timeToMinutes(policy.work_end_time || '17:00');
             const lunchStartMins = timeToMinutes(policy.lunch_start_time || '12:00');
-            const lunchEndMins = timeToMinutes(policy.lunch_end_time || '13:30');
+            const lunchEndMins = timeToMinutes(policy.lunch_end_time || '13:00');
             const lunchBreakMins = Math.max(0, lunchEndMins - lunchStartMins);
             const graceMins = parseInt(policy.grace_period_minutes, 10) || 5;
-            const stdHours = parseFloat(policy.standard_daily_hours) || 8.0;
+            const stdHours = parseFloat(policy.standard_daily_hours) || 7.5;
 
             // 4. Lấy danh sách ngày lễ trong CSDL
             const holRes = await client.query("SELECT holiday_date::text, holiday_name, is_paid FROM holidays");
@@ -287,12 +287,17 @@ class YunAttService {
                         earlyMinutes = curEndMins - outMins;
                     }
 
-                    // Tổng giờ làm việc thực tế
-                    let totalWorkedMins = Math.max(0, outMins - inMins);
-                    if (curLunchMins > 0 && inMins < lunchStartMins && outMins > lunchEndMins) {
-                        totalWorkedMins = Math.max(0, totalWorkedMins - curLunchMins);
+                    // Giờ làm việc trong ca chuẩn (Regular Shift Hours):
+                    // Đến sớm trước ca (vd 07:54, 08:08) chỉ tính từ giờ bắt đầu ca curStartMins (08:30)
+                    // Ra muộn sau ca chỉ tính trong ca đến giờ kết thúc ca curEndMins (17:00 / 12:00)
+                    const effectiveInMins = Math.max(inMins, curStartMins);
+                    const effectiveOutMins = Math.min(outMins, curEndMins);
+
+                    let shiftWorkedMins = Math.max(0, effectiveOutMins - effectiveInMins);
+                    if (curLunchMins > 0 && effectiveInMins < lunchStartMins && effectiveOutMins > lunchEndMins) {
+                        shiftWorkedMins = Math.max(0, shiftWorkedMins - curLunchMins);
                     }
-                    const workingHours = parseFloat((totalWorkedMins / 60).toFixed(2));
+                    const shiftHours = parseFloat((shiftWorkedMins / 60).toFixed(2));
 
                     // Giá trị ngày công
                     let workingDayValue = curDayValueTarget;
@@ -300,34 +305,58 @@ class YunAttService {
                         workingDayValue = 1.0;
                     } else if (dayOfWeek === 0) {
                         workingDayValue = 0;
-                    } else if (workingHours >= (curStdHours - 0.5)) {
+                    } else if (shiftHours >= (curStdHours - 0.5)) {
                         workingDayValue = curDayValueTarget;
-                    } else if (workingHours >= (curStdHours / 2.0)) {
+                    } else if (shiftHours >= (curStdHours / 2.0)) {
                         workingDayValue = parseFloat((curDayValueTarget / 2.0).toFixed(2));
-                    } else if (workingHours > 0) {
-                        workingDayValue = parseFloat((workingHours / curStdHours * curDayValueTarget).toFixed(2));
+                    } else if (shiftHours > 0) {
+                        workingDayValue = parseFloat((shiftHours / curStdHours * curDayValueTarget).toFixed(2));
                     } else {
                         workingDayValue = 0;
                     }
 
                     // Tính số phút làm thêm ngoài giờ (OT):
                     let otHours = 0;
+                    const otMinMins = parseInt(policy.ot_min_minutes, 10) || 0;
+
                     if (holiday) {
-                        otHours = workingHours;
+                        let workedMins = Math.max(0, outMins - inMins);
+                        if (inMins < lunchStartMins && outMins > lunchEndMins) {
+                            workedMins = Math.max(0, workedMins - (lunchBreakMins || 60));
+                        }
+                        otHours = parseFloat((workedMins / 60).toFixed(2));
                     } else if (dayOfWeek === 0) {
-                        otHours = workingHours;
+                        let workedMins = Math.max(0, outMins - inMins);
+                        if (inMins < lunchStartMins && outMins > lunchEndMins) {
+                            workedMins = Math.max(0, workedMins - (lunchBreakMins || 60));
+                        }
+                        otHours = parseFloat((workedMins / 60).toFixed(2));
+                    } else if (isSat && satMode === 'OFF_AFTERNOON') {
+                        // Thứ Bảy nghỉ chiều (ca sáng 08:30 - 12:00, nghỉ trưa 12:00 - 13:00)
+                        if (timeParts.length > 1 && outMins > 780) {
+                            const extraMins = outMins - 780;
+                            if (extraMins >= otMinMins) {
+                                otHours = parseFloat((extraMins / 60).toFixed(2));
+                            }
+                        }
                     } else {
-                        const excessShiftHours = workingHours > curStdHours ? parseFloat((workingHours - curStdHours).toFixed(2)) : 0;
-                        const otMinMins = parseInt(policy.ot_min_minutes, 10) || 0;
-                        let afterShiftHours = 0;
+                        // Ngày thường (Thứ 2 - Thứ 6): chỉ tính OT khi về sau giờ tan ca chuẩn
                         if (timeParts.length > 1 && outMins > curEndMins) {
                             const extraMins = outMins - curEndMins;
                             if (extraMins >= otMinMins) {
-                                afterShiftHours = parseFloat((extraMins / 60).toFixed(2));
+                                otHours = parseFloat((extraMins / 60).toFixed(2));
                             }
                         }
-                        otHours = Math.max(excessShiftHours, afterShiftHours);
-                        if (otHours < 0.05) otHours = 0;
+                    }
+
+                    if (otHours < 0.05) otHours = 0;
+
+                    // Tổng giờ làm việc thực tế hiển thị
+                    let workingHours = 0;
+                    if (holiday || dayOfWeek === 0) {
+                        workingHours = otHours;
+                    } else {
+                        workingHours = parseFloat((shiftHours + otHours).toFixed(2));
                     }
 
                     // Tính tiền phạt đi trễ + về sớm

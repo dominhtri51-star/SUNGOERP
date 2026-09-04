@@ -605,40 +605,56 @@ async function calculateSingleDayAttendance(client, employeeId, workDateStr, pol
         earlyMinutes = endTimeMins - outMins;
     }
 
-    // Tính tổng giờ làm việc thực tế (trừ nghỉ trưa nếu áp dụng)
-    let totalWorkedMinutes = Math.max(0, outMins - inMins);
-    if (lunchBreakMins > 0 && inMins < lunchStartMins && outMins > lunchEndMins) {
-        totalWorkedMinutes = Math.max(0, totalWorkedMinutes - lunchBreakMins);
+    // Giờ làm việc trong ca chuẩn (Regular Shift Hours):
+    // Đến sớm trước ca (vd 07:54, 08:08) chỉ tính từ giờ ca bắt đầu startTimeMins (08:30)
+    // Ra sau ca chỉ tính trong ca đến giờ kết thúc ca endTimeMins (17:00 / 12:00)
+    const effectiveInMins = Math.max(inMins, startTimeMins);
+    const effectiveOutMins = Math.min(outMins, endTimeMins);
+
+    let shiftWorkedMinutes = Math.max(0, effectiveOutMins - effectiveInMins);
+    if (lunchBreakMins > 0 && effectiveInMins < lunchStartMins && effectiveOutMins > lunchEndMins) {
+        shiftWorkedMinutes = Math.max(0, shiftWorkedMinutes - lunchBreakMins);
     }
-    const workingHours = parseFloat((totalWorkedMinutes / 60).toFixed(2));
+    const shiftHours = parseFloat((shiftWorkedMinutes / 60).toFixed(2));
 
     // Tính giá trị ngày công (working_day_value)
     let workingDayValue = dayValueTarget;
-    if (workingHours >= (stdHours - 0.5)) {
+    if (shiftHours >= (stdHours - 0.5)) {
         workingDayValue = dayValueTarget;
-    } else if (workingHours >= (stdHours / 2.0)) {
+    } else if (shiftHours >= (stdHours / 2.0)) {
         workingDayValue = parseFloat((dayValueTarget / 2.0).toFixed(2));
-    } else if (workingHours > 0) {
-        workingDayValue = parseFloat((workingHours / stdHours * dayValueTarget).toFixed(2));
+    } else if (shiftHours > 0) {
+        workingDayValue = parseFloat((shiftHours / stdHours * dayValueTarget).toFixed(2));
     } else {
         workingDayValue = 0;
     }
 
     // Tính số phút làm thêm ngoài giờ (OT):
-    // 1. Dựa trên số giờ làm việc thực tế vượt chuẩn ca (workingHours - stdHours)
-    const excessShiftHours = workingHours > stdHours ? parseFloat((workingHours - stdHours).toFixed(2)) : 0;
-    // 2. Dựa trên số phút về sau ca chuẩn (outMins - endTimeMins)
+    let otHours = 0;
     const otMinMins = parseInt(policy?.ot_min_minutes, 10) || 0;
-    let afterShiftHours = 0;
-    if (logs.length > 1 && outMins > endTimeMins) {
-        const extraMins = outMins - endTimeMins;
-        if (extraMins >= otMinMins) {
-            afterShiftHours = parseFloat((extraMins / 60).toFixed(2));
+
+    if (isSaturday && satMode === 'OFF_AFTERNOON') {
+        // Thứ Bảy nghỉ chiều: Ca sáng 08:30 - 12:00. Nghỉ trưa 12:00 - 13:00.
+        // Nếu ở lại làm ca chiều (outMins > 13:00 = 780):
+        if (logs.length > 1 && outMins > 780) {
+            const extraMins = outMins - 780;
+            if (extraMins >= otMinMins) {
+                otHours = parseFloat((extraMins / 60).toFixed(2));
+            }
+        }
+    } else {
+        // Ngày thường (Thứ 2 - Thứ 6): chỉ tính OT khi về sau giờ tan ca chuẩn (endTimeMins = 17:00)
+        if (logs.length > 1 && outMins > endTimeMins) {
+            const extraMins = outMins - endTimeMins;
+            if (extraMins >= otMinMins) {
+                otHours = parseFloat((extraMins / 60).toFixed(2));
+            }
         }
     }
-    // Lấy giá trị lớn nhất giữa số giờ vượt chuẩn ca và giờ về muộn
-    let otHours = Math.max(excessShiftHours, afterShiftHours);
     if (otHours < 0.05) otHours = 0;
+
+    // Tổng giờ làm việc thực tế
+    const workingHours = parseFloat((shiftHours + otHours).toFixed(2));
 
     // Xác định trạng thái & tiền phạt đi trễ + về sớm theo bậc
     let status = 'ON_TIME';
@@ -1236,5 +1252,6 @@ router.post('/adjust', async (req, res) => {
     }
 });
 
+router.calculateAndSaveMonthlySummary = calculateAndSaveMonthlySummary;
 module.exports = router;
 
