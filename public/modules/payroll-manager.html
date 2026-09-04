@@ -303,6 +303,8 @@ window.modPayroll = {
                 const allowances = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
                 const bonusPenalty = (parseFloat(item.bonus_amount) || 0) - (parseFloat(item.deduction_penalty) || 0);
                 const whComm = parseFloat(item.warehouse_commission) || 0;
+                const totalComm = parseFloat(item.total_commission) || 0;
+                const salesComm = Math.max(0, totalComm - whComm);
 
                 return `
                     <tr class="hover:bg-emerald-50/30 transition border-b border-slate-100">
@@ -314,6 +316,7 @@ window.modPayroll = {
                         <td class="p-3 text-center font-bold text-blue-600">${item.actual_working_days}/26</td>
                         <td class="p-3 text-right font-medium text-slate-600">${(parseFloat(item.base_salary) || 0).toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right font-bold text-slate-800">${(parseFloat(item.salary_by_days) || 0).toLocaleString('vi-VN')} đ</td>
+                        <td class="p-3 text-right text-slate-600">${allowances.toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right">
                             ${whComm > 0 && salesComm > 0 ? `
                                 <div class="font-black text-amber-600">${totalComm.toLocaleString('vi-VN')} đ</div>
