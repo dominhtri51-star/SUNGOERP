@@ -980,6 +980,29 @@ window.modPos = {
         window.modPos.renderCart();
     },
 
+    // Cập nhật số lượng nhanh khi gõ phím (không re-render toàn bộ DOM để không mất focus)
+    onInputQty: (productId, val) => {
+        const item = window.modPos.cart.find(x => x.product_id === productId);
+        if (!item) return;
+        const cleanVal = parseInt(val.toString().replace(/[^0-9]/g, ''), 10);
+        if (!isNaN(cleanVal) && cleanVal > 0) {
+            item.quantity = cleanVal;
+            const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
+            const totalEl = document.getElementById('cart-item-total-' + productId);
+            if (totalEl) totalEl.innerText = fmt(item.quantity * item.price) + ' đ';
+            window.modPos.updateTotal();
+        }
+    },
+
+    // Chốt và chuẩn hóa số lượng khi người dùng rời ô nhập hoặc nhấn Enter
+    setQty: (productId, val) => {
+        const item = window.modPos.cart.find(x => x.product_id === productId);
+        if (!item) return;
+        const cleanVal = parseInt(val.toString().replace(/[^0-9]/g, ''), 10);
+        item.quantity = (isNaN(cleanVal) || cleanVal <= 0) ? 1 : cleanVal;
+        window.modPos.renderCart();
+    },
+
     // Chỉnh sửa đơn giá trực tiếp trong giỏ hàng
     updateItemPrice: (productId, newPriceVal) => {
         const item = window.modPos.cart.find(x => x.product_id === productId);
@@ -1057,11 +1080,22 @@ window.modPos = {
                     </div>
                     
                     <div class="flex justify-between items-center gap-2 pt-0.5">
-                        <!-- Bộ tăng giảm số lượng (Touch Friendly) -->
+                        <!-- Bộ tăng giảm số lượng (Hỗ trợ gõ trực tiếp số lượng) -->
                         <div class="flex items-center bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
-                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, -1)" class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-black text-xs cursor-pointer">-</button>
-                            <span class="w-7 sm:w-7 text-center text-xs font-black border-x border-slate-200 text-slate-800">${item.quantity}</span>
-                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, 1)" class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-black text-xs cursor-pointer">+</button>
+                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, -1)" class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-black text-xs cursor-pointer select-none">-</button>
+                            <input type="number" 
+                                   id="pos-cart-qty-${item.product_id}"
+                                   value="${item.quantity}" 
+                                   min="1" 
+                                   inputmode="numeric"
+                                   onclick="this.select()"
+                                   onfocus="this.select()"
+                                   oninput="window.modPos.onInputQty(${item.product_id}, this.value)"
+                                   onchange="window.modPos.setQty(${item.product_id}, this.value)"
+                                   onkeydown="if(event.key === 'Enter') this.blur()"
+                                   class="w-10 sm:w-11 text-center text-xs font-black border-x border-slate-200 text-slate-800 outline-none focus:bg-amber-50 py-0.5 bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                   title="Bấm để nhập trực tiếp số lượng">
+                            <button type="button" onclick="window.modPos.updateQty(${item.product_id}, 1)" class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-black text-xs cursor-pointer select-none">+</button>
                         </div>
 
                         <!-- Đơn giá & Thành tiền -->
@@ -1072,7 +1106,7 @@ window.modPos = {
                                    onchange="window.modPos.updateItemPrice(${item.product_id}, this.value)" 
                                    title="Click để sửa đơn giá"
                                    class="w-[78px] sm:w-[82px] text-right font-black text-blue-600 text-xs bg-white border border-slate-200 rounded px-1.5 py-0.5 outline-none focus:border-blue-500">
-                            <span class="font-black text-slate-900 text-xs min-w-[65px]">${fmt(itemTotal)} đ</span>
+                            <span id="cart-item-total-${item.product_id}" class="font-black text-slate-900 text-xs min-w-[65px]">${fmt(itemTotal)} đ</span>
                         </div>
                     </div>
                 </div>`;
@@ -1106,7 +1140,11 @@ window.modPos = {
     updateTotal: () => {
         const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
         let subtotal = 0;
-        window.modPos.cart.forEach(item => { subtotal += item.quantity * item.price; });
+        let totalQty = 0;
+        window.modPos.cart.forEach(item => { 
+            subtotal += item.quantity * item.price; 
+            totalQty += item.quantity;
+        });
 
         const discount = Math.min(subtotal, window.modPos.discountVal || 0);
         const finalTotal = Math.max(0, subtotal - discount);
@@ -1117,6 +1155,9 @@ window.modPos = {
         const ptEl = document.getElementById('pos-point');
         const tabTotEl = document.getElementById('pos-tab-total-cart');
         const floatTotEl = document.getElementById('m-float-total');
+        const countSpan = document.getElementById('pos-cart-count');
+        const badgeCart = document.getElementById('pos-tab-badge-cart');
+        const floatQty = document.getElementById('m-float-qty');
 
         if (subEl) subEl.innerText = fmt(subtotal) + ' đ';
         if (discEl) discEl.innerText = '-' + fmt(discount) + ' đ';
@@ -1124,6 +1165,9 @@ window.modPos = {
         if (ptEl) ptEl.innerText = '+' + fmt(finalTotal * 0.01) + ' đ';
         if (tabTotEl) tabTotEl.innerText = fmt(finalTotal) + ' đ';
         if (floatTotEl) floatTotEl.innerText = fmt(finalTotal) + ' đ';
+        if (countSpan) countSpan.innerText = totalQty;
+        if (badgeCart) badgeCart.innerText = totalQty;
+        if (floatQty) floatQty.innerText = totalQty;
     },
 
     // Tạo đơn hàng mới từ POS
