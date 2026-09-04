@@ -89,11 +89,18 @@ router.post('/generate', async (req, res) => {
         }
 
         // 2. Lấy cấu hình tỷ lệ bảo hiểm xã hội hiện hành
-        const insPolRes = await client.query("SELECT * FROM insurance_policies WHERE id = 1");
-        const insPol = insPolRes.rows[0] || {
+        let insPol = {
             rate_bhxh_emp: 8.0, rate_bhyt_emp: 1.5, rate_bhtn_emp: 1.0,
             rate_bhxh_comp: 17.5, rate_bhyt_comp: 3.0, rate_bhtn_comp: 1.0, rate_kpcd_comp: 2.0
         };
+        try {
+            const insPolRes = await client.query("SELECT * FROM insurance_policies WHERE id = 1");
+            if (insPolRes.rows.length > 0) {
+                insPol = insPolRes.rows[0];
+            }
+        } catch(insErr) {
+            console.warn("⚠️ Không thể đọc insurance_policies, sử dụng tỷ lệ mặc định:", insErr.message);
+        }
 
         // 3. Lấy toàn bộ nhân sự đang làm việc (ACTIVE)
         const employeesRes = await client.query(`

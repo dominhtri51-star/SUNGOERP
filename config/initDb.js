@@ -843,6 +843,8 @@ async function autoInitDatabase() {
                     NULL;
                 END $$;
             `);
+        } catch(skuErr) {}
+
         // 42. Thêm các cột lưu chi tiết chành xe & người nhận hàng trong bảng orders
         try {
             await pool.query(`
@@ -858,6 +860,40 @@ async function autoInitDatabase() {
                 END $$;
             `);
         } catch(ordShipColErr) {}
+
+        // 43. Đảm bảo bảng insurance_policies luôn tồn tại
+        try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS insurance_policies (
+                    id SERIAL PRIMARY KEY,
+                    policy_name VARCHAR(255) DEFAULT 'Quy Định Tỷ Lệ Đóng Bảo Hiểm Xã Hội & Kinh Phí Công Đoàn',
+                    rate_bhxh_emp NUMERIC DEFAULT 8.0,
+                    rate_bhyt_emp NUMERIC DEFAULT 1.5,
+                    rate_bhtn_emp NUMERIC DEFAULT 1.0,
+                    rate_bhxh_comp NUMERIC DEFAULT 17.5,
+                    rate_bhyt_comp NUMERIC DEFAULT 3.0,
+                    rate_bhtn_comp NUMERIC DEFAULT 1.0,
+                    rate_kpcd_comp NUMERIC DEFAULT 2.0,
+                    min_insurance_salary NUMERIC DEFAULT 5000000,
+                    max_insurance_salary NUMERIC DEFAULT 46800000,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                INSERT INTO insurance_policies (
+                    id, policy_name,
+                    rate_bhxh_emp, rate_bhyt_emp, rate_bhtn_emp,
+                    rate_bhxh_comp, rate_bhyt_comp, rate_bhtn_comp, rate_kpcd_comp,
+                    min_insurance_salary, max_insurance_salary, notes
+                ) VALUES (
+                    1, 'Quy Định Tỷ Lệ Đóng Bảo Hiểm Xã Hội & Kinh Phí Công Đoàn',
+                    8.0, 1.5, 1.0,
+                    17.5, 3.0, 1.0, 2.0,
+                    5000000, 46800000, 'Quy định chuẩn theo Luật BHXH Việt Nam: NLĐ đóng 10.5%, DN đóng 23.5% (tổng 34%)'
+                ) ON CONFLICT (id) DO NOTHING;
+            `);
+        } catch(insPolErr) {}
 
         console.log("✅ Khởi tạo và đồng bộ toàn bộ CSDL Cổng Bảo Hành Điện Tử & ERP thành công!");
     } catch (err) {

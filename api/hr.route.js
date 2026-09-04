@@ -72,13 +72,35 @@ router.delete('/departments/:id', async (req, res) => {
 // ==========================================
 router.get('/insurance-policies', async (req, res) => {
     try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS insurance_policies (
+                id SERIAL PRIMARY KEY,
+                policy_name VARCHAR(255) DEFAULT 'Quy Định Tỷ Lệ Đóng Bảo Hiểm Xã Hội & Kinh Phí Công Đoàn',
+                rate_bhxh_emp NUMERIC DEFAULT 8.0,
+                rate_bhyt_emp NUMERIC DEFAULT 1.5,
+                rate_bhtn_emp NUMERIC DEFAULT 1.0,
+                rate_bhxh_comp NUMERIC DEFAULT 17.5,
+                rate_bhyt_comp NUMERIC DEFAULT 3.0,
+                rate_bhtn_comp NUMERIC DEFAULT 1.0,
+                rate_kpcd_comp NUMERIC DEFAULT 2.0,
+                min_insurance_salary NUMERIC DEFAULT 5000000,
+                max_insurance_salary NUMERIC DEFAULT 46800000,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
         let result = await pool.query("SELECT * FROM insurance_policies WHERE id = 1");
         if (result.rows.length === 0) {
             result = await pool.query(`
                 INSERT INTO insurance_policies (id, policy_name, rate_bhxh_emp, rate_bhyt_emp, rate_bhtn_emp, rate_bhxh_comp, rate_bhyt_comp, rate_bhtn_comp, rate_kpcd_comp)
                 VALUES (1, 'Quy Định Tỷ Lệ Đóng Bảo Hiểm Xã Hội & Kinh Phí Công Đoàn', 8.0, 1.5, 1.0, 17.5, 3.0, 1.0, 2.0)
+                ON CONFLICT (id) DO NOTHING
                 RETURNING *
             `);
+            if (result.rows.length === 0) {
+                result = await pool.query("SELECT * FROM insurance_policies WHERE id = 1");
+            }
         }
         res.json({ success: true, data: result.rows[0] });
     } catch (err) {
