@@ -1,14 +1,12 @@
 <style>
-    #boq-list-container { display: flex !important; flex-direction: column !important; height: 100% !important; }
-    #boq-list-container .overflow-x-auto { max-height: calc(100vh - 220px) !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
-    #boq-list-container thead th { position: sticky !important; top: 0 !important; z-index: 10 !important; background-color: #f8f9fa !important; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1); }
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    #boq-list-container { display: flex !important; flex-direction: column !important; min-height: 100% !important; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 
-<div class="h-full flex flex-col bg-slate-50 relative overflow-hidden text-sm" id="boq-wrapper">
+<div class="w-full min-h-full flex flex-col bg-slate-50 relative text-sm pb-28 md:pb-6" id="boq-wrapper">
     
     <!-- MÀN HÌNH 1: BẢNG DANH SÁCH BOQ -->
     <div id="boq-list-container" class="flex-1 flex flex-col p-2.5 sm:p-4 md:p-6 w-full h-full overflow-y-auto">
@@ -99,48 +97,63 @@
     </div>
 
     <!-- MÀN HÌNH 2: CHI TIẾT BOQ (SLIDE OUT) -->
-    <div id="boq-detail-container" class="absolute inset-0 bg-slate-100 z-30 flex-col hidden overflow-hidden transition-all duration-300 transform translate-x-full">
+    <!-- MÀN HÌNH 2: CHI TIẾT BOQ -->
+    <div id="boq-detail-container" class="w-full flex-1 flex flex-col bg-slate-50 min-h-full hidden">
         <!-- HEADER SLIDE-OUT -->
-        <div class="bg-white border-b border-slate-200 p-4 px-6 flex justify-between items-center shadow-sm shrink-0">
-            <button onclick="window.modBoq.showList()" class="text-slate-600 hover:text-blue-600 font-bold text-xs flex items-center gap-2 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition">
+        <div class="bg-white border-b border-slate-200 px-3 sm:px-6 pb-2.5 sm:pb-3.5 pt-safe flex justify-between items-center shadow-xs shrink-0 flex-wrap sm:flex-nowrap gap-2">
+            <button onclick="window.modBoq.showList()" class="text-slate-600 hover:text-blue-600 font-bold text-xs flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 px-3 py-1.5 sm:py-2 rounded-xl transition cursor-pointer shrink-0">
                 <i class="fas fa-arrow-left"></i> QUAY LẠI BẢNG
             </button>
-            <div class="text-center">
-                <h2 class="font-black text-slate-900 text-base">CHI TIẾT BÁO GIÁ BOQ: <span id="dt-boq-code" class="text-blue-600 font-mono">---</span></h2>
-                <p class="text-[11px] text-slate-500" id="dt-boq-created-info">Ngày tạo: ...</p>
+            <div class="text-center min-w-0">
+                <h2 class="font-black text-slate-900 text-xs sm:text-base truncate flex items-center justify-center gap-1.5">
+                    BOQ: <span id="dt-boq-code" class="text-blue-600 font-mono">---</span>
+                    <button type="button" onclick="window.copyToClipboard(document.getElementById('dt-boq-code').innerText, 'Mã báo giá BOQ')" class="text-slate-400 hover:text-blue-600 p-1 transition cursor-pointer" title="Sao chép mã báo giá">
+                        <i class="fas fa-copy text-xs"></i>
+                    </button>
+                </h2>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 truncate" id="dt-boq-created-info">Ngày tạo: ...</p>
             </div>
-            <div class="flex gap-2">
-                <button onclick="window.modBoq.exportPDF()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+                <button id="btn-edit-boq" onclick="window.modBoq.editQuotation()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap" title="Nhân viên & Admin chỉnh sửa báo giá">
+                    <i class="fas fa-edit"></i> SỬA BÁO GIÁ
+                </button>
+                <button id="btn-config-print-boq" onclick="window.modBoq.openPrintConfigModal()" class="hidden bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap" title="Chỉ Admin: Cài đặt thông tin Shop & Mẫu in PDF">
+                    <i class="fas fa-sliders-h text-purple-200"></i> CÀI ĐẶT MẪU IN
+                </button>
+                <button onclick="window.modBoq.exportPDF()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
                     <i class="fas fa-file-pdf text-red-400"></i> XUẤT PDF
                 </button>
                 <div id="dt-order-action-container">
-                    <button onclick="window.modBoq.convertToOrder()" id="btn-convert-order" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
-                        <i class="fas fa-cart-arrow-down"></i> TẠO ĐƠN HÀNG (SALE ORDER)
+                    <button onclick="window.modBoq.convertToOrder()" id="btn-convert-order" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                        <i class="fas fa-cart-arrow-down"></i> TẠO ĐƠN HÀNG
                     </button>
                 </div>
+                <button id="btn-delete-boq" onclick="window.modBoq.deleteQuotation(window.modBoq.selectedQuotation?.quotation_id || window.modBoq.selectedQuotation?.id)" class="hidden bg-red-50 hover:bg-red-600 hover:text-white text-red-600 px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold border border-red-200 shadow-2xs transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap" title="Xóa Vĩnh Viễn Báo Giá & Các Chứng Từ Liên Quan">
+                    <i class="fas fa-trash-alt"></i> XÓA BÁO GIÁ
+                </button>
             </div>
         </div>
 
-        <!-- BODY SLIDE-OUT -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full">
+        <!-- BODY CHI TIẾT (CUỘN MƯỢT MÀ TOÀN TRANG) -->
+        <div class="w-full p-2.5 sm:p-4 md:p-6 space-y-4 max-w-7xl mx-auto pb-36 sm:pb-12">
             <!-- CARDS THÔNG TIN CHÍNH -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Khách Hàng</p>
-                    <h4 class="text-sm font-black text-slate-800 mt-1" id="dt-cust-name">---</h4>
+                    <h4 class="text-xs sm:text-sm font-black text-slate-800 mt-1 truncate" id="dt-cust-name">---</h4>
                     <p class="text-xs text-slate-500 mt-0.5" id="dt-cust-phone"><i class="fas fa-phone mr-1"></i>---</p>
                 </div>
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Dự Án / Cấu Hình</p>
-                    <h4 class="text-sm font-black text-slate-800 mt-1" id="dt-project-name">---</h4>
+                    <h4 class="text-xs sm:text-sm font-black text-slate-800 mt-1 truncate" id="dt-project-name">---</h4>
                     <p class="text-xs text-blue-600 font-bold mt-0.5" id="dt-system-spec">---</p>
                 </div>
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng Giá Trị Báo Giá</p>
-                    <h4 class="text-base font-black text-emerald-600 mt-1" id="dt-total-amount">0 đ</h4>
+                    <h4 class="text-sm sm:text-base font-black text-emerald-600 mt-1" id="dt-total-amount">0 đ</h4>
                     <p class="text-xs text-slate-500 mt-0.5" id="dt-cost-info">Giá vốn: 0 đ</p>
                 </div>
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Biên Lợi Nhuận & Trạng Thái</p>
                     <div class="flex items-center gap-2 mt-1" id="dt-status-wrapper">
                         <span id="dt-margin-badge" class="font-black text-sm">--%</span>
@@ -151,14 +164,16 @@
             </div>
 
             <!-- BẢNG BÓC TÁCH THIẾT BỊ VẬT TƯ -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                    <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
-                        <i class="fas fa-boxes text-amber-500"></i> Bảng Bóc Tách Khối Lượng Vật Tư & Nhân Công (BOQ Details)
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                <div class="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <h3 class="font-black text-slate-800 text-xs sm:text-sm flex items-center gap-2">
+                        <i class="fas fa-boxes text-amber-500"></i> Bảng Bóc Tách Vật Tư (BOQ Details)
                     </h3>
-                    <span class="text-xs text-slate-500" id="dt-item-count">0 mục</span>
+                    <span class="text-xs text-slate-500 font-bold" id="dt-item-count">0 mục</span>
                 </div>
-                <div class="overflow-x-auto">
+                
+                <!-- 1. Desktop Table -->
+                <div class="hidden md:block overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-100 text-slate-600 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
                             <tr>
@@ -176,13 +191,108 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- 2. Mobile Cards -->
+                <div id="dt-items-mobile" class="md:hidden p-2.5 space-y-2 bg-slate-50/50">
+                    <!-- Rendered by JS on mobile -->
+                </div>
             </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL CẤU HÌNH MẪU IN BÁO GIÁ (CHỈ ADMIN) -->
+<div id="modal-boq-print-config" onclick="if(event.target === this) window.modBoq.closePrintConfigModal()" class="hidden fixed inset-0 z-[120] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-purple-900 text-white px-6 py-4 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-300">
+                    <i class="fas fa-print text-base"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-sm sm:text-base text-white">Cấu Hình Mẫu In Báo Giá & Thông Tin Shop</h3>
+                    <p class="text-[11px] text-purple-200">Tùy biến thông tin hiển thị trên file in PDF Báo Giá BOQ</p>
+                </div>
+            </div>
+            <button onclick="window.modBoq.closePrintConfigModal()" class="text-slate-400 hover:text-white p-1 rounded-lg text-lg"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs">
+            <div class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-amber-900 flex items-start gap-2.5">
+                <i class="fas fa-shield-alt text-amber-600 text-base mt-0.5 shrink-0"></i>
+                <div class="text-[11.5px] leading-relaxed">
+                    <strong>Phân quyền Quản trị viên (Admin):</strong> Thông tin lưu tại đây sẽ tự động áp dụng trực tiếp lên tất cả các bản xuất PDF Báo Giá / BOQ trên toàn hệ thống.
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Tên Công Ty / Shop Bán Hàng <span class="text-red-500">*</span></label>
+                    <input type="text" id="cfg-print-store-name" placeholder="VD: CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold text-xs outline-none focus:border-purple-500 bg-slate-50">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Hotline Kinh Doanh / Kỹ Thuật <span class="text-red-500">*</span></label>
+                    <input type="text" id="cfg-print-store-phone" placeholder="VD: 0937.039.889" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold text-xs outline-none focus:border-purple-500 bg-slate-50 text-blue-600">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Mã Số Thuế (MST)</label>
+                    <input type="text" id="cfg-print-store-tax" placeholder="VD: 0315614349" class="w-full border border-slate-300 rounded-xl p-2.5 font-medium text-xs outline-none focus:border-purple-500 bg-slate-50">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Email Liên Hệ / Hỗ Trợ</label>
+                    <input type="text" id="cfg-print-store-email" placeholder="VD: contact@sungo.vn" class="w-full border border-slate-300 rounded-xl p-2.5 font-medium text-xs outline-none focus:border-purple-500 bg-slate-50">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Địa Chỉ Trụ Sở / Văn Phòng Công Ty <span class="text-red-500">*</span></label>
+                <input type="text" id="cfg-print-store-address" placeholder="VD: 419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM" class="w-full border border-slate-300 rounded-xl p-2.5 font-medium text-xs outline-none focus:border-purple-500 bg-slate-50">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Website Chính Thức</label>
+                    <input type="text" id="cfg-print-store-website" placeholder="VD: https://sungo.vn" class="w-full border border-slate-300 rounded-xl p-2.5 font-medium text-xs outline-none focus:border-purple-500 bg-slate-50 text-blue-600">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Đại Diện Bên Bán Ký Tên</label>
+                    <input type="text" id="cfg-print-store-sign" placeholder="VD: CÔNG TY TNHH NĂNG LƯỢNG SUNGO" class="w-full border border-slate-300 rounded-xl p-2.5 font-bold text-xs outline-none focus:border-purple-500 bg-slate-50">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Ghi Chú Kỹ Thuật & Cam Kết Mặc Định</label>
+                <textarea id="cfg-print-quote-notes" rows="3" placeholder="- Giá trên đã bao gồm toàn bộ thiết bị chính hãng...&#10;- Toàn bộ thiết bị đạt chứng nhận tiêu chuẩn chất lượng quốc tế..." class="w-full border border-slate-300 rounded-xl p-2.5 font-normal text-xs outline-none focus:border-purple-500 bg-slate-50 leading-relaxed"></textarea>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex justify-end gap-2.5 shrink-0">
+            <button type="button" onclick="window.modBoq.closePrintConfigModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition">HỦY BỎ</button>
+            <button type="button" onclick="window.modBoq.savePrintConfig()" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+                <i class="fas fa-save"></i> LƯU CẤU HÌNH MẪU IN
+            </button>
         </div>
     </div>
 </div>
 
 <script>
 window.modBoq = {
+    isAdminUser: function() {
+        try {
+            var uStr = localStorage.getItem("sungo_user") || localStorage.getItem("currentUser") || sessionStorage.getItem("sungo_user");
+            if (!uStr) return false;
+            var u = JSON.parse(uStr);
+            var r = String(u.role || "").toUpperCase().trim();
+            var adminRoles = ["ADMIN", "SUPER_ADMIN", "GIAM_DOC", "TONG_GIAM_DOC", "DIRECTOR"];
+            return adminRoles.indexOf(r) !== -1;
+        } catch(e) {
+            return false;
+        }
+    },
     allData: [],
     currentStatusFilter: 'ALL',
     selectedQuotation: null,
@@ -311,6 +421,9 @@ window.modBoq = {
             return { stBadge, sysBadge };
         };
 
+        const canEdit = true; // Nhân viên Sale và Admin đều được sửa báo giá
+        const canDelete = window.modBoq.isAdminUser(); // Chỉ Admin mới được xóa báo giá
+
         // 1. RENDER DESKTOP DATA TABLE
         if (tbody) {
             tbody.innerHTML = dataList.map(o => {
@@ -324,8 +437,13 @@ window.modBoq = {
                 return `
                 <tr class="hover:bg-blue-50/40 transition border-b border-slate-100">
                     <td class="p-3 pl-4 font-bold">
-                        <span class="text-blue-600 text-[13px] font-mono font-black cursor-pointer hover:underline" onclick="window.modBoq.openDetail(${qId})">${o.quotation_code}</span>
-                        <br><span class="text-[10px] text-slate-400 font-normal">${dateStr}</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-blue-600 text-[13px] font-mono font-black cursor-pointer hover:underline" onclick="window.modBoq.openDetail(${qId})">${o.quotation_code}</span>
+                            <button type="button" onclick="event.stopPropagation(); window.copyToClipboard('${o.quotation_code}', 'Mã báo giá')" class="text-slate-400 hover:text-blue-600 p-0.5 transition cursor-pointer" title="Sao chép mã báo giá">
+                                <i class="fas fa-copy text-[11px]"></i>
+                            </button>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-normal">${dateStr}</span>
                     </td>
                     <td class="p-3">
                         <p class="font-bold text-slate-800 text-[13px]">${o.project_name || 'Dự án điện mặt trời'}</p>
@@ -346,6 +464,7 @@ window.modBoq = {
                             <button onclick="window.modBoq.openDetail(${qId})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer" title="Xem Chi Tiết BOQ">
                                 <i class="fas fa-eye mr-1"></i> Xem
                             </button>
+                            ${canEdit ? `
                             <button onclick="window.modBoq.editQuotation(${qId})" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-2.5 py-1.5 rounded-lg font-black text-xs transition cursor-pointer shadow-2xs" title="Sửa Báo Giá Dự Án">
                                 <i class="fas fa-edit"></i> Sửa
                             </button>
@@ -356,6 +475,10 @@ window.modBoq = {
                                     <i class="fas fa-cart-arrow-down"></i>
                                 </button>
                             `}
+                            <button onclick="window.modBoq.deleteQuotation(${qId})" class="bg-red-50 hover:bg-red-600 hover:text-white text-red-600 px-2 py-1.5 rounded-lg font-bold text-xs transition border border-red-200 cursor-pointer shadow-2xs" title="Xóa Báo Giá & Hồ Sơ Liên Quan">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            ` : ''}
                         </div>
                     </td>
                 </tr>`;
@@ -378,6 +501,9 @@ window.modBoq = {
                     <div class="flex items-center justify-between gap-1.5">
                         <div class="flex items-center gap-1.5 min-w-0">
                             <span class="text-blue-600 font-mono font-black text-xs cursor-pointer hover:underline" onclick="window.modBoq.openDetail(${qId})">${o.quotation_code}</span>
+                            <button type="button" onclick="event.stopPropagation(); window.copyToClipboard('${o.quotation_code}', 'Mã báo giá')" class="text-slate-400 hover:text-blue-600 p-0.5 transition cursor-pointer" title="Sao chép mã báo giá">
+                                <i class="fas fa-copy text-[10px]"></i>
+                            </button>
                             ${sysBadge}
                         </div>
                         <div class="shrink-0">
@@ -415,6 +541,7 @@ window.modBoq = {
                             <button type="button" onclick="window.modBoq.openDetail(${qId})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black text-[11px] px-2.5 py-1 rounded-lg border border-blue-200 transition flex items-center gap-1 cursor-pointer">
                                 <i class="fas fa-eye text-[10px]"></i> Xem
                             </button>
+                            ${canEdit ? `
                             <button type="button" onclick="window.modBoq.editQuotation(${qId})" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] px-2.5 py-1 rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer">
                                 <i class="fas fa-edit text-[10px]"></i> Sửa
                             </button>
@@ -425,6 +552,10 @@ window.modBoq = {
                                     <i class="fas fa-cart-arrow-down text-[10px]"></i> Lên Đơn
                                 </button>
                             `}
+                            <button type="button" onclick="window.modBoq.deleteQuotation(${qId})" class="bg-red-50 hover:bg-red-600 hover:text-white text-red-600 font-black text-[11px] px-2.5 py-1 rounded-lg border border-red-200 transition flex items-center gap-1 cursor-pointer" title="Xóa Báo Giá">
+                                <i class="fas fa-trash-alt text-[10px]"></i> Xóa
+                            </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -494,24 +625,194 @@ window.modBoq = {
             }).join('');
         }
 
+        // Render mobile cards
+        const itemsMobile = document.getElementById('dt-items-mobile');
+        if (itemsMobile) {
+            if (items.length === 0) {
+                itemsMobile.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs font-bold">Không có danh sách vật tư chi tiết</div>';
+            } else {
+                itemsMobile.innerHTML = items.map((it, idx) => {
+                    const qty = parseFloat(it.quantity || it.qty || 1);
+                    const price = parseFloat(it.price || it.unit_price || 0);
+                    const itemTotal = qty * price;
+                    const imgUrl = it.image_url || 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=100&auto=format&fit=crop&q=60';
+                    const desc = it.description || '';
+
+                    return `
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs space-y-2">
+                        <div class="flex items-start gap-2.5">
+                            <div class="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center p-0.5 shrink-0">
+                                <img src="${imgUrl}" alt="${it.product_name}" class="w-full h-full object-cover rounded" onerror="this.src='https://images.unsplash.com/photo-1509391365360-2e959784a276?w=100&auto=format&fit=crop&q=60'"/>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-bold text-slate-900 text-xs leading-snug">${it.product_name || it.name}</div>
+                                ${it.sku ? `<span class="inline-block font-mono text-[9px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 mt-0.5">${it.sku}</span>` : ''}
+                                ${desc ? `<p class="text-[10px] text-slate-400 font-normal leading-tight mt-0.5 line-clamp-2">${desc}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-lg border border-slate-100">
+                            <div><span class="text-slate-400">SL:</span> <b class="text-slate-800">${qty} ${it.unit || 'Bộ'}</b> × <span class="text-slate-600 font-medium">${window.modBoq.fmt(price)} đ</span></div>
+                            <div><strong class="text-xs font-black text-amber-700">${window.modBoq.fmt(itemTotal)} đ</strong></div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
         // Nút chuyển thành đơn hàng
         const orderContainer = document.getElementById('dt-order-action-container');
         if (q.status === 'WON') {
-            orderContainer.innerHTML = `<span class="bg-emerald-100 text-emerald-800 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5"><i class="fas fa-check-circle"></i> Đã Tạo Đơn Hàng (${q.converted_order_code || 'DH'})</span>`;
+            orderContainer.innerHTML = `<span class="bg-emerald-100 text-emerald-800 px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap"><i class="fas fa-check-circle"></i> Đã Lên Đơn (${q.converted_order_code || 'DH'})</span>`;
         } else {
-            orderContainer.innerHTML = `<button onclick="window.modBoq.convertToOrder()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"><i class="fas fa-cart-arrow-down"></i> TẠO ĐƠN HÀNG (SALE ORDER)</button>`;
+            orderContainer.innerHTML = `<button onclick="window.modBoq.convertToOrder()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"><i class="fas fa-cart-arrow-down"></i> TẠO ĐƠN HÀNG</button>`;
+        }
+
+        // Phân quyền hiển thị nút Sửa & Xóa báo giá cho Admin
+        const isAdmin = window.modBoq.isAdminUser();
+        const btnEdit = document.getElementById('btn-edit-boq');
+        const btnDel = document.getElementById('btn-delete-boq');
+        if (btnEdit) btnEdit.classList.remove('hidden'); // Cả Sale và Admin đều sửa được
+        if (btnDel) {
+            if (isAdmin) btnDel.classList.remove('hidden');
+            else btnDel.classList.add('hidden');
+        }
+        const btnCfgPrint = document.getElementById('btn-config-print-boq');
+        if (btnCfgPrint) {
+            if (isAdmin) btnCfgPrint.classList.remove('hidden');
+            else btnCfgPrint.classList.add('hidden');
         }
 
         document.getElementById('boq-list-container').classList.add('hidden');
-        document.getElementById('boq-detail-container').classList.remove('hidden', 'translate-x-full');
+        document.getElementById('boq-detail-container').classList.remove('hidden');
+        const mainEl = document.getElementById('main-content');
+        if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    
+    openPrintConfigModal: async () => {
+        if (!window.modBoq.isAdminUser()) {
+            alert("⛔ TỪ CHỐI TRUY CẬP: Chỉ tài khoản Quản trị viên (Admin) mới có quyền cài đặt thông tin Shop & Mẫu in!");
+            return;
+        }
+        let s = {};
+        try {
+            const res = await fetch("/api/settings?t=" + Date.now());
+            const json = await res.json();
+            s = json || {};
+        } catch(e) {
+            try {
+                const raw = localStorage.getItem("sungo_settings") || localStorage.getItem("sys_settings");
+                if (raw) s = JSON.parse(raw);
+            } catch(e2) {}
+        }
+
+        document.getElementById("cfg-print-store-name").value = s.quote_store_name || s.store_name || "CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO";
+        document.getElementById("cfg-print-store-phone").value = s.quote_store_phone || s.store_phone || s.company_hotline || "0937.039.889";
+        document.getElementById("cfg-print-store-tax").value = s.quote_store_tax || s.store_tax || s.tax_code || "0315614349";
+        document.getElementById("cfg-print-store-address").value = s.quote_store_address || s.store_address || s.company_address || "419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM";
+        document.getElementById("cfg-print-store-email").value = s.quote_store_email || s.store_email || s.company_email || "contact@sungo.vn";
+        document.getElementById("cfg-print-store-website").value = s.quote_store_website || s.store_website || s.website || "https://sungo.vn";
+        document.getElementById("cfg-print-store-sign").value = s.quote_right_sign || "CÔNG TY TNHH NĂNG LƯỢNG SUNGO";
+        document.getElementById("cfg-print-quote-notes").value = s.quote_notes || "- Giá trên đã bao gồm toàn bộ thiết bị chính hãng, phụ kiện lắp đặt và hướng dẫn vận hành.\n- Toàn bộ thiết bị đạt chứng nhận tiêu chuẩn chất lượng quốc tế (TUV, CE, IEC, UL).\n- Hệ thống được trang bị giám sát thông minh 24/7 qua App điện thoại (WiFi/4G Cloud).";
+
+        const modal = document.getElementById("modal-boq-print-config");
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+    },
+
+    closePrintConfigModal: () => {
+        const modal = document.getElementById("modal-boq-print-config");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    savePrintConfig: async () => {
+        if (!window.modBoq.isAdminUser()) {
+            alert("⛔ TỪ CHỐI TRUY CẬP: Chỉ tài khoản Quản trị viên (Admin) mới có quyền lưu cấu hình mẫu in!");
+            return;
+        }
+
+        const storeName = document.getElementById("cfg-print-store-name").value.trim();
+        const storePhone = document.getElementById("cfg-print-store-phone").value.trim();
+        const storeTax = document.getElementById("cfg-print-store-tax").value.trim();
+        const storeAddress = document.getElementById("cfg-print-store-address").value.trim();
+        const storeEmail = document.getElementById("cfg-print-store-email").value.trim();
+        const storeWebsite = document.getElementById("cfg-print-store-website").value.trim();
+        const storeSign = document.getElementById("cfg-print-store-sign").value.trim();
+        const quoteNotes = document.getElementById("cfg-print-quote-notes").value.trim();
+
+        if (!storeName || !storePhone || !storeAddress) {
+            alert("Vui lòng điền đầy đủ Tên công ty, Hotline và Địa chỉ!");
+            return;
+        }
+
+        const payload = {
+            store_name: storeName,
+            quote_store_name: storeName,
+            store_phone: storePhone,
+            quote_store_phone: storePhone,
+            company_hotline: storePhone,
+            store_tax: storeTax,
+            quote_store_tax: storeTax,
+            tax_code: storeTax,
+            store_address: storeAddress,
+            quote_store_address: storeAddress,
+            company_address: storeAddress,
+            store_email: storeEmail,
+            quote_store_email: storeEmail,
+            company_email: storeEmail,
+            store_website: storeWebsite,
+            quote_store_website: storeWebsite,
+            website: storeWebsite,
+            quote_right_sign: storeSign,
+            quote_notes: quoteNotes
+        };
+
+        try {
+            // Save to localStorage
+            let current = {};
+            try { current = JSON.parse(localStorage.getItem("sungo_settings") || "{}"); } catch(e) {}
+            const updated = { ...current, ...payload };
+            localStorage.setItem("sungo_settings", JSON.stringify(updated));
+            localStorage.setItem("sys_settings", JSON.stringify(updated));
+
+            // Save to server API
+            let userRole = "ADMIN";
+            try {
+                const u = JSON.parse(localStorage.getItem("sungo_user") || "{}");
+                userRole = u.role || "ADMIN";
+            } catch(e) {}
+
+            const res = await fetch("/api/settings", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-role": userRole
+                },
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert("🎉 Đã lưu cấu hình Mẫu In & Thông Tin Doanh Nghiệp thành công! Bản in PDF sẽ áp dụng thông tin mới ngay lập tức.");
+                window.modBoq.closePrintConfigModal();
+            } else {
+                alert("❌ Lỗi: " + (json.error || "Không thể lưu cài đặt lên máy chủ!"));
+            }
+        } catch(e) {
+            alert("⚠️ Đã lưu cấu hình trên máy cục bộ!");
+            window.modBoq.closePrintConfigModal();
+        }
     },
 
     showList: () => {
-        document.getElementById('boq-detail-container').classList.add('translate-x-full');
-        setTimeout(() => {
-            document.getElementById('boq-detail-container').classList.add('hidden');
-            document.getElementById('boq-list-container').classList.remove('hidden');
-        }, 300);
+        document.getElementById('boq-detail-container').classList.add('hidden');
+        document.getElementById('boq-list-container').classList.remove('hidden');
+        const mainEl = document.getElementById('main-content');
+        if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     quickConvertToOrder: (id) => {
@@ -580,10 +881,684 @@ window.modBoq = {
         }
     },
 
-    exportPDF: () => {
-        const q = window.modBoq.selectedQuotation;
-        if (!q) return;
-        window.print();
+        docSoTien: function(soTien) {
+        var num = Math.round(parseFloat(soTien) || 0);
+        if (num === 0) return "Không đồng";
+        var chuSo = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+        var tien = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"];
+        
+        function docBlock(n, showZeroHundred) {
+            var tram = Math.floor(n / 100);
+            var chuc = Math.floor((n % 100) / 10);
+            var donVi = n % 10;
+            var str = "";
+            if (tram > 0 || showZeroHundred) str += chuSo[tram] + " trăm ";
+            if (chuc > 1) {
+                str += chuSo[chuc] + " mươi ";
+                if (donVi === 1) str += "mốt ";
+                else if (donVi === 5) str += "lăm ";
+                else if (donVi > 0) str += chuSo[donVi] + " ";
+            } else if (chuc === 1) {
+                str += "mười ";
+                if (donVi === 5) str += "lăm ";
+                else if (donVi > 0) str += chuSo[donVi] + " ";
+            } else if (chuc === 0 && donVi > 0) {
+                if (tram > 0 || showZeroHundred) str += "lẻ ";
+                str += chuSo[donVi] + " ";
+            }
+            return str;
+        }
+        var strNum = num.toString();
+        var blocks = [];
+        while (strNum.length > 0) {
+            blocks.unshift(parseInt(strNum.slice(-3), 10));
+            strNum = strNum.slice(0, -3);
+        }
+        var result = "";
+        for (var i = 0; i < blocks.length; i++) {
+            var b = blocks[i];
+            var tier = blocks.length - 1 - i;
+            if (b > 0) {
+                var showZero = i > 0;
+                result += docBlock(b, showZero) + tien[tier] + " ";
+            }
+        }
+        result = result.trim() + " đồng";
+        return result.charAt(0).toUpperCase() + result.slice(1);
+    },
+
+    exportPDF: function() {
+        var isAdmin = window.modBoq.isAdminUser();
+        var q = window.modBoq.selectedQuotation;
+        if (!q) {
+            alert("Vui lòng chọn Báo Giá / BOQ cần xuất PDF!");
+            return;
+        }
+
+        var fmt = window.modBoq.fmt;
+        var s = {};
+        try {
+            var raw = localStorage.getItem("sungo_settings") || localStorage.getItem("sys_settings");
+            if (raw) s = JSON.parse(raw);
+        } catch(e) {}
+
+        var storeName = s.quote_store_name || s.store_name || "CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO";
+        var storePhone = s.quote_store_phone || s.store_phone || s.company_hotline || "0937.039.889";
+        var storeAddress = s.quote_store_address || s.store_address || s.company_address || "419/13 Song Hành Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM";
+        var storeTax = s.quote_store_tax || s.store_tax || s.tax_code || "0315614349";
+        var storeEmail = s.quote_store_email || s.store_email || s.company_email || "contact@sungo.vn";
+        var storeWebsite = s.quote_store_website || s.store_website || s.website || "https://sungo.vn";
+
+        var items = q.items || [];
+        var totalAmount = parseFloat(q.total_amount || 0);
+        var wordsTotal = window.modBoq.docSoTien(totalAmount);
+        var createdDate = q.created_at ? new Date(q.created_at).toLocaleDateString("vi-VN") : new Date().toLocaleDateString("vi-VN");
+        var sysSpec = q.system_type ? (q.system_type + (q.system_kwp ? (" - " + q.system_kwp + " kWp") : "")) : "Hệ Thống Điện Mặt Trời";
+
+        var itemsRows = "";
+        if (items.length === 0) {
+            itemsRows = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #94a3b8;">Chưa có dữ liệu danh mục thiết bị</td></tr>';
+        } else {
+            itemsRows = items.map(function(it, idx) {
+                var qty = parseFloat(it.quantity || it.qty || 1);
+                var price = parseFloat(it.price || it.unit_price || 0);
+                var itemTotal = qty * price;
+                var imgUrl = it.image_url || "https://images.unsplash.com/photo-1509391365360-2e959784a276?w=100&auto=format&fit=crop&q=60";
+                var desc = it.description ? '<div class="item-desc">' + it.description + '</div>' : "";
+                var sku = it.sku ? '<div class="item-sku">SKU: ' + it.sku + '</div>' : "";
+
+                return '<tr>' +
+                    '<td style="text-align: center; font-weight: 700;">' + (idx + 1) + '</td>' +
+                    '<td style="text-align: center; padding: 4px;">' +
+                        '<img src="' + imgUrl + '" alt="' + (it.product_name || it.name || '') + '" class="item-thumb" onerror="this.style.display=\'none\'"/>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div class="item-name">' + (it.product_name || it.name || 'Thiết bị Solar') + '</div>' +
+                        sku +
+                        desc +
+                    '</td>' +
+                    '<td style="text-align: center;">' + (it.unit || 'Bộ') + '</td>' +
+                    '<td style="text-align: center; font-weight: 800;">' + qty + '</td>' +
+                    '<td style="text-align: right;">' + fmt(price) + ' đ</td>' +
+                    '<td style="text-align: right; font-weight: 800; color: #0f172a;">' + fmt(itemTotal) + ' đ</td>' +
+                '</tr>';
+            }).join("");
+        }
+
+        var printHtml = '<!DOCTYPE html>' +
+'<html lang="vi">' +
+'<head>' +
+    '<meta charset="UTF-8">' +
+    '<title>Báo Giá BOQ - ' + (q.quotation_code || "SUNGO") + ' - ' + (q.customer_name || "Khách Hàng") + '</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">' +
+    '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">' +
+    '<style>' +
+        '* { box-sizing: border-box; margin: 0; padding: 0; }' +
+        'body {' +
+            'font-family: \'Inter\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;' +
+            'color: #1e293b;' +
+            'background: #e2e8f0;' +
+            'line-height: 1.45;' +
+            '-webkit-font-smoothing: antialiased;' +
+        '}' +
+        '.no-print-bar {' +
+            'background: #0f172a;' +
+            'color: #fff;' +
+            'padding: 12px 24px;' +
+            'display: flex;' +
+            'justify-content: space-between;' +
+            'align-items: center;' +
+            'position: sticky;' +
+            'top: 0;' +
+            'z-index: 1000;' +
+            'box-shadow: 0 4px 12px rgba(0,0,0,0.2);' +
+        '}' +
+        '.btn-print {' +
+            'background: linear-gradient(135deg, #2563eb, #1d4ed8);' +
+            'color: #fff;' +
+            'border: none;' +
+            'padding: 10px 22px;' +
+            'font-weight: 700;' +
+            'font-size: 13px;' +
+            'border-radius: 8px;' +
+            'cursor: pointer;' +
+            'display: inline-flex;' +
+            'align-items: center;' +
+            'gap: 8px;' +
+            'box-shadow: 0 2px 8px rgba(37,99,235,0.4);' +
+            'transition: all 0.2s;' +
+        '}' +
+        '.btn-print:hover { background: #1e40af; transform: translateY(-1px); }' +
+        '.btn-close {' +
+            'background: #334155;' +
+            'color: #cbd5e1;' +
+            'border: none;' +
+            'padding: 10px 18px;' +
+            'font-weight: 600;' +
+            'font-size: 13px;' +
+            'border-radius: 8px;' +
+            'cursor: pointer;' +
+        '}' +
+        '.btn-close:hover { background: #475569; color: #fff; }' +
+
+        '.print-page {' +
+            'width: 210mm;' +
+            'min-height: 297mm;' +
+            'margin: 20px auto;' +
+            'background: #fff;' +
+            'padding: 14mm 16mm;' +
+            'box-shadow: 0 10px 30px rgba(0,0,0,0.12);' +
+            'border-radius: 4px;' +
+            'position: relative;' +
+        '}' +
+
+        '/* HEADER */' +
+        '.doc-header {' +
+            'display: flex;' +
+            'justify-content: space-between;' +
+            'align-items: flex-start;' +
+            'border-bottom: 2.5px solid #0f172a;' +
+            'padding-bottom: 12px;' +
+            'margin-bottom: 14px;' +
+        '}' +
+        '.company-brand {' +
+            'display: flex;' +
+            'align-items: center;' +
+            'gap: 12px;' +
+        '}' +
+        '.company-logo-box {' +
+            'width: 48px;' +
+            'height: 48px;' +
+            'background: linear-gradient(135deg, #0f172a, #1e293b);' +
+            'border-radius: 10px;' +
+            'display: flex;' +
+            'align-items: center;' +
+            'justify-content: center;' +
+            'color: #f59e0b;' +
+            'font-size: 24px;' +
+        '}' +
+        '.company-title {' +
+            'font-family: \'Montserrat\', sans-serif;' +
+            'font-weight: 900;' +
+            'font-size: 14px;' +
+            'color: #0f172a;' +
+            'letter-spacing: 0.3px;' +
+            'text-transform: uppercase;' +
+        '}' +
+        '.company-sub {' +
+            'font-size: 10px;' +
+            'color: #64748b;' +
+            'margin-top: 2px;' +
+            'line-height: 1.35;' +
+        '}' +
+        '.doc-meta {' +
+            'text-align: right;' +
+        '}' +
+        '.doc-code-badge {' +
+            'display: inline-block;' +
+            'background: #eff6ff;' +
+            'color: #1d4ed8;' +
+            'border: 1.5px solid #bfdbfe;' +
+            'padding: 4px 10px;' +
+            'border-radius: 6px;' +
+            'font-family: monospace;' +
+            'font-weight: 800;' +
+            'font-size: 13px;' +
+        '}' +
+        '.doc-date {' +
+            'font-size: 10.5px;' +
+            'color: #64748b;' +
+            'margin-top: 4px;' +
+        '}' +
+
+        '/* TITLE */' +
+        '.main-title-block {' +
+            'text-align: center;' +
+            'margin: 10px 0 14px 0;' +
+        '}' +
+        '.main-title {' +
+            'font-family: \'Montserrat\', sans-serif;' +
+            'font-weight: 900;' +
+            'font-size: 16px;' +
+            'color: #0f172a;' +
+            'text-transform: uppercase;' +
+            'letter-spacing: 0.5px;' +
+        '}' +
+        '.sub-title {' +
+            'font-size: 11px;' +
+            'color: #d97706;' +
+            'font-weight: 800;' +
+            'margin-top: 2px;' +
+            'text-transform: uppercase;' +
+            'letter-spacing: 0.3px;' +
+        '}' +
+
+        '/* INFO GRID */' +
+        '.info-grid {' +
+            'display: grid;' +
+            'grid-template-columns: 1fr 1fr;' +
+            'gap: 10px;' +
+            'margin-bottom: 14px;' +
+        '}' +
+        '.info-box {' +
+            'background: #f8fafc;' +
+            'border: 1px solid #e2e8f0;' +
+            'border-radius: 8px;' +
+            'padding: 8px 10px;' +
+            'font-size: 11px;' +
+        '}' +
+        '.info-box-title {' +
+            'font-family: \'Montserrat\', sans-serif;' +
+            'font-weight: 800;' +
+            'font-size: 10px;' +
+            'text-transform: uppercase;' +
+            'color: #334155;' +
+            'border-bottom: 1px solid #e2e8f0;' +
+            'padding-bottom: 3px;' +
+            'margin-bottom: 5px;' +
+            'display: flex;' +
+            'align-items: center;' +
+            'gap: 4px;' +
+        '}' +
+        '.info-row {' +
+            'display: flex;' +
+            'margin-bottom: 3px;' +
+            'line-height: 1.35;' +
+        '}' +
+        '.info-row:last-child { margin-bottom: 0; }' +
+        '.info-label {' +
+            'width: 105px;' +
+            'color: #64748b;' +
+            'flex-shrink: 0;' +
+            'font-weight: 500;' +
+        '}' +
+        '.info-value {' +
+            'color: #0f172a;' +
+            'font-weight: 700;' +
+            'flex: 1;' +
+        '}' +
+
+        '/* TABLE */' +
+        '.boq-table {' +
+            'width: 100%;' +
+            'border-collapse: collapse;' +
+            'margin-bottom: 12px;' +
+            'font-size: 10.5px;' +
+        '}' +
+        '.boq-table th {' +
+            'background: #0f172a;' +
+            'color: #fff;' +
+            'padding: 6px 5px;' +
+            'font-weight: 700;' +
+            'font-size: 9.5px;' +
+            'text-transform: uppercase;' +
+            'letter-spacing: 0.3px;' +
+            'border: 1px solid #0f172a;' +
+            'text-align: center;' +
+        '}' +
+        '.boq-table td {' +
+            'padding: 5px 6px;' +
+            'border: 1px solid #cbd5e1;' +
+            'color: #1e293b;' +
+            'vertical-align: middle;' +
+        '}' +
+        '.boq-table tr:nth-child(even) td {' +
+            'background: #f8fafc;' +
+        '}' +
+        '.item-thumb {' +
+            'width: 32px;' +
+            'height: 32px;' +
+            'object-fit: cover;' +
+            'border-radius: 4px;' +
+            'border: 1px solid #e2e8f0;' +
+            'display: block;' +
+            'margin: 0 auto;' +
+        '}' +
+        '.item-name {' +
+            'font-weight: 700;' +
+            'color: #0f172a;' +
+        '}' +
+        '.item-sku {' +
+            'font-family: monospace;' +
+            'font-size: 9px;' +
+            'color: #2563eb;' +
+            'font-weight: 700;' +
+            'display: inline-block;' +
+            'background: #eff6ff;' +
+            'padding: 0 3px;' +
+            'border-radius: 3px;' +
+            'margin-top: 1px;' +
+        '}' +
+        '.item-desc {' +
+            'font-size: 9px;' +
+            'color: #64748b;' +
+            'margin-top: 1px;' +
+            'line-height: 1.25;' +
+        '}' +
+
+        '/* SUMMARY */' +
+        '.summary-wrapper {' +
+            'display: flex;' +
+            'justify-content: space-between;' +
+            'align-items: flex-start;' +
+            'gap: 14px;' +
+            'margin-bottom: 12px;' +
+            'page-break-inside: avoid;' +
+        '}' +
+        '.note-block {' +
+            'flex: 1;' +
+            'background: #fffbeb;' +
+            'border: 1px solid #fde68a;' +
+            'border-radius: 8px;' +
+            'padding: 8px 10px;' +
+            'font-size: 9.5px;' +
+            'color: #92400e;' +
+            'line-height: 1.35;' +
+        '}' +
+        '.note-block strong { color: #78350f; font-weight: 800; }' +
+        '.summary-card {' +
+            'width: 290px;' +
+            'background: #f8fafc;' +
+            'border: 1px solid #cbd5e1;' +
+            'border-radius: 8px;' +
+            'overflow: hidden;' +
+            'flex-shrink: 0;' +
+            'font-size: 11px;' +
+        '}' +
+        '.summary-row {' +
+            'display: flex;' +
+            'justify-content: space-between;' +
+            'padding: 4px 8px;' +
+            'border-bottom: 1px solid #e2e8f0;' +
+        '}' +
+        '.summary-row:last-child { border-bottom: none; }' +
+        '.summary-total {' +
+            'background: #0f172a;' +
+            'color: #fff;' +
+            'padding: 6px 8px;' +
+            'font-weight: 800;' +
+            'font-size: 12px;' +
+        '}' +
+        '.summary-total .val {' +
+            'color: #fbbf24;' +
+            'font-size: 13px;' +
+        '}' +
+        '.words-total {' +
+            'font-size: 10px;' +
+            'font-style: italic;' +
+            'color: #475569;' +
+            'margin-top: 4px;' +
+            'padding-left: 2px;' +
+            'line-height: 1.3;' +
+        '}' +
+
+        '/* WARRANTY & COMMITMENT */' +
+        '.warranty-card {' +
+            'border: 1px dashed #cbd5e1;' +
+            'background: #fafafa;' +
+            'border-radius: 8px;' +
+            'padding: 7px 10px;' +
+            'margin-bottom: 14px;' +
+            'font-size: 9px;' +
+            'color: #475569;' +
+            'page-break-inside: avoid;' +
+        '}' +
+        '.warranty-card-title {' +
+            'font-weight: 800;' +
+            'font-size: 9.5px;' +
+            'color: #0f172a;' +
+            'text-transform: uppercase;' +
+            'margin-bottom: 3px;' +
+            'display: flex;' +
+            'align-items: center;' +
+            'gap: 4px;' +
+        '}' +
+        '.warranty-grid {' +
+            'display: grid;' +
+            'grid-template-columns: 1fr 1fr;' +
+            'gap: 4px 12px;' +
+        '}' +
+
+        '/* SIGNATURES */' +
+        '.signatures-grid {' +
+            'display: grid;' +
+            'grid-template-columns: 1fr 1fr 1fr;' +
+            'text-align: center;' +
+            'gap: 10px;' +
+            'margin-top: 10px;' +
+            'padding-top: 8px;' +
+            'border-top: 1px solid #e2e8f0;' +
+            'font-size: 10.5px;' +
+            'page-break-inside: avoid;' +
+        '}' +
+        '.sig-title {' +
+            'font-weight: 800;' +
+            'color: #0f172a;' +
+            'text-transform: uppercase;' +
+            'font-size: 10px;' +
+        '}' +
+        '.sig-sub {' +
+            'font-size: 9px;' +
+            'color: #94a3b8;' +
+            'font-style: italic;' +
+            'margin-top: 1px;' +
+        '}' +
+        '.sig-space {' +
+            'height: 55px;' +
+        '}' +
+        '.sig-name {' +
+            'font-weight: 700;' +
+            'color: #0f172a;' +
+            'font-size: 10.5px;' +
+        '}' +
+
+        '/* PRINT MEDIA */' +
+        '@media print {' +
+            'body {' +
+                'background: #fff !important;' +
+                'color: #000 !important;' +
+            '}' +
+            '.no-print-bar {' +
+                'display: none !important;' +
+            '}' +
+            '.print-page {' +
+                'width: 100% !important;' +
+                'min-height: auto !important;' +
+                'margin: 0 !important;' +
+                'padding: 0 !important;' +
+                'box-shadow: none !important;' +
+                'border-radius: 0 !important;' +
+            '}' +
+            '@page {' +
+                'size: A4 portrait;' +
+                'margin: 10mm 12mm;' +
+            '}' +
+            '* {' +
+                '-webkit-print-color-adjust: exact !important;' +
+                'print-color-adjust: exact !important;' +
+            '}' +
+        '}' +
+    '</style>' +
+'</head>' +
+'<body>' +
+    '<div class="no-print-bar">' +
+        '<div style="display: flex; align-items: center; gap: 10px;">' +
+            '<i class="fas fa-solar-panel" style="color: #f59e0b; font-size: 18px;"></i>' +
+            '<strong>XEM TRƯỚC BẢN IN BÁO GIÁ & BÓC TÁCH VẬT TƯ BOQ</strong>' +
+        '</div>' +
+        '<div style="display: flex; gap: 10px; align-items: center;">' +
+        (isAdmin ? '<button onclick="if(window.opener && window.opener.modBoq) { window.opener.modBoq.openPrintConfigModal(); window.close(); } else { alert(\'Vui lòng mở cài đặt mẫu in trên màn hình chính!\'); }" style="background:#7c3aed; color:#fff; border:none; padding:9px 16px; font-weight:700; font-size:12.5px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(124,58,237,0.3);"><i class="fas fa-sliders-h"></i> CÀI ĐẶT MẪU IN</button>' : '') +
+            '<button onclick="window.print()" class="btn-print"><i class="fas fa-print"></i> IN / LƯU PDF</button>' +
+            '<button onclick="window.close()" class="btn-close"><i class="fas fa-times"></i> ĐÓNG</button>' +
+        '</div>' +
+    '</div>' +
+
+    '<div class="print-page">' +
+        '<!-- HEADER -->' +
+        '<div class="doc-header">' +
+            '<div class="company-brand">' +
+                '<div class="company-logo-box"><i class="fas fa-sun"></i></div>' +
+                '<div>' +
+                    '<div class="company-title">' + storeName + '</div>' +
+                    '<div class="company-sub">' +
+                        '🏢 Địa chỉ: ' + storeAddress + '<br>' +
+                        '📞 Hotline: ' + storePhone + ' | 📜 MST: ' + storeTax + ' | ✉️ Email: ' + storeEmail + ' | 🌐 Website: ' + storeWebsite +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="doc-meta">' +
+                '<div class="doc-code-badge">MÃ BOQ: ' + (q.quotation_code || "BOQ-SUNGO") + '</div>' +
+                '<div class="doc-date">Ngày phát hành: ' + createdDate + '</div>' +
+                '<div class="doc-date" style="color: #d97706; font-weight: 600;">Hiệu lực: 15 ngày</div>' +
+            '</div>' +
+        '</div>' +
+
+        '<!-- TITLE -->' +
+        '<div class="main-title-block">' +
+            '<h1 class="main-title">BẢNG BÓC TÁCH VẬT TƯ & BÁO GIÁ DỰ ÁN</h1>' +
+            '<p class="sub-title">' + (q.project_name || "DỰ ÁN ĐIỆN NĂNG LƯỢNG MẶT TRỜI") + ' (' + sysSpec + ')</p>' +
+        '</div>' +
+
+        '<!-- INFO GRID -->' +
+        '<div class="info-grid">' +
+            '<!-- Customer info -->' +
+            '<div class="info-box">' +
+                '<div class="info-box-title"><i class="fas fa-user-tie" style="color: #2563eb;"></i> THÔNG TIN KHÁCH HÀNG / CHỦ ĐẦU TƯ</div>' +
+                '<div class="info-row"><span class="info-label">Khách hàng:</span><span class="info-value">' + (q.customer_name || "Khách Hàng") + '</span></div>' +
+                '<div class="info-row"><span class="info-label">Số điện thoại:</span><span class="info-value">' + (q.phone || q.customer_phone || "---") + '</span></div>' +
+                '<div class="info-row"><span class="info-label">Địa chỉ lắp đặt:</span><span class="info-value">' + (q.address || q.customer_address || "Tại công trình của khách hàng") + '</span></div>' +
+                '<div class="info-row"><span class="info-label">Ghi chú yêu cầu:</span><span class="info-value">' + (q.notes || "Thi công trọn gói theo tiêu chuẩn kỹ thuật") + '</span></div>' +
+            '</div>' +
+
+            '<!-- Project info -->' +
+            '<div class="info-box">' +
+                '<div class="info-box-title"><i class="fas fa-bolt" style="color: #f59e0b;"></i> THÔNG SỐ KỸ THUẬT & DỰ ÁN</div>' +
+                '<div class="info-row"><span class="info-label">Tên dự án:</span><span class="info-value">' + (q.project_name || "Hệ Thống Solar") + '</span></div>' +
+                '<div class="info-row"><span class="info-label">Loại hệ thống:</span><span class="info-value">' + (q.system_type || "HYBRID") + '</span></div>' +
+                '<div class="info-row"><span class="info-label">Công suất danh định:</span><span class="info-value">' + (q.system_kwp ? (q.system_kwp + " kWp") : "Theo thiết kế") + '</span></div>' +
+                '<div class="info-row"><span class="info-label">Nhân viên phụ trách:</span><span class="info-value">' + (q.sale_name || q.created_by || "Đội Ngũ Kỹ Thuật SUNGO") + '</span></div>' +
+            '</div>' +
+        '</div>' +
+
+        '<!-- BOQ DETAILS TABLE -->' +
+        '<table class="boq-table">' +
+            '<thead>' +
+                '<tr>' +
+                    '<th style="width: 30px;">STT</th>' +
+                    '<th style="width: 44px;">ẢNH</th>' +
+                    '<th style="text-align: left; padding-left: 8px;">THIẾT BỊ / VẬT TƯ / MÔ TẢ KỸ THUẬT</th>' +
+                    '<th style="width: 45px;">ĐVT</th>' +
+                    '<th style="width: 50px;">SL</th>' +
+                    '<th style="width: 95px; text-align: right; padding-right: 6px;">ĐƠN GIÁ (VNĐ)</th>' +
+                    '<th style="width: 105px; text-align: right; padding-right: 6px;">THÀNH TIỀN (VNĐ)</th>' +
+                '</tr>' +
+            '</thead>' +
+            '<tbody>' +
+                itemsRows +
+            '</tbody>' +
+        '</table>' +
+
+        '<!-- SUMMARY -->' +
+        '<div class="summary-wrapper">' +
+            '<div class="note-block">' +
+                '<div style="font-weight: 800; text-transform: uppercase; margin-bottom: 2px;">💡 GHI CHÚ & CAM KẾT KỸ THUẬT:</div>' +
+                '- Giá trên đã bao gồm toàn bộ thiết bị chính hãng, phụ kiện lắp đặt và hướng dẫn vận hành.<br>' +
+                '- Toàn bộ thiết bị đạt chứng nhận tiêu chuẩn chất lượng quốc tế (TUV, CE, IEC, UL).<br>' +
+                '- Hệ thống được trang bị giám sát thông minh 24/7 qua App điện thoại (WiFi/4G Cloud).' +
+            '</div>' +
+            '<div class="summary-card">' +
+                '<div class="summary-row">' +
+                    '<span style="color: #64748b;">Tổng tiền vật tư:</span>' +
+                    '<span style="font-weight: 700;">' + fmt(totalAmount) + ' đ</span>' +
+                '</div>' +
+                '<div class="summary-row">' +
+                    '<span style="color: #64748b;">Thuế VAT (8% - 10%):</span>' +
+                    '<span style="font-weight: 700; color: #16a34a;">Đã bao gồm VAT</span>' +
+                '</div>' +
+                '<div class="summary-row summary-total">' +
+                    '<span>TỔNG CỘNG THANH TOÁN:</span>' +
+                    '<span class="val">' + fmt(totalAmount) + ' VNĐ</span>' +
+                '</div>' +
+                '<div class="words-total">' +
+                    '<strong>Bằng chữ:</strong> ' + wordsTotal +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+
+        '<!-- WARRANTY & POLICIES -->' +
+        '<div class="warranty-card">' +
+            '<div class="warranty-card-title"><i class="fas fa-shield-alt" style="color: #2563eb;"></i> CHÍNH SÁCH BẢO HÀNH CHÍNH HÃNG SUNGO</div>' +
+            '<div class="warranty-grid">' +
+                '<div>• <strong>Tấm Pin Quang Điện:</strong> Bảo hành sản phẩm 12 năm, hiệu suất 25 năm &ge; 80%.</div>' +
+                '<div>• <strong>Biến Tần Inverter:</strong> Bảo hành 5 năm chính hãng (Đổi mới theo tiêu chuẩn NSX).</div>' +
+                '<div>• <strong>Pin Lưu Trữ Lithium:</strong> Bảo hành 5 - 10 năm theo dung lượng và chu kỳ nạp xả.</div>' +
+                '<div>• <strong>Thi Công & Lắp Đặt:</strong> Bảo hành toàn diện 24 tháng bởi đội ngũ kỹ thuật SUNGO.</div>' +
+            '</div>' +
+        '</div>' +
+
+        '<!-- SIGNATURES -->' +
+        '<div class="signatures-grid">' +
+            '<div>' +
+                '<div class="sig-title">ĐẠI DIỆN KHÁCH HÀNG</div>' +
+                '<div class="sig-sub">(Ký & ghi rõ họ tên)</div>' +
+                '<div class="sig-space"></div>' +
+                '<div class="sig-name">' + (q.customer_name || "Khách Hàng") + '</div>' +
+            '</div>' +
+            '<div>' +
+                '<div class="sig-title">NGƯỜI LẬP BÁO GIÁ</div>' +
+                '<div class="sig-sub">(Ký & ghi rõ họ tên)</div>' +
+                '<div class="sig-space"></div>' +
+                '<div class="sig-name">' + (q.sale_name || q.created_by || "Kỹ Thuật SUNGO") + '</div>' +
+            '</div>' +
+            '<div>' +
+                '<div class="sig-title">' + storeName + '</div>' +
+                '<div class="sig-sub">(Ký tên & đóng dấu)</div>' +
+                '<div class="sig-space"></div>' +
+                '<div class="sig-name">Ban Giám Đốc</div>' +
+            '</div>' +
+        '</div>' +
+    '</div>' +
+'</body>' +
+'</html>';
+
+        var printWindow = window.open("", "_blank", "width=1020,height=900");
+        if (!printWindow) {
+            alert("Trình duyệt đã chặn cửa sổ bật lên (popup). Vui lòng cho phép popup để xem và in Báo Giá PDF!");
+            return;
+        }
+        printWindow.document.open();
+        printWindow.document.write(printHtml);
+        printWindow.document.close();
+        printWindow.focus();
+    },
+
+    deleteQuotation: async (id) => {
+        if (!id) return;
+        if (!window.modBoq.isAdminUser()) {
+            alert("⛔ TỪ CHỐI TRUY CẬP: Chỉ tài khoản Quản trị viên (Admin) mới có quyền xóa Báo Giá / BOQ!");
+            return;
+        }
+        const q = window.modBoq.allData.find(x => (x.quotation_id === id || x.id === id)) || window.modBoq.selectedQuotation;
+        const qCode = q ? (q.quotation_code || q.code) : ('BOQ #' + id);
+        const custName = q ? (q.customer_name || 'Khách hàng') : '';
+
+        if (!confirm(`⚠️ CẢNH BÁO TIÊU HỦY DỮ LIỆU:\nBạn có chắc chắn muốn XÓA Báo Giá BOQ "${qCode}" (${custName})?\n\nKhi xóa báo giá này:\n- Đơn hàng liên kết (nếu đã tạo) sẽ bị xóa vĩnh viễn.\n- Các phiếu thu/chi, đặt cọc trong Sổ Quỹ sẽ bị xóa theo.\n- Hợp đồng & công nợ khách hàng sẽ được hoàn trả / đồng bộ lại.\n\nThao tác này KHÔNG THỂ HOÀN TÁC!`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/quotations/${id}`, { method: 'DELETE' });
+            const json = await res.json();
+            if (json.success) {
+                alert(json.message || '✅ Đã xóa báo giá và dọn dẹp toàn bộ chứng từ liên quan thành công!');
+                window.modBoq.showList();
+                await window.modBoq.loadData();
+            } else {
+                alert('❌ Lỗi: ' + (json.error || 'Không thể xóa báo giá!'));
+            }
+        } catch (e) {
+            alert('❌ Lỗi kết nối máy chủ khi xóa báo giá!');
+        }
     }
 };
 

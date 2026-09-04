@@ -202,8 +202,11 @@
                     <i class="fas fa-arrow-left"></i> <span>Quay Lại</span>
                 </button>
                 <div class="flex items-center gap-1.5 min-w-0">
-                    <h2 class="font-black text-slate-800 text-xs sm:text-sm tracking-tight truncate">
+                    <h2 class="font-black text-slate-800 text-xs sm:text-sm tracking-tight truncate flex items-center gap-1">
                         ĐƠN: <span id="dt-order-code" class="text-amber-600 font-mono">---</span>
+                        <button type="button" onclick="window.copyToClipboard(document.getElementById('dt-order-code').innerText, 'Mã đơn hàng')" class="text-slate-400 hover:text-amber-600 p-1 transition cursor-pointer" title="Sao chép mã đơn hàng">
+                            <i class="fas fa-copy text-xs"></i>
+                        </button>
                     </h2>
                     <span id="dt-header-status-badge" class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200 shrink-0">---</span>
                 </div>
@@ -1827,7 +1830,13 @@ window.modOrders = {
             desktopHtml += `
             <tr class="hover:bg-amber-50/40 transition border-b border-slate-50 cursor-pointer ${isSelected ? 'bg-amber-50/70' : ''}" onclick="window.modOrders.openDetail(${o.id})">
                 ${chkDesktop}
-                <td class="p-4 py-3 font-bold text-amber-600 text-[13px]">${o.order_code}<br><span class="text-[9px] text-slate-400 font-normal">${dateStr}</span></td>
+                <td class="p-4 py-3 font-bold text-amber-600 text-[13px]">
+                    <span class="inline-flex items-center gap-1 group/code cursor-pointer hover:underline hover:text-amber-700" onclick="event.stopPropagation(); window.copyToClipboard('${o.order_code}', 'Mã đơn hàng')" title="Bấm để sao chép mã đơn">
+                        <span>${o.order_code}</span>
+                        <i class="fas fa-copy text-[11px] text-slate-400 group-hover/code:text-amber-600 opacity-60 group-hover/code:opacity-100 transition"></i>
+                    </span>
+                    <br><span class="text-[9px] text-slate-400 font-normal">${dateStr}</span>
+                </td>
                 <td class="p-4 py-3">
                     <p class="font-bold text-slate-800 text-[13px]">${o.customer_name || 'Khách Lẻ'} ${isVip}</p>
                     <p class="text-[10px] text-slate-400 mt-0.5"><i class="fas fa-phone-alt mr-1"></i>${o.customer_phone || o.phone || 'N/A'}</p>
@@ -1844,8 +1853,9 @@ window.modOrders = {
                 <div class="flex justify-between items-start">
                     <div class="flex items-center gap-2">
                         ${chkMobile}
-                        <span class="px-2 py-0.5 bg-amber-500/15 border border-amber-400/40 text-amber-800 font-black text-xs rounded-lg font-mono">
-                            ${o.order_code}
+                        <span class="px-2 py-0.5 bg-amber-500/15 border border-amber-400/40 text-amber-800 font-black text-xs rounded-lg font-mono inline-flex items-center gap-1 cursor-pointer active:scale-95 transition" onclick="event.stopPropagation(); window.copyToClipboard('${o.order_code}', 'Mã đơn hàng')" title="Bấm để sao chép mã đơn">
+                            <span>${o.order_code}</span>
+                            <i class="fas fa-copy text-[10px] text-amber-700/60"></i>
                         </span>
                         <span class="text-[10px] text-slate-400 font-medium">${dateStr}</span>
                     </div>

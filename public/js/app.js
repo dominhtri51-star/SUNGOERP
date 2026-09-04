@@ -1016,6 +1016,67 @@ async function loadModule(moduleId, title) {
 }
 window.loadModule = loadModule;
 
+// ====================================================================
+// TIỆN ÍCH TOAST & SAO CHÉP CLIPBOARD TOÀN HỆ THỐNG
+// ====================================================================
+window.showToast = function(msg, type = 'success') {
+    let container = document.getElementById('global-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-toast-container';
+        container.className = 'fixed bottom-5 right-5 z-[99999] flex flex-col gap-2 pointer-events-none max-w-sm w-auto';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    const isSuccess = type === 'success';
+    toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl text-xs sm:text-sm font-bold border transition-all duration-300 transform translate-y-4 opacity-0 ${
+        isSuccess 
+            ? 'bg-slate-900/95 text-white border-slate-700 shadow-slate-900/50 backdrop-blur-md' 
+            : 'bg-rose-900/95 text-rose-100 border-rose-700 shadow-rose-900/50 backdrop-blur-md'
+    }`;
+
+    const icon = isSuccess ? '<i class="fas fa-check-circle text-emerald-400 text-base shrink-0"></i>' : '<i class="fas fa-exclamation-circle text-rose-400 text-base shrink-0"></i>';
+    toast.innerHTML = `${icon} <span class="truncate">${msg}</span>`;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+    });
+
+    setTimeout(() => {
+        toast.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+};
+
+window.copyToClipboard = async function(text, label = 'nội dung') {
+    if (text === undefined || text === null) return;
+    const cleanText = String(text).trim();
+    if (!cleanText) return;
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(cleanText);
+        } else {
+            const textArea = document.createElement('textarea');
+            textArea.value = cleanText;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            textArea.remove();
+        }
+        window.showToast(`📋 Đã sao chép ${label}: "${cleanText}"`, 'success');
+    } catch(err) {
+        console.error('Lỗi sao chép:', err);
+        window.prompt('Nhấn Ctrl+C / Cmd+C để sao chép:', cleanText);
+    }
+};
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);
 } else {

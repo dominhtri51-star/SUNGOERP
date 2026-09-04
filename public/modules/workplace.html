@@ -815,15 +815,16 @@ window.modWorkplace = {
                 html += `
                     <div class="flex flex-col items-end group">
                         <div class="flex items-end gap-2 max-w-[88%] sm:max-w-[75%]">
-                            <!-- Nút reaction & xóa hover / touch -->
+                            <!-- Nút reaction, sao chép & xóa hover / touch -->
                             <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs mb-1">
+                                <button onclick="window.modWorkplace.copyMessage(${msg.id})" class="hover:text-amber-600 p-1 transition" title="Sao chép nội dung tin nhắn"><i class="fas fa-copy"></i></button>
                                 <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1">👍</button>
                                 <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1">❤️</button>
                                 <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-1" title="Thu hồi tin nhắn"><i class="fas fa-trash-alt"></i></button>
                             </div>
                             
                             <!-- Bong bóng tin nhắn -->
-                            <div class="bg-amber-500 text-white rounded-2xl rounded-tr-xs p-2.5 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words">
+                            <div ondblclick="window.modWorkplace.copyMessage(${msg.id})" title="Nhấp đúp để sao chép tin nhắn" class="bg-amber-500 text-white rounded-2xl rounded-tr-xs p-2.5 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words select-text cursor-text">
                                 ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-200 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Đã Ghim</div>` : ''}
                                 <div>${this.formatContent(msg.content)}</div>
                                 ${attachmentHtml}
@@ -856,7 +857,7 @@ window.modWorkplace = {
                                 </div>
 
                                 <!-- Bong bóng tin nhắn -->
-                                <div class="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-2.5 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words">
+                                <div ondblclick="window.modWorkplace.copyMessage(${msg.id})" title="Nhấp đúp để sao chép tin nhắn" class="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-2.5 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words select-text cursor-text">
                                     ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-600 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Thông Báo Ghim</div>` : ''}
                                     <div>${this.formatContent(msg.content)}</div>
                                     ${attachmentHtml}
@@ -866,6 +867,7 @@ window.modWorkplace = {
                                 <div class="flex items-center gap-1.5 mt-1">
                                     ${reactionPills}
                                     <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs ml-1">
+                                        <button onclick="window.modWorkplace.copyMessage(${msg.id})" class="hover:text-amber-600 p-0.5 transition" title="Sao chép nội dung tin nhắn"><i class="fas fa-copy"></i></button>
                                         <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-0.5">👍</button>
                                         <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-0.5">❤️</button>
                                         <button onclick="window.modWorkplace.quickReaction(${msg.id}, '🔥')" class="hover:text-orange-500 p-0.5">🔥</button>
@@ -1113,6 +1115,16 @@ window.modWorkplace = {
         if (pinned) {
             await this.togglePinMessage(pinned.id);
         }
+    },
+
+    // 12.5. Sao chép nội dung tin nhắn
+    copyMessage: function(msgId) {
+        const msg = this.messages.find(m => m.id === msgId);
+        if (!msg || !msg.content) {
+            window.showToast('Không có văn bản để sao chép', 'error');
+            return;
+        }
+        window.copyToClipboard(msg.content, 'tin nhắn');
     },
 
     // 13. Thu hồi / Xóa tin nhắn

@@ -1,129 +1,134 @@
-<div class="h-full flex flex-col space-y-4 font-sans">
+<div class="w-full min-h-full flex flex-col space-y-4 font-sans pb-28 md:pb-6">
     
     <!-- HEADER & ACTION BAR -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3.5 sm:p-5 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20 shrink-0">
-                <i class="fas fa-file-contract text-xl"></i>
+                <i class="fas fa-file-contract text-lg"></i>
             </div>
             <div>
                 <div class="flex items-center gap-2">
-                    <h2 class="text-lg md:text-xl font-black text-slate-900 flex items-center gap-2">
+                    <h2 class="text-base sm:text-xl font-black text-slate-900 flex items-center gap-2">
                         QUẢN LÝ HỢP ĐỒNG & THANH TOÁN
                     </h2>
-                    <span class="text-[10px] bg-purple-100 text-purple-800 font-bold px-2.5 py-0.5 rounded-full border border-purple-200 uppercase">Mua Bán • Thi Công • Nguyên Tắc</span>
+                    <span class="text-[9.5px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full border border-purple-200 uppercase">Mua Bán • Thi Công • Nguyên Tắc</span>
                 </div>
-                <p class="text-xs text-slate-500 font-medium mt-0.5">Tự động lấy thông tin xuất HĐ VAT từ CRM • Kiểm soát tiến độ giải ngân • Cấu hình Chữ ký số & Chứng thư CA.</p>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Tự động lấy VAT từ CRM • Kiểm soát tiến độ giải ngân • Chữ ký số & Chứng thư CA.</p>
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <button onclick="window.modContract.openQuickOrderModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-bolt"></i> <span>Tạo HĐ Mua Bán (Từ Đơn)</span>
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <button onclick="window.modContract.openQuickOrderModal()" class="flex-1 md:flex-initial bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <i class="fas fa-bolt"></i> <span>HĐ Mua Bán (Từ Đơn)</span>
             </button>
-            <button onclick="window.modContract.openCreate('THI_CONG')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+            <button onclick="window.modContract.openCreate('THI_CONG')" class="flex-1 md:flex-initial bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-hammer"></i> <span>Soạn HĐ Thi Công</span>
             </button>
-            <button onclick="window.modContract.openCreate('NGUYEN_TAC')" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-handshake"></i> <span>Soạn HĐ Nguyên Tắc</span>
+            <button onclick="window.modContract.openCreate('NGUYEN_TAC')" class="flex-1 md:flex-initial bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <i class="fas fa-handshake"></i> <span>HĐ Nguyên Tắc</span>
             </button>
-            <button onclick="window.modContract.openCertSettingsModal()" class="bg-rose-700 hover:bg-rose-800 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+            <button id="btn-cert-settings" onclick="window.modContract.openCertSettingsModal()" class="flex-1 md:flex-initial bg-rose-700 hover:bg-rose-800 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-stamp"></i> <span>Cài Đặt Chữ Ký Số</span>
             </button>
-            <button onclick="window.modContract.load()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-sync-alt"></i> <span>Làm Mới</span>
+            <button onclick="window.modContract.load()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white transition text-xs font-bold cursor-pointer" title="Làm mới">
+                <i class="fas fa-sync-alt"></i>
             </button>
         </div>
     </div>
 
     <!-- RADAR KPI CARDS (DÒNG TIỀN HỢP ĐỒNG) -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 shrink-0">
         <!-- 1. TỔNG KỲ VỌNG -->
-        <div class="bg-white p-3.5 rounded-xl border border-purple-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 font-black shrink-0">
-                <i class="fas fa-file-invoice-dollar text-lg"></i>
+        <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-purple-200 shadow-2xs flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 font-black shrink-0">
+                <i class="fas fa-file-invoice-dollar text-base"></i>
             </div>
             <div class="min-w-0">
-                <p class="text-[10px] font-black uppercase text-purple-700 tracking-wider">Tổng Giá Trị Hợp Đồng</p>
-                <h4 class="text-lg md:text-xl font-black text-purple-700 truncate" id="stat-total">0 đ</h4>
-                <p class="text-[10px] text-slate-500 font-semibold" id="stat-count-sub">0 hợp đồng đã lập</p>
+                <p class="text-[9.5px] font-black uppercase text-purple-700 tracking-wider truncate">Tổng Giá Trị HĐ</p>
+                <h4 class="text-sm sm:text-lg font-black text-purple-700 truncate" id="stat-total">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate" id="stat-count-sub">0 hợp đồng đã lập</p>
             </div>
         </div>
 
         <!-- 2. ĐÃ THỰC THU -->
-        <div class="bg-white p-3.5 rounded-xl border border-emerald-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-black shrink-0">
-                <i class="fas fa-hand-holding-dollar text-lg"></i>
+        <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-emerald-200 shadow-2xs flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-black shrink-0">
+                <i class="fas fa-hand-holding-dollar text-base"></i>
             </div>
             <div class="min-w-0">
-                <p class="text-[10px] font-black uppercase text-emerald-700 tracking-wider">Đã Thực Thu (Giải Ngân)</p>
-                <h4 class="text-lg md:text-xl font-black text-emerald-600 truncate" id="stat-paid">0 đ</h4>
-                <p class="text-[10px] text-slate-500 font-semibold">Theo các đợt tiến độ</p>
+                <p class="text-[9.5px] font-black uppercase text-emerald-700 tracking-wider truncate">Đã Thực Thu</p>
+                <h4 class="text-sm sm:text-lg font-black text-emerald-600 truncate" id="stat-paid">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate">Theo các đợt tiến độ</p>
             </div>
         </div>
 
         <!-- 3. CÔNG NỢ CÒN PHẢI THU -->
-        <div class="bg-white p-3.5 rounded-xl border border-rose-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 font-black shrink-0">
-                <i class="fas fa-clock text-lg"></i>
+        <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-rose-200 shadow-2xs flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 font-black shrink-0">
+                <i class="fas fa-clock text-base"></i>
             </div>
             <div class="min-w-0">
-                <p class="text-[10px] font-black uppercase text-rose-700 tracking-wider">Công Nợ HĐ Còn Lại</p>
-                <h4 class="text-lg md:text-xl font-black text-rose-600 truncate" id="stat-debt">0 đ</h4>
-                <p class="text-[10px] text-slate-500 font-semibold">Cần thu theo tiến độ</p>
+                <p class="text-[9.5px] font-black uppercase text-rose-700 tracking-wider truncate">Công Nợ HĐ Còn Lại</p>
+                <h4 class="text-sm sm:text-lg font-black text-rose-600 truncate" id="stat-debt">0 đ</h4>
+                <p class="text-[10px] text-slate-500 font-semibold truncate">Cần thu theo tiến độ</p>
             </div>
         </div>
 
         <!-- 4. PHÂN BỔ LOẠI HỢP ĐỒNG -->
-        <div class="bg-white p-3.5 rounded-xl border border-blue-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-black shrink-0">
-                <i class="fas fa-layer-group text-lg"></i>
+        <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-blue-200 shadow-2xs flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-black shrink-0">
+                <i class="fas fa-layer-group text-base"></i>
             </div>
             <div class="min-w-0">
-                <p class="text-[10px] font-black uppercase text-blue-700 tracking-wider">Phân Loại Hợp Đồng</p>
-                <div class="flex items-center gap-1.5 mt-0.5 text-xs font-bold text-slate-700">
+                <p class="text-[9.5px] font-black uppercase text-blue-700 tracking-wider truncate">Phân Loại Hợp Đồng</p>
+                <div class="flex items-center gap-1.5 mt-0.5 text-xs font-bold text-slate-700 truncate">
                     <span class="text-blue-600" id="stat-cnt-mb">MB: 0</span> • 
                     <span class="text-purple-600" id="stat-cnt-tc">TC: 0</span> • 
                     <span class="text-amber-600" id="stat-cnt-nt">NT: 0</span>
                 </div>
-                <p class="text-[10px] text-slate-400 font-medium">Mua bán / Thi công / Nguyên tắc</p>
+                <p class="text-[10px] text-slate-400 font-medium truncate">Mua bán / Thi công / Nguyên tắc</p>
             </div>
         </div>
     </div>
 
     <!-- BẢNG DANH SÁCH HỢP ĐỒNG -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex-1 flex flex-col overflow-hidden">
         <!-- TOOLBAR FILTER -->
-        <div class="p-3 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0">
+        <div class="p-3 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-2.5 shrink-0">
             <div class="flex flex-wrap items-center gap-1.5">
-                <button onclick="window.modContract.filterType('ALL')" id="filter-type-ALL" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-sm transition">Tất Cả</button>
-                <button onclick="window.modContract.filterType('MUA_BAN')" id="filter-type-MUA_BAN" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 transition"><i class="fas fa-cart-shopping mr-1"></i> HĐ Mua Bán</button>
-                <button onclick="window.modContract.filterType('THI_CONG')" id="filter-type-THI_CONG" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-purple-700 border border-purple-300 hover:bg-purple-50 transition"><i class="fas fa-hammer mr-1"></i> HĐ Thi Công</button>
-                <button onclick="window.modContract.filterType('NGUYEN_TAC')" id="filter-type-NGUYEN_TAC" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-amber-700 border border-amber-300 hover:bg-amber-50 transition"><i class="fas fa-handshake mr-1"></i> HĐ Nguyên Tắc</button>
+                <button onclick="window.modContract.filterType('ALL')" id="filter-type-ALL" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-2xs transition cursor-pointer">Tất Cả</button>
+                <button onclick="window.modContract.filterType('MUA_BAN')" id="filter-type-MUA_BAN" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 transition cursor-pointer"><i class="fas fa-cart-shopping mr-1"></i> Mua Bán</button>
+                <button onclick="window.modContract.filterType('THI_CONG')" id="filter-type-THI_CONG" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-purple-700 border border-purple-300 hover:bg-purple-50 transition cursor-pointer"><i class="fas fa-hammer mr-1"></i> Thi Công</button>
+                <button onclick="window.modContract.filterType('NGUYEN_TAC')" id="filter-type-NGUYEN_TAC" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-amber-700 border border-amber-300 hover:bg-amber-50 transition cursor-pointer"><i class="fas fa-handshake mr-1"></i> Nguyên Tắc</button>
             </div>
             <div class="w-full md:w-auto">
-                <input type="text" id="contract-search-input" oninput="window.modContract.search(this.value)" placeholder="Tìm mã HĐ, tên khách hàng, mã đơn..." class="border border-slate-300 bg-white p-1.5 rounded-lg text-xs font-medium outline-none focus:border-purple-500 w-full md:w-64">
+                <input type="text" id="contract-search-input" oninput="window.modContract.search(this.value)" placeholder="Tìm mã HĐ, khách hàng, mã đơn..." class="border border-slate-300 bg-white px-2.5 py-1.5 rounded-xl text-xs font-medium outline-none focus:border-purple-500 w-full md:w-64">
             </div>
         </div>
 
-        <!-- TABLE -->
-        <div class="overflow-y-auto flex-1 p-3">
-            <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase font-bold text-[10px] shadow-sm z-10">
+        <!-- 1. Desktop Table -->
+        <div class="hidden md:block overflow-x-auto p-3">
+            <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+                <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase font-bold text-[10px] shadow-2xs z-10">
                     <tr>
-                        <th class="p-3 border-b">Mã HĐ & Ngày Lập</th>
+                        <th class="p-3 pl-4 border-b">Mã HĐ & Ngày Lập</th>
                         <th class="p-3 border-b text-center">Loại HĐ</th>
                         <th class="p-3 border-b">Khách Hàng / Công Trình</th>
                         <th class="p-3 border-b text-right">Tổng Tiền (VNĐ)</th>
                         <th class="p-3 border-b text-center w-1/5">Tiến Độ Giải Ngân</th>
                         <th class="p-3 border-b text-center">Ký Số / Trạng Thái</th>
-                        <th class="p-3 border-b text-center">Thao Tác</th>
+                        <th class="p-3 pr-4 border-b text-center">Thao Tác</th>
                     </tr>
                 </thead>
                 <tbody id="tbl-contracts" class="divide-y divide-slate-100 text-slate-700 font-medium">
-                    <tr><td colspan="7" class="p-8 text-center text-slate-400">Đang tải danh sách hợp đồng...</td></tr>
+                    <tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold">Đang tải danh sách hợp đồng...</td></tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- 2. Mobile Smart Cards -->
+        <div id="tbl-contracts-mobile" class="md:hidden p-3 space-y-2.5 pb-8">
+            <!-- Rendered by JS -->
         </div>
     </div>
 </div>
@@ -159,12 +164,33 @@
             <div class="flex items-center gap-2">
                 <i class="fas fa-file-pen text-lg"></i>
                 <h3 class="font-black text-sm uppercase tracking-wider" id="builder-modal-title">SOẠN HỢP ĐỒNG MỚI</h3>
+                <span id="builder-signed-badge" class="hidden text-[10px] bg-amber-400 text-amber-950 font-black px-2 py-0.5 rounded-full border border-amber-300">
+                    <i class="fas fa-rotate"></i> Chế độ chỉnh sửa lại
+                </span>
             </div>
             <button onclick="window.modContract.closeCreate()" class="text-white/80 hover:text-white"><i class="fas fa-times text-lg"></i></button>
         </div>
 
         <!-- Body Form -->
         <div class="flex-1 overflow-y-auto p-5 space-y-4 text-xs bg-slate-50">
+            <!-- Hidden ID khi chỉnh sửa -->
+            <input type="hidden" id="c-edit-id" value="">
+
+            <!-- Cảnh báo khi chỉnh sửa Hợp đồng đã có chữ ký -->
+            <div id="builder-signed-warning-banner" class="hidden bg-amber-50 border-2 border-amber-400 text-amber-950 p-3.5 rounded-xl text-xs space-y-2 shadow-sm">
+                <div class="flex items-center gap-2 font-black text-amber-900 text-xs">
+                    <i class="fas fa-triangle-exclamation text-amber-600 text-base"></i>
+                    <span>HỢP ĐỒNG NÀY ĐÃ TỪNG ĐƯỢC KÝ DUYỆT / KÝ SỐ</span>
+                </div>
+                <p class="text-[11.5px] text-amber-800 leading-relaxed font-medium">
+                    Bạn đang chỉnh sửa lại các điều khoản/bảo hành/bảng giá. Để đảm bảo tính pháp lý, hệ thống hỗ trợ lưu phiên bản mới và cung cấp tùy chọn đặt lại chữ ký cũ để gửi link cho khách hàng ký lại.
+                </p>
+                <label class="flex items-center gap-2 font-bold text-amber-900 cursor-pointer pt-1.5 border-t border-amber-200">
+                    <input type="checkbox" id="c-reset-signature-chk" checked class="w-4 h-4 text-purple-600 rounded">
+                    <span>Đặt lại trạng thái Chờ Ký & Xóa chữ ký cũ (Tự động cập nhật link online để khách ký lại)</span>
+                </label>
+            </div>
+
             <!-- Chọn Loại HĐ & Mã HĐ -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-slate-200">
                 <div>
@@ -234,34 +260,40 @@
                 </div>
             </div>
 
-            <!-- Bảng Chủng Loại Vật Tư / Hạng Mục Thi Công -->
+            <!-- Bảng Chủng Loại Vật Tư & Thông Số Kỹ Thuật, Bảo Hành Chi Tiết -->
             <div id="wrapper-items-section" class="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center border-b pb-2">
+                <div class="flex flex-wrap justify-between items-center gap-2 border-b pb-2">
                     <h4 class="font-black text-slate-800 uppercase text-xs flex items-center gap-1.5" id="label-items-section">
-                        <i class="fas fa-list-check text-emerald-600"></i> Điều 1: Danh Mục Sản Phẩm & Giá Cả
+                        <i class="fas fa-list-check text-emerald-600"></i> Điều 1: Danh Mục Sản Phẩm, Thông Số & Bảo Hành
                     </h4>
-                    <button type="button" onclick="window.modContract.addItemRow()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-[10px] font-bold shadow transition">
-                        <i class="fas fa-plus mr-1"></i> Thêm Mặt Hàng
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="window.modContract.autoDetectWarrantyAndSpecs()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 py-1 rounded-lg text-[10.5px] font-black shadow transition flex items-center gap-1.5 cursor-pointer" title="Tự động tìm trong tên sản phẩm và mô tả để điền thông số kỹ thuật & thời hạn bảo hành (BH 5 năm, 2 năm, 12/25 năm...)">
+                            <i class="fas fa-wand-magic-sparkles text-amber-300 animate-pulse"></i> ✨ Quét Tự Động Bảo Hành & Thông Số
+                        </button>
+                        <button type="button" onclick="window.modContract.addItemRow()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[10.5px] font-bold shadow transition flex items-center gap-1 cursor-pointer">
+                            <i class="fas fa-plus"></i> Thêm Mặt Hàng
+                        </button>
+                    </div>
                 </div>
+                
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border">
+                    <table class="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
                         <thead class="bg-slate-100 text-slate-600 uppercase font-bold text-[10px]">
                             <tr>
                                 <th class="p-2 border text-center w-10">STT</th>
-                                <th class="p-2 border">Chủng Loại Vật Tư / Hạng Mục</th>
-                                <th class="p-2 border text-center w-20">ĐVT</th>
-                                <th class="p-2 border text-right w-24">Số Lượng</th>
-                                <th class="p-2 border text-right w-32">Đơn Giá (VNĐ)</th>
-                                <th class="p-2 border text-right w-36">Thành Tiền (VNĐ)</th>
-                                <th class="p-2 border text-center w-12">Xóa</th>
+                                <th class="p-2 border">Sản Phẩm & Chi Tiết Thông Số / Bảo Hành</th>
+                                <th class="p-2 border text-center w-16">ĐVT</th>
+                                <th class="p-2 border text-right w-20">Số Lượng</th>
+                                <th class="p-2 border text-right w-28">Đơn Giá (VNĐ)</th>
+                                <th class="p-2 border text-right w-32">Thành Tiền (VNĐ)</th>
+                                <th class="p-2 border text-center w-10">Xóa</th>
                             </tr>
                         </thead>
                         <tbody id="builder-items-tbody" class="divide-y text-slate-700 font-medium"></tbody>
                     </table>
                 </div>
                 <div class="flex justify-end items-center gap-4 pt-2">
-                    <span class="font-bold text-slate-600 text-xs">Tổng Giá Trị Hợp Đồng:</span>
+                    <span class="font-bold text-slate-600 text-xs">Tổng Giá Trị Hợp Đồng (Gồm VAT):</span>
                     <input type="text" id="c-total-val" readonly class="font-black text-base text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2 text-right w-48 outline-none">
                 </div>
             </div>
@@ -281,17 +313,22 @@
 
             <!-- Điều Khoản Bảo Hành & Tùy Chỉnh -->
             <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-                <h4 class="font-black text-slate-800 uppercase text-xs flex items-center gap-1.5 border-b pb-2">
-                    <i class="fas fa-shield-halved text-teal-600"></i> Điều Khoản Bảo Hành & Ghi Chú Riêng
-                </h4>
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h4 class="font-black text-slate-800 uppercase text-xs flex items-center gap-1.5">
+                        <i class="fas fa-shield-halved text-teal-600"></i> Điều 2: Chính Sách Bảo Hành & Cam Kết Kỹ Thuật
+                    </h4>
+                    <button type="button" onclick="window.modContract.generateWarrantyTextFromItems()" class="text-[10.5px] bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1 cursor-pointer">
+                        <i class="fas fa-arrows-rotate text-teal-600"></i> Đồng bộ nội dung từ danh sách thiết bị trên
+                    </button>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Chính Sách Bảo Hành Thiết Bị</label>
-                        <textarea id="c-warranty" rows="3" class="w-full border border-slate-300 rounded-lg p-2 font-medium outline-none"></textarea>
+                        <label class="block font-bold text-slate-700 mb-1">Nội Dung Điều Khoản Bảo Hành & Tiêu Chuẩn</label>
+                        <textarea id="c-warranty" rows="5" class="w-full border border-slate-300 rounded-lg p-2.5 font-medium outline-none text-xs leading-relaxed focus:border-teal-500"></textarea>
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Điều Khoản Bổ Sung / Ghi Chú Đặc Biệt</label>
-                        <textarea id="c-custom-clauses" rows="3" placeholder="Ghi chú thêm nếu có..." class="w-full border border-slate-300 rounded-lg p-2 font-medium outline-none"></textarea>
+                        <textarea id="c-custom-clauses" rows="5" placeholder="Ghi chú thêm về vận chuyển, lắp đặt hoặc điều kiện thanh toán riêng nếu có..." class="w-full border border-slate-300 rounded-lg p-2.5 font-medium outline-none text-xs leading-relaxed"></textarea>
                     </div>
                 </div>
             </div>
@@ -300,8 +337,8 @@
         <!-- Footer -->
         <div class="p-4 border-t border-slate-200 bg-white flex justify-end gap-2 shrink-0">
             <button onclick="window.modContract.closeCreate()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition text-xs">Hủy</button>
-            <button onclick="window.modContract.previewAndSave()" id="btn-save-contract" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5">
-                <i class="fas fa-save"></i> Lưu & Mở Trình Xem Hợp Đồng
+            <button onclick="window.modContract.previewAndSave()" id="btn-save-contract" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-save"></i> <span id="btn-save-contract-label">Lưu & Mở Trình Xem Hợp Đồng</span>
             </button>
         </div>
     </div>
@@ -313,28 +350,39 @@
 <div id="contract-view-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4">
     <div class="bg-white rounded-2xl w-full max-w-5xl h-[94vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col">
         <!-- Top Toolbar -->
-        <div class="p-3.5 bg-slate-900 text-white flex justify-between items-center shrink-0">
-            <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <h3 class="font-black text-sm uppercase tracking-wider" id="view-modal-title">VĂN BẢN HỢP ĐỒNG ĐIỆN TỬ</h3>
-                <span id="view-modal-badge" class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-600 text-white">HĐMB.SG</span>
-            </div>
-            <div class="flex items-center gap-2" id="view-modal-actions-container">
-                <button onclick="window.modContract.openSignPad('A')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1">
-                    <i class="fas fa-pen-nib"></i> Bên A Ký Điện Tử
+        <div class="p-3 sm:p-3.5 bg-slate-900 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 shrink-0">
+            <div class="flex items-center justify-between gap-2 w-full sm:w-auto">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <h3 class="font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5" id="view-modal-title">
+                        <span>HỢP ĐỒNG ĐIỆN TỬ</span>
+                    </h3>
+                    <button type="button" onclick="window.copyToClipboard(window.modContract.currentContract?.contract_code, 'Mã hợp đồng')" class="text-slate-400 hover:text-amber-400 p-1 transition cursor-pointer" title="Sao chép mã hợp đồng">
+                        <i class="fas fa-copy text-xs"></i>
+                    </button>
+                    <span id="view-modal-badge" class="px-2 py-0.5 rounded text-[9.5px] font-black bg-purple-600 text-white">HĐMB.SG</span>
+                </div>
+                <button type="button" onclick="document.getElementById('contract-view-modal').classList.replace('flex', 'hidden')" class="sm:hidden text-slate-400 hover:text-white p-1 cursor-pointer">
+                    <i class="fas fa-times text-base"></i>
                 </button>
-                <div id="btn-stamp-wrapper" class="flex items-center gap-1.5">
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar" id="view-modal-actions-container">
+                <button onclick="window.modContract.openSignPad('A')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-1.5 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center gap-1 cursor-pointer whitespace-nowrap">
+                    <i class="fas fa-pen-nib"></i> Bên A Ký
+                </button>
+                <div id="btn-stamp-wrapper" class="flex flex-wrap items-center gap-1.5">
                     <!-- Dynamic Stamp Buttons injected here -->
                 </div>
-                <button onclick="window.modContract.printContractPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5">
-                    <i class="fas fa-print"></i> In / Xuất PDF Chuẩn A4
+                <button onclick="window.modContract.printContractPDF()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-1.5 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center gap-1 cursor-pointer whitespace-nowrap">
+                    <i class="fas fa-print"></i> In PDF
                 </button>
-                <button onclick="document.getElementById('contract-view-modal').classList.replace('flex', 'hidden')" class="text-slate-400 hover:text-white ml-2"><i class="fas fa-times text-lg"></i></button>
+                <button type="button" onclick="document.getElementById('contract-view-modal').classList.replace('flex', 'hidden')" class="hidden sm:block text-slate-400 hover:text-white ml-2 cursor-pointer"><i class="fas fa-times text-lg"></i></button>
             </div>
         </div>
 
         <!-- Scrollable A4 Document Sheet -->
-        <div class="flex-1 overflow-y-auto bg-slate-200 p-4 md:p-8 flex justify-center">
+        <div class="flex-1 overflow-y-auto bg-slate-200 p-2 sm:p-4 md:p-8 flex justify-center">
             <div class="bg-white w-full max-w-[800px] min-h-[1050px] p-8 md:p-14 shadow-2xl rounded-sm font-serif text-[13.5px] leading-relaxed text-slate-900 border border-slate-300" id="contract-document-sheet">
                 <!-- Nội dung HĐ sẽ được đổ vào đây -->
             </div>
@@ -741,17 +789,22 @@
 <div id="payment-milestone-drawer" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden justify-end">
     <div class="bg-white w-full md:w-[520px] h-full shadow-2xl flex flex-col animate-slide-in-right">
         <!-- Header -->
-        <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-white shadow-sm shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-base shadow">
+        <div class="px-4 pb-3 pt-6 sm:pt-4 border-b border-slate-200 flex justify-between items-center bg-white shadow-sm shrink-0">
+            <div class="flex items-center gap-3 min-w-0 pr-2">
+                <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-base shadow shrink-0">
                     <i class="fas fa-money-check-dollar"></i>
                 </div>
-                <div>
-                    <h3 class="font-black text-slate-800 text-sm leading-tight" id="drawer-contract-code">HD-001</h3>
-                    <p class="text-[11px] font-bold text-slate-500 mt-0.5" id="drawer-contract-cust">Khách Hàng</p>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <h3 class="font-black text-slate-800 text-sm leading-tight truncate" id="drawer-contract-code">HD-001</h3>
+                        <button type="button" onclick="window.copyToClipboard(document.getElementById('drawer-contract-code').innerText, 'Mã hợp đồng')" class="text-slate-400 hover:text-purple-600 p-0.5 transition cursor-pointer" title="Sao chép mã hợp đồng">
+                            <i class="fas fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                    <p class="text-[11px] font-bold text-slate-500 mt-0.5 truncate" id="drawer-contract-cust">Khách Hàng</p>
                 </div>
             </div>
-            <button onclick="window.modContract.closePaymentDrawer()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition"><i class="fas fa-times text-base"></i></button>
+            <button type="button" onclick="window.modContract.closePaymentDrawer()" class="w-10 h-10 rounded-full text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition shrink-0 cursor-pointer shadow-xs"><i class="fas fa-times text-lg"></i></button>
         </div>
 
         <!-- Body -->
@@ -857,8 +910,33 @@ window.modContract = {
 
     fmt: (num) => new Intl.NumberFormat('vi-VN').format(num || 0),
 
+    checkAdminRole: () => {
+        try {
+            const uStr = localStorage.getItem('sungo_user') || localStorage.getItem('currentUser') || sessionStorage.getItem('sungo_user') || sessionStorage.getItem('currentUser');
+            const u = JSON.parse(uStr || '{}');
+            const role = (u.role || '').toUpperCase();
+            return role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'GIAM_DOC' || role === 'TONG_GIAM_DOC';
+        } catch(e) {
+            return false;
+        }
+    },
+
     init: async () => {
-        await window.modContract.loadCertSettings();
+        const isAdmin = window.modContract.checkAdminRole();
+        const btnCert = document.getElementById('btn-cert-settings');
+        if (btnCert) {
+            if (isAdmin) {
+                btnCert.classList.remove('hidden');
+                btnCert.classList.add('flex');
+            } else {
+                btnCert.classList.add('hidden');
+                btnCert.classList.remove('flex');
+            }
+        }
+
+        if (isAdmin) {
+            await window.modContract.loadCertSettings();
+        }
         await window.modContract.load();
         await window.modContract.loadCRM();
         window.modContract.initSigCanvas();
@@ -918,6 +996,9 @@ window.modContract = {
     },
 
     openCertSettingsModal: async () => {
+        if (!window.modContract.checkAdminRole()) {
+            return alert("⚠️ Bạn không có quyền cấu hình Chứng thư & Chữ ký số doanh nghiệp! Chỉ Quản Trị Viên (Admin/Giám Đốc) mới có quyền này.");
+        }
         await window.modContract.loadCertSettings();
         const cfg = window.modContract.certConfig || {};
 
@@ -1001,92 +1082,176 @@ window.modContract = {
     // =========================================================
     renderTable: (list) => {
         const tbody = document.getElementById('tbl-contracts');
+        const isAdmin = window.modContract.checkAdminRole();
         if (!list || list.length === 0) {
             return tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">Chưa có hợp đồng nào phù hợp với bộ lọc.</td></tr>';
         }
 
-        tbody.innerHTML = list.map(c => {
-            const val = parseFloat(c.total_value || 0);
-            const paid = parseFloat(c.paid_amount || 0);
-            const pct = val > 0 ? Math.min(100, Math.round((paid / val) * 100)) : 0;
+        if (tbody) {
+            tbody.innerHTML = list.map(c => {
+                const val = parseFloat(c.total_value || 0);
+                const paid = parseFloat(c.paid_amount || 0);
+                const pct = val > 0 ? Math.min(100, Math.round((paid / val) * 100)) : 0;
 
-            let typeBadge = '';
-            if (c.contract_type === 'MUA_BAN') {
-                typeBadge = '<span class="bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-black uppercase"><i class="fas fa-cart-shopping mr-1"></i> Mua Bán</span>';
-            } else if (c.contract_type === 'THI_CONG') {
-                typeBadge = '<span class="bg-purple-100 text-purple-800 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-black uppercase"><i class="fas fa-hammer mr-1"></i> Thi Công</span>';
-            } else {
-                typeBadge = '<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-black uppercase"><i class="fas fa-handshake mr-1"></i> Nguyên Tắc</span>';
-            }
+                let typeBadge = '';
+                if (c.contract_type === 'MUA_BAN') {
+                    typeBadge = '<span class="bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-black uppercase"><i class="fas fa-cart-shopping mr-1"></i> Mua Bán</span>';
+                } else if (c.contract_type === 'THI_CONG') {
+                    typeBadge = '<span class="bg-purple-100 text-purple-800 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-black uppercase"><i class="fas fa-hammer mr-1"></i> Thi Công</span>';
+                } else {
+                    typeBadge = '<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-black uppercase"><i class="fas fa-handshake mr-1"></i> Nguyên Tắc</span>';
+                }
 
-            let signStatus = '';
-            if (c.digital_stamp_b && c.digital_stamp_b.is_valid && (c.digital_stamp_a || c.e_signature_a || c.signed_file_url)) {
-                signStatus = '<span class="bg-emerald-100 text-emerald-900 border border-emerald-400 px-2 py-0.5 rounded text-[10px] font-black"><i class="fas fa-handshake mr-0.5"></i> Đã Ký 2 Bên</span>';
-            } else if (c.digital_stamp_b && c.digital_stamp_b.is_valid) {
-                signStatus = '<span class="bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-stamp mr-0.5"></i> 3. Giám Đốc Đã Ký Số</span>';
-            } else if (c.contract_status === 'PENDING_DIRECTOR_APPROVAL') {
-                signStatus = '<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-black animate-pulse"><i class="fas fa-hourglass-half mr-0.5"></i> 2. KTT Đã Lên Lệnh (Chờ Sếp Trí Duyệt)</span>';
-            } else if (c.signing_request && c.signing_request.status === 'REJECTED') {
-                signStatus = '<span class="bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-undo mr-0.5"></i> Sếp Trí Yêu Cầu KTT Sửa</span>';
-            } else {
-                signStatus = '<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">1. Dự Thảo (Chưa Trình Ký)</span>';
-            }
+                let signStatus = '';
+                if (c.digital_stamp_b && c.digital_stamp_b.is_valid && (c.digital_stamp_a || c.e_signature_a || c.signed_file_url)) {
+                    signStatus = '<span class="bg-emerald-100 text-emerald-900 border border-emerald-400 px-2 py-0.5 rounded text-[10px] font-black"><i class="fas fa-handshake mr-0.5"></i> Đã Ký 2 Bên</span>';
+                } else if (c.digital_stamp_b && c.digital_stamp_b.is_valid) {
+                    signStatus = '<span class="bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-stamp mr-0.5"></i> 3. Giám Đốc Đã Ký Số</span>';
+                } else if (c.contract_status === 'PENDING_DIRECTOR_APPROVAL') {
+                    signStatus = '<span class="bg-rose-50 text-rose-800 border border-rose-300 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse"><i class="fas fa-crown mr-0.5"></i> 2. Chờ Giám Đốc Ký</span>';
+                } else if (c.contract_status === 'DRAFT_KTT_SUBMITTED') {
+                    signStatus = '<span class="bg-blue-50 text-blue-800 border border-blue-300 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-file-invoice-dollar mr-0.5"></i> 1. KTT Đã Trình Ký</span>';
+                } else {
+                    signStatus = '<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-medium"><i class="fas fa-pen-ruler mr-0.5"></i> Dự Thảo (Draft)</span>';
+                }
 
-            if (c.signed_file_url) {
-                signStatus += ` <a href="${c.signed_file_url}" target="_blank" class="inline-block bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-300 px-1.5 py-0.5 rounded text-[9px] font-black ml-1" title="Xem File Scan Hợp Đồng Đã Ký: ${c.signed_file_name || ''}"><i class="fas fa-file-circle-check"></i> File Scan</a>`;
-            }
+                let colorBar = 'bg-slate-300';
+                if (pct >= 100) colorBar = 'bg-emerald-500';
+                else if (pct >= 50) colorBar = 'bg-blue-500';
+                else if (pct > 0) colorBar = 'bg-amber-500';
 
-            let colorBar = 'bg-rose-500';
-            if (pct > 30) colorBar = 'bg-amber-500';
-            if (pct >= 100) colorBar = 'bg-emerald-500';
+                const d = new Date(c.created_at || c.effective_date);
 
-            const d = new Date(c.created_at || c.effective_date);
+                const deleteBtnHtml = isAdmin ? `
+                    <button onclick="window.modContract.deleteContract(${c.id}, '${c.contract_code}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border border-rose-200 px-2 py-1 rounded text-[10px] font-bold transition shadow cursor-pointer" title="Xóa hợp đồng rác (Admin)">
+                        <i class="fas fa-trash-alt mr-0.5"></i> Xóa
+                    </button>
+                ` : '';
 
-            return `
-                <tr class="hover:bg-purple-50/30 transition">
-                    <td class="p-3">
-                        <p class="font-mono font-black text-purple-700 text-xs cursor-pointer hover:underline" onclick="window.modContract.openView(${c.id})">${c.contract_code}</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">${d.toLocaleDateString('vi-VN')} ${c.order_code ? `• Đơn: <span class="text-blue-600 font-bold">${c.order_code}</span>` : ''}</p>
-                    </td>
-                    <td class="p-3 text-center">${typeBadge}</td>
-                    <td class="p-3">
-                        <p class="font-bold text-slate-900 text-xs">${c.customer_company || c.customer_name}</p>
-                        <p class="text-[10px] text-slate-500 mt-0.5 truncate max-w-[200px]" title="${c.project_address || c.customer_address}">${c.project_address || c.customer_address || '---'}</p>
-                    </td>
-                    <td class="p-3 text-right font-black text-slate-900 text-xs">
-                        ${window.modContract.fmt(val)} đ
-                    </td>
-                    <td class="p-3">
-                        ${c.contract_type === 'NGUYEN_TAC' ? 
-                            '<p class="text-center text-[10px] font-bold text-amber-700 italic">Thanh toán 100% từng đơn</p>' : 
-                            `
-                            <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
-                                <span>Thu: ${window.modContract.fmt(paid)} đ</span>
-                                <span class="${colorBar.replace('bg-', 'text-')}">${pct}%</span>
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-3 pl-4">
+                            <div class="flex items-center gap-1.5">
+                                <p class="font-mono font-black text-purple-700 text-xs cursor-pointer hover:underline" onclick="window.modContract.openView(${c.id})">${c.contract_code}</p>
+                                <button type="button" onclick="event.stopPropagation(); window.copyToClipboard('${c.contract_code}', 'Mã hợp đồng')" class="text-slate-400 hover:text-purple-600 p-0.5 transition cursor-pointer" title="Sao chép mã hợp đồng">
+                                    <i class="fas fa-copy text-[11px]"></i>
+                                </button>
                             </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                                <div class="${colorBar} h-full rounded-full transition-all" style="width: ${pct}%"></div>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${d.toLocaleDateString('vi-VN')} ${c.order_code ? `• Đơn: <span class="text-blue-600 font-bold cursor-pointer hover:underline" onclick="event.stopPropagation(); window.copyToClipboard('${c.order_code}', 'Mã đơn hàng')">${c.order_code} <i class="fas fa-copy text-[9px]"></i></span>` : ''}</p>
+                        </td>
+                        <td class="p-3 text-center">${typeBadge}</td>
+                        <td class="p-3">
+                            <p class="font-bold text-slate-900 text-xs">${c.customer_company || c.customer_name}</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 truncate max-w-[200px]" title="${c.project_address || c.customer_address}">${c.project_address || c.customer_address || '---'}</p>
+                        </td>
+                        <td class="p-3 text-right font-black text-slate-900 text-xs">
+                            ${window.modContract.fmt(val)} đ
+                        </td>
+                        <td class="p-3">
+                            ${c.contract_type === 'NGUYEN_TAC' ? 
+                                '<p class="text-center text-[10px] font-bold text-amber-700 italic">Thanh toán 100% từng đơn</p>' : 
+                                `
+                                <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+                                    <span>Thu: ${window.modContract.fmt(paid)} đ</span>
+                                    <span class="${colorBar.replace('bg-', 'text-')}">${pct}%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                    <div class="${colorBar} h-full rounded-full transition-all" style="width: ${pct}%"></div>
+                                </div>
+                                `
+                            }
+                        </td>
+                        <td class="p-3 text-center">${signStatus}</td>
+                        <td class="p-3 pr-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="window.modContract.openView(${c.id})" class="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow cursor-pointer" title="Xem văn bản & Ký số">
+                                    <i class="fas fa-file-lines mr-0.5"></i> Xem & Ký
+                                </button>
+                                <button onclick="window.modContract.openEdit(${c.id})" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow cursor-pointer" title="Chỉnh sửa chi tiết">
+                                    <i class="fas fa-pen-to-square mr-0.5"></i> Sửa
+                                </button>
+                                <button onclick="window.modContract.openPaymentDrawer(${c.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow cursor-pointer" title="Tiến độ thanh toán">
+                                    <i class="fas fa-hand-holding-dollar mr-0.5"></i> Thu
+                                </button>
+                                ${deleteBtnHtml}
                             </div>
-                            `
-                        }
-                    </td>
-                    <td class="p-3 text-center">${signStatus}</td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-1.5">
-                            <button onclick="window.modContract.openView(${c.id})" class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 rounded text-[10px] font-bold transition shadow" title="Xem văn bản & Ký số">
-                                <i class="fas fa-file-lines mr-0.5"></i> Xem & Ký
-                            </button>
-                            <button onclick="window.modContract.openPaymentDrawer(${c.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-[10px] font-bold transition shadow" title="Quản lý tiến độ thanh toán">
-                                <i class="fas fa-hand-holding-dollar mr-0.5"></i> Thu Tiền
-                            </button>
-                            <button onclick="window.modContract.deleteContract(${c.id})" class="text-slate-400 hover:text-rose-600 p-1" title="Xóa">
-                                <i class="fas fa-trash-can"></i>
-                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        const mobContainer = document.getElementById('tbl-contracts-mobile');
+        if (mobContainer) {
+            mobContainer.innerHTML = list.map(c => {
+                const val = parseFloat(c.total_value || 0);
+                const paid = parseFloat(c.paid_amount || 0);
+                const pct = val > 0 ? Math.min(100, Math.round((paid / val) * 100)) : 0;
+                const d = new Date(c.created_at || c.effective_date);
+
+                let typeBadge = '';
+                if (c.contract_type === 'MUA_BAN') {
+                    typeBadge = '<span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-[10px]">Mua Bán</span>';
+                } else if (c.contract_type === 'THI_CONG') {
+                    typeBadge = '<span class="bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded text-[10px]">Thi Công</span>';
+                } else {
+                    typeBadge = '<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[10px]">Nguyên Tắc</span>';
+                }
+
+                const deleteBtnMobHtml = isAdmin ? `
+                    <button type="button" onclick="window.modContract.deleteContract(${c.id}, '${c.contract_code}')" class="px-2.5 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold transition border border-rose-200 cursor-pointer" title="Xóa hợp đồng rác (Admin)">
+                        <i class="fas fa-trash-alt"></i> Xóa
+                    </button>
+                ` : '';
+
+                return `
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-black font-mono text-[10px] border border-purple-200 inline-flex items-center gap-1 cursor-pointer active:scale-95 transition" onclick="event.stopPropagation(); window.copyToClipboard('${c.contract_code}', 'Mã hợp đồng')" title="Bấm để sao chép mã hợp đồng">
+                                <span>${c.contract_code}</span>
+                                <i class="fas fa-copy text-[9px] text-purple-500/70"></i>
+                            </span>
+                            ${typeBadge}
                         </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+                        <span class="text-[10px] text-slate-400 shrink-0">${d.toLocaleDateString('vi-VN')}</span>
+                    </div>
+
+                    <div>
+                        <h4 class="font-black text-slate-900 text-xs sm:text-sm leading-snug cursor-pointer hover:text-purple-600" onclick="window.modContract.openView(${c.id})">
+                            ${c.customer_company || c.customer_name}
+                        </h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5 truncate">${c.project_address || c.customer_address || '---'}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Tổng giá trị:</span>
+                            <b class="text-slate-900 font-black">${window.modContract.fmt(val)} đ</b>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 block text-[10px]">Đã thu:</span>
+                            <b class="text-emerald-700">${window.modContract.fmt(paid)} đ (${pct}%)</b>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                        <div class="text-[10px]">
+                            ${c.digital_stamp_b && c.digital_stamp_b.is_valid ? '<span class="text-emerald-700 font-bold"><i class="fas fa-check-circle mr-1"></i>Đã ký số</span>' : '<span class="text-slate-400">Dự thảo</span>'}
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="window.modContract.openView(${c.id})" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-file-lines"></i> Xem & Ký
+                            </button>
+                            <button type="button" onclick="window.modContract.openPaymentDrawer(${c.id})" class="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition border border-emerald-200 cursor-pointer">
+                                <i class="fas fa-hand-holding-dollar"></i> Thu
+                            </button>
+                            ${deleteBtnMobHtml}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
     },
 
     filterType: (type) => {
@@ -1137,26 +1302,37 @@ window.modContract = {
             const res = await fetch('/api/orders');
             const data = await res.json();
             if (data.success && data.data) {
-                window.modContract.availableOrders = data.data.filter(o => o.status !== 'CANCELLED');
+                window.modContract.availableOrders = data.data.filter(o => {
+                    const st = (o.status || '').toUpperCase();
+                    const isExportReleased = ['SHIPPED', 'DELIVERED', 'COMPLETED', 'CONFIRMED', 'XUAT_KHO', 'CHO_GIAO', 'DA_XUAT', 'ĐÃ HOÀN TẤT'].includes(st) || parseFloat(o.paid_amount || 0) > 0;
+                    return st !== 'CANCELLED' && st !== 'DRAFT' && isExportReleased;
+                });
                 if (window.modContract.availableOrders.length === 0) {
-                    listDiv.innerHTML = '<div class="text-center text-slate-400 py-8">Không có đơn hàng nào trong hệ thống.</div>';
+                    listDiv.innerHTML = `
+                        <div class="text-center text-slate-500 py-8 px-4">
+                            <i class="fas fa-box-open text-3xl mb-2 text-slate-400 block"></i>
+                            <p class="font-bold text-sm text-slate-700">Chưa có đơn hàng nào có lệnh xuất kho / đã xác nhận</p>
+                            <p class="text-xs text-slate-400 mt-1">Theo quy trình, chỉ những đơn hàng đã duyệt lệnh xuất hàng hoặc xác nhận mới phát sinh Hợp đồng Mua bán.</p>
+                        </div>`;
                     return;
                 }
 
-                listDiv.innerHTML = window.modContract.availableOrders.slice(0, 20).map(o => `
+                listDiv.innerHTML = window.modContract.availableOrders.slice(0, 30).map(o => `
                     <div class="p-3 bg-white border border-slate-200 rounded-xl hover:border-blue-500 transition flex justify-between items-center shadow-sm">
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="font-mono font-black text-blue-700 text-xs">${o.order_code}</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${o.status}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <i class="fas fa-truck-fast mr-0.5"></i> ${o.status}
+                                </span>
                             </div>
                             <p class="font-bold text-slate-900 text-xs mt-1">${o.customer_name || 'Khách Hàng'}</p>
                             <p class="text-[10px] text-slate-400 mt-0.5">${new Date(o.created_at).toLocaleString('vi-VN')} • ${o.items?.length || 0} mặt hàng</p>
                         </div>
                         <div class="text-right">
                             <p class="font-black text-slate-900 text-sm">${window.modContract.fmt(o.total_amount)} đ</p>
-                            <button onclick="window.modContract.createContractFromOrder('${o.id}')" class="mt-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1 rounded-lg text-xs transition shadow flex items-center gap-1">
-                                <i class="fas fa-magic"></i> Tạo HĐMB.SG
+                            <button onclick="window.modContract.createContractFromOrder('${o.id}')" class="mt-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-file-contract"></i> Phát Sinh HĐMB
                             </button>
                         </div>
                     </div>
@@ -1185,9 +1361,15 @@ window.modContract = {
     },
 
     // =========================================================
-    // 4. SOẠN HỢP ĐỒNG NHANH & LẤY THÔNG TIN VAT CRM
+    // 4. SOẠN & CHỈNH SỬA HỢP ĐỒNG (SMART CONTRACT STUDIO)
     // =========================================================
     openCreate: (type = 'MUA_BAN') => {
+        document.getElementById('c-edit-id').value = '';
+        document.getElementById('builder-modal-title').innerText = 'SOẠN HỢP ĐỒNG MỚI';
+        document.getElementById('btn-save-contract-label').innerText = 'Lưu & Mở Trình Xem Hợp Đồng';
+        document.getElementById('builder-signed-badge').classList.add('hidden');
+        document.getElementById('builder-signed-warning-banner').classList.add('hidden');
+
         document.getElementById('c-type').value = type;
         const currentYear = new Date().getFullYear();
         document.getElementById('c-code').value = '';
@@ -1202,13 +1384,111 @@ window.modContract = {
         document.getElementById('c-cust-address').value = '';
         document.getElementById('c-project-address').value = '';
         document.getElementById('crm-synced-badge').classList.add('hidden');
-        document.getElementById('c-warranty').value = `• Tấm Pin năng lượng mặt trời được bảo hành 12 năm và bảo hành hiệu suất năm thứ 25 là trên 83% (theo quy định của nhà sản xuất).\n• Bảo hành biến tần Inverter 05 năm theo quy định nhà sản xuất.\n• Bảo hành Pin lưu trữ Lithium 05 năm theo tiêu chuẩn hãng.`;
+        document.getElementById('c-warranty').value = `• Toàn bộ sản phẩm được bảo hành chính hãng theo quy định của nhà sản xuất.\n• Tấm Pin năng lượng mặt trời: Bảo hành vật lý 12 năm, bảo hành hiệu suất 25 năm.\n• Biến tần Inverter: Bảo hành chính hãng 05 năm (1 đổi 1 trong thời gian bảo hành).\n• Pin lưu trữ Lithium: Bảo hành 05 năm (chu kỳ nạp xả ≥6,000 lần).\n• Thiết bị điện, tủ điện và phụ kiện lắp đặt: Bảo hành 02 năm.`;
         document.getElementById('c-custom-clauses').value = '';
 
         window.modContract.onTypeChange(type);
         window.modContract.resetItemsTable();
 
         document.getElementById('contract-modal').classList.replace('hidden', 'flex');
+    },
+
+    openEdit: async (id) => {
+        try {
+            const res = await fetch(`/api/contracts/${id}?t=` + Date.now());
+            const data = await res.json();
+            if (!data.success || !data.data) return alert("Không tìm thấy hợp đồng!");
+
+            const c = data.data;
+            document.getElementById('c-edit-id').value = c.id;
+            document.getElementById('builder-modal-title').innerText = `CHỈNH SỬA HỢP ĐỒNG #${c.contract_code}`;
+            document.getElementById('btn-save-contract-label').innerText = 'Lưu Cập Nhật & Xem Hợp Đồng';
+
+            const isSigned = !!(c.digital_stamp_b?.is_valid || c.digital_stamp_a?.is_valid || c.e_signature_a || c.e_signature_b || c.contract_status === 'SIGNED' || c.contract_status === 'APPROVED');
+            if (isSigned) {
+                document.getElementById('builder-signed-badge').classList.remove('hidden');
+                document.getElementById('builder-signed-warning-banner').classList.remove('hidden');
+                const chk = document.getElementById('c-reset-signature-chk');
+                if (chk) chk.checked = true;
+            } else {
+                document.getElementById('builder-signed-badge').classList.add('hidden');
+                document.getElementById('builder-signed-warning-banner').classList.add('hidden');
+            }
+
+            document.getElementById('c-type').value = c.contract_type || 'MUA_BAN';
+            document.getElementById('c-code').value = c.contract_code || '';
+            document.getElementById('c-effective-date').value = c.effective_date ? c.effective_date.slice(0, 10) : new Date().toISOString().slice(0, 10);
+            document.getElementById('c-expiry-date').value = c.expiry_date ? c.expiry_date.slice(0, 10) : '';
+
+            document.getElementById('c-cust-company').value = c.customer_company || c.customer_name || '';
+            document.getElementById('c-cust-taxcode').value = c.customer_taxcode || '';
+            document.getElementById('c-cust-rep').value = c.customer_representative || '';
+            document.getElementById('c-cust-pos').value = c.customer_position || 'Giám Đốc';
+            document.getElementById('c-cust-phone').value = c.customer_phone || '';
+            document.getElementById('c-cust-address').value = c.customer_address || '';
+            document.getElementById('c-project-address').value = c.project_address || '';
+            document.getElementById('c-warranty').value = c.warranty_terms || '';
+            document.getElementById('c-custom-clauses').value = c.custom_clauses || '';
+
+            window.modContract.onTypeChange(c.contract_type || 'MUA_BAN');
+
+            // Populate items
+            const tbody = document.getElementById('builder-items-tbody');
+            const items = c.items_snapshot || [];
+            if (items.length > 0) {
+                tbody.innerHTML = items.map((it, idx) => `
+                    <tr class="item-row bg-white hover:bg-slate-50/50 transition">
+                        <td class="p-2 border text-center font-bold align-top row-stt">${idx + 1}</td>
+                        <td class="p-2 border space-y-1.5">
+                            <input type="text" class="w-full font-bold outline-none item-name text-slate-800 focus:text-purple-900 border-b border-transparent focus:border-purple-400 py-0.5" placeholder="Tên thiết bị / Hàng hóa..." value="${it.product_name || ''}">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 pt-1 border-t border-slate-100">
+                                <div class="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                                    <span class="text-[10px] font-bold text-slate-500 shrink-0"><i class="fas fa-microchip text-slate-400"></i> Thông số:</span>
+                                    <input type="text" class="w-full text-[11px] text-slate-700 outline-none bg-transparent item-specs" placeholder="VD: IP65, 2 MPPT, N-Type..." value="${it.specs || ''}">
+                                </div>
+                                <div class="flex items-center gap-1 bg-teal-50/70 px-2 py-0.5 rounded border border-teal-200">
+                                    <span class="text-[10px] font-bold text-teal-700 shrink-0"><i class="fas fa-shield text-teal-600"></i> BH:</span>
+                                    <input type="text" class="w-full text-[11px] font-bold text-teal-800 outline-none bg-transparent item-warranty" placeholder="VD: BH 5 năm, 12/25 năm..." value="${it.warranty || ''}">
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-2 border align-top"><input type="text" class="w-full text-center outline-none item-unit border-b border-transparent focus:border-purple-400 py-0.5" value="${it.unit || 'Bộ'}"></td>
+                        <td class="p-2 border align-top"><input type="number" class="w-full text-right font-bold outline-none item-qty border-b border-transparent focus:border-purple-400 py-0.5" value="${it.quantity || 1}" oninput="window.modContract.recalcTotal()"></td>
+                        <td class="p-2 border align-top"><input type="text" class="w-full text-right font-bold outline-none item-price border-b border-transparent focus:border-purple-400 py-0.5" value="${window.modContract.fmt(it.price || 0)}" oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, '')); window.modContract.recalcTotal();"></td>
+                        <td class="p-2 border text-right font-black text-slate-900 item-total align-top py-2.5">${window.modContract.fmt((it.quantity || 1) * (it.price || 0))} đ</td>
+                        <td class="p-2 border text-center align-top py-2.5"><button type="button" onclick="this.closest('.item-row').remove(); window.modContract.recalcTotal();" class="text-slate-400 hover:text-rose-600 cursor-pointer p-1" title="Xóa dòng này"><i class="fas fa-trash-can"></i></button></td>
+                    </tr>
+                `).join('');
+            } else {
+                window.modContract.resetItemsTable();
+            }
+
+            // Populate terms if present
+            const terms = c.payment_terms || [];
+            if (terms.length > 0 && c.contract_type !== 'NGUYEN_TAC') {
+                const listDiv = document.getElementById('builder-terms-list');
+                listDiv.innerHTML = terms.map(s => `
+                    <div class="p-2.5 bg-slate-50 border rounded-lg flex items-center gap-2 term-stage-row">
+                        <span class="w-14 font-black text-slate-700 shrink-0">Đợt ${s.stage}:</span>
+                        <input type="text" class="flex-1 border p-1 rounded font-bold outline-none term-name" value="${s.name}">
+                        <div class="flex items-center gap-1 w-20 shrink-0">
+                            <input type="number" class="w-12 border p-1 rounded text-right font-bold term-pct" value="${s.pct}" oninput="window.modContract.recalcTermsFromPct()">
+                            <span class="font-bold">%</span>
+                        </div>
+                        <input type="text" readonly class="w-32 border p-1 rounded text-right font-black text-purple-700 bg-purple-50 term-amt" value="${window.modContract.fmt(s.amount)} đ">
+                        <button type="button" onclick="this.closest('.term-stage-row').remove();" class="text-slate-400 hover:text-rose-600 p-1"><i class="fas fa-times"></i></button>
+                    </div>
+                `).join('');
+            }
+
+            window.modContract.recalcTotal();
+
+            // Close view modal if opened and show edit modal
+            document.getElementById('contract-view-modal').classList.replace('flex', 'hidden');
+            document.getElementById('contract-modal').classList.replace('hidden', 'flex');
+        } catch (e) {
+            alert("Lỗi khi mở form chỉnh sửa hợp đồng!");
+        }
     },
 
     closeCreate: () => {
@@ -1223,7 +1503,7 @@ window.modContract = {
         if (type === 'NGUYEN_TAC') {
             termsSection.classList.add('hidden');
             expirySection.classList.remove('hidden');
-            itemsLabel.innerHTML = '<i class="fas fa-list-check text-amber-600"></i> Điều 1: Danh Mục Thiết Bị Cung Cấp Định Kỳ';
+            itemsLabel.innerHTML = '<i class="fas fa-list-check text-amber-600"></i> Điều 1: Danh Mục Thiết Bị Cung Cấp Định Kỳ & Bảo Hành';
         } else if (type === 'THI_CONG') {
             termsSection.classList.remove('hidden');
             expirySection.classList.add('hidden');
@@ -1232,7 +1512,7 @@ window.modContract = {
         } else {
             termsSection.classList.remove('hidden');
             expirySection.classList.add('hidden');
-            itemsLabel.innerHTML = '<i class="fas fa-cart-shopping text-blue-600"></i> Điều 1: Quy Cách - Số Lượng - Giá Cả Hàng Hóa';
+            itemsLabel.innerHTML = '<i class="fas fa-cart-shopping text-blue-600"></i> Điều 1: Quy Cách - Số Lượng - Giá Cả Hàng Hóa & Bảo Hành';
             window.modContract.initDefaultTerms(type);
         }
     },
@@ -1262,45 +1542,138 @@ window.modContract = {
     resetItemsTable: () => {
         const tbody = document.getElementById('builder-items-tbody');
         tbody.innerHTML = `
-            <tr>
-                <td class="p-2 border text-center font-bold">1</td>
-                <td class="p-2 border"><input type="text" class="w-full font-bold outline-none item-name" placeholder="Tên thiết bị / Hạng mục..." value="Hệ thống Điện Mặt Trời SUNGO Hybrid 6kW"></td>
-                <td class="p-2 border"><input type="text" class="w-full text-center outline-none item-unit" value="Hệ thống"></td>
-                <td class="p-2 border"><input type="number" class="w-full text-right outline-none item-qty" value="1" oninput="window.modContract.recalcTotal()"></td>
-                <td class="p-2 border"><input type="text" class="w-full text-right font-bold outline-none item-price" value="80,000,000" oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, '')); window.modContract.recalcTotal();"></td>
-                <td class="p-2 border text-right font-black text-slate-800 item-total">80,000,000 đ</td>
-                <td class="p-2 border text-center"><button type="button" onclick="this.closest('tr').remove(); window.modContract.recalcTotal();" class="text-slate-400 hover:text-rose-600"><i class="fas fa-trash"></i></button></td>
+            <tr class="item-row bg-white hover:bg-slate-50/50 transition">
+                <td class="p-2 border text-center font-bold align-top row-stt">1</td>
+                <td class="p-2 border space-y-1.5">
+                    <input type="text" class="w-full font-bold outline-none item-name text-slate-800 focus:text-purple-900 border-b border-transparent focus:border-purple-400 py-0.5" placeholder="Tên thiết bị / Hàng hóa..." value="Biến tần Inverter Deye Hybrid 6kW 1 pha (SUN-6K-SG04LP1-EU)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 pt-1 border-t border-slate-100">
+                        <div class="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                            <span class="text-[10px] font-bold text-slate-500 shrink-0"><i class="fas fa-microchip text-slate-400"></i> Thông số:</span>
+                            <input type="text" class="w-full text-[11px] text-slate-700 outline-none bg-transparent item-specs" value="Công suất 6kW, 2 MPPT, chuẩn chống nước IP65, tích hợp WiFi/App">
+                        </div>
+                        <div class="flex items-center gap-1 bg-teal-50/70 px-2 py-0.5 rounded border border-teal-200">
+                            <span class="text-[10px] font-bold text-teal-700 shrink-0"><i class="fas fa-shield text-teal-600"></i> BH:</span>
+                            <input type="text" class="w-full text-[11px] font-bold text-teal-800 outline-none bg-transparent item-warranty" value="Bảo hành chính hãng 05 năm (1 đổi 1)">
+                        </div>
+                    </div>
+                </td>
+                <td class="p-2 border align-top"><input type="text" class="w-full text-center outline-none item-unit border-b border-transparent focus:border-purple-400 py-0.5" value="Bộ"></td>
+                <td class="p-2 border align-top"><input type="number" class="w-full text-right font-bold outline-none item-qty border-b border-transparent focus:border-purple-400 py-0.5" value="1" oninput="window.modContract.recalcTotal()"></td>
+                <td class="p-2 border align-top"><input type="text" class="w-full text-right font-bold outline-none item-price border-b border-transparent focus:border-purple-400 py-0.5" value="26,500,000" oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, '')); window.modContract.recalcTotal();"></td>
+                <td class="p-2 border text-right font-black text-slate-900 item-total align-top py-2.5">26,500,000 đ</td>
+                <td class="p-2 border text-center align-top py-2.5"><button type="button" onclick="this.closest('.item-row').remove(); window.modContract.recalcTotal();" class="text-slate-400 hover:text-rose-600 cursor-pointer p-1" title="Xóa"><i class="fas fa-trash-can"></i></button></td>
             </tr>
         `;
         window.modContract.recalcTotal();
     },
 
-    addItemRow: () => {
+    addItemRow: (data = {}) => {
         const tbody = document.getElementById('builder-items-tbody');
-        const rowCount = tbody.rows.length + 1;
+        const rowCount = tbody.querySelectorAll('.item-row').length + 1;
         const tr = document.createElement('tr');
+        tr.className = 'item-row bg-white hover:bg-slate-50/50 transition';
         tr.innerHTML = `
-            <td class="p-2 border text-center font-bold">${rowCount}</td>
-            <td class="p-2 border"><input type="text" class="w-full font-bold outline-none item-name" placeholder="Tên sản phẩm..."></td>
-            <td class="p-2 border"><input type="text" class="w-full text-center outline-none item-unit" value="Bộ"></td>
-            <td class="p-2 border"><input type="number" class="w-full text-right outline-none item-qty" value="1" oninput="window.modContract.recalcTotal()"></td>
-            <td class="p-2 border"><input type="text" class="w-full text-right font-bold outline-none item-price" value="0" oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, '')); window.modContract.recalcTotal();"></td>
-            <td class="p-2 border text-right font-black text-slate-800 item-total">0 đ</td>
-            <td class="p-2 border text-center"><button type="button" onclick="this.closest('tr').remove(); window.modContract.recalcTotal();" class="text-slate-400 hover:text-rose-600"><i class="fas fa-trash"></i></button></td>
+            <td class="p-2 border text-center font-bold align-top row-stt">${rowCount}</td>
+            <td class="p-2 border space-y-1.5">
+                <input type="text" class="w-full font-bold outline-none item-name text-slate-800 focus:text-purple-900 border-b border-transparent focus:border-purple-400 py-0.5" placeholder="Tên sản phẩm..." value="${data.product_name || ''}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 pt-1 border-t border-slate-100">
+                    <div class="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                        <span class="text-[10px] font-bold text-slate-500 shrink-0"><i class="fas fa-microchip text-slate-400"></i> Thông số:</span>
+                        <input type="text" class="w-full text-[11px] text-slate-700 outline-none bg-transparent item-specs" placeholder="VD: IP65, 2 MPPT, N-Type..." value="${data.specs || ''}">
+                    </div>
+                    <div class="flex items-center gap-1 bg-teal-50/70 px-2 py-0.5 rounded border border-teal-200">
+                        <span class="text-[10px] font-bold text-teal-700 shrink-0"><i class="fas fa-shield text-teal-600"></i> BH:</span>
+                        <input type="text" class="w-full text-[11px] font-bold text-teal-800 outline-none bg-transparent item-warranty" placeholder="VD: BH 5 năm, 12/25 năm..." value="${data.warranty || ''}">
+                    </div>
+                </div>
+            </td>
+            <td class="p-2 border align-top"><input type="text" class="w-full text-center outline-none item-unit border-b border-transparent focus:border-purple-400 py-0.5" value="${data.unit || 'Bộ'}"></td>
+            <td class="p-2 border align-top"><input type="number" class="w-full text-right font-bold outline-none item-qty border-b border-transparent focus:border-purple-400 py-0.5" value="${data.quantity || 1}" oninput="window.modContract.recalcTotal()"></td>
+            <td class="p-2 border align-top"><input type="text" class="w-full text-right font-bold outline-none item-price border-b border-transparent focus:border-purple-400 py-0.5" value="${window.modContract.fmt(data.price || 0)}" oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, '')); window.modContract.recalcTotal();"></td>
+            <td class="p-2 border text-right font-black text-slate-900 item-total align-top py-2.5">${window.modContract.fmt((data.quantity || 1) * (data.price || 0))} đ</td>
+            <td class="p-2 border text-center align-top py-2.5"><button type="button" onclick="this.closest('.item-row').remove(); window.modContract.recalcTotal();" class="text-slate-400 hover:text-rose-600 cursor-pointer p-1" title="Xóa"><i class="fas fa-trash-can"></i></button></td>
         `;
         tbody.appendChild(tr);
+        window.modContract.recalcTotal();
+    },
+
+    autoDetectWarrantyAndSpecs: async () => {
+        const rows = document.querySelectorAll('#builder-items-tbody .item-row');
+        if (rows.length === 0) return alert("Chưa có mặt hàng nào trong danh sách!");
+
+        const itemsToDetect = [];
+        rows.forEach(tr => {
+            itemsToDetect.push({
+                product_name: tr.querySelector('.item-name')?.value || '',
+                specs: tr.querySelector('.item-specs')?.value || '',
+                warranty: tr.querySelector('.item-warranty')?.value || ''
+            });
+        });
+
+        try {
+            const res = await fetch('/api/contracts/detect-specs-warranty', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: itemsToDetect })
+            });
+            const data = await res.json();
+            if (data.success && Array.isArray(data.items)) {
+                data.items.forEach((item, idx) => {
+                    if (rows[idx]) {
+                        if (item.specs) rows[idx].querySelector('.item-specs').value = item.specs;
+                        if (item.warranty) rows[idx].querySelector('.item-warranty').value = item.warranty;
+                    }
+                });
+                window.modContract.generateWarrantyTextFromItems();
+                alert(`✨ Đã tự động nhận diện và cập nhật Thông số & Thời hạn bảo hành cho ${data.items.length} sản phẩm!`);
+            } else {
+                alert("Không thể nhận diện sản phẩm: " + (data.error || 'Lỗi không xác định'));
+            }
+        } catch (e) {
+            alert("Lỗi khi kết nối nhận diện thông số!");
+        }
+    },
+
+    generateWarrantyTextFromItems: () => {
+        const rows = document.querySelectorAll('#builder-items-tbody .item-row');
+        const warrantyLines = [];
+        warrantyLines.push("• Cam kết toàn bộ thiết bị mới 100%, xuất xứ chính hãng, đầy đủ CO, CQ và chứng chỉ kiểm định chất lượng.");
+
+        rows.forEach((tr, idx) => {
+            const name = tr.querySelector('.item-name')?.value.trim();
+            const warranty = tr.querySelector('.item-warranty')?.value.trim();
+            const specs = tr.querySelector('.item-specs')?.value.trim();
+            if (name) {
+                let line = `• ${name}: `;
+                if (warranty) {
+                    line += `Bảo hành ${warranty}`;
+                } else {
+                    line += `Bảo hành tiêu chuẩn chính hãng`;
+                }
+                if (specs) {
+                    line += ` (Tiêu chuẩn kỹ thuật: ${specs})`;
+                }
+                line += `.`;
+                warrantyLines.push(line);
+            }
+        });
+
+        warrantyLines.push("• Đội ngũ kỹ thuật SUNGO hỗ trợ xử lý sự cố online 24/7 và có mặt tại hiện trường trong vòng 24h - 48h khi nhận được yêu cầu bảo hành.");
+        document.getElementById('c-warranty').value = warrantyLines.join('\n');
     },
 
     recalcTotal: () => {
         let grandTotal = 0;
-        const rows = document.querySelectorAll('#builder-items-tbody tr');
+        const rows = document.querySelectorAll('#builder-items-tbody .item-row');
         rows.forEach((tr, index) => {
-            tr.querySelector('td:first-child').innerText = index + 1;
-            const qty = parseFloat(tr.querySelector('.item-qty').value) || 0;
-            const priceStr = tr.querySelector('.item-price').value.replace(/[^0-9]/g, '');
+            const sttEl = tr.querySelector('.row-stt');
+            if (sttEl) sttEl.innerText = index + 1;
+            const qty = parseFloat(tr.querySelector('.item-qty')?.value) || 0;
+            const priceStr = tr.querySelector('.item-price')?.value.replace(/[^0-9]/g, '') || '0';
             const price = parseFloat(priceStr) || 0;
             const lineTotal = qty * price;
-            tr.querySelector('.item-total').innerText = window.modContract.fmt(lineTotal) + ' đ';
+            const totalEl = tr.querySelector('.item-total');
+            if (totalEl) totalEl.innerText = window.modContract.fmt(lineTotal) + ' đ';
             grandTotal += lineTotal;
         });
 
@@ -1379,6 +1752,7 @@ window.modContract = {
     },
 
     previewAndSave: async () => {
+        const editId = document.getElementById('c-edit-id')?.value;
         const type = document.getElementById('c-type').value;
         const companyName = document.getElementById('c-cust-company').value.trim();
         if (!companyName) return alert("⚠️ Vui lòng nhập Tên Khách Hàng / Bên A!");
@@ -1387,25 +1761,32 @@ window.modContract = {
         const grandTotal = parseFloat(grandTotalStr) || 0;
 
         const items = [];
-        document.querySelectorAll('#builder-items-tbody tr').forEach((tr, idx) => {
-            items.push({
-                stt: idx + 1,
-                product_name: tr.querySelector('.item-name').value.trim(),
-                unit: tr.querySelector('.item-unit').value.trim() || 'Bộ',
-                quantity: parseFloat(tr.querySelector('.item-qty').value) || 1,
-                price: parseFloat(tr.querySelector('.item-price').value.replace(/[^0-9]/g, '')) || 0,
-                total_amount: (parseFloat(tr.querySelector('.item-qty').value) || 1) * (parseFloat(tr.querySelector('.item-price').value.replace(/[^0-9]/g, '')) || 0)
-            });
+        document.querySelectorAll('#builder-items-tbody .item-row').forEach((tr, idx) => {
+            const pName = tr.querySelector('.item-name')?.value.trim();
+            if (pName) {
+                const qty = parseFloat(tr.querySelector('.item-qty')?.value) || 1;
+                const price = parseFloat(tr.querySelector('.item-price')?.value.replace(/[^0-9]/g, '')) || 0;
+                items.push({
+                    stt: idx + 1,
+                    product_name: pName,
+                    specs: tr.querySelector('.item-specs')?.value.trim() || '',
+                    warranty: tr.querySelector('.item-warranty')?.value.trim() || '',
+                    unit: tr.querySelector('.item-unit')?.value.trim() || 'Bộ',
+                    quantity: qty,
+                    price: price,
+                    total_amount: qty * price
+                });
+            }
         });
 
         const paymentTerms = [];
         if (type !== 'NGUYEN_TAC') {
             document.querySelectorAll('#builder-terms-list .term-stage-row').forEach((r, idx) => {
-                const pct = parseFloat(r.querySelector('.term-pct').value) || 0;
+                const pct = parseFloat(r.querySelector('.term-pct')?.value) || 0;
                 const amt = Math.round(grandTotal * (pct / 100));
                 paymentTerms.push({
                     stage: idx + 1,
-                    name: r.querySelector('.term-name').value.trim(),
+                    name: r.querySelector('.term-name')?.value.trim(),
                     pct: pct,
                     amount: amt,
                     status: 'PENDING'
@@ -1413,11 +1794,13 @@ window.modContract = {
             });
         }
 
+        const isReset = document.getElementById('c-reset-signature-chk')?.checked;
+
         const payload = {
             contract_type: type,
             contract_code: document.getElementById('c-code').value.trim(),
-            effective_date: document.getElementById('c-effective-date').value,
-            expiry_date: document.getElementById('c-expiry-date').value,
+            effective_date: document.getElementById('c-effective-date').value || null,
+            expiry_date: document.getElementById('c-expiry-date').value || null,
             customer_company: companyName,
             customer_name: document.getElementById('c-cust-rep').value.trim() || companyName,
             customer_representative: document.getElementById('c-cust-rep').value.trim(),
@@ -1430,7 +1813,8 @@ window.modContract = {
             items_snapshot: items,
             payment_terms: paymentTerms,
             warranty_terms: document.getElementById('c-warranty').value.trim(),
-            custom_clauses: document.getElementById('c-custom-clauses').value.trim()
+            custom_clauses: document.getElementById('c-custom-clauses').value.trim(),
+            reset_signature: isReset
         };
 
         const btn = document.getElementById('btn-save-contract');
@@ -1438,24 +1822,28 @@ window.modContract = {
         btn.classList.add('opacity-50', 'pointer-events-none');
 
         try {
-            const res = await fetch('/api/contracts', {
-                method: 'POST',
+            const url = editId ? `/api/contracts/${editId}` : '/api/contracts';
+            const method = editId ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
             if (data.success) {
-                alert(data.message);
+                alert(data.message || "Lưu hợp đồng thành công!");
                 window.modContract.closeCreate();
                 await window.modContract.load();
-                if (data.data && data.data.id) {
-                    window.modContract.openView(data.data.id);
+                const savedId = editId || (data.data && data.data.id);
+                if (savedId) {
+                    window.modContract.openView(savedId);
                 }
             } else alert("Lỗi: " + data.error);
         } catch (e) {
             alert("Lỗi lưu hợp đồng!");
         } finally {
-            btn.innerHTML = '<i class="fas fa-save"></i> Lưu & Mở Trình Xem Hợp Đồng';
+            btn.innerHTML = '<i class="fas fa-save"></i> <span id="btn-save-contract-label">Lưu & Mở Trình Xem Hợp Đồng</span>';
             btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     },
@@ -1488,14 +1876,26 @@ window.modContract = {
             // Render dynamic toolbar action buttons based on 2-tier approval status & public link / file scan
             const btnWrapper = document.getElementById('btn-stamp-wrapper');
             if (btnWrapper) {
+                const isAdmin = window.modContract.checkAdminRole();
                 let extraBtns = `
-                    <button onclick="window.modContract.copyPublicSignLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1" title="Sao chép đường link gửi cho khách hàng ký online">
+                    <button onclick="window.modContract.openEdit(${c.id})" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Chỉnh sửa chi tiết hợp đồng, thông số và bảo hành">
+                        <i class="fas fa-pen-to-square"></i> Chỉnh Sửa HĐ
+                    </button>
+                    <button onclick="window.modContract.copyPublicSignLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Sao chép đường link gửi cho khách hàng ký online">
                         <i class="fas fa-link text-amber-300"></i> Link Ký Khách Hàng
                     </button>
-                    <button onclick="window.modContract.openUploadSignedModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1" title="Tải file scan giấy đã ký mộc đỏ hoặc file PDF ký ngoài">
+                    <button onclick="window.modContract.openUploadSignedModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Tải file scan giấy đã ký mộc đỏ hoặc file PDF ký ngoài">
                         <i class="fas fa-file-arrow-up"></i> Tải File Đã Ký
                     </button>
                 `;
+
+                if (isAdmin) {
+                    extraBtns += `
+                        <button onclick="window.modContract.deleteContract(${c.id}, '${c.contract_code}')" class="bg-rose-700 hover:bg-rose-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Xóa hợp đồng rác (Admin)">
+                            <i class="fas fa-trash-alt"></i> Xóa HĐ
+                        </button>
+                    `;
+                }
 
                 if (c.signed_file_url) {
                     extraBtns += `
@@ -1511,24 +1911,24 @@ window.modContract = {
                         <span class="bg-emerald-600/30 text-emerald-300 border border-emerald-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
                             <i class="fas fa-check-circle"></i> Giám Đốc Đã Ký Số SUNGO
                         </span>
-                        <button onclick="window.modContract.revokeStamp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1" title="Thu hồi chữ ký số để KTT chỉnh sửa lại">
+                        <button onclick="window.modContract.revokeStamp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Thu hồi chữ ký số để KTT chỉnh sửa lại">
                             <i class="fas fa-rotate-left"></i> Thu Hồi Dấu Số (Để Sửa)
                         </button>
                     `;
                 } else if (c.contract_status === 'PENDING_DIRECTOR_APPROVAL') {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
-                        <button onclick="window.modContract.openDirectorModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 animate-pulse">
+                        <button onclick="window.modContract.openDirectorModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 animate-pulse cursor-pointer">
                             <i class="fas fa-crown"></i> Giám Đốc Phê Duyệt & Ký Số
                         </button>
-                        <button onclick="window.modContract.directorReject()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2.5 rounded-lg text-xs transition flex items-center gap-1" title="Yêu cầu KTT sửa lại">
+                        <button onclick="window.modContract.directorReject()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2.5 rounded-lg text-xs transition flex items-center gap-1 cursor-pointer" title="Yêu cầu KTT sửa lại">
                             <i class="fas fa-undo"></i> Trả Về KTT Sửa
                         </button>
                     `;
                 } else {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
-                        <button onclick="window.modContract.openKttModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1">
+                        <button onclick="window.modContract.openKttModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer">
                             <i class="fas fa-file-invoice-dollar"></i> KTT Lên Lệnh Trình Ký
                         </button>
                     `;
@@ -1540,6 +1940,11 @@ window.modContract = {
         } catch (e) {
             alert("Lỗi tải chi tiết hợp đồng!");
         }
+    },
+
+    closeView: () => {
+        const modal = document.getElementById('contract-view-modal');
+        if (modal) modal.classList.replace('flex', 'hidden');
     },
 
     renderDocumentHTML: (c) => {
@@ -1603,6 +2008,32 @@ window.modContract = {
                     </tbody>
                 </table>
                 <p class="italic mb-4"><b>Bằng chữ:</b> ${c.total_value_text || '---'}</p>
+            `;
+        }
+
+        let specsWarrantyTableHtml = '';
+        if (items.length > 0) {
+            specsWarrantyTableHtml = `
+                <table class="w-full border-collapse border border-slate-900 my-2.5 text-[11.5px]" style="page-break-inside: avoid;">
+                    <thead>
+                        <tr class="bg-slate-100 font-bold">
+                            <th class="border border-slate-900 p-2 text-center w-9">STT</th>
+                            <th class="border border-slate-900 p-2 text-left w-2/5">Tên Thiết Bị / Chủng Loại</th>
+                            <th class="border border-slate-900 p-2 text-left">Thông Số Kỹ Thuật Chính</th>
+                            <th class="border border-slate-900 p-2 text-center w-36">Thời Hạn Bảo Hành</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(it => `
+                            <tr>
+                                <td class="border border-slate-900 p-2 text-center font-bold">${it.stt || 1}</td>
+                                <td class="border border-slate-900 p-2 font-bold">${it.product_name}</td>
+                                <td class="border border-slate-900 p-2 text-slate-800">${it.specs || 'Tiêu chuẩn kỹ thuật chính hãng theo catalog nhà sản xuất.'}</td>
+                                <td class="border border-slate-900 p-2 text-center font-bold text-teal-900">${it.warranty || 'Theo quy định hãng'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             `;
         }
 
@@ -1749,11 +2180,14 @@ window.modContract = {
             <!-- Bảng danh mục sản phẩm -->
             ${itemsHtml}
 
-            <!-- Điều khoản bảo hành -->
+            <!-- Điều khoản bảo hành & Bảng Thông số chi tiết -->
             <div class="mb-4">
-                <p class="font-bold mb-1">ĐIỀU ${items.length > 0 ? '2' : 'II'}: TIÊU CHUẨN KỸ THUẬT & CHÍNH SÁCH BẢO HÀNH</p>
-                <p class="mb-1">– Hàng hóa mới 100%, có đầy đủ CO, CQ và chứng chỉ chất lượng từ nhà sản xuất.</p>
-                <div class="whitespace-pre-line text-xs text-slate-700 ml-3 mb-2">${c.warranty_terms || '• Tấm Pin bảo hành 12 năm và bảo hành hiệu suất 25 năm.\n• Inverter và Pin lưu trữ bảo hành theo tiêu chuẩn nhà sản xuất.'}</div>
+                <p class="font-bold mb-1">ĐIỀU ${items.length > 0 ? '2' : 'II'}: TIÊU CHUẨN KỸ THUẬT & CHÍNH SÁCH BẢO HÀNH THIẾT BỊ</p>
+                <p class="mb-1">– Toàn bộ hàng hóa cung cấp mới 100%, chính hãng, đúng quy chuẩn kỹ thuật và thời hạn bảo hành theo bảng dưới đây:</p>
+                
+                ${specsWarrantyTableHtml}
+
+                <div class="whitespace-pre-line text-xs text-slate-800 ml-1 mt-2 mb-2 leading-relaxed">${c.warranty_terms || '• Tấm Pin bảo hành 12 năm và bảo hành hiệu suất 25 năm.\n• Inverter và Pin lưu trữ bảo hành theo tiêu chuẩn nhà sản xuất.'}</div>
             </div>
 
             <!-- Địa điểm giao hàng -->
@@ -2241,15 +2675,25 @@ window.modContract = {
         }
     },
 
-    deleteContract: async (id) => {
-        if (!confirm("❓ Bạn có chắc chắn muốn xóa hợp đồng này khỏi hệ thống?")) return;
+    deleteContract: async (id, code) => {
+        const isAdmin = window.modContract.checkAdminRole();
+        if (!isAdmin) {
+            return alert("⚠️ Chỉ Quản Trị Viên (Admin/Giám Đốc) mới có quyền xóa hợp đồng!");
+        }
+        if (!confirm(`⚠️ CẢNH BÁO TIÊU HỦY DỮ LIỆU:\nBạn có chắc chắn muốn xóa vĩnh viễn hợp đồng "${code || ('#' + id)}" khỏi hệ thống?\n\nToàn bộ tiến độ giải ngân, chữ ký điện tử và chứng từ liên kết sẽ bị xóa.`)) return;
         try {
             const res = await fetch(`/api/contracts/${id}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
+                alert("✅ Đã xóa hợp đồng thành công!");
+                window.modContract.closeView();
                 await window.modContract.load();
+            } else {
+                alert("❌ Lỗi khi xóa hợp đồng: " + (data.error || ''));
             }
-        } catch (e) {}
+        } catch (e) {
+            alert("❌ Lỗi kết nối máy chủ khi xóa hợp đồng!");
+        }
     },
 
     // =========================================================
