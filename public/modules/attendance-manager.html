@@ -119,6 +119,9 @@
         <button id="tab-btn-monthly" onclick="window.modAtt.switchTab('monthly')" class="px-4 py-2.5 text-xs font-black border-b-2 border-blue-600 text-blue-700 flex items-center gap-1.5">
             <i class="fas fa-calendar-alt"></i> Tổng Hợp Công Tháng, Thưởng & Tiền OT
         </button>
+        <button id="tab-btn-matrix" onclick="window.modAtt.switchTab('matrix')" class="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center gap-1.5">
+            <i class="fas fa-th"></i> Ma Trận Chấm Công Tháng (01 - 31)
+        </button>
         <button id="tab-btn-daily" onclick="window.modAtt.switchTab('daily')" class="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center gap-1.5">
             <i class="fas fa-calendar-day"></i> Bảng Chấm Công Chi Tiết Từng Ngày
         </button>
@@ -130,7 +133,7 @@
         <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-2.5">
             <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs font-bold text-slate-500">Kỳ Chấm Công:</span>
-                <input type="month" id="att-filter-period" onchange="window.modAtt.loadMonthly()" class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-black text-slate-800 outline-none focus:border-blue-500">
+                <input type="month" id="att-filter-period" onchange="window.modAtt.onPeriodFilterChange()" class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-black text-slate-800 outline-none focus:border-blue-500">
                 <button onclick="window.modAtt.loadMonthly()" class="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs">
                     <i class="fas fa-filter"></i> Lọc
                 </button>
@@ -175,6 +178,55 @@
                         <td colspan="12" class="p-8 text-center text-slate-400">
                             <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
                             <p>Đang nạp bảng tổng hợp công tháng...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB 3: MA TRẬN CHẤM CÔNG CẢ THÁNG (01 - 31) ĐỐI SOÁT MÁY CHẤM CÔNG -->
+    <div id="tab-content-matrix" class="hidden flex-1 flex flex-col bg-white rounded-2xl shadow-xs border border-slate-200">
+        <!-- Bộ lọc & Chú thích -->
+        <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2.5">
+                <span class="text-xs font-bold text-slate-500">Kỳ Đối Soát:</span>
+                <input type="month" id="att-matrix-period" onchange="window.modAtt.onMatrixPeriodChange()" class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-black text-slate-800 outline-none focus:border-blue-500">
+                <input type="text" id="att-matrix-search" oninput="window.modAtt.applyMatrixFilter()" placeholder="Tìm tên, mã nhân viên..." class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium outline-none w-52 focus:border-blue-500">
+                <button onclick="window.modAtt.loadMatrix()" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs transition flex items-center gap-1.5 shadow-xs">
+                    <i class="fas fa-sync-alt"></i> Tải lại
+                </button>
+            </div>
+            <!-- Chú giải màu sắc -->
+            <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold">
+                <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Vào đúng giờ
+                </span>
+                <span class="inline-flex items-center gap-1 text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span> Vào trễ
+                </span>
+                <span class="inline-flex items-center gap-1 text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-lg">
+                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Ra có OT
+                </span>
+                <span class="inline-flex items-center gap-1 text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span> Về sớm
+                </span>
+                <span class="inline-flex items-center gap-1 text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
+                    <span class="w-2 h-2 rounded-full bg-slate-400"></span> Cuối tuần / Nghỉ
+                </span>
+            </div>
+        </div>
+
+        <!-- Bảng Ma Trận Cuộn Ngang -->
+        <div class="flex-1 overflow-x-auto overflow-y-auto max-h-[75vh]">
+            <table class="w-full text-left border-collapse" id="att-matrix-table">
+                <thead id="att-matrix-thead" class="bg-slate-100/95 text-slate-700 text-[11px] font-black uppercase sticky top-0 z-20 border-b border-slate-200 shadow-xs">
+                </thead>
+                <tbody id="att-matrix-tbody" class="divide-y divide-slate-100 text-xs font-mono">
+                    <tr>
+                        <td colspan="36" class="p-8 text-center text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Đang nạp ma trận đối soát chấm công...</p>
                         </td>
                     </tr>
                 </tbody>
@@ -681,6 +733,7 @@ window.modAtt = {
     employees: [],
     dailyRecords: [],
     monthlyRecords: [],
+    matrixData: null,
     holidays: [],
     policy: null,
     cloudMonths: [],
@@ -690,15 +743,20 @@ window.modAtt = {
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const dd = String(now.getDate()).padStart(2, '0');
+        const currentPeriod = `${yyyy}-${mm}`;
 
         if (!document.getElementById('att-filter-period').value) {
-            document.getElementById('att-filter-period').value = `${yyyy}-${mm}`;
+            document.getElementById('att-filter-period').value = currentPeriod;
         }
         if (!document.getElementById('att-filter-from').value) {
-            document.getElementById('att-filter-from').value = `${yyyy}-${mm}-01`;
+            document.getElementById('att-filter-from').value = `${currentPeriod}-01`;
         }
         if (!document.getElementById('att-filter-to').value) {
-            document.getElementById('att-filter-to').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('att-filter-to').value = `${currentPeriod}-${dd}`;
+        }
+        const matPeriod = document.getElementById('att-matrix-period');
+        if (matPeriod && !matPeriod.value) {
+            matPeriod.value = currentPeriod;
         }
 
         await window.modAtt.loadCloudStatus();
@@ -969,22 +1027,250 @@ window.modAtt = {
         window.modAtt.activeTab = tab;
         const btnDaily = document.getElementById('tab-btn-daily');
         const btnMonthly = document.getElementById('tab-btn-monthly');
+        const btnMatrix = document.getElementById('tab-btn-matrix');
         const conDaily = document.getElementById('tab-content-daily');
         const conMonthly = document.getElementById('tab-content-monthly');
+        const conMatrix = document.getElementById('tab-content-matrix');
+
+        // Reset all buttons to inactive
+        [btnMonthly, btnMatrix, btnDaily].forEach(b => {
+            if (b) b.className = 'px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center gap-1.5';
+        });
+        // Hide all tabs
+        [conMonthly, conMatrix, conDaily].forEach(c => {
+            if (c) {
+                c.classList.add('hidden');
+                c.classList.remove('flex');
+            }
+        });
 
         if (tab === 'daily') {
-            btnDaily.className = 'px-4 py-2.5 text-xs font-black border-b-2 border-blue-600 text-blue-700 flex items-center gap-1.5';
-            btnMonthly.className = 'px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center gap-1.5';
-            conDaily.classList.remove('hidden');
-            conDaily.classList.add('flex');
-            conMonthly.classList.add('hidden');
+            if (btnDaily) btnDaily.className = 'px-4 py-2.5 text-xs font-black border-b-2 border-blue-600 text-blue-700 flex items-center gap-1.5';
+            if (conDaily) { conDaily.classList.remove('hidden'); conDaily.classList.add('flex'); }
+            window.modAtt.loadDaily();
+        } else if (tab === 'matrix') {
+            if (btnMatrix) btnMatrix.className = 'px-4 py-2.5 text-xs font-black border-b-2 border-blue-600 text-blue-700 flex items-center gap-1.5';
+            if (conMatrix) { conMatrix.classList.remove('hidden'); conMatrix.classList.add('flex'); }
+            window.modAtt.loadMatrix();
         } else {
-            btnMonthly.className = 'px-4 py-2.5 text-xs font-black border-b-2 border-blue-600 text-blue-700 flex items-center gap-1.5';
-            btnDaily.className = 'px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center gap-1.5';
-            conMonthly.classList.remove('hidden');
-            conMonthly.classList.add('flex');
-            conDaily.classList.add('hidden');
+            if (btnMonthly) btnMonthly.className = 'px-4 py-2.5 text-xs font-black border-b-2 border-blue-600 text-blue-700 flex items-center gap-1.5';
+            if (conMonthly) { conMonthly.classList.remove('hidden'); conMonthly.classList.add('flex'); }
+            window.modAtt.loadMonthly();
         }
+    },
+
+    formatTime: (val) => {
+        if (!val) return '--:--';
+        const s = String(val).trim();
+        if (s.length >= 16 && (s[10] === ' ' || s[10] === 'T')) {
+            return s.slice(11, 16);
+        }
+        if (s.length === 5 && s.includes(':')) {
+            return s;
+        }
+        try {
+            const d = new Date(val);
+            return isNaN(d) ? '--:--' : d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        } catch(e) {
+            return '--:--';
+        }
+    },
+
+    syncDateFiltersWithPeriod: (period) => {
+        if (!period) return;
+        const [yyyy, mm] = period.split('-');
+        const lastDay = new Date(parseInt(yyyy, 10), parseInt(mm, 10), 0).getDate();
+        const f = document.getElementById('att-filter-from');
+        const t = document.getElementById('att-filter-to');
+        const mp = document.getElementById('att-matrix-period');
+        const fp = document.getElementById('att-filter-period');
+        if (f) f.value = `${period}-01`;
+        if (t) t.value = `${period}-${String(lastDay).padStart(2, '0')}`;
+        if (mp && mp.value !== period) mp.value = period;
+        if (fp && fp.value !== period) fp.value = period;
+    },
+
+    onPeriodFilterChange: () => {
+        const p = document.getElementById('att-filter-period').value;
+        window.modAtt.syncDateFiltersWithPeriod(p);
+        window.modAtt.loadMonthly();
+        window.modAtt.loadDaily();
+    },
+
+    onMatrixPeriodChange: () => {
+        const p = document.getElementById('att-matrix-period').value;
+        if (p) {
+            window.modAtt.syncDateFiltersWithPeriod(p);
+            window.modAtt.loadMatrix();
+            window.modAtt.loadMonthly();
+            window.modAtt.loadDaily();
+        }
+    },
+
+    loadMatrix: async () => {
+        const period = document.getElementById('att-matrix-period').value || document.getElementById('att-filter-period').value || '2026-08';
+        try {
+            const res = await fetch(`/api/attendance/matrix?period_key=${period}`);
+            const data = await res.json();
+            if (data.success) {
+                window.modAtt.matrixData = data;
+                window.modAtt.renderMatrix();
+            }
+        } catch(e) {
+            console.error('Lỗi nạp ma trận chấm công:', e);
+        }
+    },
+
+    applyMatrixFilter: () => {
+        window.modAtt.renderMatrix();
+    },
+
+    renderMatrix: () => {
+        if (!window.modAtt.matrixData) return;
+        const { daysList, employees } = window.modAtt.matrixData;
+        const search = (document.getElementById('att-matrix-search').value || '').toLowerCase().trim();
+
+        // 1. Render Table Header
+        const thead = document.getElementById('att-matrix-thead');
+        let headerHtml = `
+            <tr>
+                <th class="p-2.5 pl-3 sticky left-0 bg-slate-100 z-30 min-w-[70px] border-r border-slate-200">Mã NV</th>
+                <th class="p-2.5 sticky left-[70px] bg-slate-100 z-30 min-w-[150px] border-r border-slate-200 shadow-xs">Họ Và Tên</th>
+        `;
+
+        daysList.forEach(d => {
+            const isSun = d.dayOfWeek === 0;
+            const isSat = d.dayOfWeek === 6;
+            const dayNum = String(d.day).padStart(2, '0');
+            const bgBadge = isSun ? 'text-rose-600 bg-rose-50' : (isSat ? 'text-amber-600 bg-amber-50' : 'text-slate-600 bg-slate-200/60');
+            headerHtml += `
+                <th class="p-1 text-center min-w-[54px] w-[54px] border-r border-slate-200 ${isSun || isSat ? 'bg-slate-50' : ''}">
+                    <span class="block text-[11px] font-black">${dayNum}</span>
+                    <span class="inline-block text-[9px] font-bold px-1 rounded ${bgBadge}">${d.dayOfWeekName}</span>
+                </th>
+            `;
+        });
+
+        headerHtml += `
+                <th class="p-2 text-center sticky right-[180px] bg-slate-100 z-30 min-w-[50px] border-l border-slate-200">Công</th>
+                <th class="p-2 text-center sticky right-[130px] bg-slate-100 z-30 min-w-[50px] border-l border-slate-200">OT</th>
+                <th class="p-2 text-center sticky right-[75px] bg-slate-100 z-30 min-w-[55px] border-l border-slate-200">Trễ</th>
+                <th class="p-2 text-right sticky right-0 bg-slate-100 z-30 min-w-[75px] pr-3 border-l border-slate-200">Phạt</th>
+            </tr>
+        `;
+        thead.innerHTML = headerHtml;
+
+        // 2. Filter employees
+        const filtered = employees.filter(e => {
+            if (!search) return true;
+            const text = `${e.emp_code} ${e.full_name} ${e.dept_name || ''} ${e.position || ''}`.toLowerCase();
+            return text.includes(search);
+        });
+
+        // 3. Render Body
+        const tbody = document.getElementById('att-matrix-tbody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${daysList.length + 6}" class="p-8 text-center text-slate-400 font-bold">Không tìm thấy nhân viên nào phù hợp.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(emp => {
+            let rowHtml = `
+                <tr class="hover:bg-indigo-50/30 transition border-b border-slate-100 group">
+                    <td class="p-2 pl-3 sticky left-0 bg-white group-hover:bg-indigo-50/40 z-10 font-black text-amber-600 font-mono border-r border-slate-100 text-[11px]">${emp.emp_code}</td>
+                    <td class="p-2 sticky left-[70px] bg-white group-hover:bg-indigo-50/40 z-10 font-bold text-slate-800 truncate max-w-[150px] border-r border-slate-100 text-xs shadow-xs" title="${emp.full_name} (${emp.dept_name || ''})">
+                        ${emp.full_name}
+                        <span class="block text-[9px] text-slate-400 font-normal truncate">${emp.dept_name || emp.position || ''}</span>
+                    </td>
+            `;
+
+            daysList.forEach(d => {
+                const rec = emp.days[d.day];
+                const isSun = d.dayOfWeek === 0;
+                const isSat = d.dayOfWeek === 6;
+
+                let cellBg = '';
+                if (rec && (rec.first_check_in || rec.last_check_out)) {
+                    if (rec.late_minutes > 0) {
+                        cellBg = 'bg-rose-50/40';
+                    } else if (rec.ot_hours > 0) {
+                        cellBg = 'bg-purple-50/40';
+                    } else {
+                        cellBg = 'bg-emerald-50/30';
+                    }
+                } else if (isSun || isSat) {
+                    cellBg = 'bg-slate-50/70';
+                }
+
+                let tooltip = `${d.date} (${d.dayOfWeekName}) - ${emp.full_name}`;
+                if (rec) {
+                    tooltip += `\nVào: ${rec.first_check_in || '--'} | Ra: ${rec.last_check_out || '--'}`;
+                    tooltip += `\nCông: ${rec.working_day_value} | Giờ làm: ${rec.working_hours}h | OT: ${rec.ot_hours}h`;
+                    if (rec.late_minutes > 0) tooltip += `\nTrễ: ${rec.late_minutes} phút`;
+                    if (rec.penalty_amount > 0) tooltip += `\nPhạt: -${rec.penalty_amount.toLocaleString('vi-VN')} đ`;
+                    if (rec.notes) tooltip += `\nGhi chú: ${rec.notes}`;
+                } else {
+                    tooltip += '\nChưa có dữ liệu quét vân tay';
+                }
+
+                const recStr = rec ? JSON.stringify(rec).replace(/"/g, '&quot;') : 'null';
+
+                rowHtml += `
+                    <td class="p-1 text-center border-r border-slate-100 ${cellBg} hover:ring-2 hover:ring-blue-400/50 transition cursor-pointer"
+                        onclick="window.modAtt.openAdjustFromMatrix('${emp.id}', '${d.date}', ${recStr})"
+                        title="${tooltip}">
+                `;
+
+                if (rec && (rec.first_check_in || rec.last_check_out)) {
+                    rowHtml += `
+                        <div class="flex flex-col items-center justify-center leading-tight py-0.5 select-none">
+                            <span class="text-[11px] font-black font-mono ${rec.late_minutes > 0 ? 'text-rose-600' : 'text-emerald-700'}">
+                                ${rec.first_check_in || '--:--'}
+                            </span>
+                            <span class="text-[11px] font-black font-mono ${rec.ot_hours > 0 ? 'text-purple-700 font-extrabold' : (rec.early_minutes > 0 ? 'text-amber-600' : 'text-slate-700')}">
+                                ${rec.last_check_out || '--:--'}
+                            </span>
+                        </div>
+                    `;
+                } else if (isSun) {
+                    rowHtml += `<span class="text-[10px] text-slate-300 font-sans font-medium">CN</span>`;
+                } else if (isSat) {
+                    rowHtml += `<span class="text-[10px] text-slate-300 font-sans font-medium">T7</span>`;
+                } else {
+                    rowHtml += `<span class="text-[10px] text-slate-300">--</span>`;
+                }
+
+                rowHtml += `</td>`;
+            });
+
+            const penStr = emp.total_penalties > 0 ? `-${emp.total_penalties.toLocaleString('vi-VN')} đ` : '0 đ';
+            rowHtml += `
+                    <td class="p-2 text-center sticky right-[180px] bg-white group-hover:bg-indigo-50/40 z-10 font-black text-blue-700 border-l border-slate-100 text-xs">${emp.total_days}</td>
+                    <td class="p-2 text-center sticky right-[130px] bg-white group-hover:bg-indigo-50/40 z-10 font-bold ${emp.total_ot_hours > 0 ? 'text-purple-700 font-black' : 'text-slate-400'} border-l border-slate-100 text-xs">${emp.total_ot_hours > 0 ? `${emp.total_ot_hours}h` : '--'}</td>
+                    <td class="p-2 text-center sticky right-[75px] bg-white group-hover:bg-indigo-50/40 z-10 font-bold ${emp.total_late_count > 0 ? 'text-rose-600 font-black' : 'text-slate-400'} border-l border-slate-100 text-xs">${emp.total_late_count > 0 ? `${emp.total_late_count}` : '0'}</td>
+                    <td class="p-2 text-right sticky right-0 bg-white group-hover:bg-indigo-50/40 z-10 font-mono font-black ${emp.total_penalties > 0 ? 'text-rose-600' : 'text-slate-400'} pr-3 border-l border-slate-100 text-xs shadow-xs">${penStr}</td>
+                </tr>
+            `;
+            return rowHtml;
+        }).join('');
+    },
+
+    openAdjustFromMatrix: (empId, dateStr, rec) => {
+        document.getElementById('adj-emp-id').value = empId;
+        document.getElementById('adj-work-date').value = dateStr;
+        if (rec && rec.first_check_in) {
+            document.getElementById('adj-checkin-time').value = `${dateStr}T${rec.first_check_in}`;
+        } else {
+            document.getElementById('adj-checkin-time').value = `${dateStr}T08:30`;
+        }
+        if (rec && rec.last_check_out) {
+            document.getElementById('adj-checkout-time').value = `${dateStr}T${rec.last_check_out}`;
+        } else {
+            document.getElementById('adj-checkout-time').value = `${dateStr}T17:00`;
+        }
+        document.getElementById('adj-reason').value = rec && rec.notes ? rec.notes : 'Điều chỉnh ma trận chấm công';
+        document.getElementById('att-adjust-modal').classList.remove('hidden');
+        document.getElementById('att-adjust-modal').classList.add('flex');
     },
 
     loadDaily: async () => {
@@ -1041,8 +1327,9 @@ window.modAtt = {
                 statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">Vắng mặt</span>';
             }
 
-            const inTime = r.first_check_in ? new Date(r.first_check_in).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
-            const outTime = r.last_check_out ? new Date(r.last_check_out).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+            const inTime = window.modAtt.formatTime(r.first_check_in);
+            const outTime = window.modAtt.formatTime(r.last_check_out);
+            const dateStr = r.work_date ? String(r.work_date).slice(0, 10) : '';
             const penalty = parseFloat(r.penalty_amount) || 0;
             const otHours = parseFloat(r.ot_hours) || 0;
 
@@ -1050,7 +1337,7 @@ window.modAtt = {
 
             return `
                 <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                    <td class="p-3.5 pl-4 font-bold text-slate-700">${r.work_date ? r.work_date.slice(0, 10) : ''}</td>
+                    <td class="p-3.5 pl-4 font-bold text-slate-700">${dateStr}</td>
                     <td class="p-3.5 font-black text-amber-600 font-mono">${r.emp_code}</td>
                     <td class="p-3.5 font-bold text-slate-800">
                         ${r.full_name}
@@ -1226,21 +1513,19 @@ window.modAtt = {
     openAdjustModalFromRow: (row) => {
         if (!row) return;
         document.getElementById('adj-emp-id').value = row.employee_id || '';
-        const dStr = row.work_date ? row.work_date.slice(0, 10) : new Date().toISOString().slice(0, 10);
+        const dStr = row.work_date ? String(row.work_date).slice(0, 10) : new Date().toISOString().slice(0, 10);
         document.getElementById('adj-work-date').value = dStr;
 
         if (row.first_check_in) {
-            const inD = new Date(row.first_check_in);
-            inD.setMinutes(inD.getMinutes() - inD.getTimezoneOffset());
-            document.getElementById('adj-checkin-time').value = inD.toISOString().slice(0, 16);
+            const inT = window.modAtt.formatTime(row.first_check_in);
+            document.getElementById('adj-checkin-time').value = inT !== '--:--' ? `${dStr}T${inT}` : `${dStr}T08:30`;
         } else {
             document.getElementById('adj-checkin-time').value = `${dStr}T08:30`;
         }
 
         if (row.last_check_out) {
-            const outD = new Date(row.last_check_out);
-            outD.setMinutes(outD.getMinutes() - outD.getTimezoneOffset());
-            document.getElementById('adj-checkout-time').value = outD.toISOString().slice(0, 16);
+            const outT = window.modAtt.formatTime(row.last_check_out);
+            document.getElementById('adj-checkout-time').value = outT !== '--:--' ? `${dStr}T${outT}` : `${dStr}T17:00`;
         } else {
             document.getElementById('adj-checkout-time').value = `${dStr}T17:00`;
         }
@@ -1292,8 +1577,8 @@ window.modAtt = {
                 body: JSON.stringify({
                     employee_id: empId,
                     work_date: workDate,
-                    first_check_in: checkIn ? new Date(checkIn) : null,
-                    last_check_out: checkOut ? new Date(checkOut) : null,
+                    first_check_in: checkIn || null,
+                    last_check_out: checkOut || null,
                     adjustment_reason: reason,
                     adjusted_by: adjustedBy
                 })
@@ -1304,6 +1589,9 @@ window.modAtt = {
                 window.modAtt.closeModal('att-adjust-modal');
                 await window.modAtt.loadDaily();
                 await window.modAtt.loadMonthly();
+                if (window.modAtt.activeTab === 'matrix') {
+                    await window.modAtt.loadMatrix();
+                }
             } else {
                 alert('Lỗi: ' + data.error);
             }

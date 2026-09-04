@@ -922,6 +922,110 @@ router.get('/daily', async (req, res) => {
     }
 });
 
+// 5.5. Lấy ma trận chấm công cả tháng (Toàn bộ 01 - 31 ngày chi tiết dạng bảng đối soát như máy chấm công)
+router.get('/matrix', async (req, res) => {
+    try {
+        const periodKey = req.query.period_key || new Date().toISOString().slice(0, 7);
+        const [yearStr, monthStr] = periodKey.split('-');
+        const year = parseInt(yearStr, 10);
+        const month = parseInt(monthStr, 10);
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const startDate = `${periodKey}-01`;
+        const endDate = `${periodKey}-${String(daysInMonth).padStart(2, '0')}`;
+
+        const daysList = [];
+        const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dStr = `${periodKey}-${String(d).padStart(2, '0')}`;
+            const dow = new Date(`${dStr}T00:00:00Z`).getUTCDay();
+            daysList.push({
+                day: d,
+                date: dStr,
+                dayOfWeek: dow,
+                dayOfWeekName: dayNames[dow],
+                isWeekend: dow === 0 || dow === 6
+            });
+        }
+
+        const empsRes = await pool.query(`
+            SELECT e.id, e.emp_code, e.full_name, e.position, d.dept_name
+            FROM employees e
+            LEFT JOIN departments d ON e.department_id = d.id
+            WHERE e.status = 'ACTIVE'
+            ORDER BY e.emp_code ASC
+        `);
+
+        const dailyRes = await pool.query(`
+            SELECT employee_id, work_date, first_check_in, last_check_out, working_hours, late_minutes, early_minutes, ot_hours, working_day_value, status, penalty_amount, notes
+            FROM attendance_daily
+            WHERE work_date >= $1 AND work_date <= $2
+        `, [startDate, endDate]);
+
+        const dailyMap = {};
+        dailyRes.rows.forEach(r => {
+            const dayNum = parseInt(String(r.work_date).slice(8, 10), 10);
+            const key = `${r.employee_id}_${dayNum}`;
+            const inT = r.first_check_in ? String(r.first_check_in).slice(11, 16) : '';
+            const outT = r.last_check_out ? String(r.last_check_out).slice(11, 16) : '';
+            dailyMap[key] = {
+                first_check_in: inT,
+                last_check_out: outT,
+                working_hours: parseFloat(r.working_hours) || 0,
+                late_minutes: parseInt(r.late_minutes, 10) || 0,
+                early_minutes: parseInt(r.early_minutes, 10) || 0,
+                ot_hours: parseFloat(r.ot_hours) || 0,
+                working_day_value: parseFloat(r.working_day_value) || 0,
+                status: r.status,
+                penalty_amount: parseFloat(r.penalty_amount) || 0,
+                notes: r.notes || ''
+            };
+        });
+
+        const employees = empsRes.rows.map(e => {
+            const days = {};
+            let totalDays = 0;
+            let totalOt = 0;
+            let lateCount = 0;
+            let penaltyTotal = 0;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const rec = dailyMap[`${e.id}_${d}`] || null;
+                days[d] = rec;
+                if (rec) {
+                    totalDays += rec.working_day_value;
+                    totalOt += rec.ot_hours;
+                    if (rec.late_minutes > 0) lateCount++;
+                    penaltyTotal += rec.penalty_amount;
+                }
+            }
+
+            return {
+                id: e.id,
+                emp_code: e.emp_code,
+                full_name: e.full_name,
+                position: e.position,
+                dept_name: e.dept_name,
+                total_days: parseFloat(totalDays.toFixed(2)),
+                total_ot_hours: parseFloat(totalOt.toFixed(2)),
+                total_late_count: lateCount,
+                total_penalties: penaltyTotal,
+                days
+            };
+        });
+
+        res.json({
+            success: true,
+            period_key: periodKey,
+            daysInMonth,
+            daysList,
+            employees
+        });
+    } catch (err) {
+        console.error('Lỗi lấy ma trận chấm công:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 6. Tổng hợp công tháng & Kịch bản Thưởng Chuyên Cần / Đúng Giờ / Phạt Kỷ Luật / Tiền OT (Monthly Summary)
 router.get('/monthly-summary', async (req, res) => {
     try {

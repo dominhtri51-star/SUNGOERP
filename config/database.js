@@ -1,5 +1,13 @@
 try { require('dotenv').config(); } catch (e) {}
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+
+// 1. Parse DATE (oid 1082) thành chuỗi 'YYYY-MM-DD' nguyên gốc
+// Tránh việc node-pg tự ép sang Date object gây lệch múi giờ lùi 1 ngày khi serialize JSON
+types.setTypeParser(1082, (val) => val);
+
+// 2. Parse TIMESTAMP WITHOUT TIME ZONE (oid 1114) thành chuỗi 'YYYY-MM-DD HH:mm:ss' nguyên gốc
+// Tránh việc node-pg gắn đuôi UTC 'Z' vào giờ máy chấm công (giờ Việt Nam GMT+7), khiến trình duyệt cộng thêm 7 tiếng
+types.setTypeParser(1114, (val) => val);
 
 let pool;
 
