@@ -285,6 +285,7 @@ window.modPayroll = {
             }
         } catch (err) {
             console.error('Lỗi tải bảng lương:', err);
+            tbody.innerHTML = `<tr><td colspan="14" class="p-8 text-center text-rose-500 font-bold"><i class="fas fa-exclamation-circle mr-1.5"></i>Không thể tải dữ liệu bảng lương (${err.message || 'Lỗi không xác định'})<br><button onclick="window.modPayroll.load()" class="mt-3 px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-bold hover:bg-slate-700 cursor-pointer"><i class="fas fa-redo mr-1"></i> Thử Lại</button></td></tr>`;
         }
     },
 
@@ -298,6 +299,7 @@ window.modPayroll = {
         }
 
         if (tbody) {
+            tbody.innerHTML = window.modPayroll.items.map(item => {
                 const allowances = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
                 const bonusPenalty = (parseFloat(item.bonus_amount) || 0) - (parseFloat(item.deduction_penalty) || 0);
                 const whComm = parseFloat(item.warehouse_commission) || 0;
