@@ -317,21 +317,24 @@ router.post('/employees', async (req, res) => {
         }
 
         // Tự động tìm và liên kết tài khoản RBAC tương ứng
-        let finalUserId = user_id || null;
+        let finalUserId = user_id ? (parseInt(user_id, 10) || null) : null;
         if (!finalUserId) {
-            const matchUser = await client.query("SELECT id, user_id FROM users WHERE UPPER(emp_id) = $1 OR UPPER(username) = $1", [finalEmpCode]);
+            const matchUser = await client.query("SELECT id FROM users WHERE UPPER(emp_id) = $1 OR UPPER(username) = $1", [finalEmpCode]);
             if (matchUser.rows.length > 0) {
-                finalUserId = matchUser.rows[0].id || matchUser.rows[0].user_id;
+                finalUserId = matchUser.rows[0].id;
             }
         }
 
         // Nếu có user_id, đồng bộ lại emp_id và full_name trong bảng users
         if (finalUserId) {
             await client.query(
-                "UPDATE users SET emp_id = $1, full_name = COALESCE($2, full_name) WHERE id = $3 OR user_id = $3",
-                [finalEmpCode, full_name, finalUserId]
+                "UPDATE users SET emp_id = $1, full_name = COALESCE($2, full_name) WHERE id::text = $3::text OR user_id = $3::text",
+                [finalEmpCode, full_name, String(finalUserId)]
             );
         }
+
+        const parsedDeptId = department_id ? (parseInt(department_id, 10) || null) : null;
+        const parsedMgrId = manager_id ? (parseInt(manager_id, 10) || null) : null;
 
         const empRes = await client.query(`
             INSERT INTO employees (
@@ -345,7 +348,7 @@ router.post('/employees', async (req, res) => {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
             RETURNING *
         `, [
-            finalEmpCode, finalUserId, department_id || null, full_name, gender || 'Nam',
+            finalEmpCode, finalUserId, parsedDeptId, full_name, gender || 'Nam',
             dob || null, id_card_number || '', phone || '', email || '', address || '',
             position || '', contract_type || 'CHINH_THUC', start_date || new Date(),
             end_date || null, status || 'ACTIVE', parseFloat(base_salary) || 0,
@@ -355,7 +358,7 @@ router.post('/employees', async (req, res) => {
             parseFloat(commission_rate_manager_wholesale) !== undefined && !isNaN(parseFloat(commission_rate_manager_wholesale)) ? parseFloat(commission_rate_manager_wholesale) : 2,
             parseFloat(commission_rate_manager_boq) !== undefined && !isNaN(parseFloat(commission_rate_manager_boq)) ? parseFloat(commission_rate_manager_boq) : 3,
             parseFloat(min_gross_profit_threshold) || 0,
-            department_role || 'STAFF', manager_id || null
+            department_role || 'STAFF', parsedMgrId
         ]);
         const employee = empRes.rows[0];
 
@@ -395,6 +398,7 @@ router.put('/employees/:id', async (req, res) => {
     try {
         await client.query('BEGIN');
         const { id } = req.params;
+        const empId = parseInt(id, 10);
         const {
             emp_code, user_id, department_id, full_name, gender, dob, id_card_number,
             phone, email, address, position, contract_type, start_date, end_date,
@@ -412,21 +416,24 @@ router.put('/employees/:id', async (req, res) => {
         }
 
         // Tự động tìm user_id nếu chưa chọn
-        let finalUserId = user_id || null;
+        let finalUserId = user_id ? (parseInt(user_id, 10) || null) : null;
         if (!finalUserId) {
-            const matchUser = await client.query("SELECT id, user_id FROM users WHERE UPPER(emp_id) = $1 OR UPPER(username) = $1", [finalEmpCode]);
+            const matchUser = await client.query("SELECT id FROM users WHERE UPPER(emp_id) = $1 OR UPPER(username) = $1", [finalEmpCode]);
             if (matchUser.rows.length > 0) {
-                finalUserId = matchUser.rows[0].id || matchUser.rows[0].user_id;
+                finalUserId = matchUser.rows[0].id;
             }
         }
 
         // Đồng bộ sang bảng users
         if (finalUserId) {
             await client.query(
-                "UPDATE users SET emp_id = $1, full_name = COALESCE($2, full_name) WHERE id = $3 OR user_id = $3",
-                [finalEmpCode, full_name, finalUserId]
+                "UPDATE users SET emp_id = $1, full_name = COALESCE($2, full_name) WHERE id::text = $3::text OR user_id = $3::text",
+                [finalEmpCode, full_name, String(finalUserId)]
             );
         }
+
+        const parsedDeptId = department_id ? (parseInt(department_id, 10) || null) : null;
+        const parsedMgrId = manager_id ? (parseInt(manager_id, 10) || null) : null;
 
         const empRes = await client.query(`
             UPDATE employees SET
@@ -441,7 +448,7 @@ router.put('/employees/:id', async (req, res) => {
                 department_role = $26, manager_id = $27
             WHERE id = $28 RETURNING *
         `, [
-            finalEmpCode, finalUserId, department_id || null, full_name, gender || 'Nam',
+            finalEmpCode, finalUserId, parsedDeptId, full_name, gender || 'Nam',
             dob || null, id_card_number || '', phone || '', email || '', address || '',
             position || '', contract_type || 'CHINH_THUC', start_date || new Date(),
             end_date || null, status || 'ACTIVE', parseFloat(base_salary) || 0,
@@ -451,8 +458,8 @@ router.put('/employees/:id', async (req, res) => {
             parseFloat(commission_rate_manager_wholesale) !== undefined && !isNaN(parseFloat(commission_rate_manager_wholesale)) ? parseFloat(commission_rate_manager_wholesale) : 2,
             parseFloat(commission_rate_manager_boq) !== undefined && !isNaN(parseFloat(commission_rate_manager_boq)) ? parseFloat(commission_rate_manager_boq) : 3,
             parseFloat(min_gross_profit_threshold) || 0,
-            department_role || 'STAFF', manager_id || null,
-            id
+            department_role || 'STAFF', parsedMgrId,
+            empId
         ]);
 
         // Cập nhật bảo hiểm
@@ -471,7 +478,7 @@ router.put('/employees/:id', async (req, res) => {
                 has_kpcd = EXCLUDED.has_kpcd,
                 status = EXCLUDED.status
         `, [
-            id, bhxh_code || '', bhyt_code || '', hospital_name || '',
+            empId, bhxh_code || '', bhyt_code || '', hospital_name || '',
             has_bhxh !== false, has_bhyt !== false, has_bhtn !== false, has_kpcd !== false,
             insurance_status || 'DANG_DONG'
         ]);
@@ -490,9 +497,9 @@ router.put('/employees/:id', async (req, res) => {
 // Xóa nhân viên
 router.delete('/employees/:id', async (req, res) => {
     try {
-        const { id } = req.params;
-        await pool.query("DELETE FROM employee_insurances WHERE employee_id = $1", [id]);
-        await pool.query("DELETE FROM employees WHERE id = $1", [id]);
+        const empId = parseInt(req.params.id, 10);
+        await pool.query("DELETE FROM employee_insurances WHERE employee_id = $1", [empId]);
+        await pool.query("DELETE FROM employees WHERE id = $1", [empId]);
         res.json({ success: true, message: 'Đã xóa nhân viên thành công' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
