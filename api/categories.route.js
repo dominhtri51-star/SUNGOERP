@@ -221,12 +221,30 @@ router.get('/', async (req, res) => {
         categories.forEach(c => { counts[c.id] = 0; });
 
         products.forEach(p => {
-            const catName = (p.category || '').trim().toLowerCase();
-            const matched = categories.find(c => 
-                (p.category_id && c.id === p.category_id) ||
-                (c.name.trim().toLowerCase() === catName) ||
-                (catName.includes(c.name.trim().toLowerCase()) && c.name.length > 3)
-            );
+            // 1. Khớp chính xác category_id
+            let matched = null;
+            if (p.category_id) {
+                matched = categories.find(c => c.id === parseInt(p.category_id, 10));
+            }
+            // 2. Khớp chuỗi category
+            if (!matched) {
+                const catName = (p.category || '').trim().toLowerCase();
+                if (catName) {
+                    matched = categories.find(c => c.name.trim().toLowerCase() === catName);
+                    if (!matched) {
+                        matched = categories.find(c => {
+                            const clean = c.name.replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+                            return clean && (clean === catName || catName === clean);
+                        });
+                    }
+                    if (!matched) {
+                        matched = categories.find(c => {
+                            const clean = c.name.replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+                            return (clean.length > 3 && catName.includes(clean)) || (c.name.length > 3 && catName.includes(c.name.trim().toLowerCase()));
+                        });
+                    }
+                }
+            }
             if (matched) {
                 counts[matched.id] = (counts[matched.id] || 0) + 1;
             }

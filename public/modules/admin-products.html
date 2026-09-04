@@ -1404,16 +1404,61 @@
             }
         },
 
+        // Lấy danh sách ID danh mục của nhánh (bao gồm chính nó và con cháu đệ quy)
+        getBranchCategoryIds: (catId) => {
+            const ids = [];
+            const collect = (id) => {
+                ids.push(id);
+                const children = (window.modCats?.data || []).filter(c => c.parent_id === id);
+                children.forEach(ch => collect(ch.id));
+            };
+            collect(parseInt(catId, 10));
+            return ids;
+        },
+
+        // Nhận diện danh mục tương ứng cho từng sản phẩm (chuẩn hóa đồng bộ 100% với số lượng SP trên cây danh mục)
+        getProductMatchedCategory: (p) => {
+            const cats = window.modCats?.data || [];
+            if (!cats.length) return null;
+
+            // 1. Ưu tiên khớp chính xác theo category_id của sản phẩm
+            if (p.category_id) {
+                const found = cats.find(c => c.id === parseInt(p.category_id, 10));
+                if (found) return found;
+            }
+
+            // 2. Khớp theo chuỗi category
+            const catName = (p.category || '').trim().toLowerCase();
+            if (!catName) return null;
+
+            // 2a. Khớp chính xác tên
+            let found = cats.find(c => c.name.trim().toLowerCase() === catName);
+            if (found) return found;
+
+            // 2b. Khớp tên đã loại bỏ ngoặc đơn (ví dụ "Pin Lưu Trữ Áp Cao" khớp "Pin Lưu Trữ Áp Cao (HV)")
+            found = cats.find(c => {
+                const clean = c.name.replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+                return clean && (clean === catName || catName === clean);
+            });
+            if (found) return found;
+
+            // 2c. Khớp chuỗi con (includes)
+            return cats.find(c => {
+                const clean = c.name.replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+                return (clean.length > 3 && catName.includes(clean)) || (c.name.length > 3 && catName.includes(c.name.trim().toLowerCase()));
+            }) || null;
+        },
+
         // Lấy danh sách tên danh mục của nhánh (bao gồm con cháu)
         getBranchCategoryNames: (catId) => {
             const names = [];
             const collect = (id) => {
-                const item = window.modCats.data.find(c => c.id === id);
+                const item = (window.modCats?.data || []).find(c => c.id === id);
                 if (item) names.push(item.name.toLowerCase().trim());
-                const children = window.modCats.data.filter(c => c.parent_id === id);
+                const children = (window.modCats?.data || []).filter(c => c.parent_id === id);
                 children.forEach(ch => collect(ch.id));
             };
-            collect(catId);
+            collect(parseInt(catId, 10));
             return names;
         },
 
@@ -1474,12 +1519,12 @@
 
             let filtered = [...window.modProducts.list];
 
-            // 1. Lọc theo Danh mục Cây
+            // 1. Lọc theo Danh mục Cây (sử dụng logic đệ quy ID và nhận diện danh mục chuẩn xác 100%)
             if (window.modProducts.currentCatId !== 'ALL') {
-                const branchNames = window.modProducts.getBranchCategoryNames(window.modProducts.currentCatId);
+                const branchIds = window.modProducts.getBranchCategoryIds(window.modProducts.currentCatId);
                 filtered = filtered.filter(p => {
-                    const pCat = (p.category || '').toLowerCase().trim();
-                    return branchNames.includes(pCat) || branchNames.some(bn => pCat.includes(bn));
+                    const matched = window.modProducts.getProductMatchedCategory(p);
+                    return matched && branchIds.includes(matched.id);
                 });
             }
 
