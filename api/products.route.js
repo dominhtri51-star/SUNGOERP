@@ -6,6 +6,7 @@ const pool = require('../config/database');
 (async () => {
     try {
         await pool.query(`
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_products_upper_sku ON products (UPPER(TRIM(sku)));
             CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku ON products (sku);
             ALTER TABLE products ALTER COLUMN wholesale_price SET DEFAULT 0;
             ALTER TABLE products ALTER COLUMN wholesale_price DROP NOT NULL;
@@ -237,6 +238,26 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { sku, product_name, category, category_id, description, bin_location, stocks, image_url, doc_cocq, doc_datasheet, doc_catalog, doc_manual, import_price, retail_price, price_2, price_3, price_4, price_5, price_6, stock_qty, virtual_stock, unit, accounting_code, accounting_name, vat_rate } = req.body;
+        
+        const cleanSku = String(sku || '').trim().toUpperCase();
+        const cleanName = String(product_name || '').trim();
+
+        if (!cleanSku || !cleanName) {
+            return res.status(400).json({ success: false, error: 'Mã SKU và Tên thiết bị không được để trống!' });
+        }
+
+        // Kiểm tra xem có sản phẩm khác đang dùng SKU này không (không phân biệt hoa thường)
+        const dupCheck = await pool.query(
+            "SELECT id, product_name FROM products WHERE UPPER(TRIM(sku)) = $1 AND id != $2",
+            [cleanSku, req.params.id]
+        );
+        if (dupCheck.rows.length > 0) {
+            return res.status(400).json({
+                success: false,
+                error: `Mã SKU "${cleanSku}" đã được sử dụng bởi thiết bị "${dupCheck.rows[0].product_name}" (ID: ${dupCheck.rows[0].id}). Vui lòng chọn mã SKU khác!`
+            });
+        }
+
         await pool.query(
             `UPDATE products SET 
                 sku=$1, product_name=$2, category=$3, category_id=$4, description=$5, bin_location=$6, stocks=$7, 
@@ -245,8 +266,8 @@ router.put('/:id', async (req, res) => {
                 stock_qty=$20, virtual_stock=$21, unit=$22, accounting_code=$23, accounting_name=$24, vat_rate=$25 
              WHERE id=$26`, 
             [
-                sku, 
-                product_name, 
+                cleanSku, 
+                cleanName, 
                 category || 'Khác', 
                 category_id || null, 
                 description || '', 
@@ -257,24 +278,32 @@ router.put('/:id', async (req, res) => {
                 doc_datasheet || '', 
                 doc_catalog || '', 
                 doc_manual || '', 
-                import_price || 0, 
-                retail_price || 0, 
-                price_2 || 0, 
-                price_3 || 0, 
-                price_4 || 0, 
-                price_5 || 0, 
-                price_6 || 0, 
-                stock_qty || 0, 
-                virtual_stock || 0,
-                unit || 'Bộ',
-                accounting_code || sku,
-                accounting_name || product_name,
-                vat_rate !== undefined ? parseFloat(vat_rate) : 8,
+                parseFloat(import_price) || 0, 
+                parseFloat(retail_price) || 0, 
+                parseFloat(price_2) || 0, 
+                parseFloat(price_3) || 0, 
+                parseFloat(price_4) || 0, 
+                parseFloat(price_5) || 0, 
+                parseFloat(price_6) || 0, 
+                parseInt(stock_qty) || 0, 
+                parseInt(virtual_stock) || 0, 
+                unit || 'Bộ', 
+                accounting_code || cleanSku, 
+                accounting_name || cleanName, 
+                vat_rate !== undefined ? parseFloat(vat_rate) : 8, 
                 req.params.id
             ]
         );
         res.json({ success: true });
-    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+    } catch (err) { 
+        if (err.code === '23505') {
+            return res.status(400).json({ 
+                success: false, 
+                error: `Mã SKU đã tồn tại trên một thiết bị khác trong hệ thống!` 
+            });
+        }
+        res.status(500).json({ success: false, error: err.message }); 
+    }
 });
 
 // Endpoint cập nhật nhanh thông tin kế toán (Dành cho Kế toán map mã hàng)

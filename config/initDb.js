@@ -832,6 +832,19 @@ async function autoInitDatabase() {
             `);
         } catch(ordColErr) {}
 
+        // 41. Chuẩn hóa SKU sản phẩm và tạo Unique Index chống trùng lặp không phân biệt hoa thường
+        try {
+            await pool.query(`
+                DO $$ 
+                BEGIN 
+                    UPDATE products SET sku = UPPER(TRIM(sku)) WHERE sku <> UPPER(TRIM(sku));
+                    CREATE UNIQUE INDEX IF NOT EXISTS idx_products_upper_sku ON products (UPPER(TRIM(sku)));
+                EXCEPTION WHEN OTHERS THEN 
+                    NULL;
+                END $$;
+            `);
+        } catch(prodErr) {}
+
         console.log("✅ Khởi tạo và đồng bộ toàn bộ CSDL Cổng Bảo Hành Điện Tử & ERP thành công!");
     } catch (err) {
         console.error("⚠️ Cảnh báo khởi tạo CSDL:", err.message);
