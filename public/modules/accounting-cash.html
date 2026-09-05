@@ -18,6 +18,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+            <a href="#debt-book" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-book-bookmark"></i> <span>Mở Sổ Nợ (Mobile App)</span>
+            </a>
             <button onclick="window.modCash.openCollectModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
                 <i class="fas fa-hand-holding-dollar"></i> <span>Lập Phiếu Thu Nợ</span>
             </button>
@@ -86,18 +89,105 @@
         
         <!-- TABS HEADER -->
         <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-3 pt-2 gap-1.5">
-            <button onclick="window.modCash.switchTab('DEBT_LIST')" id="tab-btn-DEBT_LIST" class="px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-blue-600 text-blue-700 rounded-t-lg shadow-sm transition flex items-center gap-1.5">
-                <i class="fas fa-users text-blue-600"></i> 1. Danh Sách Khách Hàng Nợ & Phân Tích Tuổi Nợ (CRM 131)
+            <button onclick="window.modCash.switchTab('DEBT_BOOK_MOBILE')" id="tab-btn-DEBT_BOOK_MOBILE" class="px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-emerald-600 text-emerald-700 rounded-t-lg shadow-sm transition flex items-center gap-1.5">
+                <i class="fas fa-mobile-screen-button text-emerald-600"></i> 1. Sổ Nợ Nhanh (Mobile Style)
+            </button>
+            <button onclick="window.modCash.switchTab('DEBT_LIST')" id="tab-btn-DEBT_LIST" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
+                <i class="fas fa-users text-slate-500"></i> 2. Bảng Công Nợ 131 & Tuổi Nợ (Desktop)
             </button>
             <button onclick="window.modCash.switchTab('COLLECT_HISTORY')" id="tab-btn-COLLECT_HISTORY" class="px-4 py-2.5 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-lg transition flex items-center gap-1.5">
-                <i class="fas fa-history text-slate-500"></i> 2. Lịch Sử Phiếu Thu Tiền Nợ Khách Hàng
+                <i class="fas fa-history text-slate-500"></i> 3. Lịch Sử Phiếu Thu Tiền Nợ
             </button>
         </div>
 
         <!-- ========================================================= -->
-        <!-- TAB 1: DANH SÁCH KHÁCH HÀNG NỢ (TK 131) -->
+        <!-- TAB 1: SỔ NỢ NHANH (MOBILE STYLE) -->
         <!-- ========================================================= -->
-        <div id="tab-content-DEBT_LIST" class="flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3">
+        <div id="tab-content-DEBT_BOOK_MOBILE" class="flex-1 flex flex-col p-3 sm:p-4 bg-white min-h-0 space-y-3 overflow-y-auto">
+            <!-- BANNER HƯỚNG DẪN & NÚT MỞ TOÀN MÀN HÌNH -->
+            <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-200 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-base shrink-0 shadow-sm">
+                        <i class="fas fa-book-bookmark"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2">
+                            <span>Sổ Nợ Nhanh</span>
+                            <span class="text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full uppercase border border-emerald-200">Giao diện điện thoại</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">Xử lý trực tiếp: Khách chuyển tiền cọc trước khi lên đơn, ghi nhận thu nợ và đồng bộ tức thời Sổ Quỹ & TK 131.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <a href="#debt-book?txType=RECEIVE" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-xs px-3.5 py-2 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-plus"></i> <span>Tôi đã nhận</span>
+                    </a>
+                    <a href="#debt-book?txType=PAY" class="flex-1 sm:flex-none bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-black text-xs px-3.5 py-2 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-minus"></i> <span>Tôi đã đưa</span>
+                    </a>
+                    <a href="#debt-book" class="bg-slate-900 hover:bg-black text-white font-black text-xs px-3.5 py-2 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-up-right-from-square"></i> <span class="hidden md:inline">Toàn Màn Hình</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 2 THẺ TỔNG HỢP NỢ NHANH (PHẢI THU & PHẢI TRẢ) -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-emerald-50/90 border border-emerald-200/80 rounded-2xl p-3.5 flex flex-col justify-between shadow-2xs">
+                    <div class="flex items-center gap-1.5 text-emerald-800 text-xs font-bold mb-1">
+                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-black">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                        <span>Phải thu (Dư Nợ 131)</span>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-2xl font-black text-emerald-700 tracking-tight leading-tight truncate" id="embed-kpi-receivable">0 đ</h2>
+                        <p class="text-[10px] text-emerald-800 font-semibold mt-0.5" id="embed-kpi-debtor-count">0 khách đang nợ</p>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-3.5 flex flex-col justify-between shadow-2xs">
+                    <div class="flex items-center gap-1.5 text-amber-800 text-xs font-bold mb-1">
+                        <span class="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] font-black">
+                            <i class="fas fa-minus"></i>
+                        </span>
+                        <span>Phải trả (Khách cọc trước)</span>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-2xl font-black text-amber-700 tracking-tight leading-tight truncate" id="embed-kpi-payable">0 đ</h2>
+                        <p class="text-[10px] text-amber-800 font-semibold mt-0.5" id="embed-kpi-creditor-count">0 khách cọc trước</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TÌM KIẾM & BỘ LỌC NHANH -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fas fa-search text-xs"></i>
+                    </div>
+                    <input type="text" id="embed-debt-search" oninput="window.modCash.filterDebtBookEmbed(this.value)" placeholder="Tìm khách hàng, số điện thoại, tiền nợ..." class="w-full pl-8 pr-4 py-2 bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-slate-800 text-xs font-medium rounded-xl outline-none border border-transparent focus:border-emerald-500 transition">
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto text-[11px] font-bold">
+                    <button type="button" onclick="window.modCash.setDebtBookFilterType('ALL')" id="embed-chip-ALL" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold transition">Tất cả</button>
+                    <button type="button" onclick="window.modCash.setDebtBookFilterType('RECEIVABLE')" id="embed-chip-RECEIVABLE" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🟢 Phải thu</button>
+                    <button type="button" onclick="window.modCash.setDebtBookFilterType('PAYABLE')" id="embed-chip-PAYABLE" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🟠 Phải trả (Cọc)</button>
+                </div>
+            </div>
+
+            <!-- DANH SÁCH THẺ ĐỐI TÁC SỔ NỢ (CARD LIST MOBILE-FIRST) -->
+            <div id="embed-debt-partner-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white overflow-hidden flex-1">
+                <div class="py-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
+                    <i class="fas fa-spinner fa-spin text-xl text-emerald-600"></i>
+                    <span>Đang nạp danh sách Sổ Nợ...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 2: DANH SÁCH KHÁCH HÀNG NỢ (TK 131) -->
+        <!-- ========================================================= -->
+        <div id="tab-content-DEBT_LIST" class="hidden flex-1 flex flex-col p-4 bg-white min-h-0 space-y-3">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
                 <div class="flex items-center gap-2">
                     <span class="font-bold text-slate-700">Lọc Tuổi Nợ:</span>
@@ -409,6 +499,9 @@ window.modCash = {
     displayedHistoryCount: 10,
     currentStatementData: null,
     currentStatementCust: null,
+    embedPartners: [],
+    embedFilterType: 'ALL',
+    embedSearchQuery: '',
 
     init: async () => {
         window.modCash.pageSize = 10;
@@ -418,7 +511,7 @@ window.modCash = {
     },
 
     switchTab: (tab) => {
-        ['DEBT_LIST', 'COLLECT_HISTORY'].forEach(t => {
+        ['DEBT_BOOK_MOBILE', 'DEBT_LIST', 'COLLECT_HISTORY'].forEach(t => {
             const content = document.getElementById(`tab-content-${t}`);
             const btn = document.getElementById(`tab-btn-${t}`);
             if (content) content.classList.add('hidden');
@@ -431,7 +524,12 @@ window.modCash = {
         const activeBtn = document.getElementById(`tab-btn-${tab}`);
         if (activeContent) activeContent.classList.remove('hidden');
         if (activeBtn) {
-            activeBtn.className = 'px-4 py-2.5 font-bold text-xs bg-white border-t-2 border-blue-600 text-blue-700 rounded-t-lg shadow-sm transition flex items-center gap-1.5';
+            const activeColor = tab === 'DEBT_BOOK_MOBILE' ? 'border-emerald-600 text-emerald-700' : 'border-blue-600 text-blue-700';
+            activeBtn.className = `px-4 py-2.5 font-bold text-xs bg-white border-t-2 ${activeColor} rounded-t-lg shadow-sm transition flex items-center gap-1.5`;
+        }
+
+        if (tab === 'DEBT_BOOK_MOBILE') {
+            window.modCash.loadDebtBookEmbed();
         }
     },
 
@@ -467,10 +565,142 @@ window.modCash = {
                 window.modCash.displayedHistoryCount = window.modCash.pageSize;
                 window.modCash.renderCurrentHistorySlice();
             }
+
+            // Đồng bộ dữ liệu Sổ Nợ Mobile
+            await window.modCash.loadDebtBookEmbed();
         } catch (e) {
             console.error("Lỗi nạp dữ liệu công nợ:", e);
             if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-red-500 font-bold">Lỗi kết nối máy chủ khi lấy danh sách công nợ!</td></tr>`;
         }
+    },
+
+    loadDebtBookEmbed: async () => {
+        try {
+            const [sumRes, partRes] = await Promise.all([
+                fetch('/api/debt-book/summary?t=' + Date.now()),
+                fetch('/api/debt-book/partners?partner_type=CUSTOMER&debt_status=ALL&t=' + Date.now())
+            ]);
+            const [sumData, partData] = await Promise.all([sumRes.json(), partRes.json()]);
+
+            if (sumData.success && sumData.summary) {
+                const s = sumData.summary;
+                const fmt = (v) => new Intl.NumberFormat('vi-VN').format(Math.round(v || 0)) + ' đ';
+                const elRec = document.getElementById('embed-kpi-receivable');
+                const elPay = document.getElementById('embed-kpi-payable');
+                const elDebCnt = document.getElementById('embed-kpi-debtor-count');
+                const elCredCnt = document.getElementById('embed-kpi-creditor-count');
+                if (elRec) elRec.innerText = fmt(s.total_receivable);
+                if (elPay) elPay.innerText = fmt(s.total_payable);
+                if (elDebCnt) elDebCnt.innerText = `${s.debtor_count} khách đang nợ`;
+                if (elCredCnt) elCredCnt.innerText = `${s.creditor_count} khách cọc trước`;
+            }
+
+            if (partData.success) {
+                window.modCash.embedPartners = partData.partners || [];
+                window.modCash.renderDebtBookEmbedList();
+            }
+        } catch (e) {
+            console.error("Lỗi nạp dữ liệu Sổ Nợ:", e);
+        }
+    },
+
+    setDebtBookFilterType: (type) => {
+        window.modCash.embedFilterType = type;
+        ['ALL', 'RECEIVABLE', 'PAYABLE'].forEach(t => {
+            const chip = document.getElementById(`embed-chip-${t}`);
+            if (chip) {
+                if (t === type) {
+                    chip.className = 'px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold transition cursor-pointer';
+                } else {
+                    chip.className = 'px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer';
+                }
+            }
+        });
+        window.modCash.renderDebtBookEmbedList();
+    },
+
+    filterDebtBookEmbed: (val) => {
+        window.modCash.embedSearchQuery = (val || '').toLowerCase().trim();
+        window.modCash.renderDebtBookEmbedList();
+    },
+
+    renderDebtBookEmbedList: () => {
+        const container = document.getElementById('embed-debt-partner-list');
+        if (!container) return;
+
+        let list = window.modCash.embedPartners || [];
+        const type = window.modCash.embedFilterType || 'ALL';
+        const q = window.modCash.embedSearchQuery || '';
+
+        if (type !== 'ALL') {
+            list = list.filter(p => p.debt_type === type);
+        }
+        if (q) {
+            list = list.filter(p => 
+                (p.name && p.name.toLowerCase().includes(q)) ||
+                (p.phone && p.phone.includes(q))
+            );
+        }
+
+        if (list.length === 0) {
+            container.innerHTML = `
+                <div class="py-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
+                    <i class="fas fa-inbox text-3xl text-slate-300"></i>
+                    <p class="font-bold">Không tìm thấy khách hàng nào phù hợp.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const fmt = (v) => new Intl.NumberFormat('vi-VN').format(Math.round(v || 0)) + ' đ';
+
+        container.innerHTML = list.map(p => {
+            const isReceivable = p.debt_type === 'RECEIVABLE';
+            const isPayable = p.debt_type === 'PAYABLE';
+            
+            const badgeClass = isReceivable
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : (isPayable ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200');
+            
+            const amountColor = isReceivable ? 'text-emerald-600' : (isPayable ? 'text-amber-600' : 'text-slate-400');
+            const prefix = isReceivable ? '+' : (isPayable ? '-' : '');
+
+            return `
+                <div class="p-3.5 hover:bg-slate-50 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-700 font-black text-xs flex items-center justify-center border border-slate-200 shrink-0 shadow-2xs">
+                            ${p.initials || 'KH'}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="text-xs sm:text-sm font-bold text-slate-900 truncate">${p.name || 'Khách Vãng Lai'}</h4>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badgeClass}">
+                                    ${p.debt_label}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-3 text-[11px] text-slate-500 font-medium mt-0.5">
+                                <span><i class="fas fa-phone-alt text-[10px] text-slate-400 mr-1"></i>${p.phone || 'Chưa có SĐT'}</span>
+                                <span><i class="fas fa-clock text-[10px] text-slate-400 mr-1"></i>${p.last_activity_text || ''}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                        <div class="text-left sm:text-right">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${p.debt_label}</p>
+                            <h3 class="text-sm sm:text-base font-black ${amountColor}">${prefix}${fmt(p.amount)}</h3>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <a href="#debt-book?partnerId=${p.id}" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1">
+                                <i class="fas fa-book-open"></i> <span>Sổ nợ</span>
+                            </a>
+                            <button onclick="window.modCash.quickCollect('${p.name.replace(/'/g, "\\'")}', '${p.id}', ${p.amount})" class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+                                Thu nợ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     },
 
     loadMoreDebts: () => {

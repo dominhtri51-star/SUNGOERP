@@ -1,0 +1,938 @@
+<div id="debt-book-container" class="min-h-full flex flex-col font-sans bg-white pb-24 select-none">
+    
+    <!-- ========================================================================= -->
+    <!-- MÀN HÌNH 1: SỔ NỢ TỔNG QUAN (DASHBOARD MOBILE & DESKTOP) -->
+    <!-- ========================================================================= -->
+    <div id="view-debt-overview" class="flex-1 flex flex-col max-w-3xl w-full mx-auto p-3 sm:p-4 space-y-3.5">
+        
+        <!-- HEADER THANH ĐIỀU HƯỚNG -->
+        <div class="flex items-center justify-between pt-1 pb-1">
+            <div class="flex items-center gap-2.5">
+                <button type="button" onclick="window.history.back()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition cursor-pointer" title="Quay lại">
+                    <i class="fas fa-arrow-left text-xs"></i>
+                </button>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <span>Sổ nợ</span>
+                    <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Giao dịch nhanh</span>
+                </h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="window.modDebtBook.exportAllExcel()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer shadow-2xs" title="Tải báo cáo Excel">
+                    <i class="fas fa-arrow-down-to-bracket text-xs"></i>
+                </button>
+                <button type="button" onclick="window.modDebtBook.loadData()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer shadow-2xs" title="Làm mới dữ liệu">
+                    <i class="fas fa-sync-alt text-xs"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- THANH TÌM KIẾM BO TRÒN THÔNG THOÁNG -->
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fas fa-search text-xs"></i>
+            </div>
+            <input type="text" id="debt-search-input" oninput="window.modDebtBook.onSearch(this.value)" placeholder="Tìm khách hàng, nhà cung cấp, SĐT..." class="w-full pl-9 pr-8 py-2.5 bg-slate-100/90 hover:bg-slate-100 focus:bg-white text-slate-800 text-xs sm:text-sm font-medium rounded-2xl outline-none border border-transparent focus:border-emerald-500 transition shadow-2xs">
+            <button type="button" id="debt-search-clear" onclick="window.modDebtBook.clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                <i class="fas fa-times-circle text-xs"></i>
+            </button>
+        </div>
+
+        <!-- BỘ LỌC DẠNG PILLS (NGANG) -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs font-bold text-slate-600">
+            <div class="relative shrink-0">
+                <select id="filter-partner-type" onchange="window.modDebtBook.onFilterChange()" class="appearance-none bg-white border border-slate-200 rounded-xl px-3 py-1.5 pr-6 text-xs font-bold text-slate-700 outline-none shadow-2xs cursor-pointer">
+                    <option value="ALL">Tất cả đối tác</option>
+                    <option value="CUSTOMER" selected>Khách hàng</option>
+                    <option value="SUPPLIER">Nhà cung cấp</option>
+                </select>
+                <i class="fas fa-chevron-down text-[9px] text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            </div>
+
+            <div class="relative shrink-0">
+                <select id="filter-debt-status" onchange="window.modDebtBook.onFilterChange()" class="appearance-none bg-white border border-slate-200 rounded-xl px-3 py-1.5 pr-6 text-xs font-bold text-slate-700 outline-none shadow-2xs cursor-pointer">
+                    <option value="ALL" selected>Tất cả trạng thái nợ</option>
+                    <option value="RECEIVABLE">🟢 Chỉ phải thu</option>
+                    <option value="PAYABLE">🟠 Chỉ phải trả (Tiền cọc)</option>
+                    <option value="ZERO">⚪ Đã hết nợ</option>
+                </select>
+                <i class="fas fa-chevron-down text-[9px] text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            </div>
+        </div>
+
+        <!-- 2 THẺ TỔNG HỢP NỢ (PHẢI THU & PHẢI TRẢ) -->
+        <div class="grid grid-cols-2 gap-3">
+            <!-- THẺ 1: PHẢI THU (MÀU XANH LÁ NHẸ) -->
+            <div onclick="window.modDebtBook.quickFilterStatus('RECEIVABLE')" class="bg-emerald-50/90 hover:bg-emerald-100/90 active:scale-[0.98] border border-emerald-200/80 rounded-2xl p-3.5 sm:p-4.5 flex flex-col justify-between transition shadow-2xs cursor-pointer group">
+                <div class="flex items-center gap-1.5 text-emerald-800 text-[11px] sm:text-xs font-bold mb-1">
+                    <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-black group-hover:scale-110 transition">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <span>Phải thu</span>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate" id="kpi-total-receivable">0</h2>
+                    <p class="text-[10px] text-emerald-700/80 font-medium mt-0.5" id="kpi-debtor-count">0 khách đang nợ</p>
+                </div>
+            </div>
+
+            <!-- THẺ 2: PHẢI TRẢ (MÀU VÀNG CAM PASTEL) -->
+            <div onclick="window.modDebtBook.quickFilterStatus('PAYABLE')" class="bg-amber-50/90 hover:bg-amber-100/90 active:scale-[0.98] border border-amber-200/80 rounded-2xl p-3.5 sm:p-4.5 flex flex-col justify-between transition shadow-2xs cursor-pointer group">
+                <div class="flex items-center gap-1.5 text-amber-800 text-[11px] sm:text-xs font-bold mb-1">
+                    <span class="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] font-black group-hover:scale-110 transition">
+                        <i class="fas fa-minus"></i>
+                    </span>
+                    <span>Phải trả (Cọc trước)</span>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate" id="kpi-total-payable">0</h2>
+                    <p class="text-[10px] text-amber-700/80 font-medium mt-0.5" id="kpi-creditor-count">0 khách cọc trước</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DÒNG LỊCH NHẮC NỢ -->
+        <div onclick="window.modDebtBook.openRemindersList()" class="bg-slate-50 hover:bg-slate-100 active:scale-[0.99] border border-slate-200/80 rounded-2xl p-3 flex items-center justify-between transition shadow-2xs cursor-pointer">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <span class="text-xs sm:text-sm font-black text-slate-800">Lịch nhắc nợ</span>
+                <span id="badge-reminders-count" class="hidden text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.2 rounded-full border border-amber-200">0 lịch hẹn</span>
+            </div>
+            <i class="fas fa-chevron-right text-xs text-slate-400"></i>
+        </div>
+
+        <!-- TIÊU ĐỀ DANH SÁCH -->
+        <div class="flex items-center justify-between pt-1 border-b border-slate-100 pb-1.5">
+            <span class="text-[11px] font-black uppercase text-slate-400 tracking-wider">DANH SÁCH KHÁCH HÀNG</span>
+            <span class="text-[11px] font-bold text-slate-500" id="debt-list-count">0 đối tác</span>
+        </div>
+
+        <!-- DANH SÁCH KHÁCH HÀNG / ĐỐI TÁC SỔ NỢ -->
+        <div id="debt-partner-list" class="divide-y divide-slate-100">
+            <!-- Loading skeleton -->
+            <div class="py-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
+                <i class="fas fa-spinner fa-spin text-xl text-emerald-600"></i>
+                <span>Đang nạp dữ liệu Sổ Nợ...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- THANH NÚT NỔI Ở ĐÁY MÀN HÌNH (CAPSULE FLOATING ACTION BAR) -->
+    <!-- ========================================================================= -->
+    <div id="debt-floating-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-slide-up">
+        <div class="bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-full shadow-2xl px-5 py-2.5 flex items-center gap-4 text-xs sm:text-sm transition transform hover:scale-105 active:scale-95 border-2 border-emerald-500/30 backdrop-blur-md">
+            <!-- NỬA TRÁI: TÔI ĐÃ ĐƯA -->
+            <button type="button" onclick="window.modDebtBook.openQuickTxModal('PAY')" class="flex items-center gap-1.5 text-white/95 hover:text-white transition cursor-pointer">
+                <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">
+                    <i class="fas fa-minus"></i>
+                </span>
+                <span>Tôi đã đưa</span>
+            </button>
+
+            <!-- THANH PHÂN CÁCH -->
+            <span class="text-white/40 font-light select-none">|</span>
+
+            <!-- NỬA PHẢI: TÔI ĐÃ NHẬN -->
+            <button type="button" onclick="window.modDebtBook.openQuickTxModal('RECEIVE')" class="flex items-center gap-1.5 text-white/95 hover:text-white transition cursor-pointer">
+                <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">
+                    <i class="fas fa-plus"></i>
+                </span>
+                <span>Tôi đã nhận</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MÀN HÌNH 2: CHI TIẾT SỔ NỢ ĐỐI TÁC (CUSTOMER DEBT TIMELINE) -->
+    <!-- ========================================================================= -->
+    <div id="view-debt-detail" class="hidden flex-1 flex flex-col bg-slate-50 min-h-screen">
+        
+        <!-- HEADER XANH LỤC BẢO ĐẬM (EMERALD GRADIENT) -->
+        <div class="bg-gradient-to-b from-emerald-800 to-emerald-700 text-white px-4 pt-3 pb-6 shrink-0 relative">
+            <div class="flex items-center justify-between pb-3">
+                <button type="button" onclick="window.modDebtBook.backToOverview()" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition cursor-pointer" title="Quay lại">
+                    <i class="fas fa-arrow-left text-xs"></i>
+                </button>
+                <div class="flex items-center gap-2">
+                    <a id="detail-phone-btn" href="#" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition cursor-pointer" title="Gọi điện">
+                        <i class="fas fa-phone-alt text-xs"></i>
+                    </a>
+                    <button type="button" onclick="window.modDebtBook.openEditCustomer()" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition cursor-pointer" title="Sửa thông tin khách hàng">
+                        <i class="fas fa-pen text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- AVATAR TRÒN LỚN Ở TRUNG TÂM -->
+            <div class="flex flex-col items-center justify-center text-center">
+                <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-emerald-200/90 text-emerald-950 font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/30 mb-2" id="detail-avatar">
+                    KH
+                </div>
+                <h2 class="text-base sm:text-xl font-black text-white leading-snug" id="detail-name">Khách Hàng</h2>
+                <p class="text-xs text-white/80 font-mono mt-0.5" id="detail-phone">---</p>
+            </div>
+        </div>
+
+        <!-- THẺ DƯ NỢ NỔI (BALANCE CARD TRẮNG BO TRÒN) -->
+        <div class="max-w-2xl w-full mx-auto px-4 -mt-3.5 relative z-10">
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                    <span class="text-[11px] font-black uppercase tracking-wider text-slate-500 block" id="detail-debt-label">TÔI PHẢI THU</span>
+                    <h3 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight" id="detail-debt-amount">0 đ</h3>
+                </div>
+                <button type="button" onclick="window.modDebtBook.openSetReminderModal()" class="text-xs font-bold bg-slate-50 hover:bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl border border-slate-200 flex items-center gap-1.5 transition cursor-pointer shadow-2xs">
+                    <i class="fas fa-calendar-alt text-emerald-600"></i>
+                    <span id="detail-reminder-btn-text">Đặt lịch nhắc nợ</span>
+                </button>
+            </div>
+
+            <!-- 3 NÚT TÁC VỤ NHANH (ZALO, CHIA SẺ, TẢI BÁO CÁO) -->
+            <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+                <button type="button" onclick="window.modDebtBook.remindViaZalo()" class="bg-white hover:bg-blue-50 active:bg-blue-100 border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1 text-slate-700 transition shadow-2xs cursor-pointer group">
+                    <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-black group-hover:scale-110 transition">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <span class="text-[11px] font-bold">Nhắc qua Zalo</span>
+                </button>
+
+                <button type="button" onclick="window.modDebtBook.shareDebtStatement()" class="bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1 text-slate-700 transition shadow-2xs cursor-pointer group">
+                    <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-sm font-black group-hover:scale-110 transition">
+                        <i class="fas fa-share-nodes"></i>
+                    </div>
+                    <span class="text-[11px] font-bold">Chia sẻ</span>
+                </button>
+
+                <button type="button" onclick="window.modDebtBook.exportPartnerExcel()" class="bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1 text-slate-700 transition shadow-2xs cursor-pointer group">
+                    <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-black group-hover:scale-110 transition">
+                        <i class="fas fa-file-arrow-down"></i>
+                    </div>
+                    <span class="text-[11px] font-bold">Tải báo cáo</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- DANH SÁCH DÒNG THỜI GIAN GIAO DỊCH -->
+        <div class="max-w-2xl w-full mx-auto px-4 mt-4 flex-1 pb-24">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                <span class="text-[11px] font-black uppercase text-slate-500 tracking-wider">GIAO DỊCH</span>
+                <span class="text-[11px] font-bold text-slate-400" id="detail-tx-count">0 giao dịch</span>
+            </div>
+
+            <div id="detail-timeline-list" class="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/80 mt-2 shadow-2xs overflow-hidden">
+                <!-- Timeline items rendered by JS -->
+            </div>
+        </div>
+
+        <!-- THANH NÚT THAO TÁC DÍNH ĐÁY MÀN HÌNH CHI TIẾT -->
+        <div class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 z-30 shadow-lg">
+            <div class="max-w-2xl mx-auto flex items-center gap-2.5">
+                <button type="button" onclick="window.modDebtBook.openQuickTxModal('PAY')" class="flex-1 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 font-black py-3 rounded-xl text-xs sm:text-sm transition text-center cursor-pointer shadow-2xs">
+                    Tôi Đã Đưa
+                </button>
+                <button type="button" onclick="window.modDebtBook.openQuickTxModal('RECEIVE')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black py-3 rounded-xl text-xs sm:text-sm transition text-center cursor-pointer shadow-md flex items-center justify-center gap-1.5">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Thanh Toán / Đã Nhận</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL / BOTTOM SHEET: TẠO GIAO DỊCH NHANH ("TÔI ĐÃ NHẬN" / "TÔI ĐÃ ĐƯA") -->
+    <!-- ========================================================================= -->
+    <div id="modal-quick-tx" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeQuickTxModal()">
+        <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-slide-up" onclick="event.stopPropagation()">
+            
+            <!-- HEADER MODAL GIAO DỊCH -->
+            <div class="px-4 pt-4 pb-3 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs flex items-center justify-center shrink-0" id="tx-modal-avatar">KH</div>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-black text-slate-900 truncate" id="tx-modal-partner-name">Chọn khách hàng</h3>
+                        <p class="text-[11px] text-slate-500 font-medium truncate" id="tx-modal-partner-debt">Số dư nợ: 0 đ</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.modDebtBook.closeQuickTxModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- CHỌN ĐỐI TÁC NẾU TẠO TỪ MÀN HÌNH TỔNG QUAN -->
+            <div id="tx-modal-partner-select-box" class="px-4 pt-3 pb-1 border-b border-slate-100 hidden">
+                <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Khách Hàng / Đối Tác</label>
+                <div class="relative">
+                    <input type="text" id="tx-modal-cust-search" oninput="window.modDebtBook.searchCustInModal(this.value)" placeholder="Gõ tên hoặc SĐT khách hàng..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
+                    <div id="tx-modal-cust-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto z-20 divide-y divide-slate-100 text-xs">
+                        <!-- Customer search results rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- NÚT GẠT CHUYỂN ĐỔI ("TÔI ĐÃ ĐƯA" vs "TÔI ĐÃ NHẬN") -->
+            <div class="px-4 pt-3">
+                <div class="bg-slate-100 p-1 rounded-2xl flex items-center text-xs font-black">
+                    <button type="button" id="btn-tab-pay" onclick="window.modDebtBook.setTxType('PAY')" class="flex-1 py-2 rounded-xl text-slate-600 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-minus"></i> <span>Tôi đã đưa</span>
+                    </button>
+                    <button type="button" id="btn-tab-receive" onclick="window.modDebtBook.setTxType('RECEIVE')" class="flex-1 py-2 rounded-xl bg-white text-emerald-700 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-check"></i> <span>Tôi đã nhận</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- FORM NHẬP SỐ TIỀN KHỔ LỚN -->
+            <div class="p-4 space-y-3.5 overflow-y-auto flex-1">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">SỐ TIỀN GIAO DỊCH (VNĐ)</label>
+                    <div class="relative">
+                        <input type="text" id="tx-modal-amount" oninput="window.modDebtBook.onAmountInput(this)" placeholder="0" class="w-full border-b-2 border-slate-300 focus:border-emerald-600 pb-1 text-2xl sm:text-3xl font-black text-slate-900 outline-none bg-transparent font-mono tracking-tight">
+                        <span class="absolute right-0 bottom-2 text-sm font-black text-slate-400">đ</span>
+                    </div>
+
+                    <!-- CHIPS CHỌN NHANH SỐ TIỀN -->
+                    <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
+                        <button type="button" onclick="window.modDebtBook.addQuickAmount(1000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer">+1 Tr</button>
+                        <button type="button" onclick="window.modDebtBook.addQuickAmount(5000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer">+5 Tr</button>
+                        <button type="button" onclick="window.modDebtBook.addQuickAmount(10000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer">+10 Tr</button>
+                        <button type="button" onclick="window.modDebtBook.addQuickAmount(50000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer">+50 Tr</button>
+                        <button type="button" onclick="window.modDebtBook.setExactRemainingDebt()" id="btn-quick-full-debt" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 font-bold text-[11px] transition cursor-pointer">Hết nợ</button>
+                    </div>
+                </div>
+
+                <!-- DIỄN GIẢI / GHI CHÚ -->
+                <div>
+                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">NỘI DUNG / LÝ DO GIAO DỊCH</label>
+                    <input type="text" id="tx-modal-notes" placeholder="VD: Khách chuyển khoản cọc trước, thanh toán công nợ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500">
+                </div>
+
+                <!-- PHƯƠNG THỨC & NGUỒN TIỀN SỔ QUỸ -->
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Hình Thức</label>
+                        <select id="tx-modal-method" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-slate-700 outline-none">
+                            <option value="Chuyển Khoản" selected>Chuyển Khoản (NH)</option>
+                            <option value="Tiền Mặt">Tiền Mặt</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Quỹ Đồng Bộ</label>
+                        <select id="tx-modal-fund" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-slate-700 outline-none">
+                            <option value="TK_CONG_TY" selected>Tài Khoản Cty (ACB/VCB)</option>
+                            <option value="TIEN_MAT_QUY">Két Tiền Mặt</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TÙY CHỌN TỰ ĐỘNG CẤN TRỪ ĐƠN CŨ -->
+                <div class="pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                        <input type="checkbox" id="tx-modal-auto-settle" checked class="w-4 h-4 rounded text-emerald-600 accent-emerald-600 cursor-pointer">
+                        <span class="text-xs font-bold text-slate-700">Tự động cấn trừ vào các đơn nợ cũ (FIFO)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- NÚT LƯU GIAO DỊCH -->
+            <div class="p-4 border-t border-slate-100 bg-slate-50 shrink-0">
+                <button type="button" id="btn-tx-modal-save" onclick="window.modDebtBook.submitTransaction()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black py-3 rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fas fa-check"></i> <span>Lưu giao dịch</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL ĐẶT LỊCH NHẮC NỢ -->
+    <!-- ========================================================================= -->
+    <div id="modal-reminder" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeReminderModal()">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h3 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <i class="fas fa-calendar-alt text-emerald-600"></i> Đặt lịch nhắc nợ
+                </h3>
+                <button type="button" onclick="window.modDebtBook.closeReminderModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Ngày Hẹn Thanh Toán</label>
+                <input type="date" id="modal-reminder-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Ghi chú lời nhắc</label>
+                <input type="text" id="modal-reminder-notes" placeholder="VD: Khách hẹn thanh toán tiền đợt 2..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500">
+            </div>
+
+            <button type="button" onclick="window.modDebtBook.saveReminder()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 rounded-xl text-xs transition shadow-md cursor-pointer">
+                Lưu Lịch Hẹn
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+window.modDebtBook = {
+    partners: [],
+    currentPartner: null,
+    currentTxType: 'RECEIVE', // 'RECEIVE' hoặc 'PAY'
+    selectedPartnerForTx: null,
+
+    init: async () => {
+        await window.modDebtBook.loadData();
+        const hash = window.location.hash || '';
+        const matchPartner = hash.match(/[?&]partnerId=([^&]+)/);
+        if (matchPartner && matchPartner[1]) {
+            await window.modDebtBook.selectPartner(matchPartner[1]);
+        }
+        const matchTx = hash.match(/[?&]txType=([^&]+)/);
+        if (matchTx && matchTx[1]) {
+            window.modDebtBook.openQuickTxModal(matchTx[1]);
+        }
+    },
+
+    fmtMoney: (num) => new Intl.NumberFormat('vi-VN').format(Math.round(num || 0)),
+
+    loadData: async () => {
+        try {
+            // 1. Nạp tổng quan Phải thu & Phải trả
+            const sumRes = await fetch('/api/debt-book/summary?t=' + Date.now());
+            const sumJson = await sumRes.json();
+            if (sumJson.success && sumJson.summary) {
+                const s = sumJson.summary;
+                document.getElementById('kpi-total-receivable').innerText = window.modDebtBook.fmtMoney(s.total_receivable) + ' đ';
+                document.getElementById('kpi-total-payable').innerText = window.modDebtBook.fmtMoney(s.total_payable) + ' đ';
+                document.getElementById('kpi-debtor-count').innerText = `${s.debtor_count} khách đang nợ`;
+                document.getElementById('kpi-creditor-count').innerText = `${s.creditor_count} khách cọc trước`;
+
+                const remBadge = document.getElementById('badge-reminders-count');
+                if (remBadge) {
+                    if (s.reminder_count > 0) {
+                        remBadge.classList.remove('hidden');
+                        remBadge.innerText = `${s.reminder_count} lịch hẹn`;
+                    } else {
+                        remBadge.classList.add('hidden');
+                    }
+                }
+            }
+
+            // 2. Nạp danh sách đối tác
+            const pType = document.getElementById('filter-partner-type')?.value || 'ALL';
+            const dStatus = document.getElementById('filter-debt-status')?.value || 'ALL';
+            const q = document.getElementById('debt-search-input')?.value || '';
+
+            const pRes = await fetch(`/api/debt-book/partners?partner_type=${encodeURIComponent(pType)}&debt_status=${encodeURIComponent(dStatus)}&search=${encodeURIComponent(q)}&t=` + Date.now());
+            const pJson = await pRes.json();
+            if (pJson.success) {
+                window.modDebtBook.partners = pJson.partners || [];
+                window.modDebtBook.renderPartners();
+            }
+        } catch(err) {
+            console.error("Lỗi nạp dữ liệu Sổ Nợ:", err);
+        }
+    },
+
+    renderPartners: () => {
+        const list = document.getElementById('debt-partner-list');
+        const countEl = document.getElementById('debt-list-count');
+        if (!list) return;
+
+        const partners = window.modDebtBook.partners || [];
+        if (countEl) countEl.innerText = `${partners.length} đối tác`;
+
+        if (partners.length === 0) {
+            list.innerHTML = `
+                <div class="py-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
+                    <i class="fas fa-check-circle text-3xl text-emerald-400 opacity-60"></i>
+                    <p class="font-bold text-slate-600">Không có đối tác nợ nào phù hợp bộ lọc!</p>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = partners.map(p => {
+            let labelClass = "text-slate-400";
+            let labelText = p.debt_label;
+            let avatarBg = "bg-slate-100 text-slate-700";
+
+            if (p.debt_type === 'RECEIVABLE') {
+                labelClass = "text-emerald-600 font-bold";
+                avatarBg = "bg-emerald-100 text-emerald-800";
+            } else if (p.debt_type === 'PAYABLE') {
+                labelClass = "text-amber-600 font-bold";
+                avatarBg = "bg-amber-100 text-amber-900";
+            }
+
+            return `
+            <div onclick="window.modDebtBook.openDetail(${p.id})" class="py-3 sm:py-3.5 px-2 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 rounded-2xl cursor-pointer transition">
+                <!-- CỘT TRÁI: AVATAR & TÊN -->
+                <div class="flex items-center gap-3 min-w-0 pr-2">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full ${avatarBg} font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-2xs">
+                        ${p.initials || 'KH'}
+                    </div>
+                    <div class="min-w-0">
+                        <h4 class="text-xs sm:text-sm font-black text-slate-900 truncate leading-snug">${p.name}</h4>
+                        <p class="text-[11px] ${labelClass} mt-0.5 flex items-center gap-1">
+                            <span>${labelText}</span>
+                            ${p.phone ? `<span class="text-slate-400 font-normal">• ${p.phone}</span>` : ''}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CỘT PHẢI: SỐ TIỀN -->
+                <div class="text-right shrink-0">
+                    <span class="text-xs sm:text-base font-black text-slate-900 block font-mono">${window.modDebtBook.fmtMoney(p.amount)}</span>
+                </div>
+            </div>
+            `;
+        }).join('');
+    },
+
+    onSearch: (val) => {
+        const clearBtn = document.getElementById('debt-search-clear');
+        if (clearBtn) {
+            if (val.trim()) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+        }
+        window.modDebtBook.loadData();
+    },
+
+    clearSearch: () => {
+        const inp = document.getElementById('debt-search-input');
+        if (inp) inp.value = '';
+        const clearBtn = document.getElementById('debt-search-clear');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        window.modDebtBook.loadData();
+    },
+
+    onFilterChange: () => {
+        window.modDebtBook.loadData();
+    },
+
+    quickFilterStatus: (status) => {
+        const filterSelect = document.getElementById('filter-debt-status');
+        if (filterSelect) {
+            filterSelect.value = status;
+            window.modDebtBook.loadData();
+        }
+    },
+
+    // =========================================================================
+    // MÀN HÌNH CHI TIẾT ĐỐI TÁC
+    // =========================================================================
+    openDetail: async (partnerId) => {
+        try {
+            const res = await fetch(`/api/debt-book/partner/${partnerId}?t=` + Date.now());
+            const json = await res.json();
+            if (!json.success) return alert("Lỗi: " + json.error);
+
+            const p = json.partner;
+            window.modDebtBook.currentPartner = p;
+
+            // Render Header
+            document.getElementById('detail-name').innerText = p.name;
+            document.getElementById('detail-phone').innerText = p.phone || 'Chưa có SĐT';
+            document.getElementById('detail-avatar').innerText = p.initials || 'KH';
+            
+            const phoneBtn = document.getElementById('detail-phone-btn');
+            if (phoneBtn) {
+                if (p.phone) {
+                    phoneBtn.href = `tel:${p.phone}`;
+                    phoneBtn.classList.remove('hidden');
+                } else {
+                    phoneBtn.classList.add('hidden');
+                }
+            }
+
+            // Render Balance Card
+            const lbl = document.getElementById('detail-debt-label');
+            const amt = document.getElementById('detail-debt-amount');
+            if (lbl) {
+                lbl.innerText = p.debt_label;
+                if (p.debt_type === 'RECEIVABLE') lbl.className = "text-[11px] font-black uppercase tracking-wider text-emerald-700 block";
+                else if (p.debt_type === 'PAYABLE') lbl.className = "text-[11px] font-black uppercase tracking-wider text-amber-700 block";
+                else lbl.className = "text-[11px] font-black uppercase tracking-wider text-slate-500 block";
+            }
+            if (amt) amt.innerText = window.modDebtBook.fmtMoney(p.amount) + ' đ';
+
+            const remBtnText = document.getElementById('detail-reminder-btn-text');
+            if (remBtnText) {
+                if (p.active_reminder && p.active_reminder.reminder_date) {
+                    remBtnText.innerText = `Hẹn: ${new Date(p.active_reminder.reminder_date).toLocaleDateString('vi-VN')}`;
+                } else {
+                    remBtnText.innerText = "Đặt lịch nhắc nợ";
+                }
+            }
+
+            // Render Timeline
+            window.modDebtBook.renderTimeline(json.transactions || []);
+
+            // Switch view
+            document.getElementById('view-debt-overview').classList.add('hidden');
+            document.getElementById('debt-floating-bar').classList.add('hidden');
+            document.getElementById('view-debt-detail').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch(err) {
+            alert("Lỗi tải chi tiết sổ nợ!");
+        }
+    },
+
+    backToOverview: () => {
+        document.getElementById('view-debt-detail').classList.add('hidden');
+        document.getElementById('view-debt-overview').classList.remove('hidden');
+        document.getElementById('debt-floating-bar').classList.remove('hidden');
+        window.modDebtBook.loadData();
+    },
+
+    renderTimeline: (events) => {
+        const list = document.getElementById('detail-timeline-list');
+        const count = document.getElementById('detail-tx-count');
+        if (count) count.innerText = `${events.length} giao dịch`;
+        if (!list) return;
+
+        if (events.length === 0) {
+            list.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs italic">Chưa có giao dịch nợ nào được ghi nhận.</div>`;
+            return;
+        }
+
+        list.innerHTML = events.map(e => {
+            const isReceive = (e.type === 'RECEIVE');
+            const isOrder = (e.type === 'SALE_ORDER');
+            
+            let iconHtml = '<i class="fas fa-plus text-emerald-600"></i>';
+            let iconBg = 'bg-emerald-100';
+            let amtColor = 'text-emerald-700';
+            let amtPrefix = '+';
+
+            if (isOrder || e.type === 'PAY') {
+                iconHtml = '<i class="fas fa-minus text-amber-600"></i>';
+                iconBg = 'bg-amber-100';
+                amtColor = 'text-amber-700';
+                amtPrefix = '-';
+            }
+
+            const d = new Date(e.created_at);
+            const dateStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+            return `
+            <div class="p-3 sm:p-3.5 flex items-center justify-between hover:bg-slate-50 transition">
+                <div class="flex items-start gap-2.5 min-w-0 pr-2">
+                    <div class="w-6 h-6 rounded-full ${iconBg} flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                        ${iconHtml}
+                    </div>
+                    <div class="min-w-0">
+                        <h4 class="text-xs sm:text-sm font-black text-slate-900 leading-snug">${e.type_label}</h4>
+                        <p class="text-[11px] text-slate-500 font-medium truncate mt-0.5">${e.notes || ''}</p>
+                        <span class="text-[10px] text-slate-400 font-mono block mt-0.5">${dateStr}</span>
+                    </div>
+                </div>
+
+                <div class="text-right shrink-0">
+                    <span class="text-xs sm:text-sm font-black ${amtColor} block font-mono">${amtPrefix}${window.modDebtBook.fmtMoney(e.amount)} đ</span>
+                    <span class="text-[10px] text-slate-400 font-medium block mt-0.5">Dư nợ: ${window.modDebtBook.fmtMoney(e.balance_abs)} đ</span>
+                </div>
+            </div>
+            `;
+        }).join('');
+    },
+
+    // =========================================================================
+    // MODAL TẠO GIAO DỊCH NHANH
+    // =========================================================================
+    openQuickTxModal: (type) => {
+        window.modDebtBook.currentTxType = type || 'RECEIVE';
+        const modal = document.getElementById('modal-quick-tx');
+        if (!modal) return;
+
+        // Nếu đang mở từ chi tiết khách hàng
+        const p = window.modDebtBook.currentPartner;
+        const selectBox = document.getElementById('tx-modal-partner-select-box');
+
+        if (p) {
+            window.modDebtBook.selectedPartnerForTx = p;
+            document.getElementById('tx-modal-avatar').innerText = p.initials || 'KH';
+            document.getElementById('tx-modal-partner-name').innerText = p.name;
+            document.getElementById('tx-modal-partner-debt').innerText = `${p.debt_label}: ${window.modDebtBook.fmtMoney(p.amount)} đ`;
+            if (selectBox) selectBox.classList.add('hidden');
+        } else {
+            // Mở từ màn hình tổng quan -> Cho phép tìm kiếm đối tác
+            window.modDebtBook.selectedPartnerForTx = null;
+            document.getElementById('tx-modal-avatar').innerText = 'KH';
+            document.getElementById('tx-modal-partner-name').innerText = 'Chọn khách hàng';
+            document.getElementById('tx-modal-partner-debt').innerText = 'Vui lòng chọn khách hàng';
+            if (selectBox) selectBox.classList.remove('hidden');
+        }
+
+        window.modDebtBook.setTxType(window.modDebtBook.currentTxType);
+
+        // Reset inputs
+        const amtInput = document.getElementById('tx-modal-amount');
+        if (amtInput) amtInput.value = '';
+        const notesInput = document.getElementById('tx-modal-notes');
+        if (notesInput) {
+            notesInput.value = (window.modDebtBook.currentTxType === 'RECEIVE' ? 'Khách chuyển khoản cọc trước / trả nợ' : 'Chi hoàn trả tiền cọc khách hàng');
+        }
+
+        modal.classList.remove('hidden');
+        if (amtInput) amtInput.focus();
+    },
+
+    closeQuickTxModal: () => {
+        const modal = document.getElementById('modal-quick-tx');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    setTxType: (type) => {
+        window.modDebtBook.currentTxType = type;
+        const btnPay = document.getElementById('btn-tab-pay');
+        const btnRec = document.getElementById('btn-tab-receive');
+        const notesInput = document.getElementById('tx-modal-notes');
+
+        if (type === 'RECEIVE') {
+            btnRec.className = "flex-1 py-2 rounded-xl bg-white text-emerald-700 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer";
+            btnPay.className = "flex-1 py-2 rounded-xl text-slate-600 transition flex items-center justify-center gap-1.5 cursor-pointer";
+            if (notesInput && (!notesInput.value || notesInput.value.includes('Chi hoàn'))) {
+                notesInput.value = 'Khách chuyển khoản cọc trước / trả nợ';
+            }
+        } else {
+            btnPay.className = "flex-1 py-2 rounded-xl bg-white text-amber-700 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer";
+            btnRec.className = "flex-1 py-2 rounded-xl text-slate-600 transition flex items-center justify-center gap-1.5 cursor-pointer";
+            if (notesInput && (!notesInput.value || notesInput.value.includes('chuyển khoản cọc'))) {
+                notesInput.value = 'Chi hoàn trả tiền cọc khách hàng';
+            }
+        }
+    },
+
+    onAmountInput: (inp) => {
+        let raw = inp.value.replace(/\D/g, '');
+        if (!raw) { inp.value = ''; return; }
+        inp.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw, 10));
+    },
+
+    addQuickAmount: (val) => {
+        const inp = document.getElementById('tx-modal-amount');
+        if (!inp) return;
+        let cur = parseInt(inp.value.replace(/\D/g, '') || '0', 10);
+        cur += val;
+        inp.value = new Intl.NumberFormat('vi-VN').format(cur);
+    },
+
+    setExactRemainingDebt: () => {
+        const p = window.modDebtBook.selectedPartnerForTx || window.modDebtBook.currentPartner;
+        if (!p) return;
+        const inp = document.getElementById('tx-modal-amount');
+        if (inp) {
+            inp.value = new Intl.NumberFormat('vi-VN').format(p.amount || 0);
+        }
+    },
+
+    searchCustInModal: (q) => {
+        const dd = document.getElementById('tx-modal-cust-dropdown');
+        if (!dd) return;
+        if (!q.trim()) { dd.classList.add('hidden'); return; }
+
+        const filtered = (window.modDebtBook.partners || []).filter(p => 
+            p.name.toLowerCase().includes(q.toLowerCase()) || (p.phone && p.phone.includes(q))
+        ).slice(0, 5);
+
+        if (filtered.length === 0) {
+            dd.innerHTML = `<div class="p-3 text-center text-slate-400">Không tìm thấy. <button type="button" onclick="window.modDebtBook.chooseNewCust('${q.replace(/'/g, "\\'")}')" class="text-emerald-600 font-bold underline">Tạo mới khách "${q}"</button></div>`;
+        } else {
+            dd.innerHTML = filtered.map(p => `
+                <div onclick="window.modDebtBook.choosePartnerForTx(${p.id})" class="p-2.5 hover:bg-slate-50 flex items-center justify-between cursor-pointer">
+                    <div>
+                        <span class="font-bold text-slate-800 block">${p.name}</span>
+                        <span class="text-[11px] text-slate-400">${p.phone || 'Chưa có SĐT'}</span>
+                    </div>
+                    <span class="text-xs font-black text-slate-700">${window.modDebtBook.fmtMoney(p.amount)} đ</span>
+                </div>
+            `).join('');
+        }
+        dd.classList.remove('hidden');
+    },
+
+    choosePartnerForTx: (partnerId) => {
+        const p = (window.modDebtBook.partners || []).find(x => x.id === partnerId);
+        if (!p) return;
+        window.modDebtBook.selectedPartnerForTx = p;
+        document.getElementById('tx-modal-avatar').innerText = p.initials || 'KH';
+        document.getElementById('tx-modal-partner-name').innerText = p.name;
+        document.getElementById('tx-modal-partner-debt').innerText = `${p.debt_label}: ${window.modDebtBook.fmtMoney(p.amount)} đ`;
+        document.getElementById('tx-modal-cust-dropdown').classList.add('hidden');
+        document.getElementById('tx-modal-cust-search').value = p.name;
+    },
+
+    chooseNewCust: (name) => {
+        window.modDebtBook.selectedPartnerForTx = { id: null, name: name, initials: 'NEW', amount: 0, debt_label: 'Khách Mới' };
+        document.getElementById('tx-modal-avatar').innerText = 'NEW';
+        document.getElementById('tx-modal-partner-name').innerText = name;
+        document.getElementById('tx-modal-partner-debt').innerText = 'Khách mới (chưa có nợ)';
+        document.getElementById('tx-modal-cust-dropdown').classList.add('hidden');
+        document.getElementById('tx-modal-cust-search').value = name;
+    },
+
+    submitTransaction: async () => {
+        const p = window.modDebtBook.selectedPartnerForTx || window.modDebtBook.currentPartner;
+        if (!p) {
+            return alert("Vui lòng chọn khách hàng cần thực hiện giao dịch!");
+        }
+
+        const amtStr = document.getElementById('tx-modal-amount')?.value.replace(/\D/g, '');
+        const amt = parseInt(amtStr, 10);
+        if (!amt || amt <= 0) {
+            return alert("Vui lòng nhập số tiền giao dịch hợp lệ (> 0 VNĐ)!");
+        }
+
+        const notes = document.getElementById('tx-modal-notes')?.value.trim();
+        const method = document.getElementById('tx-modal-method')?.value || 'Chuyển Khoản';
+        const fund = document.getElementById('tx-modal-fund')?.value || 'TK_CONG_TY';
+        const autoSettle = document.getElementById('tx-modal-auto-settle')?.checked;
+
+        const btn = document.getElementById('btn-tx-modal-save');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu giao dịch & sổ quỹ...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const payload = {
+                customer_id: p.id || null,
+                customer_name: p.name,
+                transaction_type: window.modDebtBook.currentTxType,
+                amount: amt,
+                payment_method: method,
+                source_fund: fund,
+                notes: notes,
+                auto_settle_orders: autoSettle
+            };
+
+            const res = await fetch('/api/debt-book/transaction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message || "✅ Đã lưu giao dịch thành công!");
+                window.modDebtBook.closeQuickTxModal();
+
+                if (window.modDebtBook.currentPartner && window.modDebtBook.currentPartner.id === p.id) {
+                    await window.modDebtBook.openDetail(p.id);
+                } else {
+                    await window.modDebtBook.loadData();
+                }
+            } else {
+                alert("❌ Lỗi: " + data.error);
+            }
+        } catch(err) {
+            alert("Lỗi mạng khi lưu giao dịch!");
+        } finally {
+            btn.innerHTML = oldText;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+
+    // =========================================================================
+    // NHẮC NỢ QUA ZALO & CHIA SẺ
+    // =========================================================================
+    remindViaZalo: () => {
+        const p = window.modDebtBook.currentPartner;
+        if (!p) return;
+        if (!p.phone) {
+            return alert("Khách hàng này chưa có số điện thoại để gửi Zalo!");
+        }
+
+        const cleanPhone = p.phone.replace(/\D/g, '');
+        const text = `Kính gửi anh/chị ${p.name},\nSUNGO xin phép gửi thông tin đối soát công nợ tính đến hôm nay: ${p.debt_label} số tiền là ${window.modDebtBook.fmtMoney(p.amount)} đ.\nAnh/chị vui lòng kiểm tra và hỗ trợ thanh toán giúp em ạ.\nThông tin STK nhận: Techcombank - 0315614349 - CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO.\nEm cảm ơn anh/chị nhiều ạ!`;
+
+        // Sao chép nội dung vào Clipboard
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text);
+        }
+
+        // Mở Zalo chat
+        window.open(`https://zalo.me/${cleanPhone}`, '_blank');
+        alert("📋 Đã sao chép mẫu tin nhắn nhắc nợ vào Clipboard & Đang mở Zalo của khách!");
+    },
+
+    shareDebtStatement: () => {
+        const p = window.modDebtBook.currentPartner;
+        if (!p) return;
+        const text = `ĐỐI SOÁT CÔNG NỢ SUNGO - ${p.name}\n${p.debt_label}: ${window.modDebtBook.fmtMoney(p.amount)} đ\nNgày: ${new Date().toLocaleDateString('vi-VN')}\nHotline hỗ trợ: 0937.039.889`;
+        if (navigator.share) {
+            navigator.share({ title: 'Đối soát công nợ SUNGO', text: text });
+        } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(text);
+            alert("📋 Đã sao chép tóm tắt công nợ vào Clipboard!");
+        }
+    },
+
+    exportPartnerExcel: () => {
+        const p = window.modDebtBook.currentPartner;
+        if (!p) return;
+        window.open(`/api/accounting/debt-statement?customer_id=${p.id}&customer_name=${encodeURIComponent(p.name)}`, '_blank');
+    },
+
+    exportAllExcel: () => {
+        window.open('/api/accounting/receivables-aging', '_blank');
+    },
+
+    // =========================================================================
+    // LỊCH NHẮC NỢ
+    // =========================================================================
+    openSetReminderModal: () => {
+        const p = window.modDebtBook.currentPartner;
+        if (!p) return;
+        const modal = document.getElementById('modal-reminder');
+        if (modal) {
+            const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+            document.getElementById('modal-reminder-date').value = nextWeek;
+            document.getElementById('modal-reminder-notes').value = `Hẹn nhắc nợ ${p.name} thanh toán`;
+            modal.classList.remove('hidden');
+        }
+    },
+
+    closeReminderModal: () => {
+        const modal = document.getElementById('modal-reminder');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    saveReminder: async () => {
+        const p = window.modDebtBook.currentPartner;
+        if (!p) return;
+        const rDate = document.getElementById('modal-reminder-date')?.value;
+        const rNotes = document.getElementById('modal-reminder-notes')?.value;
+
+        if (!rDate) return alert("Vui lòng chọn ngày hẹn thanh toán!");
+
+        try {
+            const res = await fetch('/api/debt-book/reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customer_id: p.id,
+                    reminder_date: rDate,
+                    notes: rNotes
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message || "✅ Đã lưu lịch nhắc nợ!");
+                window.modDebtBook.closeReminderModal();
+                await window.modDebtBook.openDetail(p.id);
+            } else alert("Lỗi: " + data.error);
+        } catch(e) {
+            alert("Lỗi kết nối khi lưu lịch hẹn!");
+        }
+    },
+
+    openRemindersList: () => {
+        alert("📅 Tính năng lọc xem riêng các khách hàng đến ngày hẹn thanh toán.");
+    }
+};
+
+window.modDebtBook.init();
+</script>

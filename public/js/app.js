@@ -149,6 +149,7 @@ const ALL_SYSTEM_GROUPS = [
         items: [ 
             { id: 'accounting-vault', icon: 'fa-vault', title: 'Két Sắt Hồ Sơ & Thuế', desc: 'Kho tài liệu quyết toán thuế' }, 
             { id: 'accounting-cashbook', icon: 'fa-book-journal-whills', title: 'Sổ Quỹ Tiền Mặt (Thu/Chi)', desc: 'Phiếu thu, phiếu chi tiền mặt/NH' }, 
+            { id: 'debt-book', icon: 'fa-book-bookmark', title: 'Sổ Nợ (Giao Dịch Nhanh)', desc: 'Ghi nhận cọc, thu chi nhanh, nợ khách hàng' },
             { id: 'accounting-cash', icon: 'fa-wallet', title: 'Công Nợ Phải Thu (131)', desc: 'Theo dõi nợ khách hàng' }, 
             { id: 'accounting-payments', icon: 'fa-file-invoice-dollar', title: 'Phải Trả NCC & UNC (331)', desc: 'Lệnh chi tiền & UNC nhà cung cấp' }, 
             { id: 'contract-billing', icon: 'fa-file-contract', title: 'Hợp Đồng & Thanh Toán', desc: 'Soạn thảo & ký hợp đồng online' }, 
@@ -176,6 +177,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'sale-crm': 'EDIT',
         'sale-orders': 'EDIT',
         'order-history': 'EDIT',
+        'debt-book': 'EDIT',
         'return-orders': 'EDIT',
         'sales-commissions': 'EDIT',
         'sale-boq': 'EDIT',
@@ -195,6 +197,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'sale-crm': 'EDIT',
         'sale-orders': 'EDIT',
         'order-history': 'EDIT',
+        'debt-book': 'EDIT',
         'return-orders': 'EDIT',
         'sales-commissions': 'VIEW',
         'sale-boq': 'EDIT',
@@ -211,6 +214,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'sale-crm': 'EDIT',
         'sale-orders': 'EDIT',
         'order-history': 'EDIT',
+        'debt-book': 'EDIT',
         'return-orders': 'EDIT',
         'sales-commissions': 'VIEW',
         'sale-boq': 'EDIT',
@@ -248,6 +252,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'admin-products': 'VIEW',
         'accounting-vault': 'EDIT',
         'accounting-cashbook': 'EDIT',
+        'debt-book': 'EDIT',
         'accounting-cash': 'EDIT',
         'accounting-payments': 'EDIT',
         'contract-billing': 'EDIT',
@@ -466,10 +471,9 @@ const roleBottomNavs = {
         { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
     ],
     'KE_TOAN': [
-        { id: 'accounting-vault', icon: 'fa-vault', label: 'Két Sắt' },
         { id: 'accounting-cashbook', icon: 'fa-book-journal-whills', label: 'Sổ Quỹ' },
+        { id: 'debt-book', icon: 'fa-book-bookmark', label: 'Sổ Nợ' },
         { id: 'accounting-cash', icon: 'fa-wallet', label: 'Công Nợ 131' },
-        { id: 'accounting-vat', icon: 'fa-file-invoice', label: 'VAT' },
         { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'KY_THUAT': [
