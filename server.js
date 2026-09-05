@@ -46,6 +46,16 @@ app.use(express.static('public', {
     }
 }));
 
+// Fallback cho /uploads/*: nếu không có trên container disk, chuyển hướng sang GCS
+app.get('/uploads/*', (req, res) => {
+    const relPath = req.params[0];
+    const localPath = path.join(__dirname, 'public/uploads', relPath);
+    if (fs.existsSync(localPath)) {
+        return res.sendFile(localPath);
+    }
+    return res.redirect(`https://storage.googleapis.com/sungo-erp-uploads/${relPath}`);
+});
+
 // ==========================================
 // BẢO MẬT XÁC THỰC TRUNG TÂM (JWT AUTH)
 // ==========================================

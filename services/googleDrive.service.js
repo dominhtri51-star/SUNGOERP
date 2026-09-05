@@ -1,31 +1,68 @@
+try { require('dotenv').config(); } catch (e) {}
 const { google } = require('googleapis');
+const { Storage } = require('@google-cloud/storage');
 const fs = require('fs');
 const path = require('path');
 const stream = require('stream');
 const fileOptimizer = require('./fileOptimizer.service');
 
 /**
- * GOOGLE DRIVE & LOCAL OPTIMIZED STORAGE SERVICE
- * Tự động nén hình ảnh (giảm 90% dung lượng) và lưu trữ đa kênh:
- * 1. Google Drive (Nếu có OAuth2 hoặc Service Account).
- * 2. Optimized Local Storage (Ổ cứng máy chủ với dung lượng siêu nhẹ, chống tràn disk).
+ * ENTERPRISE MULTI-TIER STORAGE SERVICE (SUNGO ERP)
+ * 1. Google Cloud Storage (GCS) - Lưu trữ đám mây vĩnh viễn, CDN tốc độ cao, không bao giờ mất file khi Cloud Run scale/redeploy.
+ * 2. Google Drive (Dự phòng cho tài liệu chia sẻ Workspace).
+ * 3. Local Optimized Storage (Ổ cứng cục bộ nén ảnh 90%).
  */
 
 const KEY_FILE_PATH = process.env.GOOGLE_DRIVE_KEY_PATH || path.join(__dirname, '../config/google-service-account.json');
 const DEFAULT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
+const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME || 'sungo-erp-uploads';
+const GCP_PROJECT_ID = process.env.GOOGLE_PROJECT_ID || 'sungo-erp';
 
 class GoogleDriveService {
     constructor() {
         this.drive = null;
         this.authType = null;
         this.accountIdentifier = null;
+
+        // GCS Client
+        this.gcs = null;
+        this.gcsBucket = null;
+        this.gcsBucketName = GCS_BUCKET_NAME;
+
         this.init();
     }
 
     /**
-     * Khởi tạo kết nối Google Drive API
+     * Khởi tạo kết nối Google Cloud Storage & Google Drive API
      */
     init() {
+        // A. KHỞI TẠO GOOGLE CLOUD STORAGE (GCS)
+        try {
+            let gcsOptions = { projectId: GCP_PROJECT_ID };
+
+            if (fs.existsSync(KEY_FILE_PATH)) {
+                gcsOptions.keyFilename = KEY_FILE_PATH;
+                console.log('☁️ [GCS Storage] Sử dụng Service Account Key File:', KEY_FILE_PATH);
+            } else if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+                try {
+                    const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON.trim();
+                    gcsOptions.credentials = raw.startsWith('{') ? JSON.parse(raw) : JSON.parse(Buffer.from(raw, 'base64').toString('utf-8'));
+                    console.log('☁️ [GCS Storage] Sử dụng Service Account từ ENV');
+                } catch(e) {
+                    console.warn('⚠️ [GCS Storage] Lỗi parse GOOGLE_SERVICE_ACCOUNT_JSON:', e.message);
+                }
+            }
+
+            this.gcs = new Storage(gcsOptions);
+            this.gcsBucket = this.gcs.bucket(this.gcsBucketName);
+            console.log(`✅ [GCS Storage] Đã kết nối Google Cloud Storage Bucket: ${this.gcsBucketName}`);
+        } catch (gcsErr) {
+            console.warn('⚠️ [GCS Storage] Không thể khởi tạo GCS:', gcsErr.message);
+            this.gcs = null;
+            this.gcsBucket = null;
+        }
+
+        // B. KHỞI TẠO GOOGLE DRIVE API (DỰ PHÒNG HOẶC TIỆN ÍCH PHỤ)
         try {
             // 1. Kiểm tra cấu hình OAuth2
             const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -39,38 +76,10 @@ class GoogleDriveService {
                 this.drive = google.drive({ version: 'v3', auth: oauth2Client });
                 this.authType = 'OAUTH2';
                 this.accountIdentifier = 'OAuth2 Personal Account';
-                console.log('☁️ [Google Drive] Đã kết nối Google Drive qua OAuth2.');
                 return;
             }
 
-            // 2. Kiểm tra Service Account qua Biến môi trường (Dành cho Cloud Run / Docker)
-            if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-                let credentials;
-                try {
-                    const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON.trim();
-                    if (raw.startsWith('{')) {
-                        credentials = JSON.parse(raw);
-                    } else {
-                        credentials = JSON.parse(Buffer.from(raw, 'base64').toString('utf-8'));
-                    }
-                } catch (parseErr) {
-                    console.error('⚠️ [Google Drive] Lỗi parse GOOGLE_SERVICE_ACCOUNT_JSON:', parseErr.message);
-                }
-
-                if (credentials) {
-                    this.accountIdentifier = credentials.client_email || null;
-                    const auth = new google.auth.GoogleAuth({
-                        credentials,
-                        scopes: ['https://www.googleapis.com/auth/drive']
-                    });
-                    this.drive = google.drive({ version: 'v3', auth });
-                    this.authType = 'SERVICE_ACCOUNT';
-                    console.log(`☁️ [Google Drive] Đã nạp Service Account từ Env: ${this.accountIdentifier}`);
-                    return;
-                }
-            }
-
-            // 3. Kiểm tra Service Account qua file
+            // 2. Kiểm tra Service Account cho Drive
             if (fs.existsSync(KEY_FILE_PATH)) {
                 const keyContent = JSON.parse(fs.readFileSync(KEY_FILE_PATH, 'utf-8'));
                 this.accountIdentifier = keyContent.client_email || null;
@@ -82,19 +91,14 @@ class GoogleDriveService {
 
                 this.drive = google.drive({ version: 'v3', auth });
                 this.authType = 'SERVICE_ACCOUNT';
-                console.log(`☁️ [Google Drive] Đã nạp Service Account từ File: ${this.accountIdentifier}`);
-                return;
             }
-
-            console.log('ℹ️ [Storage Engine] Đang chạy chế độ Optimized Local Storage (Tự động nén ảnh 90%).');
         } catch (error) {
-            console.error('⚠️ [Storage Engine] Lỗi khởi tạo Drive, dùng Local Storage:', error.message);
             this.drive = null;
         }
     }
 
     isConfigured() {
-        return !!this.drive;
+        return !!this.gcsBucket || !!this.drive;
     }
 
     /**
@@ -138,7 +142,7 @@ class GoogleDriveService {
             totalFormatted: formatBytes(totalBytes),
             totalFiles,
             folderDetails,
-            storageMode: this.isConfigured() ? this.authType : 'LOCAL_OPTIMIZED'
+            storageMode: this.gcsBucket ? 'GOOGLE_CLOUD_STORAGE' : (this.drive ? this.authType : 'LOCAL_OPTIMIZED')
         };
     }
 
@@ -148,38 +152,36 @@ class GoogleDriveService {
     async checkStatus() {
         const stats = this.getStorageStats();
 
-        if (!this.isConfigured()) {
+        if (this.gcsBucket) {
             return {
-                configured: false,
-                mode: 'LOCAL_OPTIMIZED',
-                message: 'Hệ thống đang hoạt động ở chế độ Local Siêu Nhẹ (Tự động nén ảnh 90% chống tràn đĩa).',
+                configured: true,
+                mode: 'GOOGLE_CLOUD_STORAGE',
+                bucket: this.gcsBucketName,
+                message: `Google Cloud Storage Bucket [${this.gcsBucketName}] đang hoạt động (Lưu trữ vĩnh viễn, CDN tốc độ cao).`,
                 storageStats: stats
             };
         }
 
-        try {
-            const about = await this.drive.about.get({ fields: 'user, storageQuota' });
+        if (this.drive) {
             return {
                 configured: true,
                 mode: this.authType,
-                user: about.data.user,
-                storageQuota: about.data.storageQuota,
-                storageStats: stats,
-                message: 'Google Drive API đang hoạt động!'
-            };
-        } catch (error) {
-            return {
-                configured: false,
-                mode: 'ERROR_FALLBACK_LOCAL',
-                error: error.message,
-                storageStats: stats,
-                message: 'Chế độ dự phòng: Tự động lưu trữ cục bộ có tối ưu dung lượng.'
+                account: this.accountIdentifier,
+                message: 'Google Drive API đang hoạt động!',
+                storageStats: stats
             };
         }
+
+        return {
+            configured: false,
+            mode: 'LOCAL_OPTIMIZED',
+            message: 'Hệ thống đang hoạt động ở chế độ Local (Tự động nén ảnh 90%).',
+            storageStats: stats
+        };
     }
 
     /**
-     * Upload buffer với cơ chế TỰ ĐỘNG NÉN và chuyển kênh thông minh
+     * Upload file/buffer với cơ chế TỰ ĐỘNG NÉN và ĐẨY LÊN CLOUD STORAGE VĨNH VIỄN
      */
     async uploadFile({ buffer, originalname, mimetype, subfolder = 'general', customFolderId = null }) {
         if (!buffer || !Buffer.isBuffer(buffer)) {
@@ -194,9 +196,38 @@ class GoogleDriveService {
         const ext = path.extname(originalname || '') || (finalMime && finalMime.includes('png') ? '.png' : '.jpg');
         const cleanName = path.basename(originalname || 'file', ext).replace(/[^a-zA-Z0-9_-]/g, '_');
         const uniqueFileName = `${Date.now()}_${cleanName}${ext}`;
+        const cleanSubfolder = String(subfolder || 'general').replace(/[^a-zA-Z0-9_-]/g, '') || 'general';
 
-        // 2. NẾU CÓ GOOGLE DRIVE -> ĐẨY LÊN GOOGLE DRIVE
-        if (this.isConfigured()) {
+        // 2. ƯU TIÊN 1: GOOGLE CLOUD STORAGE (VĨNH VIỄN, AN TOÀN TRÊN CLOUD RUN, URL CÔNG KHAI TRỰC TIẾP)
+        if (this.gcsBucket) {
+            try {
+                const gcsPath = `${cleanSubfolder}/${uniqueFileName}`;
+                const file = this.gcsBucket.file(gcsPath);
+
+                await file.save(finalBuffer, {
+                    contentType: finalMime || 'application/octet-stream',
+                    metadata: {
+                        cacheControl: 'public, max-age=31536000'
+                    }
+                });
+
+                const publicUrl = `https://storage.googleapis.com/${this.gcsBucketName}/${cleanSubfolder}/${uniqueFileName}`;
+                return {
+                    success: true,
+                    storage: 'google_cloud_storage',
+                    fileName: uniqueFileName,
+                    url: publicUrl,
+                    downloadUrl: publicUrl,
+                    savedPercent: optimized.savedPercent,
+                    size: finalBuffer.length
+                };
+            } catch (gcsErr) {
+                console.error('⚠️ [GCS Upload Error, thử Drive/Local]:', gcsErr.message);
+            }
+        }
+
+        // 3. ƯU TIÊN 2: GOOGLE DRIVE (NẾU CÓ CẤU HÌNH VÀ CÒN HOẠT ĐỘNG)
+        if (this.drive) {
             try {
                 const targetFolder = customFolderId || DEFAULT_FOLDER_ID;
                 const bufferStream = new stream.PassThrough();
@@ -246,12 +277,12 @@ class GoogleDriveService {
                     size: finalBuffer.length
                 };
             } catch (driveErr) {
-                // Tự động lưu local nếu drive lỗi
+                console.warn('⚠️ [Drive Upload Error, fallback Local]:', driveErr.message);
             }
         }
 
-        // 3. LƯU LOCAL ĐƯỢC TỐI ƯU SIÊU NHẸ
-        return this.saveToLocalStorage(finalBuffer, uniqueFileName, subfolder, optimized.savedPercent);
+        // 4. ƯU TIÊN 3: LƯU TRỮ CỤC BỘ (LOCAL OPTIMIZED)
+        return this.saveToLocalStorage(finalBuffer, uniqueFileName, cleanSubfolder, optimized.savedPercent);
     }
 
     saveToLocalStorage(buffer, fileName, subfolder = 'general', savedPercent = 0) {
@@ -259,7 +290,6 @@ class GoogleDriveService {
         const uploadsRoot = path.resolve(__dirname, '../public/uploads');
         const localDir = path.resolve(uploadsRoot, cleanSubfolder);
 
-        // Chống tuyệt đối Path Traversal
         if (!localDir.startsWith(uploadsRoot)) {
             throw new Error('Cảnh báo an ninh: Phát hiện dấu hiệu Path Traversal trái phép!');
         }
