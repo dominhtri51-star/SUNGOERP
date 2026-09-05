@@ -17,9 +17,6 @@
                 </h1>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" onclick="window.modDebtBook.exportAllExcel()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer shadow-2xs" title="Tải báo cáo Excel">
-                    <i class="fas fa-arrow-down-to-bracket text-xs"></i>
-                </button>
                 <button type="button" onclick="window.modDebtBook.loadData()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer shadow-2xs" title="Làm mới dữ liệu">
                     <i class="fas fa-sync-alt text-xs"></i>
                 </button>
@@ -121,7 +118,7 @@
     <!-- ========================================================================= -->
     <!-- THANH NÚT NỔI Ở ĐÁY MÀN HÌNH (CAPSULE FLOATING ACTION BAR) -->
     <!-- ========================================================================= -->
-    <div id="debt-floating-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-slide-up">
+    <div id="debt-floating-bar" class="fixed bottom-[74px] md:bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
         <div class="bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-full shadow-2xl px-5 py-2.5 flex items-center gap-4 text-xs sm:text-sm transition transform hover:scale-105 active:scale-95 border-2 border-emerald-500/30 backdrop-blur-md">
             <!-- NỬA TRÁI: TÔI ĐÃ ĐƯA -->
             <button type="button" onclick="window.modDebtBook.openQuickTxModal('PAY')" class="flex items-center gap-1.5 text-white/95 hover:text-white transition cursor-pointer">
@@ -188,33 +185,32 @@
                 </button>
             </div>
 
-            <!-- 3 NÚT TÁC VỤ NHANH (ZALO, CHIA SẺ, TẢI BÁO CÁO) -->
-            <div class="grid grid-cols-3 gap-2 mt-3 text-center">
-                <button type="button" onclick="window.modDebtBook.remindViaZalo()" class="bg-white hover:bg-blue-50 active:bg-blue-100 border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1 text-slate-700 transition shadow-2xs cursor-pointer group">
-                    <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-black group-hover:scale-110 transition">
-                        <i class="fas fa-comment-dots"></i>
-                    </div>
-                    <span class="text-[11px] font-bold">Nhắc qua Zalo</span>
-                </button>
-
-                <button type="button" onclick="window.modDebtBook.shareDebtStatement()" class="bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1 text-slate-700 transition shadow-2xs cursor-pointer group">
-                    <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-sm font-black group-hover:scale-110 transition">
+            <!-- 2 NÚT TÁC VỤ: CHIA SẺ ĐƠN NỢ & TẢI BÁO CÁO ĐỐI CHIẾU -->
+            <div class="grid grid-cols-2 gap-3 mt-3 text-center">
+                <button type="button" onclick="window.modDebtBook.shareDebtOrdersFile()" class="bg-white hover:bg-blue-50 active:bg-blue-100 border border-slate-200 rounded-2xl p-3 flex items-center justify-center gap-2.5 text-slate-700 transition shadow-2xs cursor-pointer group">
+                    <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-black group-hover:scale-110 transition shrink-0">
                         <i class="fas fa-share-nodes"></i>
                     </div>
-                    <span class="text-[11px] font-bold">Chia sẻ</span>
+                    <div class="text-left min-w-0">
+                        <span class="text-xs font-bold text-slate-800 block truncate">Chia sẻ</span>
+                        <span class="text-[10px] text-slate-400 font-medium block truncate">File đơn hàng nợ</span>
+                    </div>
                 </button>
 
-                <button type="button" onclick="window.modDebtBook.exportPartnerExcel()" class="bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1 text-slate-700 transition shadow-2xs cursor-pointer group">
-                    <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-black group-hover:scale-110 transition">
+                <button type="button" onclick="window.modDebtBook.exportPartnerExcel()" class="bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 rounded-2xl p-3 flex items-center justify-center gap-2.5 text-slate-700 transition shadow-2xs cursor-pointer group">
+                    <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-black group-hover:scale-110 transition shrink-0">
                         <i class="fas fa-file-arrow-down"></i>
                     </div>
-                    <span class="text-[11px] font-bold">Tải báo cáo</span>
+                    <div class="text-left min-w-0">
+                        <span class="text-xs font-bold text-slate-800 block truncate">Tải báo cáo</span>
+                        <span class="text-[10px] text-slate-400 font-medium block truncate">File đối chiếu</span>
+                    </div>
                 </button>
             </div>
         </div>
 
         <!-- DANH SÁCH DÒNG THỜI GIAN GIAO DỊCH -->
-        <div class="max-w-2xl w-full mx-auto px-4 mt-4 flex-1 pb-24">
+        <div class="max-w-2xl w-full mx-auto px-4 mt-4 flex-1 pb-36">
             <div class="flex items-center justify-between pb-2 border-b border-slate-200">
                 <span class="text-[11px] font-black uppercase text-slate-500 tracking-wider">GIAO DỊCH</span>
                 <span class="text-[11px] font-bold text-slate-400" id="detail-tx-count">0 giao dịch</span>
@@ -224,25 +220,12 @@
                 <!-- Timeline items rendered by JS -->
             </div>
         </div>
-
-        <!-- THANH NÚT THAO TÁC DÍNH ĐÁY MÀN HÌNH CHI TIẾT -->
-        <div class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 z-30 shadow-lg">
-            <div class="max-w-2xl mx-auto flex items-center gap-2.5">
-                <button type="button" onclick="window.modDebtBook.openQuickTxModal('PAY')" class="flex-1 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 font-black py-3 rounded-xl text-xs sm:text-sm transition text-center cursor-pointer shadow-2xs">
-                    Tôi Đã Đưa
-                </button>
-                <button type="button" onclick="window.modDebtBook.openQuickTxModal('RECEIVE')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black py-3 rounded-xl text-xs sm:text-sm transition text-center cursor-pointer shadow-md flex items-center justify-center gap-1.5">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Thanh Toán / Đã Nhận</span>
-                </button>
-            </div>
-        </div>
     </div>
 
     <!-- ========================================================================= -->
     <!-- MODAL / BOTTOM SHEET: TẠO GIAO DỊCH NHANH ("TÔI ĐÃ NHẬN" / "TÔI ĐÃ ĐƯA") -->
     <!-- ========================================================================= -->
-    <div id="modal-quick-tx" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeQuickTxModal()">
+    <div id="modal-quick-tx" class="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeQuickTxModal()">
         <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-slide-up" onclick="event.stopPropagation()">
             
             <!-- HEADER MODAL GIAO DỊCH -->
@@ -346,7 +329,7 @@
     <!-- ========================================================================= -->
     <!-- MODAL ĐẶT LỊCH NHẮC NỢ -->
     <!-- ========================================================================= -->
-    <div id="modal-reminder" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeReminderModal()">
+    <div id="modal-reminder" class="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeReminderModal()">
         <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <h3 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
@@ -573,7 +556,8 @@ window.modDebtBook = {
 
             // Switch view
             document.getElementById('view-debt-overview').classList.add('hidden');
-            document.getElementById('debt-floating-bar').classList.add('hidden');
+            // Giữ thanh nút nổi Tôi đã đưa / Tôi đã nhận ở đáy màn hình
+            document.getElementById('debt-floating-bar').classList.remove('hidden');
             document.getElementById('view-debt-detail').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch(err) {
@@ -582,6 +566,7 @@ window.modDebtBook = {
     },
 
     backToOverview: () => {
+        window.modDebtBook.currentPartner = null;
         document.getElementById('view-debt-detail').classList.add('hidden');
         document.getElementById('view-debt-overview').classList.remove('hidden');
         document.getElementById('debt-floating-bar').classList.remove('hidden');
@@ -858,26 +843,129 @@ window.modDebtBook = {
         alert("📋 Đã sao chép mẫu tin nhắn nhắc nợ vào Clipboard & Đang mở Zalo của khách!");
     },
 
-    shareDebtStatement: () => {
+    shareDebtOrdersFile: async () => {
         const p = window.modDebtBook.currentPartner;
         if (!p) return;
-        const text = `ĐỐI SOÁT CÔNG NỢ SUNGO - ${p.name}\n${p.debt_label}: ${window.modDebtBook.fmtMoney(p.amount)} đ\nNgày: ${new Date().toLocaleDateString('vi-VN')}\nHotline hỗ trợ: 0937.039.889`;
-        if (navigator.share) {
-            navigator.share({ title: 'Đối soát công nợ SUNGO', text: text });
-        } else if (navigator.clipboard) {
-            navigator.clipboard.writeText(text);
-            alert("📋 Đã sao chép tóm tắt công nợ vào Clipboard!");
+        try {
+            const res = await fetch(`/api/accounting/debt-statement?customer_id=${p.id}&customer_name=${encodeURIComponent(p.name)}&t=` + Date.now());
+            const d = await res.json();
+            if (!d.success) return alert("Không tìm thấy dữ liệu đơn hàng: " + (d.error || ''));
+
+            const allOrders = d.orders || [];
+            // Lọc các đơn hàng còn nợ hiện tại (remaining_debt > 0)
+            const unpaidOrders = allOrders.filter(o => parseFloat(o.remaining_debt || 0) > 0);
+
+            if (unpaidOrders.length === 0) {
+                return alert(`Khách hàng "${p.name}" hiện tại không còn đơn hàng nào nợ!`);
+            }
+
+            let totalDebt = 0;
+            let csv = "\uFEFFCÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO\n";
+            csv += "Địa chỉ: 419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM\n";
+            csv += "Hotline: 0937.039.889 | Email: info@sungo.vn\n\n";
+            csv += `DANH SÁCH CÁC ĐƠN HÀNG CÒN NỢ HIỆN TẠI\n`;
+            csv += `Khách hàng: ${p.name}\n`;
+            csv += `Số điện thoại: ${p.phone || '-'}\n`;
+            csv += `Thời gian xuất: ${new Date().toLocaleDateString('vi-VN')} ${new Date().toLocaleTimeString('vi-VN')}\n\n`;
+
+            csv += "STT,MÃ ĐƠN HÀNG,NGÀY TẠO,TỔNG TIỀN ĐƠN (VNĐ),ĐÃ THANH TOÁN (VNĐ),SỐ TIỀN CÒN NỢ (VNĐ),TÌNH TRẠNG\n";
+
+            unpaidOrders.forEach((ord, idx) => {
+                const dateStr = new Date(ord.order_date).toLocaleDateString('vi-VN');
+                const rem = parseFloat(ord.remaining_debt || 0);
+                totalDebt += rem;
+                csv += `${idx + 1},${ord.order_code || ''},${dateStr},${ord.total_amount || 0},${ord.paid_amount || 0},${rem},Còn nợ\n`;
+            });
+
+            csv += `\n,,TỔNG CỘNG NỢ HIỆN TẠI,,,${totalDebt},ĐANG CÒN NỢ\n`;
+
+            const safeName = (p.name || 'KhachHang').replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_');
+            const fileName = `Don_Hang_Con_No_${safeName}_${new Date().toISOString().slice(0, 10)}.csv`;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const file = new File([blob], fileName, { type: 'text/csv;charset=utf-8;' });
+
+            // Chia sẻ qua Web Share API nếu trên mobile hỗ trợ
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: `Đơn hàng còn nợ - ${p.name}`,
+                        text: `Kính gửi anh/chị ${p.name} danh sách các đơn hàng còn nợ hiện tại tại SunGo Solar. Tổng nợ: ${window.modDebtBook.fmtMoney(totalDebt)} đ.`,
+                        files: [file]
+                    });
+                    return;
+                } catch(shareErr) {
+                    if (shareErr.name === 'AbortError') return; // Người dùng tự hủy share
+                }
+            }
+
+            // Tải file trực tiếp nếu không dùng navigator.share
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            if (navigator.clipboard) {
+                const summaryText = `SUNGO SOLAR - DANH SÁCH ĐƠN HÀNG CÒN NỢ\nKhách hàng: ${p.name}\nTổng nợ: ${window.modDebtBook.fmtMoney(totalDebt)} đ (${unpaidOrders.length} đơn nợ)\nHotline: 0937.039.889`;
+                navigator.clipboard.writeText(summaryText);
+            }
+            alert(`📥 Đã tải file "${fileName}" (${unpaidOrders.length} đơn hàng còn nợ)!`);
+        } catch (e) {
+            console.error(e);
+            alert("Lỗi xuất danh sách đơn hàng nợ!");
         }
     },
 
-    exportPartnerExcel: () => {
+    exportPartnerExcel: async () => {
         const p = window.modDebtBook.currentPartner;
         if (!p) return;
-        window.open(`/api/accounting/debt-statement?customer_id=${p.id}&customer_name=${encodeURIComponent(p.name)}`, '_blank');
-    },
+        try {
+            const res = await fetch(`/api/accounting/debt-statement?customer_id=${p.id}&customer_name=${encodeURIComponent(p.name)}&t=` + Date.now());
+            const d = await res.json();
+            if (!d.success) return alert("Không tìm thấy dữ liệu đối chiếu: " + (d.error || ''));
 
-    exportAllExcel: () => {
-        window.open('/api/accounting/receivables-aging', '_blank');
+            const cust = d.customer || {};
+            const sum = d.summary || {};
+            const orders = d.orders || [];
+
+            let csv = "\uFEFFCÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO\n";
+            csv += "Địa chỉ: 419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM\n";
+            csv += "Hotline: 0937.039.889 | Email: info@sungo.vn\n\n";
+            csv += `BẢNG ĐỐI CHIẾU CÔNG NỢ CHI TIẾT - ${(cust.name || p.name).toUpperCase()}\n`;
+            csv += `Từ ngày: ${new Date(d.date_range?.from_date || Date.now()).toLocaleDateString('vi-VN')} Đến ngày: ${new Date(d.date_range?.to_date || Date.now()).toLocaleDateString('vi-VN')}\n\n`;
+
+            csv += "STT,MÃ ĐƠN HÀNG,NGÀY TẠO,TÊN HÀNG / THIẾT BỊ,ĐVT,SỐ LƯỢNG,ĐƠN GIÁ (VNĐ),THÀNH TIỀN (VNĐ),TỔNG ĐƠN (VNĐ),ĐÃ THANH TOÁN (VNĐ),CÒN NỢ (VNĐ)\n";
+
+            let stt = 1;
+            orders.forEach(ord => {
+                const dateStr = new Date(ord.order_date).toLocaleDateString('vi-VN');
+                (ord.items || []).forEach((item, idx) => {
+                    const safeName = `"${(item.product_name || '').replace(/"/g, '""')}"`;
+                    const totalOrd = idx === 0 ? ord.total_amount : '';
+                    const paidOrd = idx === 0 ? ord.paid_amount : '';
+                    const remOrd = idx === 0 ? ord.remaining_debt : '';
+                    csv += `${stt++},${ord.order_code || ''},${dateStr},${safeName},${item.unit || 'Bộ'},${item.quantity || 1},${item.price || 0},${item.total || 0},${totalOrd},${paidOrd},${remOrd}\n`;
+                });
+            });
+
+            csv += `\n,,,,,,,TỔNG DOANH SỐ,${sum.total_gross_amount || 0},,\n`;
+            csv += `,,,,,,,ĐÃ THANH TOÁN,,${sum.total_paid_amount || 0},\n`;
+            csv += `,,,,,,,DƯ NỢ CÒN LẠI,,,${sum.remaining_balance || 0}\n`;
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const safeCustName = (cust.name || p.name || 'KhachHang').replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_');
+            const fileName = `Bang_Doi_Chieu_Cong_No_${safeCustName}_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error(err);
+            alert("Lỗi tải file đối chiếu công nợ!");
+        }
     },
 
     // =========================================================================
