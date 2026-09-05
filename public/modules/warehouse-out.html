@@ -777,21 +777,26 @@ window.modWmsOut = {
         if (mobileContainer) {
             mobileContainer.innerHTML = filtered.map(o => {
                 let stBadge = '';
-                if (o.status === 'PROCESSING') stBadge = '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">⏳ Chờ xử lý</span>';
-                else if (o.status === 'SHIPPING_CMD') stBadge = '<span class="px-2 py-0.5 bg-orange-100 text-orange-800 border border-orange-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">🚛 Lệnh xuất</span>';
-                else if (o.status === 'PACKED') stBadge = '<span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 border border-indigo-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">📦 Sẵn sàng</span>';
-                else if (o.status === 'SHIPPED') stBadge = '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase rounded-lg shadow-2xs">✅ Đã giao</span>';
+                if (o.status === 'PROCESSING') stBadge = '<span class="px-2.5 py-1 bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-black uppercase rounded-lg shadow-2xs whitespace-nowrap shrink-0 inline-flex items-center">⏳ Chờ xử lý</span>';
+                else if (o.status === 'SHIPPING_CMD') stBadge = '<span class="px-2.5 py-1 bg-orange-100 text-orange-800 border border-orange-300 text-[10px] font-black uppercase rounded-lg shadow-2xs whitespace-nowrap shrink-0 inline-flex items-center">🚛 Lệnh xuất</span>';
+                else if (o.status === 'PACKED') stBadge = '<span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 border border-indigo-300 text-[10px] font-black uppercase rounded-lg shadow-2xs whitespace-nowrap shrink-0 inline-flex items-center">📦 Sẵn sàng</span>';
+                else if (o.status === 'SHIPPED') stBadge = '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase rounded-lg shadow-2xs whitespace-nowrap shrink-0 inline-flex items-center">✅ Đã giao</span>';
 
                 let itemsHtml = '<span class="text-[10px] text-slate-400 italic">Không có SP</span>';
                 if (o.items && o.items.length > 0) {
-                    itemsHtml = o.items.map(i => '<p class="text-[11px] text-slate-800 font-bold truncate leading-tight">• ' + i.product_name + ' <span class="text-orange-700 bg-orange-50 border border-orange-200 px-1 rounded font-mono font-black text-[10px]">(x' + i.quantity + ')</span></p>').join('');
+                    itemsHtml = o.items.map(i => `
+                        <div class="flex items-start justify-between gap-2 text-[11px] text-slate-800 font-bold leading-snug">
+                            <span class="break-words flex-1">• ${i.product_name}</span>
+                            <span class="text-orange-700 bg-orange-50 border border-orange-200 px-1.5 py-0.2 rounded font-mono font-black text-[10px] shrink-0 whitespace-nowrap">x${i.quantity}</span>
+                        </div>
+                    `).join('');
                 }
 
                 let quickActionBtn = '';
                 if (o.status === 'SHIPPING_CMD') {
-                    quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'PACKED')" class="text-[10px] font-black bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl shadow-2xs transition cursor-pointer">👉 SOẠN XONG</button>`;
+                    quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'PACKED')" class="text-[10px] font-black bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl shadow-2xs transition cursor-pointer whitespace-nowrap">👉 SOẠN XONG</button>`;
                 } else if (o.status === 'PACKED') {
-                    quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'SHIPPED')" class="text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl shadow-2xs transition cursor-pointer">👉 ĐÃ GIAO XE</button>`;
+                    quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'SHIPPED')" class="text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl shadow-2xs transition cursor-pointer whitespace-nowrap">👉 ĐÃ GIAO XE</button>`;
                 }
 
                 const isDirector = window.modWmsOut.isDirectorOrAdmin();
@@ -807,30 +812,44 @@ window.modWmsOut = {
 
                 return `
                 <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs space-y-2.5 cursor-pointer active:bg-slate-50 transition" onclick="window.modWmsOut.openDetail(${o.id})">
-                    <div class="flex justify-between items-start gap-2">
-                        <div class="flex items-center gap-1.5">
-                            <span class="px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 border border-orange-200 font-mono font-black text-xs">${o.order_code}</span>
-                            <span class="font-black text-slate-800 text-xs truncate max-w-[140px]">${o.customer_name || 'Khách Lẻ'}</span>
+                    <!-- HÀNG 1: MÃ ĐƠN HÀNG, SỐ ĐIỆN THOẠI & TRẠNG THÁI -->
+                    <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 border border-orange-200 font-mono font-black text-xs shrink-0">${o.order_code}</span>
+                            ${o.phone ? `<a href="tel:${o.phone}" onclick="event.stopPropagation()" class="text-[11px] text-slate-500 font-bold hover:text-blue-600 flex items-center gap-1 shrink-0"><i class="fas fa-phone-alt text-[9px] text-emerald-600"></i> ${o.phone}</a>` : ''}
                         </div>
-                        <div>${stBadge}</div>
+                        <div class="shrink-0 whitespace-nowrap">${stBadge}</div>
                     </div>
 
-                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
+                    <!-- HÀNG 2: TÊN KHÁCH HÀNG FULL 100% (KHÔNG BỊ CẮT XÉN, HIỂN THỊ ĐẦY ĐỦ) -->
+                    <div class="pt-0.5">
+                        <h4 class="font-black text-slate-900 text-sm sm:text-base leading-snug break-words flex items-start gap-1.5">
+                            <i class="fas fa-user-circle text-slate-400 text-sm mt-0.5 shrink-0"></i>
+                            <span class="flex-1">${o.customer_name || 'Khách Lẻ'}</span>
+                        </h4>
+                    </div>
+
+                    <!-- HÀNG 3: DANH SÁCH THIẾT BỊ -->
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1.5">
                         ${itemsHtml}
                     </div>
 
                     ${whStaffMobile}
 
-                    <div class="text-[10px] text-slate-600 space-y-0.5">
-                        <div class="flex justify-between items-center">
-                            <span><i class="fas fa-truck text-emerald-600 mr-1"></i><b>${o.delivery_company || 'Chưa chọn chành xe'}</b></span>
-                            ${o.phone ? `<span><i class="fas fa-phone-alt text-slate-400 mr-1"></i>${o.phone}</span>` : ''}
+                    <!-- HÀNG 4: CHÀNH XE & ĐỊA CHỈ GIAO -->
+                    <div class="text-[11px] text-slate-600 space-y-1 pt-0.5">
+                        <div class="flex items-start gap-1.5">
+                            <i class="fas fa-truck text-emerald-600 text-xs mt-0.5 shrink-0"></i>
+                            <div class="flex-1 min-w-0">
+                                <span class="font-black text-emerald-800">${o.delivery_company || 'Chưa chọn chành xe'}</span>
+                                ${o.carrier_address ? `<div class="text-[10px] text-amber-700 font-bold break-words mt-0.5"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i>${o.carrier_address}</div>` : ''}
+                            </div>
                         </div>
-                        ${o.carrier_address ? `<div class="text-amber-700 font-bold truncate"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i>${o.carrier_address}</div>` : ''}
                     </div>
 
+                    <!-- HÀNG 5: NÚT THAO TÁC -->
                     <div class="flex justify-between items-center pt-2 border-t border-slate-100 gap-2">
-                        <button onclick="event.stopPropagation(); window.modWmsOut.openDetail(${o.id})" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 font-black rounded-xl text-[10px] shadow-2xs flex items-center gap-1">
+                        <button onclick="event.stopPropagation(); window.modWmsOut.openDetail(${o.id})" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 font-black rounded-xl text-[10px] shadow-2xs flex items-center gap-1.5 cursor-pointer shrink-0">
                             <span>Chi Tiết Đóng Gói</span> <i class="fas fa-chevron-right text-[8px]"></i>
                         </button>
                         <div>${quickActionBtn}</div>
