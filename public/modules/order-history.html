@@ -3809,23 +3809,13 @@ window.modOrders = {
             sys = setRes.data || {};
         } catch(e) {}
 
-        const storeName = sys.store_name || 'CÔNG TY ĐIỆN MẶT TRỜI SUNGO';
-        const storePhone = sys.store_phone || '0848961212';
-        
-        const deliveryName = document.getElementById('dt-delivery').value || '........................................';
-        const carrierAddress = document.getElementById('dt-carrier-address')?.value.trim() || o.carrier_address || '';
-        const driverEl = document.getElementById('dt-driver');
-        const recPhoneEl = document.getElementById('dt-recipient-phone');
-        
-        const deliveryPhone = (driverEl && driverEl.value.trim() !== '') ? driverEl.value : '....................';
-        const finalPhone = (recPhoneEl && recPhoneEl.value.trim() !== '') ? recPhoneEl.value : (o.customer_phone || o.phone || '');
-        const shippingNote = document.getElementById('dt-shipping-note') ? document.getElementById('dt-shipping-note').value : 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
-        
-        const recNameEl = document.getElementById('dt-recipient-name');
-        const finalRecipient = (recNameEl && recNameEl.value.trim() !== '') ? recNameEl.value : (o.customer_name || 'Khách Lẻ');
-        
-        const recAddrEl = document.getElementById('dt-plate');
-        const finalAddress = (recAddrEl && recAddrEl.value.trim() !== '') ? recAddrEl.value : (o.customer_address || o.address || '');
+        const title = sys.shipping_title || 'PHIẾU GỬI HÀNG CHÀNH XE';
+        const warning = shippingNote || sys.shipping_warning_text || '⚠️ HÀNG ĐIỆN TỬ - DỄ VỠ XIN NHẸ TAY • KHÔNG ĐÈ NẶNG';
+        const storeName = sys.shipping_sender_name || sys.store_name || 'CÔNG TY ĐIỆN MẶT TRỜI SUNGO';
+        const storePhone = sys.shipping_sender_phone || sys.store_phone || '0937.039.889';
+        const storeAddress = sys.shipping_sender_address || sys.store_address || '';
+        const carrierNote = sys.shipping_carrier_note ? '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;font-size:12px;color:#92400e;margin-bottom:12px;"><b>Lưu ý:</b> ' + sys.shipping_carrier_note + '</div>' : '';
+        const footerText = sys.shipping_footer_text || 'Ký nhận của chành xe: ........................';
 
         const actionBarHTML = '<div id="erp-action-bar" style="background: #1e293b; padding: 12px 20px; text-align: center; border-bottom: 4px solid #f59e0b; position: sticky; top: 0; z-index: 99999; margin: -20px -20px 20px -20px; font-family: Arial, sans-serif;">' +
             '<button onclick="window.print()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-right: 15px;">🖨️ IN TEM DÁN THÙNG</button>' +
@@ -3835,14 +3825,14 @@ window.modOrders = {
             '<style>' +
             'body { font-family: Arial, sans-serif; padding: 20px; color: #000; max-width: 500px; margin: 0 auto; border: 2px dashed #000; }' +
             'h1 { text-align: center; font-size: 26px; margin-bottom: 8px; text-transform: uppercase; font-weight: 900; }' +
-            '.warning { text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 20px; line-height: 1.4; text-transform: uppercase; }' +
+            '.warning { text-align: center; font-weight: bold; font-size: 15px; margin-bottom: 18px; line-height: 1.4; text-transform: uppercase; color: #dc2626; }' +
             '.box { border: 2px solid #000; padding: 12px; margin-bottom: 15px; border-radius: 8px; font-size: 15px; line-height: 1.5; }' +
             '.highlight { font-size: 18px; font-weight: 900; text-transform: uppercase; }' +
             '</style>' +
             '</head><body>' +
             actionBarHTML +
-            '<h1>PHIẾU GỬI HÀNG</h1>' +
-            '<div class="warning">' + shippingNote + '</div>' +
+            '<h1>' + title + '</h1>' +
+            '<div class="warning">' + warning + '</div>' +
             
             '<div class="box" style="text-align:center; font-size: 20px; font-weight: 900;">' +
             deliveryName + ' ' + deliveryPhone +
@@ -3853,6 +3843,7 @@ window.modOrders = {
             '<strong style="font-size: 13px;">Người gửi:</strong><br>' +
             '<span class="highlight">' + storeName + '</span><br>' +
             '<strong>SĐT:</strong> ' + storePhone +
+            (storeAddress ? '<br><span>' + storeAddress + '</span>' : '') +
             '</div>' +
 
             '<div class="box">' +
@@ -3862,8 +3853,10 @@ window.modOrders = {
             '<strong>Địa chỉ:</strong> ' + finalAddress +
             '</div>' +
             
+            carrierNote +
+
             '<div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 8px; font-size: 11px; text-align: center;">' +
-            'Mã đơn: ' + o.order_code + ' - Ký nhận của chành xe: ........................' +
+            'Mã đơn: ' + o.order_code + ' - ' + footerText +
             '</div>' +
             '</body></html>';
 
@@ -3882,6 +3875,9 @@ window.modOrders = {
         } catch(e) {}
 
         const carrierAddress = document.getElementById('dt-carrier-address')?.value.trim() || o.carrier_address || '';
+        const showSerial = sys.delivery_show_serial !== false;
+        const showUnit = sys.delivery_show_unit !== false;
+        const showNoteCol = sys.delivery_show_note_col !== false;
 
         let itemsRows = window.modOrders.currentItems.map((i, index) => {
             const qEl = document.getElementById('qty-input-' + i.id) || document.getElementById('m-qty-input-' + i.id);
@@ -3893,16 +3889,27 @@ window.modOrders = {
             return '<tr>' +
                    '<td style="padding: 8px; border-bottom: 1px solid #ccc; text-align: center;">' + (index + 1) + '</td>' +
                    '<td style="padding: 8px; border-bottom: 1px solid #ccc;"><strong style="font-size: 13px;">' + i.product_name + '</strong><br><small style="color:#555">SKU: ' + (i.sku || '') + '</small></td>' +
-                   '<td style="padding: 8px; border-bottom: 1px solid #ccc; text-align: center; font-size: 12px; text-transform: uppercase;">' + serial + '</td>' +
+                   (showSerial ? '<td style="padding: 8px; border-bottom: 1px solid #ccc; text-align: center; font-size: 12px; text-transform: uppercase;">' + serial + '</td>' : '') +
                    '<td style="padding: 8px; border-bottom: 1px solid #ccc; text-align: center; font-size: 14px; font-weight: bold;">' + qty + '</td>' +
-                   '<td style="padding: 8px; border-bottom: 1px solid #ccc;"></td>' +
+                   (showUnit ? '<td style="padding: 8px; border-bottom: 1px solid #ccc; text-align: center;">' + (i.sku || 'Bộ') + '</td>' : '') +
+                   (showNoteCol ? '<td style="padding: 8px; border-bottom: 1px solid #ccc; font-size: 11px; color: #555;">Mới 100%</td>' : '') +
                    '</tr>';
         }).join('');
 
         const d = new Date();
         const dateString = 'Ngày ' + d.getDate() + ' tháng ' + (d.getMonth()+1) + ' năm ' + d.getFullYear();
         
-        let storeName = sys.store_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+        const title = sys.delivery_title || 'PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG';
+        const storeName = sys.delivery_store_name || sys.store_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+        const storePhone = sys.delivery_store_phone || sys.store_phone || '';
+        const storeAddress = sys.delivery_store_address || sys.store_address || '';
+        const notes = sys.delivery_notes || '';
+
+        const sign1 = sys.delivery_sign_receiver || 'NGƯỜI NHẬN HÀNG';
+        const sign2 = sys.delivery_sign_deliverer || 'NGƯỜI GIAO HÀNG';
+        const sign3 = sys.delivery_sign_warehouse || 'THỦ KHO XUẤT';
+        const sign4 = sys.delivery_sign_accountant || 'KẾ TOÁN DUYỆT';
+
         let logoHtml = sys.store_logo ? '<img src="' + sys.store_logo + '" style="max-height:50px; display:inline-block;"/>' : '';
 
         const printHTML = '<html><head><title>Phiếu Xuất Kho - ' + o.order_code + '</title>' +
@@ -3911,10 +3918,9 @@ window.modOrders = {
             '.header { text-align: center; margin-bottom: 20px; }' +
             'h1 { margin: 0; font-size: 20px; text-transform: uppercase; }' +
             '.info-box { border: 1px solid #000; padding: 12px; margin-bottom: 15px; line-height: 1.5; border-radius: 6px; font-size: 13px; }' +
-            'table { width: 100%; border-collapse: collapse; margin-bottom: 30px; border: 1px solid #000; font-size: 13px; }' +
+            'table { width: 100%; border-collapse: collapse; margin-bottom: 25px; border: 1px solid #000; font-size: 13px; }' +
             'th { background: #f1f5f9; border-bottom: 2px solid #000; padding: 8px; font-size: 13px; text-align: center; }' +
-            '.footer { display: flex; justify-content: space-between; text-align: center; margin-top: 40px; font-size: 13px; }' +
-            '.sign-box { width: 30%; }' +
+            '.footer { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; margin-top: 30px; font-size: 12px; gap: 8px; }' +
             '</style></head><body>' +
             
             '<div id="erp-action-bar" style="background: #1e293b; padding: 12px 20px; text-align: center; border-bottom: 4px solid #f59e0b; position: sticky; top: 0; z-index: 99999; margin: -30px -30px 20px -30px; font-family: Arial, sans-serif;">' +
@@ -3924,7 +3930,9 @@ window.modOrders = {
             '<style>@media print { #erp-action-bar { display: none !important; } body { padding: 0 !important; } }</style>' +
     
             '<div style="text-align:center; margin-bottom:8px;">' + logoHtml + '</div>' +
-            '<div class="header"><h1>PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG</h1><p>Mã Đơn: <strong>' + o.order_code + '</strong> | ' + dateString + '</p></div>' +
+            '<div class="header"><h1>' + title + '</h1>' +
+            '<p style="font-size: 12px; margin: 3px 0 0 0; color: #334155;">Đơn vị: <strong>' + storeName + '</strong>' + (storePhone ? ' • Hotline: <strong>' + storePhone + '</strong>' : '') + (storeAddress ? '<br>Địa chỉ: ' + storeAddress : '') + '</p>' +
+            '<p style="font-size: 13px; margin: 5px 0 0 0;">Mã Đơn: <strong>' + o.order_code + '</strong> | ' + dateString + '</p></div>' +
             '<div class="info-box">' +
             '<strong>Khách hàng:</strong> ' + (o.customer_name || 'Khách Lẻ') + '<br>' +
             '<strong>Số điện thoại:</strong> ' + (o.customer_phone || o.phone || '') + '<br>' +
@@ -3933,12 +3941,24 @@ window.modOrders = {
             '<strong>Ghi chú đơn:</strong> ' + (o.notes || 'Không có') +
             '</div>' +
             
-            '<table><thead><tr><th width="6%">STT</th><th width="38%" style="text-align: left;">Tên Thiết Bị / Sản Phẩm</th><th width="20%">Mã Serial / IMEI</th><th width="12%">Số Lượng</th><th width="24%">Ghi chú / Tình trạng</th></tr></thead>' +
+            '<table><thead><tr>' +
+            '<th width="6%">STT</th>' +
+            '<th width="38%" style="text-align: left;">Tên Thiết Bị / Sản Phẩm</th>' +
+            (showSerial ? '<th width="20%">Mã Serial / IMEI</th>' : '') +
+            '<th width="10%">Số Lượng</th>' +
+            (showUnit ? '<th width="10%">ĐVT</th>' : '') +
+            (showNoteCol ? '<th width="16%">Ghi chú / Tình trạng</th>' : '') +
+            '</tr></thead>' +
             '<tbody>' + itemsRows + '</tbody></table>' +
             
-            '<div class="footer"><div class="sign-box"><strong>NGƯỜI NHẬN HÀNG</strong><br><small>(Ký và ghi rõ họ tên)</small><br><br><br><br></div>' +
-            '<div class="sign-box"><strong>NGƯỜI GIAO HÀNG</strong><br><small>(Ký và ghi rõ họ tên)</small><br><br><br><br></div>' +
-            '<div class="sign-box"><strong>THỦ KHO XUẤT</strong><br><small>(Ký và ghi rõ họ tên)</small><br><br><br><br></div></div>' +
+            (notes ? '<div style="font-size:11px;color:#475569;margin-bottom:20px;font-style:italic;border-top:1px dashed #cbd5e1;padding-top:6px;">* ' + notes.replace(/\n/g, '<br>* ') + '</div>' : '') +
+
+            '<div class="footer">' +
+            '<div><strong>' + sign1 + '</strong><br><small>(Ký và ghi rõ họ tên)</small><br><br><br><br></div>' +
+            '<div><strong>' + sign2 + '</strong><br><small>(Ký và ghi rõ họ tên)</small><br><br><br><br></div>' +
+            '<div><strong>' + sign3 + '</strong><br><small>(Ký và ghi rõ họ tên)</small><br><br><br><br></div>' +
+            '<div><strong>' + sign4 + '</strong><br><small>(Ký và ghi rõ họ tên)</small><br><br><br><br></div>' +
+            '</div>' +
             '</body></html>';
 
         window.modOrders.executePrint(printHTML, 'Phiếu Xuất Kho Kiêm Giao Hàng - ' + (o.order_code || ''));

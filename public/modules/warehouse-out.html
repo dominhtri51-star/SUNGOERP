@@ -1468,22 +1468,30 @@ window.modWmsOut = {
     printShippingLabel: async () => {
         const o = window.modWmsOut.currentData;
         let sys = {};
-        try { const r = await fetch('/api/settings'); sys = (await r.json()).data || {}; } catch(e) {}
+        try { const r = await fetch('/api/settings?t=' + Date.now()); sys = (await r.json()).data || {}; } catch(e) {}
 
         const deliveryName = document.getElementById('wms-delivery').value || '........................................';
         const carrierAddress = document.getElementById('wms-carrier-address')?.value || o.carrier_address || '';
         const deliveryPhone = document.getElementById('wms-driver').value || '....................';
-        const notes = document.getElementById('wms-shipping-note').value || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
+        const notes = document.getElementById('wms-shipping-note').value || '';
         
         const finalRecipient = document.getElementById('wms-recipient-name').value || 'Khách Lẻ';
         const finalPhone = document.getElementById('wms-recipient-phone').value || '';
         const finalAddress = document.getElementById('wms-address').value || '';
 
+        const title = sys.shipping_title || 'PHIẾU GỬI HÀNG CHÀNH XE';
+        const warning = notes ? `⚠️ ${notes}` : (sys.shipping_warning_text || '⚠️ HÀNG ĐIỆN TỬ - DỄ VỠ XIN NHẸ TAY • KHÔNG ĐÈ NẶNG');
+        const senderName = sys.shipping_sender_name || sys.store_name || 'SUNGO SOLAR';
+        const senderPhone = sys.shipping_sender_phone || sys.store_phone || '---';
+        const senderAddr = sys.shipping_sender_address || sys.store_address || '---';
+        const carrierNote = sys.shipping_carrier_note ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px;font-size:13px;color:#92400e;margin-bottom:12px;"><b>Lưu ý bác tài:</b> ${sys.shipping_carrier_note}</div>` : '';
+        const footerText = sys.shipping_footer_text || 'Ký nhận chành xe: ........................';
+
         const printHTML = `
-            <div style="font-family:Arial,sans-serif;padding:20px;border:2px dashed #000;border-radius:12px;background:#fff;">
+            <div style="font-family:Arial,sans-serif;padding:20px;border:2px dashed #000;border-radius:12px;background:#fff;max-width:550px;margin:0 auto;">
                 <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:15px;">
-                    <h1 style="font-size:24px;font-black;margin:0;text-transform:uppercase;">PHIẾU GỬI HÀNG CHÀNH XE</h1>
-                    <p style="font-size:14px;color:#dc2626;font-weight:bold;margin:5px 0 0 0;">⚠️ ${notes}</p>
+                    <h1 style="font-size:24px;font-weight:900;margin:0;text-transform:uppercase;">${title}</h1>
+                    <p style="font-size:14px;color:#dc2626;font-weight:bold;margin:5px 0 0 0;">${warning}</p>
                 </div>
 
                 <div style="border:2px solid #000;padding:12px;margin-bottom:15px;border-radius:8px;font-size:16px;text-align:center;background:#f8fafc;">
@@ -1493,22 +1501,24 @@ window.modWmsOut = {
                 </div>
 
                 <div style="border:1.5px solid #000;padding:12px;margin-bottom:12px;border-radius:8px;font-size:14px;line-height:1.5;">
-                    <strong style="text-transform:uppercase;color:#475569;">Người Gửi:</strong><br>
-                    <span style="font-size:16px;font-weight:900;">${sys.store_name || 'SUNGO SOLAR'}</span><br>
-                    <span>Hotline: <b>${sys.store_phone || '---'}</b></span><br>
-                    <span>Địa chỉ: ${sys.store_address || '---'}</span>
+                    <strong style="text-transform:uppercase;color:#475569;font-size:12px;">Người Gửi:</strong><br>
+                    <span style="font-size:16px;font-weight:900;">${senderName}</span><br>
+                    <span>Hotline: <b>${senderPhone}</b></span><br>
+                    <span>Địa chỉ: ${senderAddr}</span>
                 </div>
 
                 <div style="border:1.5px solid #000;padding:12px;margin-bottom:15px;border-radius:8px;font-size:14px;line-height:1.5;background:#eff6ff;">
-                    <strong style="text-transform:uppercase;color:#1e40af;">Người Nhận:</strong><br>
+                    <strong style="text-transform:uppercase;color:#1e40af;font-size:12px;">Người Nhận:</strong><br>
                     <span style="font-size:18px;font-weight:900;color:#1e3a8a;">${finalRecipient}</span><br>
                     <span style="font-size:16px;font-weight:bold;">SĐT: ${finalPhone || '---'}</span><br>
                     <span>Địa chỉ: ${finalAddress || '---'}</span>
                 </div>
 
+                ${carrierNote}
+
                 <div style="display:flex;justify-content:space-between;font-size:12px;border-top:1px solid #cbd5e1;padding-top:10px;">
                     <span>Mã Đơn: <b>${o.order_code}</b></span>
-                    <span>Ký nhận chành xe: ........................</span>
+                    <span>${footerText}</span>
                 </div>
             </div>
         `;
@@ -1519,26 +1529,47 @@ window.modWmsOut = {
     printDeliveryNote: async () => {
         const o = window.modWmsOut.currentData;
         let sys = {};
-        try { const r = await fetch('/api/settings'); sys = (await r.json()).data || {}; } catch(e) {}
+        try { const r = await fetch('/api/settings?t=' + Date.now()); sys = (await r.json()).data || {}; } catch(e) {}
+
+        const showSerial = sys.delivery_show_serial !== false;
+        const showUnit = sys.delivery_show_unit !== false;
+        const showNoteCol = sys.delivery_show_note_col !== false;
 
         const itemsRows = window.modWmsOut.currentItems.map((i, idx) => {
             const sEl = document.getElementById('wms-serial-' + i.product_id) || document.getElementById('m-wms-serial-' + i.product_id);
-            const serial = (sEl ? sEl.value : i.serial_number) ? '<br><span style="color:#2563eb;font-size:11px;font-family:monospace;">Serial: ' + (sEl ? sEl.value : i.serial_number) + '</span>' : '';
+            const serialText = (sEl ? sEl.value : i.serial_number) || '';
+            const serial = (showSerial && serialText) ? '<br><span style="color:#2563eb;font-size:11px;font-family:monospace;">Serial: ' + serialText + '</span>' : '';
             return '<tr>' +
                    '<td style="padding:8px 10px;border:1px solid #000;text-align:center;">' + (idx+1) + '</td>' +
                    '<td style="padding:8px 10px;border:1px solid #000;"><strong>' + i.product_name + '</strong>' + serial + '</td>' +
                    '<td style="padding:8px 10px;border:1px solid #000;text-align:center;font-size:14px;font-weight:bold;">' + i.quantity + '</td>' +
-                   '<td style="padding:8px 10px;border:1px solid #000;text-align:center;">' + (i.sku || 'Bộ') + '</td>' +
+                   (showUnit ? '<td style="padding:8px 10px;border:1px solid #000;text-align:center;">' + (i.sku || 'Bộ') + '</td>' : '') +
+                   (showNoteCol ? '<td style="padding:8px 10px;border:1px solid #000;font-size:11px;color:#475569;">Mới 100%</td>' : '') +
                    '</tr>';
         }).join('');
+
+        const title = sys.delivery_title || 'PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG';
+        const storeName = sys.delivery_store_name || sys.store_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+        const storePhone = sys.delivery_store_phone || sys.store_phone || '---';
+        const storeAddr = sys.delivery_store_address || sys.store_address || '---';
+        const notes = sys.delivery_notes || '';
+
+        const sign1 = sys.delivery_sign_receiver || 'NGƯỜI NHẬN HÀNG';
+        const sign2 = sys.delivery_sign_deliverer || 'NGƯỜI GIAO HÀNG';
+        const sign3 = sys.delivery_sign_warehouse || 'THỦ KHO XUẤT';
+        const sign4 = sys.delivery_sign_accountant || 'KẾ TOÁN DUYỆT';
 
         const logoHtml = sys.store_logo ? '<img src="' + sys.store_logo + '" style="max-height:50px;display:inline-block;margin-bottom:8px;"/>' : '';
         const printHTML = `
             <div style="font-family:'Times New Roman',serif;padding:20px;color:#000;background:#fff;">
                 <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:15px;">
                     ${logoHtml}
-                    <h2 style="font-size:20px;font-weight:bold;margin:0;text-transform:uppercase;">PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG</h2>
-                    <p style="font-size:13px;margin:4px 0 0 0;">Mã Đơn: <strong>${o.order_code}</strong> • Ngày: ${new Date().toLocaleDateString('vi-VN')}</p>
+                    <h2 style="font-size:20px;font-weight:bold;margin:0;text-transform:uppercase;">${title}</h2>
+                    <p style="font-size:12px;margin:3px 0 0 0;color:#334155;">
+                        Đơn vị: <strong>${storeName}</strong> • Hotline: <strong>${storePhone}</strong><br>
+                        Địa chỉ: ${storeAddr}
+                    </p>
+                    <p style="font-size:13px;margin:5px 0 0 0;">Mã Đơn: <strong>${o.order_code}</strong> • Ngày: ${new Date().toLocaleDateString('vi-VN')}</p>
                 </div>
 
                 <div style="border:1px solid #000;padding:12px;margin-bottom:15px;border-radius:6px;font-size:13px;line-height:1.6;">
@@ -1548,22 +1579,26 @@ window.modWmsOut = {
                     <strong>Ghi chú:</strong> ${document.getElementById('wms-shipping-note').value || 'Không có'}
                 </div>
 
-                <table style="width:100%;border-collapse:collapse;margin-bottom:25px;font-size:13px;">
+                <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;">
                     <thead>
                         <tr style="background:#f1f5f9;">
                             <th style="border:1px solid #000;padding:8px;width:35px;text-align:center;">STT</th>
                             <th style="border:1px solid #000;padding:8px;text-align:left;">Tên Thiết Bị / Hàng Hóa</th>
                             <th style="border:1px solid #000;padding:8px;width:60px;text-align:center;">Số Lượng</th>
-                            <th style="border:1px solid #000;padding:8px;width:60px;text-align:center;">ĐVT</th>
+                            ${showUnit ? '<th style="border:1px solid #000;padding:8px;width:60px;text-align:center;">ĐVT</th>' : ''}
+                            ${showNoteCol ? '<th style="border:1px solid #000;padding:8px;width:100px;text-align:left;">Ghi Chú</th>' : ''}
                         </tr>
                     </thead>
                     <tbody>${itemsRows}</tbody>
                 </table>
 
-                <div style="display:flex;justify-content:space-between;text-align:center;margin-top:35px;font-size:13px;">
-                    <div><strong>NGƯỜI NHẬN HÀNG</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span></div>
-                    <div><strong>NGƯỜI GIAO HÀNG</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span></div>
-                    <div><strong>THỦ KHO XUẤT</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span></div>
+                ${notes ? `<div style="font-size:11px;color:#475569;margin-bottom:25px;font-style:italic;border-top:1px dashed #cbd5e1;padding-top:6px;">* ${notes.replace(/\n/g, '<br>* ')}</div>` : ''}
+
+                <div style="display:grid;grid-template-columns:repeat(4, 1fr);text-align:center;margin-top:25px;font-size:12px;gap:8px;">
+                    <div><strong>${sign1}</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span><div style="height:45px;"></div></div>
+                    <div><strong>${sign2}</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span><div style="height:45px;"></div></div>
+                    <div><strong>${sign3}</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span><div style="height:45px;"></div></div>
+                    <div><strong>${sign4}</strong><br><span style="font-size:11px;color:#666;">(Ký & ghi rõ họ tên)</span><div style="height:45px;"></div></div>
                 </div>
             </div>
         `;

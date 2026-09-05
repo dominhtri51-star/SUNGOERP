@@ -31,7 +31,7 @@
                 <span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-black">Nâng cao</span>
             </button>
             <button id="btn-tab-delivery" onclick="window.modSettings.switchTab('delivery')" class="tab-btn w-full text-left px-4 py-3 rounded-xl font-bold text-[13px] text-slate-600 hover:bg-slate-50 transition flex items-center gap-2.5">
-                <i class="fas fa-truck-loading w-5 text-center"></i> Mẫu Phiếu Xuất Kho
+                <i class="fas fa-truck-loading w-5 text-center text-indigo-600"></i> Mẫu Xuất Kho & Gửi Hàng
             </button>
         </div>
 
@@ -553,14 +553,208 @@
                 </div>
             </div>
 
-            <!-- TAB: DELIVERY -->
+            <!-- ============================================================== -->
+            <!-- TAB: DELIVERY & SHIPPING (MẪU PHIẾU XUẤT KHO & PHIẾU GỬI HÀNG) -->
+            <!-- ============================================================== -->
             <div id="tab-delivery" class="setting-tab hidden space-y-5">
-                <h3 class="font-black text-slate-800 uppercase border-b pb-3 mb-5 flex items-center gap-2">
-                    <i class="fas fa-truck-loading text-amber-600"></i> Tùy Chỉnh Phiếu Xuất Kho
-                </h3>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Quy Định Kho & Xuất Hàng</label>
-                    <textarea id="set-delivery-notes" rows="6" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-blue-500"></textarea>
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                        <h3 class="font-black text-slate-800 uppercase text-base flex items-center gap-2">
+                            <i class="fas fa-truck-loading text-indigo-600"></i> Cài Đặt Mẫu Phiếu Xuất Kho & Phiếu Gửi Chành Xe
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Tùy biến chi tiết thông tin đơn vị xuất, quy định kho, cảnh báo giao vận chành xe và các ô ký nhận</p>
+                    </div>
+
+                    <!-- Subtab Switcher & Print Test Buttons -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200">
+                            <button type="button" id="btn-subtab-delivery-note" onclick="window.modSettings.switchDeliverySubTab('delivery_note')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-indigo-600 shadow-2xs flex items-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-file-invoice"></i> Phiếu Xuất Kho
+                            </button>
+                            <button type="button" id="btn-subtab-shipping-label" onclick="window.modSettings.switchDeliverySubTab('shipping_label')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-box"></i> Phiếu Gửi Chành Xe
+                            </button>
+                        </div>
+                        <button type="button" id="btn-print-sample-delivery" onclick="window.modSettings.printSampleDeliveryNote()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                            <i class="fas fa-print text-indigo-400"></i> In Thử Phiếu Xuất
+                        </button>
+                        <button type="button" id="btn-print-sample-shipping" onclick="window.modSettings.printSampleShippingNote()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer hidden">
+                            <i class="fas fa-print text-amber-400"></i> In Thử Phiếu Gửi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2 CỘT: TRÁI LÀ FORM CẤU HÌNH, PHẢI LÀ LIVE PREVIEW A4 -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    
+                    <!-- CỘT TRÁI (7 CỘT): FORM CẤU HÌNH -->
+                    <div class="lg:col-span-7 space-y-4">
+
+                        <!-- SUBTAB 1 FORM: PHIẾU XUẤT KHO -->
+                        <div id="delivery-subtab-form-note" class="space-y-4">
+                            <!-- KHỐI 1: THÔNG TIN ĐƠN VỊ XUẤT KHO -->
+                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                                <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                    <i class="fas fa-warehouse text-indigo-600"></i> 1. Thông Tin Đơn Vị Xuất Kho
+                                </h4>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Đơn Vị / Công Ty Xuất Hàng</label>
+                                    <input type="text" id="set-delivery-store-name" oninput="window.modSettings.updateDeliveryPreview()" placeholder="VD: CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Hotline / SĐT Kho</label>
+                                        <input type="text" id="set-delivery-store-phone" oninput="window.modSettings.updateDeliveryPreview()" placeholder="VD: 0937.039.889" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Địa Chỉ Kho Xuất</label>
+                                        <input type="text" id="set-delivery-store-address" oninput="window.modSettings.updateDeliveryPreview()" placeholder="VD: 419/13 Song Hành, P. Trường Thọ, TP. Thủ Đức" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- KHỐI 2: TIÊU ĐỀ & CẤU HÌNH CỘT BẢNG HÀNG HÓA -->
+                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                                <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                    <i class="fas fa-heading text-purple-600"></i> 2. Tiêu Đề Văn Bản & Cấu Hình Cột
+                                </h4>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Mẫu In Phiếu Xuất</label>
+                                    <input type="text" id="set-delivery-title" oninput="window.modSettings.updateDeliveryPreview()" placeholder="VD: PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-indigo-500">
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                                    <label class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 cursor-pointer">
+                                        <input type="checkbox" id="set-delivery-show-serial" onchange="window.modSettings.updateDeliveryPreview()" checked class="w-4 h-4 text-indigo-600 accent-indigo-600">
+                                        <span class="text-[11px] font-bold text-slate-700">Mã Serial</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 cursor-pointer">
+                                        <input type="checkbox" id="set-delivery-show-unit" onchange="window.modSettings.updateDeliveryPreview()" checked class="w-4 h-4 text-indigo-600 accent-indigo-600">
+                                        <span class="text-[11px] font-bold text-slate-700">Đơn Vị Tính</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 cursor-pointer">
+                                        <input type="checkbox" id="set-delivery-show-note-col" onchange="window.modSettings.updateDeliveryPreview()" checked class="w-4 h-4 text-indigo-600 accent-indigo-600">
+                                        <span class="text-[11px] font-bold text-slate-700">Cột Ghi Chú</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 cursor-pointer">
+                                        <input type="checkbox" id="set-delivery-show-price" onchange="window.modSettings.updateDeliveryPreview()" class="w-4 h-4 text-indigo-600 accent-indigo-600">
+                                        <span class="text-[11px] font-bold text-slate-700">Hiện Đơn Giá</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- KHỐI 3: QUY ĐỊNH KHO & LƯU Ý GIAO NHẬN -->
+                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                                <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                    <i class="fas fa-exclamation-circle text-amber-600"></i> 3. Quy Định Kho & Lưu Ý Giao Nhận Chân Phiếu
+                                </h4>
+                                <div>
+                                    <textarea id="set-delivery-notes" rows="3" oninput="window.modSettings.updateDeliveryPreview()" placeholder="Hàng hóa đã xuất kho vui lòng kiểm tra kỹ số lượng & quy cách trước khi nhận. Mọi khiếu nại về hư hỏng vật lý sau khi rời kho công ty không chịu trách nhiệm." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- KHỐI 4: CÁC Ô CHỮ KÝ XÁC NHẬN (4 Ô) -->
+                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                                <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                    <i class="fas fa-file-signature text-emerald-600"></i> 4. Tiêu Đề Các Ô Chữ Ký Xác Nhận
+                                </h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Chữ Ký 1 (Khách Hàng / Người Nhận)</label>
+                                        <input type="text" id="set-delivery-sign-receiver" oninput="window.modSettings.updateDeliveryPreview()" value="NGƯỜI NHẬN HÀNG" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Chữ Ký 2 (Người Vận Chuyển / Giao Hàng)</label>
+                                        <input type="text" id="set-delivery-sign-deliverer" oninput="window.modSettings.updateDeliveryPreview()" value="NGƯỜI GIAO HÀNG" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Chữ Ký 3 (Thủ Kho Xuất Hàng)</label>
+                                        <input type="text" id="set-delivery-sign-warehouse" oninput="window.modSettings.updateDeliveryPreview()" value="THỦ KHO XUẤT" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Chữ Ký 4 (Kế Toán Kho / Duyệt)</label>
+                                        <input type="text" id="set-delivery-sign-accountant" oninput="window.modSettings.updateDeliveryPreview()" value="KẾ TOÁN DUYỆT" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUBTAB 2 FORM: PHIẾU GỬI HÀNG CHÀNH XE -->
+                        <div id="delivery-subtab-form-shipping" class="space-y-4 hidden">
+                            <!-- KHỐI 1: TIÊU ĐỀ & CẢNH BÁO HÀNG HÓA -->
+                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                                <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                    <i class="fas fa-heading text-amber-600"></i> 1. Tiêu Đề Tem & Cảnh Báo Hàng Hóa
+                                </h4>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tiêu Đề Tem Dán Thùng Gửi Xe</label>
+                                    <input type="text" id="set-shipping-title" oninput="window.modSettings.updateShippingPreview()" placeholder="VD: PHIẾU GỬI HÀNG CHÀNH XE" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Dòng Cảnh Báo Nổi Bật Cho Bác Tài</label>
+                                    <input type="text" id="set-shipping-warning" oninput="window.modSettings.updateShippingPreview()" placeholder="VD: ⚠️ HÀNG ĐIỆN TỬ - DỄ VỠ XIN NHẸ TAY • KHÔNG ĐÈ NẶNG" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-red-600 outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+
+                            <!-- KHỐI 2: THÔNG TIN NGƯỜI GỬI (SHOP / KHO) -->
+                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                                <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                    <i class="fas fa-store text-blue-600"></i> 2. Thông Tin Người Gửi In Trên Tem
+                                </h4>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Người Gửi (Công Ty / Cửa Hàng)</label>
+                                    <input type="text" id="set-shipping-sender-name" oninput="window.modSettings.updateShippingPreview()" placeholder="VD: CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Hotline / SĐT Người Gửi</label>
+                                        <input type="text" id="set-shipping-sender-phone" oninput="window.modSettings.updateShippingPreview()" placeholder="VD: 0937.039.889" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Địa Chỉ Kho Gửi</label>
+                                        <input type="text" id="set-shipping-sender-address" oninput="window.modSettings.updateShippingPreview()" placeholder="VD: 419/13 Song Hành, P. Trường Thọ, TP. Thủ Đức" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-amber-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- KHỐI 3: GHI CHÚ BÁC TÀI & KÝ NHẬN -->
+                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                                <h4 class="font-black text-slate-800 text-xs uppercase flex items-center gap-2 border-b border-slate-200 pb-2">
+                                    <i class="fas fa-truck text-emerald-600"></i> 3. Lưu Ý Với Bác Tài / Chành Xe & Dòng Ký Nhận
+                                </h4>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Lưu Ý Dành Riêng Cho Bác Tài / Nhà Xe</label>
+                                    <input type="text" id="set-shipping-carrier-note" oninput="window.modSettings.updateShippingPreview()" placeholder="VD: Bác tài vui lòng gọi điện trước khi giao. Thu tiền COD đúng số tiền trên phiếu." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Dòng Chữ Ký Nhận Chân Tem</label>
+                                    <input type="text" id="set-shipping-footer-text" oninput="window.modSettings.updateShippingPreview()" value="Ký nhận của chành xe: ........................" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- CỘT PHẢI (5 CỘT): KHUNG XEM TRƯỚC LIVE PREVIEW TRỰC QUAN -->
+                    <div class="lg:col-span-5 sticky top-2">
+                        <div class="bg-slate-900 rounded-2xl p-3 border border-slate-800 shadow-xl space-y-2 text-white">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                                <span class="text-xs font-black uppercase text-indigo-400 flex items-center gap-1.5" id="delivery-preview-title-badge">
+                                    <i class="fas fa-eye"></i> Xem Trước Bản In (Live Preview)
+                                </span>
+                                <span id="delivery-preview-type-badge" class="text-[9px] bg-indigo-500 text-white px-2 py-0.5 rounded-full font-black uppercase">XUẤT KHO</span>
+                            </div>
+
+                            <!-- KHUNG XEM TRƯỚC PHIẾU XUẤT KHO MÔ PHỎNG -->
+                            <div id="preview-delivery-note-box" class="bg-white text-slate-900 p-4 rounded-xl shadow-inner font-sans text-[11px] leading-relaxed border border-slate-300 max-h-[620px] overflow-y-auto pos-scroll select-none">
+                                <!-- Rendered dynamically by JS -->
+                            </div>
+
+                            <!-- KHUNG XEM TRƯỚC PHIẾU GỬI CHÀNH XE MÔ PHỎNG -->
+                            <div id="preview-shipping-label-box" class="bg-white text-slate-900 p-4 rounded-xl shadow-inner font-sans text-[11px] leading-relaxed border border-slate-300 max-h-[620px] overflow-y-auto pos-scroll select-none hidden">
+                                <!-- Rendered dynamically by JS -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1001,6 +1195,215 @@ window.modSettings = {
         win.document.close();
     },
 
+    // ============================================================
+    // MẪU PHIẾU XUẤT KHO & PHIẾU GỬI HÀNG CHÀNH XE
+    // ============================================================
+    selectedDeliverySubTab: 'delivery_note',
+
+    switchDeliverySubTab: (subTabKey) => {
+        window.modSettings.selectedDeliverySubTab = subTabKey;
+        const btnNote = document.getElementById('btn-subtab-delivery-note');
+        const btnShip = document.getElementById('btn-subtab-shipping-label');
+        const formNote = document.getElementById('delivery-subtab-form-note');
+        const formShip = document.getElementById('delivery-subtab-form-shipping');
+        const prevNote = document.getElementById('preview-delivery-note-box');
+        const prevShip = document.getElementById('preview-shipping-label-box');
+        const printNote = document.getElementById('btn-print-sample-delivery');
+        const printShip = document.getElementById('btn-print-sample-shipping');
+        const typeBadge = document.getElementById('delivery-preview-type-badge');
+
+        if (subTabKey === 'delivery_note') {
+            if (btnNote) btnNote.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-indigo-600 shadow-2xs flex items-center gap-1.5 cursor-pointer";
+            if (btnShip) btnShip.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer";
+            if (formNote) formNote.classList.remove('hidden');
+            if (formShip) formShip.classList.add('hidden');
+            if (prevNote) prevNote.classList.remove('hidden');
+            if (prevShip) prevShip.classList.add('hidden');
+            if (printNote) printNote.classList.remove('hidden');
+            if (printShip) printShip.classList.add('hidden');
+            if (typeBadge) {
+                typeBadge.innerText = "XUẤT KHO";
+                typeBadge.className = "text-[9px] bg-indigo-500 text-white px-2 py-0.5 rounded-full font-black uppercase";
+            }
+            window.modSettings.updateDeliveryPreview();
+        } else {
+            if (btnShip) btnShip.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-amber-600 shadow-2xs flex items-center gap-1.5 cursor-pointer";
+            if (btnNote) btnNote.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer";
+            if (formShip) formShip.classList.remove('hidden');
+            if (formNote) formNote.classList.add('hidden');
+            if (prevShip) prevShip.classList.remove('hidden');
+            if (prevNote) prevNote.classList.add('hidden');
+            if (printShip) printShip.classList.remove('hidden');
+            if (printNote) printNote.classList.add('hidden');
+            if (typeBadge) {
+                typeBadge.innerText = "CHÀNH XE";
+                typeBadge.className = "text-[9px] bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full font-black uppercase";
+            }
+            window.modSettings.updateShippingPreview();
+        }
+    },
+
+    updateDeliveryPreview: () => {
+        const previewBox = document.getElementById('preview-delivery-note-box');
+        if (!previewBox) return;
+
+        const storeName = document.getElementById('set-delivery-store-name')?.value || document.getElementById('set-store-name')?.value || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+        const storePhone = document.getElementById('set-delivery-store-phone')?.value || document.getElementById('set-store-phone')?.value || '0937.039.889';
+        const storeAddr = document.getElementById('set-delivery-store-address')?.value || document.getElementById('set-store-address')?.value || '419/13 Song Hành, P. Trường Thọ, TP. Thủ Đức, TP.HCM';
+        const storeLogo = document.getElementById('set-store-logo')?.value || 'https://sungo.vn/wp-content/uploads/2023/11/logo-sungo.png';
+
+        const title = document.getElementById('set-delivery-title')?.value || 'PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG';
+        const showSerial = document.getElementById('set-delivery-show-serial')?.checked !== false;
+        const showUnit = document.getElementById('set-delivery-show-unit')?.checked !== false;
+        const showNoteCol = document.getElementById('set-delivery-show-note-col')?.checked !== false;
+        const showPrice = document.getElementById('set-delivery-show-price')?.checked === true;
+        const notes = document.getElementById('set-delivery-notes')?.value || 'Hàng hóa đã xuất kho vui lòng kiểm tra kỹ số lượng & quy cách trước khi nhận.';
+
+        const sign1 = document.getElementById('set-delivery-sign-receiver')?.value || 'NGƯỜI NHẬN HÀNG';
+        const sign2 = document.getElementById('set-delivery-sign-deliverer')?.value || 'NGƯỜI GIAO HÀNG';
+        const sign3 = document.getElementById('set-delivery-sign-warehouse')?.value || 'THỦ KHO XUẤT';
+        const sign4 = document.getElementById('set-delivery-sign-accountant')?.value || 'KẾ TOÁN DUYỆT';
+
+        const logoHtml = storeLogo 
+            ? `<img src="${storeLogo}" style="max-height:42px; display:inline-block; margin-bottom:6px;" alt="Logo">`
+            : `<div style="font-weight:900; font-size:16px; color:#4338ca;">SUNGO SOLAR</div>`;
+
+        const sampleItems = [
+            { name: 'Tấm pin năng lượng mặt trời Jinko 620wp Tiger Neo', sku: 'JK-620N', serial: 'JK260824001', qty: 18, unit: 'Tấm', price: '2.418.000 đ', total: '43.524.000 đ', note: 'Mới 100%' },
+            { name: 'Biến tần Inverter hòa lưới bám tải Cergy 10kW 3 Pha', sku: 'CG-10KT', serial: 'CG10K2026889', qty: 1, unit: 'Bộ', price: '15.500.000 đ', total: '15.500.000 đ', note: 'Kèm catalog' },
+            { name: 'Đồng hồ đo thông minh Smart Meter 3 Pha Zero-Export', sku: 'SM-3P', serial: 'SM3P99201', qty: 1, unit: 'Bộ', price: '3.800.000 đ', total: '3.800.000 đ', note: 'Kèm CT' }
+        ];
+
+        const rowsHtml = sampleItems.map((item, idx) => `
+            <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:4px 6px; text-align:center; border:1px solid #cbd5e1;">${idx + 1}</td>
+                <td style="padding:4px 6px; border:1px solid #cbd5e1;">
+                    <strong>${item.name}</strong>
+                    ${showSerial && item.serial ? `<br><span style="color:#2563eb; font-family:monospace; font-size:8px;">SN: ${item.serial}</span>` : ''}
+                </td>
+                ${showUnit ? `<td style="padding:4px 6px; text-align:center; border:1px solid #cbd5e1;">${item.unit}</td>` : ''}
+                <td style="padding:4px 6px; text-align:center; font-weight:bold; border:1px solid #cbd5e1;">${item.qty}</td>
+                ${showPrice ? `<td style="padding:4px 6px; text-align:right; border:1px solid #cbd5e1;">${item.price}</td>` : ''}
+                ${showPrice ? `<td style="padding:4px 6px; text-align:right; font-weight:bold; border:1px solid #cbd5e1;">${item.total}</td>` : ''}
+                ${showNoteCol ? `<td style="padding:4px 6px; font-size:8.5px; border:1px solid #cbd5e1; color:#64748b;">${item.note}</td>` : ''}
+            </tr>
+        `).join('');
+
+        previewBox.innerHTML = `
+        <div style="font-family:'Times New Roman',serif; color:#0f172a;">
+            <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:8px; margin-bottom:10px;">
+                ${logoHtml}
+                <h2 style="font-size:13px; font-weight:bold; margin:0; text-transform:uppercase; letter-spacing:0.5px;">${title}</h2>
+                <p style="font-size:9px; margin:2px 0 0 0; color:#475569;">
+                    Đơn vị: <strong>${storeName}</strong> • Hotline: <strong>${storePhone}</strong><br>
+                    Địa chỉ: ${storeAddr}
+                </p>
+                <p style="font-size:9px; margin:4px 0 0 0; color:#0f172a;">Mã Đơn: <strong>DH-9181991797</strong> • Ngày xuất: 27/08/2026</p>
+            </div>
+
+            <div style="border:1px solid #94a3b8; padding:6px 8px; margin-bottom:8px; border-radius:6px; font-size:9px; line-height:1.45; background:#f8fafc;">
+                <strong>Người nhận:</strong> Anh Nguyễn Văn An &nbsp;|&nbsp; <strong>SĐT:</strong> 0909.123.456<br>
+                <strong>Địa chỉ:</strong> 128 Nguyễn Trãi, Phường 3, Quận 5, TP.HCM<br>
+                <strong>Vận chuyển:</strong> Chành xe Tô Châu (Tân Bình) &nbsp;|&nbsp; <strong>SĐT xe:</strong> 0918.888.999<br>
+                <strong>Ghi chú xuất kho:</strong> Giao trước 16h chiều, khách nhận trực tiếp.
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:8px; font-size:9px; border:1px solid #cbd5e1;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="border:1px solid #cbd5e1; padding:4px 6px; width:22px; text-align:center;">STT</th>
+                        <th style="border:1px solid #cbd5e1; padding:4px 6px; text-align:left;">Tên Hàng Hóa / Thiết Bị</th>
+                        ${showUnit ? `<th style="border:1px solid #cbd5e1; padding:4px 6px; width:32px; text-align:center;">ĐVT</th>` : ''}
+                        <th style="border:1px solid #cbd5e1; padding:4px 6px; width:30px; text-align:center;">SL</th>
+                        ${showPrice ? `<th style="border:1px solid #cbd5e1; padding:4px 6px; width:65px; text-align:right;">Đơn Giá</th>` : ''}
+                        ${showPrice ? `<th style="border:1px solid #cbd5e1; padding:4px 6px; width:75px; text-align:right;">Thành Tiền</th>` : ''}
+                        ${showNoteCol ? `<th style="border:1px solid #cbd5e1; padding:4px 6px; width:60px; text-align:left;">Ghi Chú</th>` : ''}
+                    </tr>
+                </thead>
+                <tbody>${rowsHtml}</tbody>
+            </table>
+
+            <div style="font-size:8.5px; color:#475569; border-top:1px dashed #cbd5e1; padding-top:4px; margin-bottom:12px; font-style:italic;">
+                * ${notes.replace(/\n/g, '<br>* ')}
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); text-align:center; font-size:8.5px; font-weight:bold; gap:4px; border-top:1px solid #e2e8f0; padding-top:6px;">
+                <div>${sign1}<br><span style="font-size:7.5px; font-weight:normal; color:#64748b;">(Ký & ghi họ tên)</span><div style="height:28px;"></div></div>
+                <div>${sign2}<br><span style="font-size:7.5px; font-weight:normal; color:#64748b;">(Ký & ghi họ tên)</span><div style="height:28px;"></div></div>
+                <div>${sign3}<br><span style="font-size:7.5px; font-weight:normal; color:#64748b;">(Ký & ghi họ tên)</span><div style="height:28px;"></div></div>
+                <div>${sign4}<br><span style="font-size:7.5px; font-weight:normal; color:#64748b;">(Ký & ghi họ tên)</span><div style="height:28px;"></div></div>
+            </div>
+        </div>
+        `;
+    },
+
+    updateShippingPreview: () => {
+        const previewBox = document.getElementById('preview-shipping-label-box');
+        if (!previewBox) return;
+
+        const title = document.getElementById('set-shipping-title')?.value || 'PHIẾU GỬI HÀNG CHÀNH XE';
+        const warning = document.getElementById('set-shipping-warning')?.value || '⚠️ HÀNG ĐIỆN TỬ - DỄ VỠ XIN NHẸ TAY • KHÔNG ĐÈ NẶNG';
+        const senderName = document.getElementById('set-shipping-sender-name')?.value || document.getElementById('set-store-name')?.value || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+        const senderPhone = document.getElementById('set-shipping-sender-phone')?.value || document.getElementById('set-store-phone')?.value || '0937.039.889';
+        const senderAddr = document.getElementById('set-shipping-sender-address')?.value || document.getElementById('set-store-address')?.value || '419/13 Song Hành, P. Trường Thọ, TP. Thủ Đức, TP.HCM';
+        const carrierNote = document.getElementById('set-shipping-carrier-note')?.value || 'Bác tài vui lòng gọi điện trước khi giao. Thu tiền COD đúng số tiền trên phiếu.';
+        const footerText = document.getElementById('set-shipping-footer-text')?.value || 'Ký nhận của chành xe: ........................';
+
+        previewBox.innerHTML = `
+        <div style="font-family:Arial,sans-serif; padding:12px; border:2px dashed #0f172a; border-radius:10px; background:#fff; color:#0f172a;">
+            <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:6px; margin-bottom:8px;">
+                <h1 style="font-size:14px; font-weight:900; margin:0; text-transform:uppercase; letter-spacing:0.5px;">${title}</h1>
+                <p style="font-size:9.5px; color:#dc2626; font-weight:bold; margin:3px 0 0 0;">${warning}</p>
+            </div>
+
+            <div style="border:2px solid #0f172a; padding:8px; margin-bottom:8px; border-radius:8px; text-align:center; background:#f8fafc;">
+                <strong style="font-size:12px; display:block;">🚚 CHÀNH XE: VẬN TẢI TÔ CHÂU</strong>
+                <span style="font-size:9px; color:#0f172a;">📍 <b>Đ/C Chành:</b> Bãi xe số 5, 230 Lê Hồng Phong, P.4, Q.5</span><br>
+                <span style="font-size:9px;">SĐT XE: <b>0918.888.999</b></span>
+            </div>
+
+            <div style="border:1.5px solid #0f172a; padding:6px 8px; margin-bottom:6px; border-radius:6px; font-size:9px; line-height:1.4;">
+                <strong style="text-transform:uppercase; color:#475569; font-size:8px;">Người Gửi:</strong><br>
+                <span style="font-size:10px; font-weight:900;">${senderName}</span><br>
+                <span>Hotline: <b>${senderPhone}</b></span><br>
+                <span>Địa chỉ: ${senderAddr}</span>
+            </div>
+
+            <div style="border:1.5px solid #0f172a; padding:6px 8px; margin-bottom:8px; border-radius:6px; font-size:9px; line-height:1.4; background:#eff6ff;">
+                <strong style="text-transform:uppercase; color:#1e40af; font-size:8px;">Người Nhận:</strong><br>
+                <span style="font-size:11px; font-weight:900; color:#1e3a8a;">ANH NGUYỄN VĂN AN</span><br>
+                <span style="font-size:10px; font-weight:bold;">SĐT: 0909.123.456</span><br>
+                <span>Địa chỉ: 128 Nguyễn Trãi, Phường 3, Quận 5, TP.HCM</span>
+            </div>
+
+            <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:4px 6px; font-size:8.5px; color:#92400e; margin-bottom:8px;">
+                <strong>Lưu ý:</strong> ${carrierNote}
+            </div>
+
+            <div style="display:flex; justify-content:space-between; font-size:8.5px; border-top:1px solid #cbd5e1; padding-top:6px;">
+                <span>Mã Đơn: <b>DH-9181991797</b></span>
+                <span>${footerText}</span>
+            </div>
+        </div>
+        `;
+    },
+
+    printSampleDeliveryNote: () => {
+        const previewBox = document.getElementById('preview-delivery-note-box');
+        if (!previewBox) return;
+        const win = window.open('', '', 'width=900,height=800');
+        win.document.write('<html><head><title>IN THỬ PHIẾU XUẤT KHO</title><style>body { font-family: "Times New Roman", serif; padding: 25px; color:#000; }</style></head><body>' + previewBox.innerHTML + '<script>window.print();<\/script></body></html>');
+        win.document.close();
+    },
+
+    printSampleShippingNote: () => {
+        const previewBox = document.getElementById('preview-shipping-label-box');
+        if (!previewBox) return;
+        const win = window.open('', '', 'width=600,height=700');
+        win.document.write('<html><head><title>IN THỬ TEM GỬI HÀNG CHÀNH XE</title><style>body { font-family: Arial, sans-serif; padding: 15px; color:#000; max-width: 500px; margin: 0 auto; }</style></head><body>' + previewBox.innerHTML + '<script>window.print();<\/script></body></html>');
+        win.document.close();
+    },
+
     load: async () => {
         try {
             const res = await fetch('/api/settings?t=' + Date.now());
@@ -1062,7 +1465,31 @@ window.modSettings = {
                 // Mặc định nạp mẫu Hybrid
                 window.modSettings.switchQuoteSystem('hybrid');
 
-                if (document.getElementById('set-delivery-notes')) document.getElementById('set-delivery-notes').value = d.delivery_notes || '';
+                // Mẫu Phiếu Xuất Kho & Phiếu Gửi Chành Xe
+                if (document.getElementById('set-delivery-store-name')) document.getElementById('set-delivery-store-name').value = d.delivery_store_name || storeNameVal;
+                if (document.getElementById('set-delivery-store-phone')) document.getElementById('set-delivery-store-phone').value = d.delivery_store_phone || storePhoneVal;
+                if (document.getElementById('set-delivery-store-address')) document.getElementById('set-delivery-store-address').value = d.delivery_store_address || storeAddrVal;
+                if (document.getElementById('set-delivery-title')) document.getElementById('set-delivery-title').value = d.delivery_title || 'PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG';
+                if (document.getElementById('set-delivery-show-serial')) document.getElementById('set-delivery-show-serial').checked = d.delivery_show_serial !== false;
+                if (document.getElementById('set-delivery-show-unit')) document.getElementById('set-delivery-show-unit').checked = d.delivery_show_unit !== false;
+                if (document.getElementById('set-delivery-show-note-col')) document.getElementById('set-delivery-show-note-col').checked = d.delivery_show_note_col !== false;
+                if (document.getElementById('set-delivery-show-price')) document.getElementById('set-delivery-show-price').checked = d.delivery_show_price === true;
+                if (document.getElementById('set-delivery-notes')) document.getElementById('set-delivery-notes').value = d.delivery_notes || 'Hàng hóa đã xuất kho vui lòng kiểm tra kỹ số lượng & quy cách trước khi nhận. Mọi khiếu nại về hư hỏng vật lý sau khi rời kho công ty không chịu trách nhiệm.';
+                if (document.getElementById('set-delivery-sign-receiver')) document.getElementById('set-delivery-sign-receiver').value = d.delivery_sign_receiver || 'NGƯỜI NHẬN HÀNG';
+                if (document.getElementById('set-delivery-sign-deliverer')) document.getElementById('set-delivery-sign-deliverer').value = d.delivery_sign_deliverer || 'NGƯỜI GIAO HÀNG';
+                if (document.getElementById('set-delivery-sign-warehouse')) document.getElementById('set-delivery-sign-warehouse').value = d.delivery_sign_warehouse || 'THỦ KHO XUẤT';
+                if (document.getElementById('set-delivery-sign-accountant')) document.getElementById('set-delivery-sign-accountant').value = d.delivery_sign_accountant || 'KẾ TOÁN DUYỆT';
+
+                if (document.getElementById('set-shipping-title')) document.getElementById('set-shipping-title').value = d.shipping_title || 'PHIẾU GỬI HÀNG CHÀNH XE';
+                if (document.getElementById('set-shipping-warning')) document.getElementById('set-shipping-warning').value = d.shipping_warning_text || '⚠️ HÀNG ĐIỆN TỬ - DỄ VỠ XIN NHẸ TAY • KHÔNG ĐÈ NẶNG';
+                if (document.getElementById('set-shipping-sender-name')) document.getElementById('set-shipping-sender-name').value = d.shipping_sender_name || storeNameVal;
+                if (document.getElementById('set-shipping-sender-phone')) document.getElementById('set-shipping-sender-phone').value = d.shipping_sender_phone || storePhoneVal;
+                if (document.getElementById('set-shipping-sender-address')) document.getElementById('set-shipping-sender-address').value = d.shipping_sender_address || storeAddrVal;
+                if (document.getElementById('set-shipping-carrier-note')) document.getElementById('set-shipping-carrier-note').value = d.shipping_carrier_note || 'Bác tài vui lòng gọi điện trước khi giao. Thu tiền COD đúng số tiền trên phiếu.';
+                if (document.getElementById('set-shipping-footer-text')) document.getElementById('set-shipping-footer-text').value = d.shipping_footer_text || 'Ký nhận của chành xe: ........................';
+
+                window.modSettings.updateDeliveryPreview();
+                window.modSettings.updateShippingPreview();
                 
                 // Warehouses
                 let whData = [];
@@ -1783,7 +2210,29 @@ window.modSettings = {
             // Tùy biến mẫu báo giá theo 4 hệ thống BOQ Solar (Hybrid, On-Grid, Off-Grid, Solar Pump)
             quote_templates: window.modSettings.quoteTemplates,
 
+            // Cấu hình Mẫu Phiếu Xuất Kho & Phiếu Gửi Chành Xe
+            delivery_store_name: document.getElementById('set-delivery-store-name')?.value || storeName,
+            delivery_store_phone: document.getElementById('set-delivery-store-phone')?.value || storePhone,
+            delivery_store_address: document.getElementById('set-delivery-store-address')?.value || storeAddr,
+            delivery_title: document.getElementById('set-delivery-title')?.value || 'PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG',
+            delivery_show_serial: document.getElementById('set-delivery-show-serial') ? document.getElementById('set-delivery-show-serial').checked : true,
+            delivery_show_unit: document.getElementById('set-delivery-show-unit') ? document.getElementById('set-delivery-show-unit').checked : true,
+            delivery_show_note_col: document.getElementById('set-delivery-show-note-col') ? document.getElementById('set-delivery-show-note-col').checked : true,
+            delivery_show_price: document.getElementById('set-delivery-show-price') ? document.getElementById('set-delivery-show-price').checked : false,
             delivery_notes: document.getElementById('set-delivery-notes')?.value || '',
+            delivery_sign_receiver: document.getElementById('set-delivery-sign-receiver')?.value || 'NGƯỜI NHẬN HÀNG',
+            delivery_sign_deliverer: document.getElementById('set-delivery-sign-deliverer')?.value || 'NGƯỜI GIAO HÀNG',
+            delivery_sign_warehouse: document.getElementById('set-delivery-sign-warehouse')?.value || 'THỦ KHO XUẤT',
+            delivery_sign_accountant: document.getElementById('set-delivery-sign-accountant')?.value || 'KẾ TOÁN DUYỆT',
+
+            shipping_title: document.getElementById('set-shipping-title')?.value || 'PHIẾU GỬI HÀNG CHÀNH XE',
+            shipping_warning_text: document.getElementById('set-shipping-warning')?.value || '⚠️ HÀNG ĐIỆN TỬ - DỄ VỠ XIN NHẸ TAY • KHÔNG ĐÈ NẶNG',
+            shipping_sender_name: document.getElementById('set-shipping-sender-name')?.value || storeName,
+            shipping_sender_phone: document.getElementById('set-shipping-sender-phone')?.value || storePhone,
+            shipping_sender_address: document.getElementById('set-shipping-sender-address')?.value || storeAddr,
+            shipping_carrier_note: document.getElementById('set-shipping-carrier-note')?.value || '',
+            shipping_footer_text: document.getElementById('set-shipping-footer-text')?.value || 'Ký nhận của chành xe: ........................',
+
             warehouses: window.modSettings.warehouses,
             role_permissions: window.modSettings.rolePermissions
         };
