@@ -1083,31 +1083,34 @@ router.put('/:id/wms-out', async (req, res) => {
         const profitComm = Math.round(orderGp * (profitPercent / 100));
         const rateWhCommission = ratePerOrder + profitComm;
 
-        // Xử lý Upload Ảnh Giao Hàng
-        let proofUrls = [];
-        if (delivery_proofs && Array.isArray(delivery_proofs)) {
-            for (let i = 0; i < delivery_proofs.length; i++) {
-                const proof = delivery_proofs[i];
-                if (proof && proof.startsWith('data:image')) {
-                    const matches = proof.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-                    const mime = matches ? matches[1] : 'image/jpeg';
-                    const base64Str = matches ? matches[2] : proof.replace(/^data:image\/\w+;base64,/, '');
-                    const buffer = Buffer.from(base64Str, 'base64');
-                    const fileName = `proof_${id}_${Date.now()}_${i}.jpg`;
-                    
-                    const uploadResult = await googleDriveService.uploadFile({
-                        buffer: buffer,
-                        originalname: fileName,
-                        mimetype: mime,
-                        subfolder: 'proofs'
-                    });
-                    proofUrls.push(uploadResult.url);
-                } else if (proof) {
-                    proofUrls.push(proof); // Ảnh cũ đã có URL
+        // Xử lý Upload Ảnh Giao Hàng (nếu có gửi kèm)
+        let proofsJson = null;
+        if (delivery_proofs !== undefined) {
+            let proofUrls = [];
+            if (Array.isArray(delivery_proofs)) {
+                for (let i = 0; i < delivery_proofs.length; i++) {
+                    const proof = delivery_proofs[i];
+                    if (proof && proof.startsWith('data:image')) {
+                        const matches = proof.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+                        const mime = matches ? matches[1] : 'image/jpeg';
+                        const base64Str = matches ? matches[2] : proof.replace(/^data:image\/\w+;base64,/, '');
+                        const buffer = Buffer.from(base64Str, 'base64');
+                        const fileName = `proof_${id}_${Date.now()}_${i}.jpg`;
+                        
+                        const uploadResult = await googleDriveService.uploadFile({
+                            buffer: buffer,
+                            originalname: fileName,
+                            mimetype: mime,
+                            subfolder: 'proofs'
+                        });
+                        proofUrls.push(uploadResult.url);
+                    } else if (proof) {
+                        proofUrls.push(proof); // Ảnh cũ đã có URL
+                    }
                 }
             }
+            proofsJson = JSON.stringify(proofUrls);
         }
-        const proofsJson = JSON.stringify(proofUrls);
 
         // Update thông tin giao vận, tình trạng và chi phí giao vận do kho cập nhật
         await client.query(`
@@ -1117,7 +1120,7 @@ router.put('/:id/wms-out', async (req, res) => {
                 license_plate = COALESCE($3, license_plate),
                 notes = COALESCE($4, notes),
                 status = COALESCE($5, status),
-                delivery_proofs = $6,
+                delivery_proofs = COALESCE($6, delivery_proofs),
                 carrier_address = COALESCE($7, carrier_address),
                 recipient_name = COALESCE($8, recipient_name),
                 recipient_phone = COALESCE($9, recipient_phone),
@@ -1173,7 +1176,7 @@ router.put('/:id/wms-out', async (req, res) => {
                                other_fee_note
                         FROM orders WHERE id = $1
                     `, [orderIdInt]);
-                    const fees = fRes.rows[0];
+                    const fees = fRes.rows[0] || {};
 
                     if (fees.s_fee > 0) {
                         await client.query(`
@@ -1229,20 +1232,119 @@ router.put('/:id/wms-out', async (req, res) => {
                             $1, 
                             (SELECT sku FROM products WHERE id = $2), 
                             $3, 
-                            120, 
-                            CURRENT_TIMESTAMP
+                            COALESCE((SELECT warranty_months FROM products WHERE id = $2), 24), 
+                            NOW()
                         )
-                        ON CONFLICT (serial_number) DO NOTHING
+                        ON CONFLICT (serial_number) DO UPDATE 
+                        SET activated_at = NOW(), 
+                            customer_name = EXCLUDED.customer_name
                     `, [i.serial_number.trim(), i.product_id, warrantyCustomer]);
                 }
             }
         }
         await client.query('COMMIT');
-        res.json({ success: true, proofUrls });
+        res.json({ success: true, proofUrls: proofsJson ? JSON.parse(proofsJson) : [] });
     } catch(e) { 
         await client.query('ROLLBACK'); 
         res.status(500).json({ success: false, error: e.message }); 
     } finally { client.release(); }
+});
+
+// [WMS] TẢI LÊN VÀ TỰ ĐỘNG LƯU ẢNH BẰNG CHỨNG GIAO NHẬN NGAY LẬP TỨC VÀO GOOGLE CLOUD STORAGE
+router.post('/:id/proofs', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { file_data, file_name, image } = req.body;
+        const dataUri = file_data || image;
+        if (!dataUri) {
+            return res.status(400).json({ success: false, error: 'Thiếu dữ liệu hình ảnh (file_data)' });
+        }
+
+        const matches = dataUri.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        const mimeType = matches ? matches[1] : 'image/jpeg';
+        const base64Str = matches ? matches[2] : dataUri.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Str, 'base64');
+        const ext = file_name ? path.extname(file_name) || '.jpg' : '.jpg';
+        const rawFileName = `proof_${id}_${Date.now()}${ext}`;
+
+        // Upload trực tiếp lên Google Cloud Storage (Tự động nén qua sharp)
+        const uploadResult = await googleDriveService.uploadFile({
+            buffer,
+            originalname: rawFileName,
+            mimetype: mimeType,
+            subfolder: 'proofs'
+        });
+
+        const newUrl = uploadResult.url;
+
+        // Lấy và cập nhật mảng delivery_proofs của đơn hàng trong database
+        const curRes = await pool.query("SELECT delivery_proofs FROM orders WHERE id = $1", [id]);
+        if (curRes.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+        }
+
+        let proofs = [];
+        const rawProofs = curRes.rows[0].delivery_proofs;
+        if (Array.isArray(rawProofs)) {
+            proofs = rawProofs;
+        } else if (typeof rawProofs === 'string' && rawProofs.trim()) {
+            try { proofs = JSON.parse(rawProofs); } catch(e) { proofs = []; }
+        }
+        if (!Array.isArray(proofs)) proofs = [];
+
+        proofs.push(newUrl);
+
+        await pool.query("UPDATE orders SET delivery_proofs = $1 WHERE id = $2", [JSON.stringify(proofs), id]);
+
+        return res.json({
+            success: true,
+            url: newUrl,
+            delivery_proofs: proofs,
+            message: 'Đã tải lên và lưu ảnh bằng chứng vĩnh viễn!'
+        });
+    } catch(err) {
+        console.error('Lỗi POST /api/orders/:id/proofs:', err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// [WMS] XÓA ẢNH BẰNG CHỨNG GIAO NHẬN KHỎI ĐƠN HÀNG
+router.delete('/:id/proofs', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { url, index } = req.body;
+
+        const curRes = await pool.query("SELECT delivery_proofs FROM orders WHERE id = $1", [id]);
+        if (curRes.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+        }
+
+        let proofs = [];
+        const rawProofs = curRes.rows[0].delivery_proofs;
+        if (Array.isArray(rawProofs)) {
+            proofs = rawProofs;
+        } else if (typeof rawProofs === 'string' && rawProofs.trim()) {
+            try { proofs = JSON.parse(rawProofs); } catch(e) { proofs = []; }
+        }
+        if (!Array.isArray(proofs)) proofs = [];
+
+        if (typeof index === 'number' && index >= 0 && index < proofs.length) {
+            proofs.splice(index, 1);
+        } else if (url) {
+            proofs = proofs.filter(p => p !== url);
+        }
+
+        await pool.query("UPDATE orders SET delivery_proofs = $1 WHERE id = $2", [JSON.stringify(proofs), id]);
+
+        return res.json({
+            success: true,
+            delivery_proofs: proofs,
+            message: 'Đã xóa ảnh bằng chứng khỏi đơn hàng!'
+        });
+    } catch(err) {
+        console.error('Lỗi DELETE /api/orders/:id/proofs:', err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // TỰ ĐỘNG DỌN DẸP ĐƠN CHỜ XÁC NHẬN QUÁ 30 NGÀY (AUTO-CLEANUP)
