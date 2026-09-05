@@ -925,6 +925,33 @@ async function autoInitDatabase() {
             `);
         } catch(whKpiErr) {}
 
+        // 45. Cơ chế Quỹ Lương Biến Đổi 70/30 & Quỹ Thưởng Tết Cuối Năm
+        try {
+            await pool.query(`
+                ALTER TABLE employees ADD COLUMN IF NOT EXISTS commission_retention_rate NUMERIC DEFAULT 30;
+                ALTER TABLE payroll_items ADD COLUMN IF NOT EXISTS commission_rate_retained NUMERIC DEFAULT 30;
+                ALTER TABLE payroll_items ADD COLUMN IF NOT EXISTS commission_retained NUMERIC DEFAULT 0;
+                ALTER TABLE payroll_items ADD COLUMN IF NOT EXISTS commission_paid NUMERIC DEFAULT 0;
+                ALTER TABLE payroll_items ADD COLUMN IF NOT EXISTS cumulative_retained_bonus NUMERIC DEFAULT 0;
+                ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS total_commission_retained NUMERIC DEFAULT 0;
+
+                CREATE TABLE IF NOT EXISTS year_end_bonus_policies (
+                    id SERIAL PRIMARY KEY,
+                    year INTEGER UNIQUE NOT NULL,
+                    target_gross_profit NUMERIC DEFAULT 10000000000,
+                    profit_sharing_percent NUMERIC DEFAULT 10.0,
+                    status VARCHAR(50) DEFAULT 'ACTIVE',
+                    notes TEXT DEFAULT '',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                INSERT INTO year_end_bonus_policies (year, target_gross_profit, profit_sharing_percent, status, notes)
+                VALUES (2026, 10000000000, 10.0, 'ACTIVE', 'Chính sách thưởng vượt kế hoạch năm 2026')
+                ON CONFLICT (year) DO NOTHING;
+            `);
+        } catch(yearEndErr) {}
+
         console.log("✅ Khởi tạo và đồng bộ toàn bộ CSDL Cổng Bảo Hành Điện Tử & ERP thành công!");
     } catch (err) {
         console.error("⚠️ Cảnh báo khởi tạo CSDL:", err.message);

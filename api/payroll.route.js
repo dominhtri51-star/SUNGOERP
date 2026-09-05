@@ -460,6 +460,7 @@ router.put('/item/:id', async (req, res) => {
         const meal = parseFloat(allowance_meal) !== undefined ? parseFloat(allowance_meal) : parseFloat(item.allowance_meal);
         const phoneGas = parseFloat(allowance_phone_gas) !== undefined ? parseFloat(allowance_phone_gas) : parseFloat(item.allowance_phone_gas);
         const resp = parseFloat(allowance_responsibility) !== undefined ? parseFloat(allowance_responsibility) : parseFloat(item.allowance_responsibility);
+        const totalAllowance = meal + phoneGas + resp;
         const commPaid = item.commission_paid !== null && item.commission_paid !== undefined
             ? parseFloat(item.commission_paid)
             : (parseFloat(item.total_commission) * 0.7);
