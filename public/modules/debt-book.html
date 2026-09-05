@@ -47,8 +47,8 @@
 
             <div class="relative shrink-0">
                 <select id="filter-debt-status" onchange="window.modDebtBook.onFilterChange()" class="appearance-none bg-white border border-slate-200 rounded-xl px-3 py-1.5 pr-6 text-xs font-bold text-slate-700 outline-none shadow-2xs cursor-pointer">
-                    <option value="ALL" selected>Tất cả trạng thái nợ</option>
-                    <option value="RECEIVABLE">🟢 Chỉ phải thu</option>
+                    <option value="RECEIVABLE" selected>🟢 Chỉ phải thu</option>
+                    <option value="ALL">Tất cả trạng thái nợ</option>
                     <option value="PAYABLE">🟠 Chỉ phải trả (Tiền cọc)</option>
                     <option value="ZERO">⚪ Đã hết nợ</option>
                 </select>
@@ -228,80 +228,85 @@
     <div id="modal-quick-tx" class="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeQuickTxModal()">
         <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-slide-up" onclick="event.stopPropagation()">
             
+            <!-- MOBILE TOP DRAG HANDLE -->
+            <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2 sm:hidden shrink-0"></div>
+
             <!-- HEADER MODAL GIAO DỊCH -->
-            <div class="px-4 pt-4 pb-3 border-b border-slate-100 flex items-center justify-between">
+            <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs flex items-center justify-center shrink-0" id="tx-modal-avatar">KH</div>
+                    <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs" id="tx-modal-avatar">KH</div>
                     <div class="min-w-0">
                         <h3 class="text-sm font-black text-slate-900 truncate" id="tx-modal-partner-name">Chọn khách hàng</h3>
                         <p class="text-[11px] text-slate-500 font-medium truncate" id="tx-modal-partner-debt">Số dư nợ: 0 đ</p>
                     </div>
                 </div>
-                <button type="button" onclick="window.modDebtBook.closeQuickTxModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition cursor-pointer">
+                <button type="button" onclick="window.modDebtBook.closeQuickTxModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition cursor-pointer">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <!-- CHỌN ĐỐI TÁC NẾU TẠO TỪ MÀN HÌNH TỔNG QUAN -->
-            <div id="tx-modal-partner-select-box" class="px-4 pt-3 pb-1 border-b border-slate-100 hidden">
-                <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Khách Hàng / Đối Tác</label>
-                <div class="relative">
-                    <input type="text" id="tx-modal-cust-search" oninput="window.modDebtBook.searchCustInModal(this.value)" placeholder="Gõ tên hoặc SĐT khách hàng..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500">
-                    <div id="tx-modal-cust-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto z-20 divide-y divide-slate-100 text-xs">
-                        <!-- Customer search results rendered here -->
+            <!-- SCROLLABLE BODY -->
+            <div class="p-4 space-y-3.5 overflow-y-auto flex-1">
+
+                <!-- CHỌN ĐỐI TÁC NẾU TẠO TỪ MÀN HÌNH TỔNG QUAN -->
+                <div id="tx-modal-partner-select-box" class="hidden">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Khách Hàng / Đối Tác</label>
+                    <div class="relative">
+                        <input type="text" id="tx-modal-cust-search" oninput="window.modDebtBook.searchCustInModal(this.value)" placeholder="Gõ tên hoặc SĐT khách hàng..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
+                        <div id="tx-modal-cust-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto z-20 divide-y divide-slate-100 text-xs">
+                            <!-- Customer search results rendered here -->
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- NÚT GẠT CHUYỂN ĐỔI ("TÔI ĐÃ ĐƯA" vs "TÔI ĐÃ NHẬN") -->
-            <div class="px-4 pt-3">
+                <!-- NÚT GẠT CHUYỂN ĐỔI ("TÔI ĐÃ ĐƯA" vs "TÔI ĐÃ NHẬN") -->
                 <div class="bg-slate-100 p-1 rounded-2xl flex items-center text-xs font-black">
-                    <button type="button" id="btn-tab-pay" onclick="window.modDebtBook.setTxType('PAY')" class="flex-1 py-2 rounded-xl text-slate-600 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                    <button type="button" id="btn-tab-pay" onclick="window.modDebtBook.setTxType('PAY')" class="flex-1 py-2.5 rounded-xl text-slate-600 transition flex items-center justify-center gap-1.5 cursor-pointer">
                         <i class="fas fa-minus"></i> <span>Tôi đã đưa</span>
                     </button>
-                    <button type="button" id="btn-tab-receive" onclick="window.modDebtBook.setTxType('RECEIVE')" class="flex-1 py-2 rounded-xl bg-white text-emerald-700 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                    <button type="button" id="btn-tab-receive" onclick="window.modDebtBook.setTxType('RECEIVE')" class="flex-1 py-2.5 rounded-xl bg-white text-emerald-700 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer">
                         <i class="fas fa-check"></i> <span>Tôi đã nhận</span>
                     </button>
                 </div>
-            </div>
 
-            <!-- FORM NHẬP SỐ TIỀN KHỔ LỚN -->
-            <div class="p-4 space-y-3.5 overflow-y-auto flex-1">
-                <div>
-                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">SỐ TIỀN GIAO DỊCH (VNĐ)</label>
+                <!-- KHUNG NHẬP SỐ TIỀN & CHIPS SỐ TIỀN GIAO DỊCH -->
+                <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider">SỐ TIỀN GIAO DỊCH</label>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">VNĐ</span>
+                    </div>
                     <div class="relative">
-                        <input type="text" id="tx-modal-amount" oninput="window.modDebtBook.onAmountInput(this)" placeholder="0" class="w-full border-b-2 border-slate-300 focus:border-emerald-600 pb-1 text-2xl sm:text-3xl font-black text-slate-900 outline-none bg-transparent font-mono tracking-tight">
-                        <span class="absolute right-0 bottom-2 text-sm font-black text-slate-400">đ</span>
+                        <input type="text" id="tx-modal-amount" oninput="window.modDebtBook.onAmountInput(this)" placeholder="0" class="w-full border-b-2 border-slate-300 focus:border-emerald-600 pb-1 text-2xl sm:text-3xl font-black text-slate-900 outline-none bg-transparent font-mono tracking-tight text-center sm:text-left">
                     </div>
 
                     <!-- CHIPS CHỌN NHANH SỐ TIỀN -->
-                    <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
-                        <button type="button" onclick="window.modDebtBook.addQuickAmount(1000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer">+1 Tr</button>
-                        <button type="button" onclick="window.modDebtBook.addQuickAmount(5000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer">+5 Tr</button>
-                        <button type="button" onclick="window.modDebtBook.addQuickAmount(10000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer">+10 Tr</button>
-                        <button type="button" onclick="window.modDebtBook.addQuickAmount(50000000)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer">+50 Tr</button>
-                        <button type="button" onclick="window.modDebtBook.setExactRemainingDebt()" id="btn-quick-full-debt" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 font-bold text-[11px] transition cursor-pointer">Hết nợ</button>
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
+                        <button type="button" onclick="window.modDebtBook.addQuickAmount(1000000)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 text-slate-700 font-bold text-[11px] transition cursor-pointer shadow-2xs">+1 Tr</button>
+                        <button type="button" onclick="window.modDebtBook.addQuickAmount(5000000)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 text-slate-700 font-bold text-[11px] transition cursor-pointer shadow-2xs">+5 Tr</button>
+                        <button type="button" onclick="window.modDebtBook.addQuickAmount(10000000)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 text-slate-700 font-bold text-[11px] transition cursor-pointer shadow-2xs">+10 Tr</button>
+                        <button type="button" onclick="window.modDebtBook.addQuickAmount(50000000)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 text-slate-700 font-bold text-[11px] transition cursor-pointer shadow-2xs">+50 Tr</button>
+                        <button type="button" onclick="window.modDebtBook.setExactRemainingDebt()" id="btn-quick-full-debt" class="px-2.5 py-1 rounded-lg bg-emerald-100/80 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 font-bold text-[11px] transition cursor-pointer shadow-2xs">Hết nợ</button>
                     </div>
                 </div>
 
                 <!-- DIỄN GIẢI / GHI CHÚ -->
                 <div>
                     <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">NỘI DUNG / LÝ DO GIAO DỊCH</label>
-                    <input type="text" id="tx-modal-notes" placeholder="VD: Khách chuyển khoản cọc trước, thanh toán công nợ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500">
+                    <input type="text" id="tx-modal-notes" placeholder="VD: Khách chuyển khoản cọc trước, thanh toán công nợ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
                 </div>
 
                 <!-- PHƯƠNG THỨC & NGUỒN TIỀN SỔ QUỸ -->
                 <div class="grid grid-cols-2 gap-2 text-xs">
                     <div>
                         <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Hình Thức</label>
-                        <select id="tx-modal-method" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-slate-700 outline-none">
+                        <select id="tx-modal-method" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-slate-700 outline-none shadow-2xs">
                             <option value="Chuyển Khoản" selected>Chuyển Khoản (NH)</option>
                             <option value="Tiền Mặt">Tiền Mặt</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Quỹ Đồng Bộ</label>
-                        <select id="tx-modal-fund" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-slate-700 outline-none">
+                        <select id="tx-modal-fund" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-slate-700 outline-none shadow-2xs">
                             <option value="TK_CONG_TY" selected>Tài Khoản Cty (ACB/VCB)</option>
                             <option value="TIEN_MAT_QUY">Két Tiền Mặt</option>
                         </select>
@@ -309,17 +314,17 @@
                 </div>
 
                 <!-- TÙY CHỌN TỰ ĐỘNG CẤN TRỪ ĐƠN CŨ -->
-                <div class="pt-1">
-                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div>
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                         <input type="checkbox" id="tx-modal-auto-settle" checked class="w-4 h-4 rounded text-emerald-600 accent-emerald-600 cursor-pointer">
                         <span class="text-xs font-bold text-slate-700">Tự động cấn trừ vào các đơn nợ cũ (FIFO)</span>
                     </label>
                 </div>
             </div>
 
-            <!-- NÚT LƯU GIAO DỊCH -->
-            <div class="p-4 border-t border-slate-100 bg-slate-50 shrink-0">
-                <button type="button" id="btn-tx-modal-save" onclick="window.modDebtBook.submitTransaction()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black py-3 rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+            <!-- NÚT LƯU GIAO DỊCH (STICKY ĐÁY) -->
+            <div class="p-3.5 sm:p-4 border-t border-slate-100 bg-white shrink-0">
+                <button type="button" id="btn-tx-modal-save" onclick="window.modDebtBook.submitTransaction()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black py-3 rounded-2xl text-sm transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
                     <i class="fas fa-check"></i> <span>Lưu giao dịch</span>
                 </button>
             </div>
@@ -370,12 +375,16 @@ window.modDebtBook = {
         const hash = window.location.hash || '';
         const matchPartner = hash.match(/[?&]partnerId=([^&]+)/);
         if (matchPartner && matchPartner[1]) {
-            await window.modDebtBook.selectPartner(matchPartner[1]);
+            await window.modDebtBook.openDetail(matchPartner[1]);
         }
         const matchTx = hash.match(/[?&]txType=([^&]+)/);
         if (matchTx && matchTx[1]) {
             window.modDebtBook.openQuickTxModal(matchTx[1]);
         }
+    },
+
+    selectPartner: async function(id) {
+        return this.openDetail(id);
     },
 
     fmtMoney: (num) => new Intl.NumberFormat('vi-VN').format(Math.round(num || 0)),
@@ -405,7 +414,7 @@ window.modDebtBook = {
 
             // 2. Nạp danh sách đối tác
             const pType = document.getElementById('filter-partner-type')?.value || 'ALL';
-            const dStatus = document.getElementById('filter-debt-status')?.value || 'ALL';
+            const dStatus = document.getElementById('filter-debt-status')?.value || 'RECEIVABLE';
             const q = document.getElementById('debt-search-input')?.value || '';
 
             const pRes = await fetch(`/api/debt-book/partners?partner_type=${encodeURIComponent(pType)}&debt_status=${encodeURIComponent(dStatus)}&search=${encodeURIComponent(q)}&t=` + Date.now());
@@ -633,6 +642,9 @@ window.modDebtBook = {
         const modal = document.getElementById('modal-quick-tx');
         if (!modal) return;
 
+        // Hide floating capsule bar so it doesn't overlap the modal
+        document.getElementById('debt-floating-bar')?.classList.add('hidden');
+
         // Nếu đang mở từ chi tiết khách hàng
         const p = window.modDebtBook.currentPartner;
         const selectBox = document.getElementById('tx-modal-partner-select-box');
@@ -669,6 +681,8 @@ window.modDebtBook = {
     closeQuickTxModal: () => {
         const modal = document.getElementById('modal-quick-tx');
         if (modal) modal.classList.add('hidden');
+        // Restore floating capsule bar
+        document.getElementById('debt-floating-bar')?.classList.remove('hidden');
     },
 
     setTxType: (type) => {
@@ -678,14 +692,14 @@ window.modDebtBook = {
         const notesInput = document.getElementById('tx-modal-notes');
 
         if (type === 'RECEIVE') {
-            btnRec.className = "flex-1 py-2 rounded-xl bg-white text-emerald-700 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer";
-            btnPay.className = "flex-1 py-2 rounded-xl text-slate-600 transition flex items-center justify-center gap-1.5 cursor-pointer";
+            btnRec.className = "flex-1 py-2.5 rounded-xl bg-white text-emerald-700 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer";
+            btnPay.className = "flex-1 py-2.5 rounded-xl text-slate-600 transition flex items-center justify-center gap-1.5 cursor-pointer";
             if (notesInput && (!notesInput.value || notesInput.value.includes('Chi hoàn'))) {
                 notesInput.value = 'Khách chuyển khoản cọc trước / trả nợ';
             }
         } else {
-            btnPay.className = "flex-1 py-2 rounded-xl bg-white text-amber-700 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer";
-            btnRec.className = "flex-1 py-2 rounded-xl text-slate-600 transition flex items-center justify-center gap-1.5 cursor-pointer";
+            btnPay.className = "flex-1 py-2.5 rounded-xl bg-white text-amber-700 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer";
+            btnRec.className = "flex-1 py-2.5 rounded-xl text-slate-600 transition flex items-center justify-center gap-1.5 cursor-pointer";
             if (notesInput && (!notesInput.value || notesInput.value.includes('chuyển khoản cọc'))) {
                 notesInput.value = 'Chi hoàn trả tiền cọc khách hàng';
             }
@@ -976,6 +990,7 @@ window.modDebtBook = {
         if (!p) return;
         const modal = document.getElementById('modal-reminder');
         if (modal) {
+            document.getElementById('debt-floating-bar')?.classList.add('hidden');
             const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
             document.getElementById('modal-reminder-date').value = nextWeek;
             document.getElementById('modal-reminder-notes').value = `Hẹn nhắc nợ ${p.name} thanh toán`;
@@ -986,6 +1001,7 @@ window.modDebtBook = {
     closeReminderModal: () => {
         const modal = document.getElementById('modal-reminder');
         if (modal) modal.classList.add('hidden');
+        document.getElementById('debt-floating-bar')?.classList.remove('hidden');
     },
 
     saveReminder: async () => {

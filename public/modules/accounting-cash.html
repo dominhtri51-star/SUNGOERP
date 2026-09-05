@@ -139,9 +139,9 @@
                     <input type="text" id="embed-debt-search" oninput="window.modCash.filterDebtBookEmbed(this.value)" placeholder="Tìm khách hàng, số điện thoại, tiền nợ..." class="w-full pl-8 pr-4 py-2 bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-slate-800 text-xs font-medium rounded-xl outline-none border border-transparent focus:border-emerald-500 transition">
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0 overflow-x-auto text-[11px] font-bold">
-                    <button type="button" onclick="window.modCash.setDebtBookFilterType('ALL')" id="embed-chip-ALL" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold transition">Tất cả</button>
-                    <button type="button" onclick="window.modCash.setDebtBookFilterType('RECEIVABLE')" id="embed-chip-RECEIVABLE" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🟢 Phải thu</button>
-                    <button type="button" onclick="window.modCash.setDebtBookFilterType('PAYABLE')" id="embed-chip-PAYABLE" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🟠 Phải trả (Cọc)</button>
+                    <button type="button" onclick="window.modCash.setDebtBookFilterType('RECEIVABLE')" id="embed-chip-RECEIVABLE" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold transition cursor-pointer">🟢 Phải thu</button>
+                    <button type="button" onclick="window.modCash.setDebtBookFilterType('ALL')" id="embed-chip-ALL" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">Tất cả</button>
+                    <button type="button" onclick="window.modCash.setDebtBookFilterType('PAYABLE')" id="embed-chip-PAYABLE" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">🟠 Phải trả (Cọc)</button>
                 </div>
             </div>
 
@@ -470,7 +470,7 @@ window.modCash = {
     currentStatementData: null,
     currentStatementCust: null,
     embedPartners: [],
-    embedFilterType: 'ALL',
+    embedFilterType: 'RECEIVABLE',
     embedSearchQuery: '',
 
     init: async () => {
@@ -548,7 +548,7 @@ window.modCash = {
         try {
             const [sumRes, partRes] = await Promise.all([
                 fetch('/api/debt-book/summary?t=' + Date.now()),
-                fetch('/api/debt-book/partners?partner_type=CUSTOMER&debt_status=ALL&t=' + Date.now())
+                fetch('/api/debt-book/partners?partner_type=CUSTOMER&debt_status=RECEIVABLE&t=' + Date.now())
             ]);
             const [sumData, partData] = await Promise.all([sumRes.json(), partRes.json()]);
 
@@ -660,9 +660,9 @@ window.modCash = {
                             <h3 class="text-sm sm:text-base font-black ${amountColor}">${prefix}${fmt(p.amount)}</h3>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <a href="#debt-book?partnerId=${p.id}" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1">
-                                <i class="fas fa-book-open"></i> <span>Sổ nợ</span>
-                            </a>
+                            <button onclick="window.modCash.openDebtStatementModal('${(p.name || '').replace(/'/g, "\\'")}', '${p.id}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-file-lines text-xs"></i> <span>Đối chiếu</span>
+                            </button>
                             <button onclick="window.modCash.quickCollect('${p.name.replace(/'/g, "\\'")}', '${p.id}', ${p.amount})" class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
                                 Thu nợ
                             </button>

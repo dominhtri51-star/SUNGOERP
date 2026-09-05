@@ -890,7 +890,8 @@ async function initApp() {
     let menuHtml = ''; 
     let firstMenu = null;
     let targetMenu = null;
-    const hashModule = window.location.hash ? window.location.hash.replace('#', '') : null;
+    const rawHash = window.location.hash ? window.location.hash.replace('#', '') : null;
+    const hashModule = rawHash ? rawHash.split('?')[0].split('&')[0] : null;
     
     userGroups.forEach(group => {
         menuHtml += `<div class="px-5 py-2 mt-3 border-t border-slate-800/80 pt-3 first:border-0 first:mt-0 first:pt-1"><p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">${group.group}</p></div>`;
@@ -918,7 +919,10 @@ async function initApp() {
 const moduleCache = {};
 
 async function loadModule(moduleId, title) {
-    window.location.hash = moduleId;
+    window.__currentModuleId = moduleId;
+    if (!window.location.hash || !window.location.hash.replace('#', '').startsWith(moduleId)) {
+        window.location.hash = moduleId;
+    }
     
     // Cập nhật tiêu đề trang trên Desktop và Mobile Header
     const pageTitleEl = document.getElementById('page-title');
@@ -1080,6 +1084,20 @@ window.copyToClipboard = async function(text, label = 'nội dung') {
         window.prompt('Nhấn Ctrl+C / Cmd+C để sao chép:', cleanText);
     }
 };
+
+window.addEventListener('hashchange', () => {
+    const raw = window.location.hash ? window.location.hash.replace('#', '') : '';
+    const modId = raw.split('?')[0].split('&')[0];
+    if (!modId) return;
+    let found = null;
+    for (const g of ALL_SYSTEM_GROUPS) {
+        const it = g.items.find(x => x.id === modId);
+        if (it) { found = it; break; }
+    }
+    if (found && window.__currentModuleId !== modId) {
+        loadModule(found.id, found.title);
+    }
+});
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);
