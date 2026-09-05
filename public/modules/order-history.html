@@ -496,7 +496,21 @@
                                 <input type="file" id="dt-proof-upload-input" multiple accept="image/*" onchange="window.modOrders.handleProofUpload(event)" class="hidden">
                             </div>
                         </div>
-                        <p class="text-[11px] text-slate-400">Hình ảnh kiện hàng, xe tải bốc hàng, biên bản giao nhận do nhân sự kho chụp tải lên đám mây.</p>
+
+                        <!-- BANNER BẢO VỆ CHỨNG TỪ THUẾ & VẬN CHUYỂN -->
+                        <div class="bg-amber-50/90 border border-amber-200/90 rounded-xl p-2.5 flex items-start gap-2.5 text-xs text-amber-950 shadow-2xs">
+                            <i class="fas fa-shield-alt text-amber-600 mt-0.5 text-sm shrink-0"></i>
+                            <div>
+                                <strong class="font-bold text-amber-900 flex items-center gap-1.5 flex-wrap">
+                                    <span>Chính sách khóa lưu trữ chứng từ thuế & giao nhận:</span>
+                                    <span class="text-[10px] bg-amber-200/80 text-amber-900 font-black px-1.5 py-0.2 rounded border border-amber-300/80">Khóa sau 15 phút</span>
+                                </strong>
+                                <span class="text-amber-800/90 text-[11px] block mt-0.5 leading-relaxed">
+                                    Chỉ nhân sự tải ảnh lên mới được phép xóa sửa sai trong vòng <strong>15 phút</strong>. Sau 15 phút, ảnh tự động <strong>khóa vĩnh viễn</strong> để lưu trữ giải trình cơ quan thuế và bằng chứng đối chiếu giao nhận.
+                                </span>
+                            </div>
+                        </div>
+
                         <div id="dt-proof-gallery" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5 pt-1"></div>
                     </div>
                 </div>
@@ -3020,18 +3034,57 @@ window.modOrders = {
         }).join('');
     },
 
+    getCurrentUser: () => {
+        try {
+            const uStr = localStorage.getItem('sungo_user') || localStorage.getItem('currentUser') || sessionStorage.getItem('sungo_user');
+            return uStr ? JSON.parse(uStr) : (window.currentUser || {});
+        } catch(e) {
+            return {};
+        }
+    },
+
     parseProofs: (raw) => {
         if (!raw) return [];
-        if (Array.isArray(raw)) return raw;
-        if (typeof raw === 'string' && raw.trim()) {
+        let list = [];
+        if (Array.isArray(raw)) list = raw;
+        else if (typeof raw === 'string' && raw.trim()) {
             try {
                 const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) return parsed;
+                if (Array.isArray(parsed)) list = parsed;
             } catch(e) {
                 return [];
             }
         }
-        return [];
+        return list.map(p => {
+            if (typeof p === 'string') {
+                let uploaded_at = null;
+                const m = p.match(/(\d{13})/);
+                if (m) {
+                    try {
+                        const ts = parseInt(m[1], 10);
+                        if (ts > 1500000000000 && ts < 2500000000000) {
+                            uploaded_at = new Date(ts).toISOString();
+                        }
+                    } catch(e) {}
+                }
+                return {
+                    url: p,
+                    uploaded_at: uploaded_at,
+                    uploaded_by_id: null,
+                    uploaded_by_emp_id: null,
+                    uploaded_by_name: 'Kho (Lưu trữ)',
+                    uploaded_by_username: null
+                };
+            }
+            return {
+                url: p.url || '',
+                uploaded_at: p.uploaded_at || null,
+                uploaded_by_id: p.uploaded_by_id || null,
+                uploaded_by_emp_id: p.uploaded_by_emp_id || null,
+                uploaded_by_name: p.uploaded_by_name || 'Kho',
+                uploaded_by_username: p.uploaded_by_username || null
+            };
+        }).filter(p => p.url);
     },
 
     renderProofs: () => {
@@ -3055,26 +3108,76 @@ window.modOrders = {
                 </div>`;
             return;
         }
-        gal.innerHTML = proofs.map((p, idx) => `
+
+        const currentUser = window.modOrders.getCurrentUser();
+        const now = Date.now();
+        const LOCK_TIMEOUT_MS = 15 * 60 * 1000;
+
+        gal.innerHTML = proofs.map((p, idx) => {
+            let isLocked = true;
+            let remainingMinutes = 0;
+            let timeAgoText = '';
+
+            if (p.uploaded_at) {
+                const uploadTime = new Date(p.uploaded_at).getTime();
+                if (!isNaN(uploadTime)) {
+                    const elapsedMs = now - uploadTime;
+                    if (elapsedMs <= LOCK_TIMEOUT_MS) {
+                        isLocked = false;
+                        remainingMinutes = Math.max(1, Math.ceil((LOCK_TIMEOUT_MS - elapsedMs) / (60 * 1000)));
+                    }
+                    const d = new Date(uploadTime);
+                    const hh = String(d.getHours()).padStart(2, '0');
+                    const mm = String(d.getMinutes()).padStart(2, '0');
+                    timeAgoText = `${hh}:${mm}`;
+                }
+            }
+
+            const isOwner = currentUser && (
+                (p.uploaded_by_id && currentUser.id && String(p.uploaded_by_id) === String(currentUser.id)) ||
+                (p.uploaded_by_username && currentUser.username && p.uploaded_by_username.toLowerCase() === currentUser.username.toLowerCase()) ||
+                (p.uploaded_by_emp_id && currentUser.emp_id && String(p.uploaded_by_emp_id) === String(currentUser.emp_id))
+            );
+
+            const canDelete = !isLocked && isOwner;
+
+            return `
             <div class="relative group rounded-xl overflow-hidden border border-slate-200 shadow-2xs bg-slate-100 cursor-pointer" onclick="window.modOrders.previewProof(${idx})">
-                <img src="${p}" 
+                <img src="${p.url}" 
                      onerror="this.onerror=null; this.src='https://placehold.co/400x300/f8fafc/64748b?text=Ảnh+hết+hạn';" 
                      class="w-full h-24 sm:h-28 object-cover transition duration-200 group-hover:scale-105 pointer-events-none" 
                      alt="Ảnh xuất kho">
                 
-                <div class="absolute bottom-1 left-1 bg-emerald-600/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1 backdrop-blur-xs pointer-events-none">
-                    <i class="fas fa-check-circle text-[8px]"></i> <span>Kho Đã Chụp</span>
+                <!-- GÓC TRÊN PHẢI: HOẶC NÚT XÓA SỬA SAI TRONG 15P HOẶC KHÓA BẢO VỆ THUẾ -->
+                ${canDelete ? `
+                    <button type="button" 
+                            onclick="event.stopPropagation(); window.modOrders.removeProof(${idx})" 
+                            title="Xóa ảnh đăng nhầm (Chỉ còn ${remainingMinutes} phút trước khi khóa vĩnh viễn)" 
+                            class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full px-2 py-0.5 text-[9px] font-black flex items-center gap-1 shadow-md cursor-pointer z-10 animate-pulse transition">
+                        <i class="fas fa-trash-alt text-[8px]"></i> <span>Xóa (${remainingMinutes}p)</span>
+                    </button>
+                ` : (isLocked ? `
+                    <div class="absolute top-1 right-1 bg-slate-900/85 text-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow backdrop-blur-xs pointer-events-none" title="Đã quá 15 phút - Ảnh đã bị khóa vĩnh viễn để lưu trữ báo cáo giải trình thuế & bằng chứng giao nhận">
+                        <i class="fas fa-lock text-amber-400 text-[8px]"></i> <span>Đã Khóa</span>
+                    </div>
+                ` : `
+                    <div class="absolute top-1 right-1 bg-slate-800/85 text-slate-200 text-[9px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow backdrop-blur-xs pointer-events-none" title="Ảnh do ${p.uploaded_by_name || 'nhân sự khác'} tải lên. Chỉ người tải mới được xóa sửa sai trong 15 phút">
+                        <i class="fas fa-user-lock text-[8px] text-slate-300"></i> <span class="max-w-[70px] truncate">${p.uploaded_by_name || 'Người khác'}</span>
+                    </div>
+                `)}
+
+                <!-- GÓC DƯỚI TRÁI: NGƯỜI ĐĂNG & THỜI GIAN -->
+                <div class="absolute bottom-1 left-1 bg-slate-900/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1 backdrop-blur-xs pointer-events-none max-w-[90%] truncate">
+                    <i class="fas fa-camera text-emerald-400 text-[8px]"></i>
+                    <span class="truncate">${p.uploaded_by_name || 'Kho'}${timeAgoText ? ` • ${timeAgoText}` : ''}</span>
                 </div>
 
+                <!-- LỚP PHỦ HOVER XEM LỚN -->
                 <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white text-xs font-bold gap-1 pointer-events-none">
                     <i class="fas fa-search-plus"></i> <span>Xem Lớn</span>
                 </div>
-
-                <button type="button" onclick="event.stopPropagation(); window.modOrders.removeProof(${idx})" title="Xóa ảnh này" class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center transition shadow-md cursor-pointer z-10">
-                    <i class="fas fa-times text-xs"></i>
-                </button>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     },
 
     handleEscKey: (e) => {
@@ -3085,7 +3188,7 @@ window.modOrders = {
 
     previewProof: (index) => {
         const p = window.modOrders.currentProofs[index];
-        if (p) window.modOrders.previewImage(p, index);
+        if (p) window.modOrders.previewImage(p.url, index);
     },
 
     previewImage: (url, index) => {
@@ -3104,8 +3207,10 @@ window.modOrders = {
         if (newTab) newTab.href = url;
         if (caption) {
             const oCode = window.modOrders.currentData?.order_code || '';
+            const p = (window.modOrders.currentProofs || [])[index] || {};
+            const uploader = p.uploaded_by_name ? ` • Đăng bởi: ${p.uploaded_by_name}` : '';
             const idxText = (typeof index === 'number') ? `(Ảnh ${index + 1}/${window.modOrders.currentProofs.length})` : '';
-            caption.innerText = `${oCode} ${idxText}`.trim();
+            caption.innerText = `${oCode} ${idxText}${uploader}`.trim();
         }
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -3179,25 +3284,28 @@ window.modOrders = {
     removeProof: async (index) => {
         const id = window.modOrders.currentDetailId;
         if (!id) return;
-        if (!confirm("Xác nhận xóa ảnh bằng chứng này khỏi đơn hàng?")) return;
+        const p = (window.modOrders.currentProofs || [])[index];
+        if (!p) return;
+
+        const confirmMsg = "⚠️ XÁC NHẬN XÓA ẢNH ĐĂNG NHẦM?\n\nChỉ người tải lên mới được xóa trong vòng 15 phút. Sau 15 phút ảnh sẽ bị khóa vĩnh viễn để lưu trữ giải trình cơ quan thuế và bằng chứng giao nhận.\n\nBạn có chắc chắn muốn xóa ảnh này?";
+        if (!confirm(confirmMsg)) return;
 
         try {
             const res = await fetch(`/api/orders/${id}/proofs`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ index })
+                body: JSON.stringify({ index, url: p.url })
             });
             const data = await res.json();
             if (data.success && data.delivery_proofs) {
                 window.modOrders.currentProofs = window.modOrders.parseProofs(data.delivery_proofs);
                 window.modOrders.renderProofs();
+                alert(data.message || "✅ Đã xóa ảnh thành công!");
             } else {
-                window.modOrders.currentProofs.splice(index, 1);
-                window.modOrders.renderProofs();
+                alert("❌ Không thể xóa ảnh:\n" + (data.error || 'Ảnh đã bị khóa lưu trữ thuế!'));
             }
         } catch (err) {
-            window.modOrders.currentProofs.splice(index, 1);
-            window.modOrders.renderProofs();
+            alert("❌ Lỗi mạng khi gửi yêu cầu xóa ảnh!");
         }
     },
 

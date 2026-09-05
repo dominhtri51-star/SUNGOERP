@@ -1026,6 +1026,130 @@ router.delete('/returns/:id', async (req, res) => {
     } catch(e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
+// ====================================================================
+// QUY TẮC BẢO VỆ CHỨNG TỪ & BẰNG CHỨNG XUẤT KHO (CHỐNG GIAN LẬN & PHỤC VỤ THUẾ)
+// 1. Chỉ nhân sự tải ảnh mới được quyền xóa sửa sai
+// 2. Chỉ được xóa trong vòng 15 phút. Quá 15 phút, ảnh bị khóa vĩnh viễn
+// ====================================================================
+const PROOF_LOCK_TIMEOUT_MS = 15 * 60 * 1000; // 15 phút
+
+function normalizeProof(p) {
+    if (!p) return null;
+    if (typeof p === 'string') {
+        let uploaded_at = null;
+        const m = p.match(/(\d{13})/);
+        if (m) {
+            try {
+                const ts = parseInt(m[1], 10);
+                if (ts > 1500000000000 && ts < 2500000000000) {
+                    uploaded_at = new Date(ts).toISOString();
+                }
+            } catch(e) {}
+        }
+        return {
+            url: p,
+            uploaded_at: uploaded_at,
+            uploaded_by_id: null,
+            uploaded_by_emp_id: null,
+            uploaded_by_name: 'Kho (Lưu trữ)',
+            uploaded_by_username: null
+        };
+    }
+    return {
+        url: p.url || '',
+        uploaded_at: p.uploaded_at || null,
+        uploaded_by_id: p.uploaded_by_id || null,
+        uploaded_by_emp_id: p.uploaded_by_emp_id || null,
+        uploaded_by_name: p.uploaded_by_name || 'Kho',
+        uploaded_by_username: p.uploaded_by_username || null
+    };
+}
+
+function checkCanDeleteProof(rawProof, user) {
+    const p = normalizeProof(rawProof);
+    if (!p || !p.url) {
+        return { canDelete: false, code: 'INVALID_PROOF', error: 'Ảnh bằng chứng không hợp lệ!' };
+    }
+
+    // 1. Kiểm tra thời gian: nếu không có thời gian hoặc quá 15 phút -> Khóa vĩnh viễn
+    if (!p.uploaded_at) {
+        return {
+            canDelete: false,
+            code: 'PROOF_LOCKED',
+            error: 'Ảnh chứng từ đã được lưu trữ vĩnh viễn để phục vụ giải trình cơ quan thuế & kiểm toán! Không thể xóa.'
+        };
+    }
+
+    const uploadTime = new Date(p.uploaded_at).getTime();
+    if (isNaN(uploadTime)) {
+        return {
+            canDelete: false,
+            code: 'PROOF_LOCKED',
+            error: 'Ảnh chứng từ đã được lưu trữ cố định để bảo vệ hồ sơ thuế.'
+        };
+    }
+
+    const now = Date.now();
+    const elapsedMs = now - uploadTime;
+    if (elapsedMs > PROOF_LOCK_TIMEOUT_MS) {
+        const elapsedMinutes = Math.floor(elapsedMs / (60 * 1000));
+        return {
+            canDelete: false,
+            code: 'PROOF_LOCKED',
+            error: `Đã quá thời hạn sửa sai (${elapsedMinutes} phút, tối đa 15 phút)! Ảnh đã bị khóa vĩnh viễn để lưu trữ báo cáo giải trình cơ quan thuế và bằng chứng giao nhận.`
+        };
+    }
+
+    // 2. Kiểm tra quyền sở hữu (Chỉ người đăng mới được xóa sửa sai trong 15 phút)
+    if (!user) {
+        return {
+            canDelete: false,
+            code: 'UNAUTHORIZED',
+            error: 'Yêu cầu đăng nhập để xác thực quyền xóa ảnh!'
+        };
+    }
+
+    const isOwner = (
+        (p.uploaded_by_id && user.id && String(p.uploaded_by_id) === String(user.id)) ||
+        (p.uploaded_by_username && user.username && p.uploaded_by_username.toLowerCase() === user.username.toLowerCase()) ||
+        (p.uploaded_by_emp_id && user.emp_id && String(p.uploaded_by_emp_id) === String(user.emp_id))
+    );
+
+    if (!isOwner) {
+        return {
+            canDelete: false,
+            code: 'PERMISSION_DENIED',
+            error: `Bạn không thể xóa ảnh này! Chỉ nhân sự đã tải ảnh lên (${p.uploaded_by_name || 'người đăng'}) mới có quyền xóa sửa sai trong vòng 15 phút.`
+        };
+    }
+
+    const remainingMinutes = Math.max(1, Math.ceil((PROOF_LOCK_TIMEOUT_MS - elapsedMs) / (60 * 1000)));
+    return { canDelete: true, remainingMinutes };
+}
+
+function retainLockedProofs(oldRaw, updatedProofs, currentUser) {
+    let oldList = [];
+    if (Array.isArray(oldRaw)) oldList = oldRaw;
+    else if (typeof oldRaw === 'string' && oldRaw.trim()) {
+        try { oldList = JSON.parse(oldRaw); } catch(e) {}
+    }
+    const result = [...updatedProofs];
+    oldList.forEach(oldItem => {
+        const check = checkCanDeleteProof(oldItem, currentUser);
+        if (!check.canDelete) {
+            const normOld = normalizeProof(oldItem);
+            const exists = result.some(item => {
+                const normItem = normalizeProof(item);
+                return normItem && normItem.url === normOld.url;
+            });
+            if (!exists) {
+                result.push(normOld);
+            }
+        }
+    });
+    return result;
+}
+
 // API DÀNH RIÊNG CHO KHO: Cập nhật vận chuyển & Serial (Bảo toàn tuyệt đối Giá tiền)
 router.put('/:id/wms-out', async (req, res) => {
     const client = await pool.connect();
@@ -1053,7 +1177,7 @@ router.put('/:id/wms-out', async (req, res) => {
 
         // Xử lý Người xuất kho & Mức hoa hồng xuất kho
         let finalDispatchedBy = dispatched_by ? parseInt(dispatched_by, 10) : null;
-        const curOrd = await client.query("SELECT dispatched_by, gross_profit, total_amount, cost_of_goods FROM orders WHERE id = $1", [id]);
+        const curOrd = await client.query("SELECT dispatched_by, gross_profit, total_amount, cost_of_goods, delivery_proofs FROM orders WHERE id = $1", [id]);
         const ordData = curOrd.rows[0] || {};
 
         if (!finalDispatchedBy) {
@@ -1090,7 +1214,7 @@ router.put('/:id/wms-out', async (req, res) => {
             if (Array.isArray(delivery_proofs)) {
                 for (let i = 0; i < delivery_proofs.length; i++) {
                     const proof = delivery_proofs[i];
-                    if (proof && proof.startsWith('data:image')) {
+                    if (typeof proof === 'string' && proof.startsWith('data:image')) {
                         const matches = proof.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
                         const mime = matches ? matches[1] : 'image/jpeg';
                         const base64Str = matches ? matches[2] : proof.replace(/^data:image\/\w+;base64,/, '');
@@ -1103,12 +1227,21 @@ router.put('/:id/wms-out', async (req, res) => {
                             mimetype: mime,
                             subfolder: 'proofs'
                         });
-                        proofUrls.push(uploadResult.url);
+                        proofUrls.push({
+                            url: uploadResult.url,
+                            uploaded_at: new Date().toISOString(),
+                            uploaded_by_id: req.user?.id || null,
+                            uploaded_by_emp_id: req.user?.emp_id || null,
+                            uploaded_by_name: req.user?.full_name || req.user?.username || 'Kho',
+                            uploaded_by_username: req.user?.username || null
+                        });
                     } else if (proof) {
-                        proofUrls.push(proof); // Ảnh cũ đã có URL
+                        proofUrls.push(normalizeProof(proof));
                     }
                 }
             }
+            // Bảo vệ các ảnh cũ đã bị khóa khỏi bị xóa mất khi submit form
+            proofUrls = retainLockedProofs(ordData.delivery_proofs, proofUrls, req.user);
             proofsJson = JSON.stringify(proofUrls);
         }
 
@@ -1250,7 +1383,7 @@ router.put('/:id/wms-out', async (req, res) => {
     } finally { client.release(); }
 });
 
-// [WMS] TẢI LÊN VÀ TỰ ĐỘNG LƯU ẢNH BẰNG CHỨNG GIAO NHẬN NGAY LẬP TỨC VÀO GOOGLE CLOUD STORAGE
+// [WMS] TẢI LÊN VÀ TỰ ĐỘNG LƯU ẢNH BẰNG CHỨNG GIAO NHẬN (GCS) KÈM METADATA NGƯỜI ĐĂNG & MỐC 15 PHÚT
 router.post('/:id/proofs', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1292,15 +1425,26 @@ router.post('/:id/proofs', async (req, res) => {
         }
         if (!Array.isArray(proofs)) proofs = [];
 
-        proofs.push(newUrl);
+        // Lưu thông tin người tải lên và mốc thời gian để khóa sau 15 phút
+        const newProofItem = {
+            url: newUrl,
+            uploaded_at: new Date().toISOString(),
+            uploaded_by_id: req.user?.id || null,
+            uploaded_by_emp_id: req.user?.emp_id || null,
+            uploaded_by_name: req.user?.full_name || req.user?.username || 'Kho',
+            uploaded_by_username: req.user?.username || null
+        };
+
+        proofs.push(newProofItem);
 
         await pool.query("UPDATE orders SET delivery_proofs = $1 WHERE id = $2", [JSON.stringify(proofs), id]);
 
         return res.json({
             success: true,
             url: newUrl,
+            proof: newProofItem,
             delivery_proofs: proofs,
-            message: 'Đã tải lên và lưu ảnh bằng chứng vĩnh viễn!'
+            message: 'Đã tải lên và lưu ảnh bằng chứng! (Có 15 phút để sửa sai nếu đăng nhầm)'
         });
     } catch(err) {
         console.error('Lỗi POST /api/orders/:id/proofs:', err);
@@ -1308,7 +1452,7 @@ router.post('/:id/proofs', async (req, res) => {
     }
 });
 
-// [WMS] XÓA ẢNH BẰNG CHỨNG GIAO NHẬN KHỎI ĐƠN HÀNG
+// [WMS] XÓA ẢNH BẰNG CHỨNG GIAO NHẬN (CHỈ CHO PHÉP CHÍNH NGƯỜI TẢI XÓA TRONG VÒNG 15 PHÚT)
 router.delete('/:id/proofs', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1328,18 +1472,39 @@ router.delete('/:id/proofs', async (req, res) => {
         }
         if (!Array.isArray(proofs)) proofs = [];
 
+        let targetIndex = -1;
         if (typeof index === 'number' && index >= 0 && index < proofs.length) {
-            proofs.splice(index, 1);
+            targetIndex = index;
         } else if (url) {
-            proofs = proofs.filter(p => p !== url);
+            targetIndex = proofs.findIndex(p => {
+                const norm = normalizeProof(p);
+                return norm && norm.url === url;
+            });
         }
+
+        if (targetIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy ảnh cần xóa trong đơn hàng!' });
+        }
+
+        const targetProof = proofs[targetIndex];
+        const check = checkCanDeleteProof(targetProof, req.user);
+        if (!check.canDelete) {
+            return res.status(403).json({
+                success: false,
+                code: check.code || 'FORBIDDEN',
+                error: check.error
+            });
+        }
+
+        // Hợp lệ: Chính người tải thực hiện xóa sửa sai trong vòng 15 phút
+        proofs.splice(targetIndex, 1);
 
         await pool.query("UPDATE orders SET delivery_proofs = $1 WHERE id = $2", [JSON.stringify(proofs), id]);
 
         return res.json({
             success: true,
             delivery_proofs: proofs,
-            message: 'Đã xóa ảnh bằng chứng khỏi đơn hàng!'
+            message: 'Đã xóa ảnh sửa sai thành công trong thời gian cho phép!'
         });
     } catch(err) {
         console.error('Lỗi DELETE /api/orders/:id/proofs:', err);

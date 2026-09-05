@@ -371,13 +371,16 @@ async function aggregateAllVaultDocuments() {
                     if (typeof ord.delivery_proofs === 'string') proofs = JSON.parse(ord.delivery_proofs);
                     else if (Array.isArray(ord.delivery_proofs)) proofs = ord.delivery_proofs;
                 } catch (e) {}
-                proofs.forEach((url, pIdx) => {
-                    docList.push({
-                        name: `Ảnh giao nhận hàng thực tế #${pIdx + 1}`,
-                        url: url,
-                        type: 'image',
-                        tag: 'DELIVERY_PROOF'
-                    });
+                proofs.forEach((item, pIdx) => {
+                    const pUrl = (typeof item === 'object' && item) ? item.url : item;
+                    if (pUrl) {
+                        docList.push({
+                            name: `Ảnh giao nhận hàng thực tế #${pIdx + 1}`,
+                            url: pUrl,
+                            type: 'image',
+                            tag: 'DELIVERY_PROOF'
+                        });
+                    }
                 });
 
                 oDocs.forEach(d => {
