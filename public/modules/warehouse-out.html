@@ -400,26 +400,32 @@
             </div>
         </div>
     <!-- MODAL XEM ẢNH BẰNG CHỨNG GIAO NHẬN (LIGHTBOX PREVIEW) -->
-    <div id="wms-image-preview-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-3 sm:p-6 hidden animate-in fade-in duration-150" onclick="window.modWmsOut.closeImagePreview()">
-        <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center justify-center" onclick="event.stopPropagation()">
+    <div id="wms-image-preview-modal" class="fixed inset-0 z-[99999] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-3 sm:p-6 hidden animate-in fade-in duration-150" style="z-index: 99999;" onclick="window.modWmsOut.closeImagePreview()">
+        <div class="relative max-w-4xl w-full max-h-[92vh] flex flex-col items-center justify-center" onclick="event.stopPropagation()">
             <div class="w-full flex items-center justify-between pb-3 text-white">
-                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <span class="text-xs sm:text-sm font-bold text-slate-200 flex items-center gap-1.5">
                     <i class="fas fa-camera text-amber-400"></i> Bằng Chứng Giao Nhận / Biên Nhận
                 </span>
                 <div class="flex items-center gap-2">
-                    <a id="wms-preview-newtab" href="#" target="_blank" class="text-xs font-bold bg-slate-800/90 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl border border-slate-700 transition flex items-center gap-1.5 shadow-sm">
-                        <i class="fas fa-external-link-alt text-[10px]"></i> Mở Tab Mới
+                    <a id="wms-preview-newtab" href="#" target="_blank" class="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl border border-slate-700 transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fas fa-external-link-alt text-[10px]"></i> <span class="hidden sm:inline">Mở Tab Mới</span><span class="sm:hidden">Ảnh Gốc</span>
                     </a>
-                    <button type="button" onclick="window.modWmsOut.closeImagePreview()" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-rose-600 text-slate-200 hover:text-white flex items-center justify-center cursor-pointer transition border border-slate-700 shadow-sm">
+                    <button type="button" onclick="window.modWmsOut.closeImagePreview()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white flex items-center justify-center cursor-pointer transition border border-slate-700 shadow-sm" title="Đóng">
                         <i class="fas fa-times text-sm"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="w-full flex items-center justify-center overflow-hidden rounded-2xl bg-black/60 border border-slate-800 p-2 shadow-2xl">
-                <img id="wms-preview-img" src="" class="max-w-full max-h-[75vh] object-contain rounded-xl" alt="Ảnh bằng chứng">
+            <div class="w-full flex items-center justify-center overflow-hidden rounded-2xl bg-black/80 border border-slate-800 p-2 shadow-2xl">
+                <img id="wms-preview-img" src="" class="max-w-full max-h-[75vh] object-contain rounded-xl select-none" alt="Ảnh bằng chứng">
             </div>
-            <p class="text-slate-400 text-[11px] font-medium mt-2 text-center">Bấm ngoài vùng ảnh hoặc phím ESC để đóng xem lớn</p>
+            
+            <div class="w-full flex items-center justify-between mt-2.5 text-slate-400 text-xs px-1">
+                <span class="text-[11px]"><i class="fas fa-info-circle mr-1"></i> Bấm ngoài vùng ảnh hoặc phím ESC để đóng</span>
+                <button type="button" onclick="window.modWmsOut.closeImagePreview()" class="sm:hidden px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold">
+                    ✕ Đóng
+                </button>
+            </div>
         </div>
     </div>
 
@@ -495,6 +501,15 @@ window.modWmsOut = {
         if (window.modWmsOut.isDirectorOrAdmin()) {
             window.modWmsOut.loadKpiStats();
         }
+
+        // Tự động đưa các modal ra document.body để thoát khỏi stacking context của main-content
+        ['wms-image-preview-modal', 'modal-wms-print-preview', 'modal-wms-kpi-policy'].forEach(mId => {
+            const el = document.getElementById(mId);
+            if (el && el.parentElement !== document.body) {
+                el.classList.add('teleported-module-modal');
+                document.body.appendChild(el);
+            }
+        });
     },
 
     loadWarehouseEmployees: async () => {
@@ -1140,10 +1155,10 @@ window.modWmsOut = {
             return;
         }
         gal.innerHTML = window.modWmsOut.currentProofs.map((p, idx) => `
-            <div class="relative group rounded-xl overflow-hidden border border-slate-200 shadow-2xs bg-slate-100 cursor-pointer" onclick="window.modWmsOut.previewImage('${p}')">
+            <div class="relative group rounded-xl overflow-hidden border border-slate-200 shadow-2xs bg-slate-100 cursor-pointer" onclick="window.modWmsOut.previewProof(${idx})">
                 <img src="${p}" 
                      onerror="this.onerror=null; this.src='https://placehold.co/400x300/f8fafc/64748b?text=Ảnh+cũ+hết+hạn\\n(Bấm+X+để+tải+lại)';" 
-                     class="w-full h-24 object-cover transition duration-200 group-hover:scale-105" 
+                     class="w-full h-24 object-cover transition duration-200 group-hover:scale-105 pointer-events-none" 
                      alt="Ảnh giao nhận">
                 
                 <!-- Huy hiệu Đã Lưu Vĩnh Viễn Trên Cloud -->
@@ -1169,9 +1184,18 @@ window.modWmsOut = {
         }
     },
 
+    previewProof: (index) => {
+        const p = window.modWmsOut.currentProofs[index];
+        if (p) window.modWmsOut.previewImage(p);
+    },
+
     previewImage: (url) => {
         if (!url) return;
-        const modal = document.getElementById('wms-image-preview-modal');
+        let modal = document.getElementById('wms-image-preview-modal');
+        if (modal && modal.parentElement !== document.body) {
+            modal.classList.add('teleported-module-modal');
+            document.body.appendChild(modal);
+        }
         const img = document.getElementById('wms-preview-img');
         const newTab = document.getElementById('wms-preview-newtab');
         if (!modal || !img) return;
@@ -1180,6 +1204,7 @@ window.modWmsOut = {
         if (newTab) newTab.href = url;
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        modal.style.display = 'flex';
         document.addEventListener('keydown', window.modWmsOut.handleEscKey);
     },
 
@@ -1188,6 +1213,7 @@ window.modWmsOut = {
         if (modal) {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            modal.style.display = 'none';
         }
         document.removeEventListener('keydown', window.modWmsOut.handleEscKey);
     },
