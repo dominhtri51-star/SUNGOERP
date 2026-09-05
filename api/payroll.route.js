@@ -114,6 +114,7 @@ router.post('/generate', async (req, res) => {
 
         let grandGross = 0;
         let grandCommission = 0;
+        let grandCommissionRetained = 0;
         let grandAllowance = 0;
         let grandBonus = 0;
         let grandInsEmp = 0;
@@ -256,6 +257,28 @@ router.post('/generate', async (req, res) => {
 
             const combinedCommission = totalCommission + warehouseCommission;
 
+            // 1.4. CƠ CHẾ HOA HỒNG BIẾN ĐỔI: 70% THỰC LĨNH THÁNG & 30% TÍCH LŨY QUỸ TẾT CUỐI NĂM
+            const retentionRate = emp.commission_retention_rate !== null && emp.commission_retention_rate !== undefined 
+                ? parseFloat(emp.commission_retention_rate) 
+                : 30;
+            
+            const commissionRetained = Math.round(combinedCommission * (retentionRate / 100));
+            const commissionPaid = combinedCommission - commissionRetained;
+
+            // Tính lũy kế quỹ thưởng Tết của nhân viên từ đầu năm đến kỳ hiện tại
+            const curYear = period_key.split('-')[0];
+            const prevRetainedRes = await client.query(`
+                SELECT COALESCE(SUM(pi.commission_retained), 0) AS prev_retained
+                FROM payroll_items pi
+                JOIN payrolls p ON pi.payroll_id = p.id
+                WHERE pi.employee_id = $1
+                  AND p.period_key LIKE $2
+                  AND p.period_key < $3
+            `, [emp.id, `${curYear}-%`, period_key]);
+            
+            const prevRetained = parseFloat(prevRetainedRes.rows[0]?.prev_retained) || 0;
+            const cumulativeRetainedBonus = prevRetained + commissionRetained;
+
             // 2. Kéo Thưởng / Phạt KPI Thu Hồi Công Nợ (Debt KPI Incentive Tiered Bonus)
             const debtKpiRes = await client.query(
                 "SELECT reward_penalty_amount, notes FROM debt_kpi_evaluations WHERE period_key = $1 AND employee_id = $2",
@@ -280,7 +303,8 @@ router.post('/generate', async (req, res) => {
             const totalBonus = kpiBonus + attendanceBonus;
             const totalPenalty = kpiPenalty + attendancePenalty;
 
-            const grossIncome = salaryByDays + totalAllowance + combinedCommission + totalBonus;
+            // 3. Tổng Thu Nhập Trước Khấu Trừ (Gross Income): Chỉ cộng hoa hồng thực chi trong tháng (70%)
+            const grossIncome = salaryByDays + totalAllowance + commissionPaid + totalBonus;
 
             // Tính Bảo hiểm
             let insBhxhEmp = 0, insBhytEmp = 0, insBhtnEmp = 0;
@@ -316,6 +340,7 @@ router.post('/generate', async (req, res) => {
 
             grandGross += grossIncome;
             grandCommission += combinedCommission;
+            grandCommissionRetained += commissionRetained;
             grandAllowance += totalAllowance;
             grandBonus += totalBonus;
             grandInsEmp += totalInsEmp;
@@ -333,22 +358,25 @@ router.post('/generate', async (req, res) => {
                     INSERT INTO payroll_items (
                         payroll_id, employee_id, actual_working_days, paid_leave_days, unpaid_leave_days,
                         base_salary, salary_by_days, allowance_meal, allowance_phone_gas, allowance_responsibility,
-                        total_commission, warehouse_commission, bonus_amount, gross_income,
+                        total_commission, warehouse_commission, commission_rate_retained, commission_retained, commission_paid, cumulative_retained_bonus,
+                        bonus_amount, gross_income,
                         ins_bhxh_emp, ins_bhyt_emp, ins_bhtn_emp, total_ins_emp,
                         ins_bhxh_comp, ins_bhyt_comp, ins_bhtn_comp, ins_kpcd_comp, total_ins_comp,
                         advance_amount, deduction_penalty, personal_tax, net_salary, payment_status
                     ) VALUES (
                         $1, $2, $3, $4, $5,
                         $6, $7, $8, $9, $10,
-                        $11, $12, $13, $14,
-                        $15, $16, $17, $18,
-                        $19, $20, $21, $22, $23,
-                        $24, $25, $26, $27, 'UNPAID'
+                        $11, $12, $13, $14, $15, $16,
+                        $17, $18,
+                        $19, $20, $21, $22,
+                        $23, $24, $25, $26, $27,
+                        $28, $29, $30, $31, 'UNPAID'
                     )
                 `, [
                     payrollId, emp.id, actualDays, paidLeaveDays, unpaidLeaveDays,
                     baseSalary, salaryByDays, mealAllowance, phoneGasAllowance, respAllowance,
-                    combinedCommission, warehouseCommission, totalBonus, grossIncome,
+                    combinedCommission, warehouseCommission, retentionRate, commissionRetained, commissionPaid, cumulativeRetainedBonus,
+                    totalBonus, grossIncome,
                     insBhxhEmp, insBhytEmp, insBhtnEmp, totalInsEmp,
                     insBhxhComp, insBhytComp, insBhtnComp, insKpcdComp, totalInsComp,
                     advanceAmount, totalPenalty, taxAmount, netSalary
@@ -359,16 +387,20 @@ router.post('/generate', async (req, res) => {
                         actual_working_days = $1, paid_leave_days = $2, unpaid_leave_days = $3,
                         base_salary = $4, salary_by_days = $5,
                         allowance_meal = $6, allowance_phone_gas = $7, allowance_responsibility = $8,
-                        total_commission = $9, warehouse_commission = $10, bonus_amount = $11, deduction_penalty = $12, gross_income = $13,
-                        ins_bhxh_emp = $14, ins_bhyt_emp = $15, ins_bhtn_emp = $16, total_ins_emp = $17,
-                        ins_bhxh_comp = $18, ins_bhyt_comp = $19, ins_bhtn_comp = $20, ins_kpcd_comp = $21, total_ins_comp = $22,
-                        net_salary = $23
-                    WHERE id = $24
+                        total_commission = $9, warehouse_commission = $10,
+                        commission_rate_retained = $11, commission_retained = $12, commission_paid = $13, cumulative_retained_bonus = $14,
+                        bonus_amount = $15, deduction_penalty = $16, gross_income = $17,
+                        ins_bhxh_emp = $18, ins_bhyt_emp = $19, ins_bhtn_emp = $20, total_ins_emp = $21,
+                        ins_bhxh_comp = $22, ins_bhyt_comp = $23, ins_bhtn_comp = $24, ins_kpcd_comp = $25, total_ins_comp = $26,
+                        net_salary = $27
+                    WHERE id = $28
                 `, [
                     actualDays, paidLeaveDays, unpaidLeaveDays,
                     baseSalary, salaryByDays,
                     mealAllowance, phoneGasAllowance, respAllowance,
-                    combinedCommission, warehouseCommission, totalBonus, totalPenalty, grossIncome,
+                    combinedCommission, warehouseCommission,
+                    retentionRate, commissionRetained, commissionPaid, cumulativeRetainedBonus,
+                    totalBonus, totalPenalty, grossIncome,
                     insBhxhEmp, insBhytEmp, insBhtnEmp, totalInsEmp,
                     insBhxhComp, insBhytComp, insBhtnComp, insKpcdComp, totalInsComp,
                     netSalary, checkItem.rows[0].id
@@ -381,15 +413,16 @@ router.post('/generate', async (req, res) => {
             UPDATE payrolls SET
                 total_gross_salary = $1,
                 total_commission = $2,
-                total_allowance = $3,
-                total_bonus = $4,
-                total_insurance_emp = $5,
-                total_insurance_comp = $6,
-                total_advance = $7,
-                total_net_salary = $8
-            WHERE id = $9
+                total_commission_retained = $3,
+                total_allowance = $4,
+                total_bonus = $5,
+                total_insurance_emp = $6,
+                total_insurance_comp = $7,
+                total_advance = $8,
+                total_net_salary = $9
+            WHERE id = $10
         `, [
-            grandGross, grandCommission, grandAllowance, grandBonus,
+            grandGross, grandCommission, grandCommissionRetained, grandAllowance, grandBonus,
             grandInsEmp, grandInsComp, grandAdvance, grandNet, payrollId
         ]);
 
@@ -427,11 +460,11 @@ router.put('/item/:id', async (req, res) => {
         const meal = parseFloat(allowance_meal) !== undefined ? parseFloat(allowance_meal) : parseFloat(item.allowance_meal);
         const phoneGas = parseFloat(allowance_phone_gas) !== undefined ? parseFloat(allowance_phone_gas) : parseFloat(item.allowance_phone_gas);
         const resp = parseFloat(allowance_responsibility) !== undefined ? parseFloat(allowance_responsibility) : parseFloat(item.allowance_responsibility);
-        const totalAllowance = meal + phoneGas + resp;
-
-        const comm = parseFloat(item.total_commission) || 0;
+        const commPaid = item.commission_paid !== null && item.commission_paid !== undefined
+            ? parseFloat(item.commission_paid)
+            : (parseFloat(item.total_commission) * 0.7);
         const bonus = parseFloat(bonus_amount) !== undefined ? parseFloat(bonus_amount) : parseFloat(item.bonus_amount);
-        const grossIncome = salaryByDays + totalAllowance + comm + bonus;
+        const grossIncome = salaryByDays + totalAllowance + commPaid + bonus;
 
         const totalInsEmp = parseFloat(item.total_ins_emp) || 0;
         const advance = parseFloat(advance_amount) !== undefined ? parseFloat(advance_amount) : parseFloat(item.advance_amount);
@@ -546,6 +579,240 @@ router.post('/:period/approve', async (req, res) => {
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Lỗi duyệt chi bảng lương:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// ====================================================================
+// QUỸ THƯỞNG CUỐI NĂM & THƯỞNG TẾT (YEAR-END RETENTION & PROFIT SHARING)
+// ====================================================================
+
+// 1. Lấy báo cáo Quỹ Thưởng Tết Cuối Năm
+router.get('/year-end/:year', async (req, res) => {
+    try {
+        const year = parseInt(req.params.year, 10) || new Date().getFullYear();
+        const startDate = `${year}-01-01 00:00:00`;
+        const endDate = `${year}-12-31 23:59:59`;
+
+        // Lấy hoặc khởi tạo chính sách năm
+        let polRes = await pool.query("SELECT * FROM year_end_bonus_policies WHERE year = $1", [year]);
+        if (polRes.rows.length === 0) {
+            await pool.query(`
+                INSERT INTO year_end_bonus_policies (year, target_gross_profit, profit_sharing_percent, status, notes)
+                VALUES ($1, 10000000000, 10.0, 'ACTIVE', 'Chính sách thưởng năm ' || $1)
+                ON CONFLICT (year) DO NOTHING
+            `, [year]);
+            polRes = await pool.query("SELECT * FROM year_end_bonus_policies WHERE year = $1", [year]);
+        }
+        const policy = polRes.rows[0];
+        const targetGp = parseFloat(policy.target_gross_profit) || 0;
+        const sharingPct = parseFloat(policy.profit_sharing_percent) || 0;
+
+        // Lấy tổng doanh thu & lợi nhuận gộp thực tế của công ty trong năm
+        const compActualRes = await pool.query(`
+            SELECT 
+                COALESCE(SUM(COALESCE(NULLIF(regexp_replace(total_amount::text, '[^0-9.-]', '', 'g'), '')::numeric, 0)), 0) AS actual_revenue,
+                COALESCE(SUM(COALESCE(NULLIF(regexp_replace(gross_profit::text, '[^0-9.-]', '', 'g'), '')::numeric, 0)), 0) AS actual_gross_profit
+            FROM orders
+            WHERE status IN ('SHIPPED', 'COMPLETED')
+              AND COALESCE(dispatched_at, created_at) >= $1
+              AND COALESCE(dispatched_at, created_at) <= $2
+        `, [startDate, endDate]);
+
+        const actualRevenue = parseFloat(compActualRes.rows[0]?.actual_revenue) || 0;
+        const actualGrossProfit = parseFloat(compActualRes.rows[0]?.actual_gross_profit) || 0;
+
+        const excessGp = Math.max(0, actualGrossProfit - targetGp);
+        const profitSharingPool = Math.round(excessGp * (sharingPct / 100));
+
+        // Lấy dữ liệu từng nhân viên
+        const empRes = await pool.query(`
+            SELECT 
+                e.id AS employee_id,
+                e.emp_code,
+                e.full_name,
+                e.position,
+                d.dept_name,
+                COALESCE(e.commission_retention_rate, 30) AS retention_rate,
+                COALESCE(SUM(pi.total_commission), 0) AS total_commission_earned,
+                COALESCE(SUM(pi.commission_paid), 0) AS total_commission_paid,
+                COALESCE(SUM(pi.commission_retained), 0) AS total_retained_pool,
+                COALESCE((
+                    SELECT SUM(sc.gross_profit)
+                    FROM sales_commissions sc
+                    WHERE sc.employee_id = e.id
+                      AND sc.created_at >= $1
+                      AND sc.created_at <= $2
+                ), 0) AS employee_gross_profit
+            FROM employees e
+            LEFT JOIN departments d ON e.department_id = d.id
+            LEFT JOIN payroll_items pi ON e.id = pi.employee_id
+            LEFT JOIN payrolls p ON pi.payroll_id = p.id AND p.period_key LIKE $3
+            WHERE e.status = 'ACTIVE'
+            GROUP BY e.id, e.emp_code, e.full_name, e.position, d.dept_name, e.commission_retention_rate
+            ORDER BY total_retained_pool DESC, e.id ASC
+        `, [startDate, endDate, `${year}-%`]);
+
+        const totalEmpGp = empRes.rows.reduce((sum, r) => sum + (parseFloat(r.employee_gross_profit) || 0), 0);
+        let totalRetainedAll = 0;
+        let totalGrandBonusAll = 0;
+
+        const employees = empRes.rows.map(r => {
+            const empGp = parseFloat(r.employee_gross_profit) || 0;
+            const earned = parseFloat(r.total_commission_earned) || 0;
+            const paid = parseFloat(r.total_commission_paid) || 0;
+            const retainedTier1 = parseFloat(r.total_retained_pool) || 0;
+
+            let targetBonusTier2 = 0;
+            if (profitSharingPool > 0 && totalEmpGp > 0 && empGp > 0) {
+                targetBonusTier2 = Math.round(profitSharingPool * (empGp / totalEmpGp));
+            }
+
+            const grandBonus = retainedTier1 + targetBonusTier2;
+            totalRetainedAll += retainedTier1;
+            totalGrandBonusAll += grandBonus;
+
+            return {
+                employee_id: r.employee_id,
+                emp_code: r.emp_code,
+                full_name: r.full_name,
+                position: r.position,
+                dept_name: r.dept_name,
+                retention_rate: parseFloat(r.retention_rate),
+                employee_gross_profit: empGp,
+                total_commission_earned: earned,
+                total_commission_paid: paid,
+                retained_pool_tier1: retainedTier1,
+                target_bonus_tier2: targetBonusTier2,
+                grand_year_end_bonus: grandBonus
+            };
+        });
+
+        res.json({
+            success: true,
+            year,
+            policy,
+            company_metrics: {
+                actual_revenue: actualRevenue,
+                actual_gross_profit: actualGrossProfit,
+                target_gross_profit: targetGp,
+                is_target_achieved: actualGrossProfit >= targetGp && targetGp > 0,
+                excess_gross_profit: excessGp,
+                profit_sharing_percent: sharingPct,
+                profit_sharing_pool: profitSharingPool,
+                total_retained_pool: totalRetainedAll,
+                grand_total_bonus_pool: totalGrandBonusAll
+            },
+            employees
+        });
+    } catch (err) {
+        console.error('Lỗi lấy báo cáo thưởng cuối năm:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. Cập nhật Chỉ Tiêu Lợi Nhuận Gộp Năm & % Thưởng Vượt Target (Dành cho Giám Đốc)
+router.put('/year-end/:year/target', async (req, res) => {
+    try {
+        const year = parseInt(req.params.year, 10);
+        const { target_gross_profit, profit_sharing_percent, notes } = req.body;
+
+        const result = await pool.query(`
+            INSERT INTO year_end_bonus_policies (year, target_gross_profit, profit_sharing_percent, notes, updated_at)
+            VALUES ($1, $2, $3, $4, NOW())
+            ON CONFLICT (year) DO UPDATE SET
+                target_gross_profit = EXCLUDED.target_gross_profit,
+                profit_sharing_percent = EXCLUDED.profit_sharing_percent,
+                notes = COALESCE(EXCLUDED.notes, year_end_bonus_policies.notes),
+                updated_at = NOW()
+            RETURNING *
+        `, [
+            year,
+            parseFloat(target_gross_profit) || 0,
+            parseFloat(profit_sharing_percent) || 0,
+            notes || ''
+        ]);
+
+        res.json({ success: true, message: `✅ Đã lưu cấu hình chỉ tiêu thưởng năm ${year}!`, data: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. Duyệt Chi Quỹ Thưởng Tết Năm (Hạch toán Sổ Quỹ & Chi phí Doanh nghiệp)
+router.post('/year-end/:year/payout', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const year = parseInt(req.params.year, 10);
+        const { approved_by = 'BAN_GIAM_DOC' } = req.body;
+
+        const polRes = await client.query("SELECT * FROM year_end_bonus_policies WHERE year = $1", [year]);
+        if (polRes.rows.length === 0) throw new Error("Chưa có chính sách thưởng năm " + year);
+        const pol = polRes.rows[0];
+
+        if (pol.status === 'PAID') {
+            return res.json({ success: true, message: `Quỹ thưởng Tết năm ${year} đã được duyệt chi từ trước!` });
+        }
+
+        // Lấy tổng số tiền thưởng năm từ các kỳ lương
+        const retainedRes = await client.query(`
+            SELECT COALESCE(SUM(pi.commission_retained), 0) AS total_retained
+            FROM payroll_items pi
+            JOIN payrolls p ON pi.payroll_id = p.id
+            WHERE p.period_key LIKE $1
+        `, [`${year}-%`]);
+        const totalRetained = parseFloat(retainedRes.rows[0]?.total_retained) || 0;
+
+        // Tính thưởng vượt target
+        const compActualRes = await client.query(`
+            SELECT COALESCE(SUM(COALESCE(NULLIF(regexp_replace(gross_profit::text, '[^0-9.-]', '', 'g'), '')::numeric, 0)), 0) AS actual_gp
+            FROM orders
+            WHERE status IN ('SHIPPED', 'COMPLETED')
+              AND EXTRACT(YEAR FROM COALESCE(dispatched_at, created_at)) = $1
+        `, [year]);
+        const actualGp = parseFloat(compActualRes.rows[0]?.actual_gp) || 0;
+        const targetGp = parseFloat(pol.target_gross_profit) || 0;
+        const excessGp = Math.max(0, actualGp - targetGp);
+        const profitSharingPool = Math.round(excessGp * (parseFloat(pol.profit_sharing_percent || 10) / 100));
+
+        const grandPayout = totalRetained + profitSharingPool;
+
+        await client.query(`
+            UPDATE year_end_bonus_policies SET
+                status = 'PAID',
+                updated_at = NOW()
+            WHERE year = $1
+        `, [year]);
+
+        const cashCode = 'PC-THUONG-TET-' + year;
+        await client.query(`
+            INSERT INTO cash_transactions (code, type, target_name, amount, notes)
+            VALUES ($1, 'CHI', $2, $3, $4)
+        `, [
+            cashCode, 'Toàn thể Cán bộ Nhân viên', grandPayout,
+            `Chi trả Quỹ Thưởng Tết & Thưởng Vượt Target năm ${year} (Cục 1 Tích lũy: ${totalRetained.toLocaleString('vi-VN')}đ + Cục 2 Thưởng Vượt: ${profitSharingPool.toLocaleString('vi-VN')}đ)`
+        ]);
+
+        await client.query(`
+            INSERT INTO expenses (
+                expense_date, category, description, vendor_name, amount_before_tax, total_amount
+            ) VALUES 
+            (CURRENT_DATE, 'LƯƠNG & NHÂN SỰ', $1, 'SUNGO ERP Bonus Hub', $2, $2)
+        `, [
+            `Chi phí Quỹ Thưởng Tết & Thưởng Vượt Target năm ${year}`, grandPayout
+        ]);
+
+        await client.query('COMMIT');
+        res.json({
+            success: true,
+            message: `✅ Đã duyệt chi Quỹ Thưởng Tết năm ${year} thành công! Đã hạch toán ${grandPayout.toLocaleString('vi-VN')} đ vào Sổ Quỹ.`,
+            cashCode
+        });
+    } catch (err) {
+        await client.query('ROLLBACK');
         res.status(500).json({ success: false, error: err.message });
     } finally {
         client.release();

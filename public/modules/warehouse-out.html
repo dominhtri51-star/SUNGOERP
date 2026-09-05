@@ -1,7 +1,6 @@
-<div class="min-h-full flex flex-col bg-slate-50 relative text-sm pb-12" id="wms-out-container">
+<div class="w-full min-h-full flex flex-col bg-slate-50 relative text-sm pb-28 md:pb-8" id="wms-out-container">
     <style>
-        #wms-out-container { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
-        .wms-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
+        .wms-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -9,7 +8,7 @@
     </style>
     
     <!-- MÀN HÌNH 1: BẢNG DANH SÁCH LỆNH XUẤT -->
-    <div id="wms-list" class="wms-scroll flex-1 flex flex-col p-3 sm:p-6 w-full h-full space-y-3">
+    <div id="wms-list" class="flex-1 flex flex-col p-3 sm:p-6 w-full space-y-3">
         
         <!-- HEADER TRANG -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shrink-0">
@@ -24,8 +23,8 @@
             </button>
         </div>
 
-        <!-- THANH THỐNG KÊ KPI HOA HỒNG XUẤT KHO -->
-        <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-2xl p-3 sm:p-4 text-white shadow-md border border-purple-800/40">
+        <!-- THANH THỐNG KÊ KPI HOA HỒNG XUẤT KHO (CHỈ GIÁM ĐỐC / ADMIN) -->
+        <div id="wms-kpi-stats-card" class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-2xl p-3 sm:p-4 text-white shadow-md border border-purple-800/40 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300 text-lg shrink-0">
@@ -77,9 +76,9 @@
         </div>
 
         <!-- CONTAINER BẢNG / CARDS -->
-        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex flex-col overflow-hidden flex-1 mb-6">
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex flex-col mb-6">
             
-            <div class="p-3 sm:p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/70 shrink-0 gap-2">
+            <div class="p-3 sm:p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/70 shrink-0 gap-2 rounded-t-2xl">
                 <div class="relative flex-1 max-w-md">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <i class="fas fa-search text-xs"></i>
@@ -92,7 +91,7 @@
             </div>
 
             <!-- DESKTOP TABLE -->
-            <div class="hidden md:block overflow-x-auto wms-scroll h-full">
+            <div class="hidden md:block overflow-x-auto rounded-b-2xl">
                 <table class="w-full text-left whitespace-nowrap">
                     <thead class="bg-[#f8f9fa] text-slate-500 text-[10px] uppercase font-bold tracking-wider sticky top-0 z-10 shadow-2xs">
                         <tr>
@@ -100,7 +99,7 @@
                             <th class="p-4 py-3">Khách Hàng / Nhận Hộ</th>
                             <th class="p-4 py-3">Danh Sách Hàng Hóa</th>
                             <th class="p-4 py-3">Thông tin Chành xe</th>
-                            <th class="p-4 py-3">NV Xuất & KPI</th>
+                            <th class="p-4 py-3" id="wms-th-staff">NV Xuất & KPI</th>
                             <th class="p-4 py-3 text-center">Trạng Thái & Thao Tác</th>
                         </tr>
                     </thead>
@@ -109,13 +108,13 @@
             </div>
 
             <!-- MOBILE SMART CARDS -->
-            <div id="wms-out-mobile-cards" class="md:hidden p-3 space-y-2.5 bg-slate-100/50 min-h-[150px]"></div>
+            <div id="wms-out-mobile-cards" class="md:hidden p-3 space-y-2.5 bg-slate-100/50 min-h-[150px] rounded-b-2xl"></div>
 
         </div>
     </div>
 
     <!-- MÀN HÌNH 2: CHI TIẾT ĐÓNG GÓI & XUẤT KHO -->
-    <div id="wms-detail" class="absolute inset-0 bg-slate-50 z-20 flex flex-col hidden overflow-hidden transition-all duration-300 transform translate-x-full">
+    <div id="wms-detail" class="fixed inset-0 bg-slate-50 z-50 flex flex-col hidden overflow-hidden transition-all duration-300">
         
         <!-- HEADER TOP ACTION BAR -->
         <div class="bg-white border-b border-slate-200 px-3 sm:px-4 pb-3 sm:pb-4 pt-safe flex justify-between items-center shadow-2xs shrink-0 gap-2 flex-wrap sm:flex-nowrap">
@@ -140,7 +139,7 @@
             </div>
         </div>
 
-        <div class="flex-1 wms-scroll p-3 sm:p-6 pb-24">
+        <div class="flex-1 overflow-y-auto p-3 sm:p-6 pb-28" style="-webkit-overflow-scrolling: touch;">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto">
                 
                 <!-- CỘT TRÁI: DANH SÁCH VẬT TƯ -->
@@ -192,7 +191,7 @@
                     <!-- KHU VỰC GÁN NHÂN VIÊN XUẤT KHO & HOA HỒNG KPI -->
                     <div class="bg-purple-50/70 rounded-2xl shadow-2xs border border-purple-200/80 p-4 sm:p-5 space-y-2.5">
                         <div class="flex items-center justify-between pb-2 border-b border-purple-200/60">
-                            <h3 class="font-black text-purple-900 text-xs sm:text-sm flex items-center gap-2">
+                            <h3 class="font-black text-purple-900 text-xs sm:text-sm flex items-center gap-2" id="wms-detail-staff-title">
                                 <i class="fas fa-user-check text-purple-600"></i> NHÂN SỰ XUẤT KHO & HOA HỒNG
                             </h3>
                             <span class="text-[9px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md font-bold border border-purple-200" id="wms-badge-kpi-rate">+20.000 đ/đơn</span>
@@ -202,7 +201,7 @@
                             <select id="wms-dispatched-by" class="w-full border border-purple-300 bg-white rounded-xl p-2.5 outline-none focus:border-purple-500 font-bold text-slate-800 shadow-2xs text-xs">
                                 <option value="">-- Đang nạp danh sách nhân sự kho --</option>
                             </select>
-                            <p class="text-[10px] text-purple-700/80 mt-1">Đơn hàng sau khi xuất kho hoàn tất sẽ được ghi nhận KPI hoa hồng và kết chuyển trực tiếp vào bảng lương của nhân viên này.</p>
+                            <p class="text-[10px] text-purple-700/80 mt-1" id="wms-detail-staff-desc">Đơn hàng sau khi xuất kho hoàn tất sẽ được ghi nhận KPI hoa hồng và kết chuyển trực tiếp vào bảng lương của nhân viên này.</p>
                         </div>
                     </div>
 
@@ -423,10 +422,52 @@ window.modWmsOut = {
         return clean ? parseFloat(clean) : 0;
     },
 
+    isDirectorOrAdmin: () => {
+        try {
+            const uStr = localStorage.getItem('sungo_user') || localStorage.getItem('currentUser') || sessionStorage.getItem('sungo_user');
+            const u = uStr ? JSON.parse(uStr) : {};
+            const r = String(u.role || '').toUpperCase().trim();
+            return ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'GIÁM ĐỐC', 'QUẢN TRỊ VIÊN', 'DIRECTOR', 'TONG_GIAM_DOC'].includes(r);
+        } catch(e) { return false; }
+    },
+
+    updateRoleUi: () => {
+        const isDirector = window.modWmsOut.isDirectorOrAdmin();
+        const kpiCard = document.getElementById('wms-kpi-stats-card');
+        const thStaff = document.getElementById('wms-th-staff');
+        const detailTitle = document.getElementById('wms-detail-staff-title');
+        const badgeKpi = document.getElementById('wms-badge-kpi-rate');
+        const detailDesc = document.getElementById('wms-detail-staff-desc');
+
+        if (kpiCard) {
+            if (isDirector) kpiCard.classList.remove('hidden');
+            else kpiCard.classList.add('hidden');
+        }
+        if (thStaff) {
+            thStaff.innerText = isDirector ? 'NV Xuất & KPI' : 'NV Phụ Trách Xuất';
+        }
+        if (detailTitle) {
+            detailTitle.innerHTML = isDirector ? 
+                '<i class="fas fa-user-check text-purple-600"></i> NHÂN SỰ XUẤT KHO & HOA HỒNG' :
+                '<i class="fas fa-user-check text-purple-600"></i> NHÂN SỰ XUẤT KHO';
+        }
+        if (badgeKpi) {
+            badgeKpi.style.display = isDirector ? '' : 'none';
+        }
+        if (detailDesc) {
+            detailDesc.innerText = isDirector ?
+                'Đơn hàng sau khi xuất kho hoàn tất sẽ được ghi nhận KPI hoa hồng và kết chuyển trực tiếp vào bảng lương của nhân viên này.' :
+                'Đơn hàng sau khi xuất kho hoàn tất sẽ được ghi nhận cho nhân viên phụ trách xuất kho này.';
+        }
+    },
+
     init: () => { 
+        window.modWmsOut.updateRoleUi();
         window.modWmsOut.loadData(); 
         window.modWmsOut.loadWarehouseEmployees();
-        window.modWmsOut.loadKpiStats();
+        if (window.modWmsOut.isDirectorOrAdmin()) {
+            window.modWmsOut.loadKpiStats();
+        }
     },
 
     loadWarehouseEmployees: async () => {
@@ -464,6 +505,7 @@ window.modWmsOut = {
     },
 
     loadKpiStats: async () => {
+        if (!window.modWmsOut.isDirectorOrAdmin()) return;
         try {
             const now = new Date();
             const pKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -530,6 +572,10 @@ window.modWmsOut = {
     },
 
     openKpiPolicyModal: async () => {
+        if (!window.modWmsOut.isDirectorOrAdmin()) {
+            alert('Chỉ Ban Giám Đốc hoặc Quản Trị Viên mới có quyền xem và cấu hình chính sách KPI.');
+            return;
+        }
         try {
             const res = await fetch('/api/warehouse-kpi/policy?t=' + Date.now());
             const data = await res.json();
@@ -700,14 +746,16 @@ window.modWmsOut = {
                     quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'SHIPPED')" class="mt-1 text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg shadow-2xs transition cursor-pointer">👉 ĐÃ GIAO XE</button>`;
                 }
 
+                const isDirector = window.modWmsOut.isDirectorOrAdmin();
                 const whComm = parseFloat(o.warehouse_commission) || (window.modWmsOut.currentPolicy?.rate_per_order || 20000);
                 const whStaffCol = o.dispatched_by_name ? `
                     <p class="font-bold text-slate-800 text-xs flex items-center gap-1">
                         <i class="fas fa-user-check text-purple-600 text-[10px]"></i> <span>${o.dispatched_by_name}</span>
                     </p>
+                    ${isDirector ? `
                     <span class="text-[10px] text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded-md font-black inline-block mt-0.5">
                         +${whComm.toLocaleString('vi-VN')} đ
-                    </span>
+                    </span>` : ''}
                 ` : '<span class="text-[11px] text-slate-400 italic">Tự động / Chưa gán</span>';
 
                 return '<tr class="hover:bg-orange-50/60 cursor-pointer transition border-b border-slate-50" onclick="window.modWmsOut.openDetail(' + o.id + ')">' +
@@ -716,7 +764,7 @@ window.modWmsOut = {
                     '<td class="p-4 py-3 bg-slate-50/40 min-w-[200px] max-w-[300px] whitespace-normal border-l border-r border-slate-100">' + itemsHtml + '</td>' +
                     '<td class="p-4 py-3 text-xs text-slate-700 font-medium whitespace-normal max-w-[200px]">' + 
                         (o.delivery_company ? '<strong class="text-emerald-700"><i class="fas fa-truck mr-1"></i>' + o.delivery_company + '</strong>' : '<span class="text-slate-400 italic">Chưa có chành xe</span>') + 
-                        (o.carrier_address ? '<br><span class="text-[10px] text-amber-700 font-bold"><i class="fas fa-map-marker-alt mr-1 text-amber-600"></i>' + o.carrier_address + '</span>' : '') +
+                        (o.carrier_address ? '<br><span class="text-[10px] text-amber-700 font-bold"><i class="fas fa-map-marker-alt mr-1 text-amber-600"></i>' + o.carrier_address + '</span>' : '') + 
                         (o.driver_name ? '<br><span class="text-[10px] text-slate-500 font-bold"><i class="fas fa-phone-alt mr-1 text-slate-400"></i>' + o.driver_name + '</span>' : '') + 
                     '</td>' +
                     '<td class="p-4 py-3">' + whStaffCol + '</td>' +
@@ -746,13 +794,14 @@ window.modWmsOut = {
                     quickActionBtn = `<button onclick="event.stopPropagation(); window.modWmsOut.fastUpdateStatus(${o.id}, 'SHIPPED')" class="text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl shadow-2xs transition cursor-pointer">👉 ĐÃ GIAO XE</button>`;
                 }
 
+                const isDirector = window.modWmsOut.isDirectorOrAdmin();
                 const whComm = parseFloat(o.warehouse_commission) || (window.modWmsOut.currentPolicy?.rate_per_order || 20000);
                 const whStaffMobile = `
-                    <div class="flex justify-between items-center text-[10px] bg-purple-50/70 border border-purple-100 px-2.5 py-1 rounded-xl">
-                        <span class="text-purple-900 font-bold flex items-center gap-1">
-                            <i class="fas fa-user-check text-purple-600"></i> ${o.dispatched_by_name || 'Thủ kho xử lý'}
+                    <div class="flex justify-between items-center text-[10px] ${isDirector ? 'bg-purple-50/70 border-purple-100' : 'bg-slate-100 border-slate-200'} border px-2.5 py-1 rounded-xl">
+                        <span class="${isDirector ? 'text-purple-900' : 'text-slate-700'} font-bold flex items-center gap-1">
+                            <i class="fas fa-user-check ${isDirector ? 'text-purple-600' : 'text-slate-500'}"></i> ${o.dispatched_by_name || 'Thủ kho xử lý'}
                         </span>
-                        <span class="font-black text-purple-700 font-mono">+${whComm.toLocaleString('vi-VN')} đ</span>
+                        ${isDirector ? `<span class="font-black text-purple-700 font-mono">+${whComm.toLocaleString('vi-VN')} đ</span>` : ''}
                     </div>
                 `;
 
@@ -939,8 +988,9 @@ window.modWmsOut = {
                 try { window.modWmsOut.currentProofs = o.delivery_proofs ? JSON.parse(o.delivery_proofs) : []; } catch(e) { window.modWmsOut.currentProofs = []; }
                 window.modWmsOut.renderProofs();
 
+                window.modWmsOut.updateRoleUi();
                 document.getElementById('wms-list').classList.add('hidden');
-                document.getElementById('wms-detail').classList.remove('hidden', 'translate-x-full');
+                document.getElementById('wms-detail').classList.remove('hidden');
             }
         } catch(e) { alert("Lỗi tải chi tiết!"); }
     },
@@ -1209,7 +1259,7 @@ window.modWmsOut = {
     },
 
     showList: () => {
-        document.getElementById('wms-detail').classList.add('translate-x-full');
+        document.getElementById('wms-detail').classList.add('hidden');
         document.getElementById('wms-list').classList.remove('hidden');
     }
 };

@@ -1,5 +1,5 @@
 <div class="w-full min-h-full flex flex-col space-y-4 font-sans relative pb-28 md:pb-6">
-    <!-- HEADER & THANH CÔNG CỤ -->
+    <!-- HEADER & THANH ĐIỀU HƯỚNG TỔNG QUAN -->
     <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3.5 sm:p-5 shrink-0 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
         <div>
             <div class="flex items-center gap-2.5">
@@ -8,127 +8,297 @@
                 </span>
                 <div>
                     <h2 class="text-base sm:text-xl font-black text-slate-900 flex items-center gap-2">
-                        BẢNG LƯƠNG & CHẤM CÔNG THÁNG
-                        <span class="text-[9.5px] bg-emerald-100 text-emerald-800 font-black px-2 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wide">Payroll Hub</span>
+                        BẢNG LƯƠNG & QUỸ THƯỞNG TẾT
+                        <span class="text-[9.5px] bg-emerald-100 text-emerald-800 font-black px-2 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wide">Chi Phí Biến Đổi</span>
                     </h2>
-                    <p class="text-xs text-slate-500 font-medium mt-0.5">Tự động tổng hợp ngày công, lương cơ bản, hoa hồng bán hàng, trích BHXH và hạch toán Sổ Quỹ.</p>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">Cơ chế hoa hồng 70/30 tích lũy quỹ Tết, gắn chặt với Lợi Nhuận Gộp (LNG) và thưởng chia sẻ lợi nhuận vượt chỉ tiêu.</p>
                 </div>
             </div>
         </div>
 
-        <div class="w-full lg:w-auto flex flex-wrap items-center justify-between lg:justify-end gap-2">
-            <!-- Chọn kỳ lương -->
-            <div class="flex items-center gap-1 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-                <span class="text-[11px] font-bold text-slate-500 px-1.5"><i class="fas fa-calendar-alt text-emerald-600 mr-1"></i> Kỳ:</span>
-                <input type="month" id="payroll-period-picker" onchange="window.modPayroll.changePeriod()" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-black text-slate-800 outline-none focus:border-emerald-500">
-            </div>
-
-            <button onclick="window.modPayroll.generatePayroll()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-magic"></i> <span>Tính Lại</span>
+        <!-- TAB NAVIGATION (HÀNG THÁNG vs THƯỞNG CUỐI NĂM) -->
+        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button onclick="window.modPayroll.switchTab('monthly')" id="tab-btn-monthly" class="px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 bg-white text-emerald-700 shadow-xs cursor-pointer">
+                <i class="fas fa-calendar-check text-emerald-600"></i>
+                <span>Bảng Lương Tháng (70/30)</span>
             </button>
-
-            <button onclick="window.modPayroll.approvePayroll()" id="btn-approve-payroll" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-95 text-white font-black py-1.5 px-3.5 rounded-xl text-xs transition shadow-md flex items-center gap-1.5 uppercase tracking-wide cursor-pointer">
-                <i class="fas fa-check-double"></i> <span>Duyệt Chi</span>
-            </button>
-
-            <button onclick="window.modPayroll.exportExcel()" class="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer" title="Xuất file Excel">
-                <i class="fas fa-file-excel text-emerald-400"></i> <span class="hidden sm:inline">Excel</span>
+            <button onclick="window.modPayroll.switchTab('yearend')" id="tab-btn-yearend" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer">
+                <i class="fas fa-gifts text-amber-500"></i>
+                <span>Quỹ Thưởng Cuối Năm & Tết</span>
             </button>
         </div>
     </div>
 
-    <!-- THẺ TỔNG HỢP QUỸ LƯƠNG & BẢO HIỂM -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 shrink-0">
-        <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shrink-0">
-                <i class="fas fa-money-bill-wave"></i>
-            </div>
-            <div class="min-w-0">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Tổng Gross</p>
-                <h3 class="text-sm sm:text-lg font-black text-slate-800 truncate" id="pay-stat-gross">0 đ</h3>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black shrink-0">
-                <i class="fas fa-percentage"></i>
-            </div>
-            <div class="min-w-0">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Tổng Hoa Hồng</p>
-                <h3 class="text-sm sm:text-lg font-black text-amber-600 truncate" id="pay-stat-comm">0 đ</h3>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-black shrink-0">
-                <i class="fas fa-shield-alt"></i>
-            </div>
-            <div class="min-w-0">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">BH Công Ty (23.5%)</p>
-                <h3 class="text-sm sm:text-lg font-black text-purple-700 truncate" id="pay-stat-ins-comp">0 đ</h3>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-black shrink-0">
-                <i class="fas fa-hand-holding-usd"></i>
-            </div>
-            <div class="min-w-0">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Thực Lĩnh Net</p>
-                <h3 class="text-sm sm:text-xl font-black text-emerald-700 truncate" id="pay-stat-net">0 đ</h3>
-            </div>
-        </div>
-    </div>
-
-    <!-- BẢNG CHI TIẾT BẢNG LƯƠNG TỪNG NHÂN VIÊN -->
-    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex-1 flex flex-col overflow-hidden">
-        <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+    <!-- ========================================================================= -->
+    <!-- VIEW 1: BẢNG LƯƠNG HÀNG THÁNG (70% THỰC NHẬN - 30% TÍCH LŨY QUỸ TẾT)       -->
+    <!-- ========================================================================= -->
+    <div id="view-monthly-payroll" class="space-y-4">
+        <!-- THANH CÔNG CỤ THÁNG -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
-                <span class="text-xs font-black uppercase tracking-wider text-slate-700">Phiếu Lương Nhân Viên</span>
-                <span id="pay-status-badge" class="px-2 py-0.5 rounded-full text-[9.5px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase">DRAFT</span>
+                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <span class="text-[11px] font-bold text-slate-500 px-1.5"><i class="fas fa-calendar-alt text-emerald-600 mr-1"></i> Kỳ Lương:</span>
+                    <input type="month" id="payroll-period-picker" onchange="window.modPayroll.changePeriod()" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-black text-slate-800 outline-none focus:border-emerald-500 cursor-pointer">
+                </div>
+                <span id="pay-status-badge" class="px-2.5 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase">DRAFT</span>
             </div>
-            <p class="text-[11px] text-slate-400 font-medium hidden sm:block">Chuẩn công: <b>26 ngày</b> | Giờ làm việc: 8h/ngày</p>
+
+            <div class="flex items-center gap-2">
+                <button onclick="window.modPayroll.generatePayroll()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-magic"></i> <span>Tính Lại</span>
+                </button>
+
+                <button onclick="window.modPayroll.approvePayroll()" id="btn-approve-payroll" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-95 text-white font-black py-1.5 px-3.5 rounded-xl text-xs transition shadow-md flex items-center gap-1.5 uppercase tracking-wide cursor-pointer">
+                    <i class="fas fa-check-double"></i> <span>Duyệt Chi</span>
+                </button>
+
+                <button onclick="window.modPayroll.exportExcel()" class="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer" title="Xuất file Excel">
+                    <i class="fas fa-file-excel text-emerald-400"></i> <span class="hidden sm:inline">Excel</span>
+                </button>
+            </div>
         </div>
 
-        <!-- 1. Desktop Table View -->
-        <div class="hidden md:block overflow-x-auto">
-            <table class="w-full text-left whitespace-nowrap text-xs" id="payroll-table">
-                <thead class="bg-slate-100/80 text-slate-600 text-[10px] uppercase font-black tracking-wider border-b border-slate-200 sticky top-0 z-10">
-                    <tr>
-                        <th class="p-3 pl-4">Mã NV</th>
-                        <th class="p-3">Họ Tên & Chức Vụ</th>
-                        <th class="p-3 text-center">Ngày Công</th>
-                        <th class="p-3 text-right">Lương Cơ Bản</th>
-                        <th class="p-3 text-right">Lương Theo Công</th>
-                        <th class="p-3 text-right">Phụ Cấp</th>
-                        <th class="p-3 text-right">Hoa Hồng</th>
-                        <th class="p-3 text-right">Thưởng / Phạt</th>
-                        <th class="p-3 text-right text-blue-700">Tổng Gross</th>
-                        <th class="p-3 text-right text-purple-700">Trừ BH (10.5%)</th>
-                        <th class="p-3 text-right text-amber-700">Tạm Ứng</th>
-                        <th class="p-3 text-right text-emerald-700 font-black">Thực Lĩnh (Net)</th>
-                        <th class="p-3 text-right text-slate-400">BH Công Ty (23.5%)</th>
-                        <th class="p-3 text-center pr-4">Thao Tác</th>
-                    </tr>
-                </thead>
-                <tbody id="payroll-tbody" class="divide-y divide-slate-100 text-xs">
-                    <tr>
-                        <td colspan="14" class="p-8 text-center text-slate-400 font-bold">
-                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                            <p>Đang nạp dữ liệu bảng lương...</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- THẺ TỔNG HỢP QUỸ LƯƠNG & BẢO HIỂM THÁNG -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 shrink-0">
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shrink-0">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Tổng Gross Tháng</p>
+                    <h3 class="text-sm sm:text-lg font-black text-slate-800 truncate" id="pay-stat-gross">0 đ</h3>
+                    <span class="text-[10px] text-slate-400">Đã gồm 70% hoa hồng</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black shrink-0">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Hoa Hồng Thực Trả (70%)</p>
+                    <h3 class="text-sm sm:text-lg font-black text-amber-600 truncate" id="pay-stat-comm">0 đ</h3>
+                    <span class="text-[10px] text-emerald-600 font-bold" id="pay-stat-comm-retained">Giữ 30%: 0 đ</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-black shrink-0">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">BH Công Ty (23.5%)</p>
+                    <h3 class="text-sm sm:text-lg font-black text-purple-700 truncate" id="pay-stat-ins-comp">0 đ</h3>
+                    <span class="text-[10px] text-slate-400">BHXH + BHYT + BHTN</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-black shrink-0">
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Thực Lĩnh Net Tháng</p>
+                    <h3 class="text-sm sm:text-xl font-black text-emerald-700 truncate" id="pay-stat-net">0 đ</h3>
+                    <span class="text-[10px] text-emerald-600 font-bold">Chuyển khoản nhân viên</span>
+                </div>
+            </div>
         </div>
 
-        <!-- 2. Mobile Smart Cards -->
-        <div id="payroll-mobile-cards" class="md:hidden p-2.5 space-y-2.5 bg-slate-50/50 pb-8">
+        <!-- BẢNG CHI TIẾT BẢNG LƯƠNG TỪNG NHÂN VIÊN -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex-1 flex flex-col overflow-hidden">
+            <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-700">Phiếu Lương Nhân Viên</span>
+                    <span class="text-[10px] bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200">
+                        <i class="fas fa-shield-alt mr-1"></i>Chính sách: Giữ lại 30% hoa hồng vào Quỹ Thưởng Tết
+                    </span>
+                </div>
+                <p class="text-[11px] text-slate-400 font-medium hidden sm:block">Chuẩn công: <b>26 ngày</b> | Giờ làm việc: 8h/ngày</p>
+            </div>
+
+            <!-- 1. Desktop Table View -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-left whitespace-nowrap text-xs" id="payroll-table">
+                    <thead class="bg-slate-100/80 text-slate-600 text-[10px] uppercase font-black tracking-wider border-b border-slate-200 sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 pl-4">Mã NV</th>
+                            <th class="p-3">Họ Tên & Chức Vụ</th>
+                            <th class="p-3 text-center">Ngày Công</th>
+                            <th class="p-3 text-right">Lương Cơ Bản</th>
+                            <th class="p-3 text-right">Lương Theo Công</th>
+                            <th class="p-3 text-right">Phụ Cấp</th>
+                            <th class="p-3 text-right">Hoa Hồng (70% & 30% Tết)</th>
+                            <th class="p-3 text-right">Thưởng / Phạt</th>
+                            <th class="p-3 text-right text-blue-700">Tổng Gross</th>
+                            <th class="p-3 text-right text-purple-700">Trừ BH (10.5%)</th>
+                            <th class="p-3 text-right text-amber-700">Tạm Ứng</th>
+                            <th class="p-3 text-right text-emerald-700 font-black">Thực Lĩnh (Net)</th>
+                            <th class="p-3 text-right text-slate-400">BH Công Ty (23.5%)</th>
+                            <th class="p-3 text-center pr-4">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payroll-tbody" class="divide-y divide-slate-100 text-xs">
+                        <tr>
+                            <td colspan="14" class="p-8 text-center text-slate-400 font-bold">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Đang nạp dữ liệu bảng lương...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 2. Mobile Smart Cards -->
+            <div id="payroll-mobile-cards" class="md:hidden p-2.5 space-y-2.5 bg-slate-50/50 pb-8">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 2: QUỸ THƯỞNG CUỐI NĂM & THƯỞNG TẾT (CỤC 1: 30% + CỤC 2: VƯỢT TARGET) -->
+    <!-- ========================================================================= -->
+    <div id="view-yearend-bonus" class="space-y-4 hidden">
+        <!-- THANH CÔNG CỤ NĂM -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                    <span class="text-xs font-black text-slate-600 px-1.5"><i class="fas fa-calendar text-amber-500 mr-1"></i> Năm Thưởng:</span>
+                    <select id="yearend-picker" onchange="window.modPayroll.loadYearEnd()" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-black text-slate-800 outline-none focus:border-amber-500 cursor-pointer">
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+                <span id="yearend-status-badge" class="px-3 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide">ACTIVE</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="window.modPayroll.openYearTargetModal()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-bold py-1.5 px-3.5 rounded-xl text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-bullseye"></i> <span>Cài Đặt Chỉ Tiêu LNG</span>
+                </button>
+
+                <button onclick="window.modPayroll.approveYearEndPayout()" id="btn-approve-yearend" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-95 text-white font-black py-1.5 px-4 rounded-xl text-xs transition shadow-md flex items-center gap-1.5 uppercase tracking-wide cursor-pointer">
+                    <i class="fas fa-hand-holding-usd"></i> <span>Duyệt Chi Quỹ Thưởng Tết</span>
+                </button>
+
+                <button onclick="window.modPayroll.exportYearEndExcel()" class="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer" title="Xuất file Excel Thưởng Tết">
+                    <i class="fas fa-file-excel text-emerald-400"></i> <span class="hidden sm:inline">Excel</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- THẺ TỔNG HỢP 4 CHỈ SỐ QUỸ THƯỞNG TẾT (2 CỤC) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
+            <!-- Card 1: Cục 1 (30% Tích lũy) -->
+            <div class="bg-white rounded-2xl p-4 border border-amber-200 shadow-2xs flex items-start gap-3.5 bg-gradient-to-br from-amber-50/40 to-white">
+                <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-black shrink-0 shadow-2xs">
+                    <i class="fas fa-piggy-bank"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] font-black text-amber-700 uppercase tracking-wider">CỤC 1: QUỸ TÍCH LŨY 30%</p>
+                    <h3 class="text-base sm:text-xl font-black text-amber-600 truncate mt-0.5" id="yearend-stat-retained">0 đ</h3>
+                    <p class="text-[10px] text-slate-500 mt-1 font-medium leading-tight">Hoàn 100% cho NV dịp Tết (Pre-funded, DN an toàn thanh khoản 0đ phát sinh).</p>
+                </div>
+            </div>
+
+            <!-- Card 2: Lợi Nhuận Gộp vs Chỉ Tiêu -->
+            <div class="bg-white rounded-2xl p-4 border border-blue-200 shadow-2xs flex items-start gap-3.5 bg-gradient-to-br from-blue-50/40 to-white">
+                <div class="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xl font-black shrink-0 shadow-2xs">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] font-black text-blue-700 uppercase tracking-wider">LNG YTD / MỤC TIÊU</p>
+                    <h3 class="text-base sm:text-lg font-black text-blue-800 truncate mt-0.5" id="yearend-stat-gp">0 đ / 0 đ</h3>
+                    <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden mt-1.5">
+                        <div id="yearend-gp-progress-bar" class="bg-blue-600 h-full rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                    <span class="text-[10px] text-blue-600 font-bold block mt-0.5" id="yearend-gp-progress-text">Đạt 0% chỉ tiêu</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Cục 2 (Thưởng Vượt Target) -->
+            <div class="bg-white rounded-2xl p-4 border border-purple-200 shadow-2xs flex items-start gap-3.5 bg-gradient-to-br from-purple-50/40 to-white">
+                <div class="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xl font-black shrink-0 shadow-2xs">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] font-black text-purple-700 uppercase tracking-wider">CỤC 2: QUỸ VƯỢT TARGET</p>
+                    <h3 class="text-base sm:text-xl font-black text-purple-700 truncate mt-0.5" id="yearend-stat-sharing">0 đ</h3>
+                    <p class="text-[10px] text-purple-600 mt-1 font-bold leading-tight" id="yearend-stat-sharing-desc">Trích 10% khi LNG vượt chỉ tiêu.</p>
+                </div>
+            </div>
+
+            <!-- Card 4: Tổng Thưởng Tết Toàn Cty -->
+            <div class="bg-white rounded-2xl p-4 border border-emerald-200 shadow-2xs flex items-start gap-3.5 bg-gradient-to-br from-emerald-50/40 to-white">
+                <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-black shrink-0 shadow-2xs">
+                    <i class="fas fa-gifts"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] font-black text-emerald-700 uppercase tracking-wider">TỔNG QUỸ THƯỞNG TẾT</p>
+                    <h3 class="text-base sm:text-xl font-black text-emerald-700 truncate mt-0.5" id="yearend-stat-total">0 đ</h3>
+                    <p class="text-[10px] text-emerald-800 font-bold mt-1 leading-tight">Cục 1 + Cục 2 trao tay nhân viên dịp Tết!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BANNER THÔNG BÁO & ĐỘNG LỰC TẾT -->
+        <div id="yearend-banner-info" class="p-3.5 rounded-2xl border text-xs font-bold flex items-center gap-3">
             <!-- Rendered by JS -->
         </div>
+
+        <!-- BẢNG BÁO CÁO THƯỞNG CUỐI NĂM TỪNG NHÂN SỰ -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 flex-1 flex flex-col overflow-hidden">
+            <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-800">Bảng Phân Bổ Thưởng Tết & Cuối Năm</span>
+                    <span class="text-[10px] bg-emerald-100 text-emerald-800 font-black px-2 py-0.5 rounded border border-emerald-200">
+                        100% Chi Phí Biến Đổi Theo Lợi Nhuận
+                    </span>
+                </div>
+                <p class="text-[11px] text-slate-400 font-medium hidden sm:block">Chi trả trước Tết Nguyên Đán</p>
+            </div>
+
+            <!-- Desktop View -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-left whitespace-nowrap text-xs" id="yearend-table">
+                    <thead class="bg-slate-100/80 text-slate-600 text-[10px] uppercase font-black tracking-wider border-b border-slate-200 sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 pl-4">Mã NV</th>
+                            <th class="p-3">Họ Tên & Phòng Ban</th>
+                            <th class="p-3 text-right text-blue-700">LNG Đem Về Cả Năm</th>
+                            <th class="p-3 text-right">Tổng Hoa Hồng (100%)</th>
+                            <th class="p-3 text-right text-slate-500">Đã Nhận (70%)</th>
+                            <th class="p-3 text-right text-amber-700 font-bold bg-amber-50/50">Cục 1: Quỹ Tích Lũy 30%</th>
+                            <th class="p-3 text-right text-purple-700 font-bold bg-purple-50/50">Cục 2: Thưởng Vượt Target</th>
+                            <th class="p-3 text-right text-emerald-700 font-black bg-emerald-50/70 text-sm">TỔNG THƯỞNG TẾT</th>
+                            <th class="p-3 text-center pr-4">Chi Tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yearend-tbody" class="divide-y divide-slate-100 text-xs">
+                        <tr>
+                            <td colspan="9" class="p-8 text-center text-slate-400 font-bold">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Đang tải dữ liệu quỹ thưởng cuối năm...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Smart Cards -->
+            <div id="yearend-mobile-cards" class="md:hidden p-2.5 space-y-2.5 bg-slate-50/50 pb-8">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
     </div>
 
-    <!-- MODAL SỬA PHIẾU LƯƠNG NHÂN VIÊN -->
+    <!-- ========================================================================= -->
+    <!-- MODALS                                                                    -->
+    <!-- ========================================================================= -->
+
+    <!-- MODAL 1: SỬA PHIẾU LƯƠNG NHÂN VIÊN THÁNG -->
     <div id="payslip-edit-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all border border-slate-200">
             <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 text-white flex items-center justify-between">
@@ -136,7 +306,7 @@
                     <i class="fas fa-edit text-emerald-400"></i>
                     <h3 class="font-black text-sm uppercase tracking-wide" id="payslip-modal-title">Chỉnh Sửa Phiếu Lương</h3>
                 </div>
-                <button onclick="window.modPayroll.closeEditModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+                <button onclick="window.modPayroll.closeEditModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-5 space-y-3 max-h-[70vh] overflow-y-auto">
                 <input type="hidden" id="edit-item-id">
@@ -186,13 +356,13 @@
                 </div>
             </div>
             <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end items-center gap-2">
-                <button onclick="window.modPayroll.closeEditModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Hủy</button>
-                <button onclick="window.modPayroll.saveItem()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase">Lưu Cập Nhật</button>
+                <button onclick="window.modPayroll.closeEditModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 cursor-pointer">Hủy</button>
+                <button onclick="window.modPayroll.saveItem()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase cursor-pointer">Lưu Cập Nhật</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL IN PHIẾU LƯƠNG CÁ NHÂN (PAYSLIP) -->
+    <!-- MODAL 2: IN / XEM PHIẾU LƯƠNG CÁ NHÂN (PAYSLIP) KÈM LŨY KẾ QUỸ TẾT 30% -->
     <div id="payslip-view-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200" id="payslip-print-content">
             <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-5 text-white flex justify-between items-start">
@@ -200,14 +370,78 @@
                     <h3 class="font-black text-base uppercase tracking-wider">PHIẾU LƯƠNG NHÂN VIÊN</h3>
                     <p class="text-xs text-emerald-100 mt-0.5" id="ps-period">Kỳ lương: ...</p>
                 </div>
-                <button onclick="window.modPayroll.closeViewModal()" class="text-emerald-100 hover:text-white"><i class="fas fa-times"></i></button>
+                <button onclick="window.modPayroll.closeViewModal()" class="text-emerald-100 hover:text-white cursor-pointer"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-6 space-y-4 text-xs" id="ps-body">
                 <!-- Dynamic Payslip details -->
             </div>
             <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-between items-center">
-                <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs"><i class="fas fa-print mr-1.5"></i> In Phiếu Lương</button>
-                <button onclick="window.modPayroll.closeViewModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Đóng</button>
+                <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs cursor-pointer"><i class="fas fa-print mr-1.5"></i> In Phiếu Lương</button>
+                <button onclick="window.modPayroll.closeViewModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 cursor-pointer">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: CẤU HÌNH CHỈ TIÊU LỢI NHUẬN GỘP & QUỸ THƯỞNG VƯỢT TARGET -->
+    <div id="yearend-target-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-amber-600 to-orange-600 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-bullseye text-amber-200"></i>
+                    <h3 class="font-black text-sm uppercase tracking-wide">Cài Đặt Chỉ Tiêu Lợi Nhuận Gộp Năm</h3>
+                </div>
+                <button onclick="window.modPayroll.closeYearTargetModal()" class="text-amber-100 hover:text-white cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block text-[11px] font-black text-slate-700 uppercase mb-1">Năm áp dụng</label>
+                    <input type="text" id="target-modal-year" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-700 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-black text-slate-700 uppercase mb-1">Mục tiêu Lợi Nhuận Gộp Công Ty (Target GP - VNĐ)</label>
+                    <input type="number" id="target-modal-gp" step="100000000" class="w-full border border-slate-200 rounded-xl p-2.5 font-black text-blue-700 text-sm focus:border-amber-500 outline-none" placeholder="VD: 10000000000 (10 Tỷ)">
+                    <p class="text-[10px] text-slate-400 mt-1" id="target-modal-gp-helper">10.000.000.000 đ</p>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-black text-slate-700 uppercase mb-1">Tỷ lệ trích thưởng khi vượt Target (%)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="target-modal-sharing-pct" step="1" min="0" max="50" class="w-28 border border-slate-200 rounded-xl p-2.5 font-black text-purple-700 text-sm focus:border-purple-500 outline-none" placeholder="10">
+                        <span class="font-bold text-slate-600">% phần LNG vượt mức</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Ví dụ: Nếu vượt 2 tỷ, trích 10% = 200 triệu chia vào Quỹ Thưởng Cục 2 cho toàn bộ nhân sự theo tỷ lệ đóng góp.</p>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-black text-slate-700 uppercase mb-1">Ghi chú nghị quyết Ban Giám Đốc</label>
+                    <textarea id="target-modal-notes" rows="2" class="w-full border border-slate-200 rounded-xl p-2 font-medium text-slate-700 focus:border-amber-500 outline-none" placeholder="Quy định thưởng Tết và chỉ tiêu năm..."></textarea>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end items-center gap-2">
+                <button onclick="window.modPayroll.closeYearTargetModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 cursor-pointer">Hủy</button>
+                <button onclick="window.modPayroll.saveYearTarget()" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black uppercase tracking-wide cursor-pointer shadow-sm">Lưu Cấu Hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: CHI TIẾT THƯỞNG TẾT TỪNG NHÂN SỰ -->
+    <div id="yearend-detail-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-amber-600 to-emerald-700 p-5 text-white flex justify-between items-start">
+                <div>
+                    <h3 class="font-black text-base uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-gift text-amber-200"></i> PHIẾU THƯỞNG TẾT & CUỐI NĂM
+                    </h3>
+                    <p class="text-xs text-amber-100 mt-0.5" id="yearend-detail-subtitle">Năm 2026</p>
+                </div>
+                <button onclick="window.modPayroll.closeYearDetailModal()" class="text-amber-100 hover:text-white cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4 text-xs" id="yearend-detail-body">
+                <!-- Injected by JS -->
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end items-center">
+                <button onclick="window.modPayroll.closeYearDetailModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 cursor-pointer">Đóng</button>
             </div>
         </div>
     </div>
@@ -215,15 +449,54 @@
 
 <script>
 window.modPayroll = {
+    currentTab: 'monthly',
     currentPeriod: new Date().toISOString().slice(0, 7), // 'YYYY-MM'
+    currentYear: new Date().getFullYear(),
     payrollData: null,
     items: [],
+    yearEndData: null,
 
     init: () => {
         document.getElementById('payroll-period-picker').value = window.modPayroll.currentPeriod;
+        document.getElementById('yearend-picker').value = window.modPayroll.currentYear;
+
+        // Listeners
+        const gpInput = document.getElementById('target-modal-gp');
+        if (gpInput) {
+            gpInput.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value) || 0;
+                document.getElementById('target-modal-gp-helper').innerText = val.toLocaleString('vi-VN') + ' đ';
+            });
+        }
+
         window.modPayroll.load();
     },
 
+    switchTab: (tab) => {
+        window.modPayroll.currentTab = tab;
+        const btnM = document.getElementById('tab-btn-monthly');
+        const btnY = document.getElementById('tab-btn-yearend');
+        const viewM = document.getElementById('view-monthly-payroll');
+        const viewY = document.getElementById('view-yearend-bonus');
+
+        if (tab === 'monthly') {
+            btnM.className = 'px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 bg-white text-emerald-700 shadow-xs cursor-pointer';
+            btnY.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer';
+            viewM.classList.remove('hidden');
+            viewY.classList.add('hidden');
+            window.modPayroll.load();
+        } else {
+            btnM.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer';
+            btnY.className = 'px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 bg-white text-amber-700 shadow-xs cursor-pointer';
+            viewM.classList.add('hidden');
+            viewY.classList.remove('hidden');
+            window.modPayroll.loadYearEnd();
+        }
+    },
+
+    // ==========================================
+    // TAB 1: BẢNG LƯƠNG HÀNG THÁNG
+    // ==========================================
     changePeriod: () => {
         window.modPayroll.currentPeriod = document.getElementById('payroll-period-picker').value;
         window.modPayroll.load();
@@ -244,26 +517,32 @@ window.modPayroll = {
 
                 const p = data.data;
                 document.getElementById('pay-stat-gross').innerText = (parseFloat(p.total_gross_salary) || 0).toLocaleString('vi-VN') + ' đ';
-                document.getElementById('pay-stat-comm').innerText = (parseFloat(p.total_commission) || 0).toLocaleString('vi-VN') + ' đ';
+                
+                const commPaid = window.modPayroll.items.reduce((s, it) => s + (parseFloat(it.commission_paid) || 0), 0);
+                const commRet = window.modPayroll.items.reduce((s, it) => s + (parseFloat(it.commission_retained) || 0), 0);
+
+                document.getElementById('pay-stat-comm').innerText = commPaid.toLocaleString('vi-VN') + ' đ';
+                document.getElementById('pay-stat-comm-retained').innerText = `Giữ 30% Tết: +${commRet.toLocaleString('vi-VN')} đ`;
                 document.getElementById('pay-stat-ins-comp').innerText = (parseFloat(p.total_insurance_comp) || 0).toLocaleString('vi-VN') + ' đ';
                 document.getElementById('pay-stat-net').innerText = (parseFloat(p.total_net_salary) || 0).toLocaleString('vi-VN') + ' đ';
 
                 const badge = document.getElementById('pay-status-badge');
                 if (p.status === 'PAID') {
-                    badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase';
+                    badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase';
                     badge.innerText = 'ĐÃ DUYỆT CHI & HẠCH TOÁN';
                     document.getElementById('btn-approve-payroll').classList.add('opacity-50', 'pointer-events-none');
                 } else {
-                    badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 uppercase';
+                    badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 uppercase';
                     badge.innerText = 'DỰ THẢO (DRAFT)';
                     document.getElementById('btn-approve-payroll').classList.remove('opacity-50', 'pointer-events-none');
                 }
 
                 window.modPayroll.renderItems();
             } else {
-                // Chưa có bảng lương cho tháng này -> hiển thị nút tạo
+                // Chưa có bảng lương cho tháng này
                 document.getElementById('pay-stat-gross').innerText = '0 đ';
                 document.getElementById('pay-stat-comm').innerText = '0 đ';
+                document.getElementById('pay-stat-comm-retained').innerText = 'Giữ 30%: 0 đ';
                 document.getElementById('pay-stat-ins-comp').innerText = '0 đ';
                 document.getElementById('pay-stat-net').innerText = '0 đ';
                 document.getElementById('pay-status-badge').innerText = 'CHƯA KHỞI TẠO';
@@ -274,14 +553,16 @@ window.modPayroll = {
                             <div class="max-w-sm mx-auto space-y-3">
                                 <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 mx-auto flex items-center justify-center text-xl"><i class="fas fa-calendar-plus"></i></div>
                                 <h4 class="font-black text-slate-800">Chưa Khởi Tạo Bảng Lương Tháng ${period}</h4>
-                                <p class="text-xs text-slate-500">Bấm nút bên dưới để hệ thống tự động tính ngày công, lương cơ bản và kéo hoa hồng bán hàng của tháng.</p>
-                                <button onclick="window.modPayroll.generatePayroll()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-2.5 px-5 rounded-xl text-xs transition shadow-md uppercase">
+                                <p class="text-xs text-slate-500">Bấm nút bên dưới để hệ thống tự động tính ngày công, lương cơ bản, tính hoa hồng 70/30 và trích lập Quỹ Thưởng Tết.</p>
+                                <button onclick="window.modPayroll.generatePayroll()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-2.5 px-5 rounded-xl text-xs transition shadow-md uppercase cursor-pointer">
                                     <i class="fas fa-magic mr-1.5"></i> Khởi Tạo Bảng Lương Tháng ${period}
                                 </button>
                             </div>
                         </td>
                     </tr>
                 `;
+                const mobContainer = document.getElementById('payroll-mobile-cards');
+                if (mobContainer) mobContainer.innerHTML = '';
             }
         } catch (err) {
             console.error('Lỗi tải bảng lương:', err);
@@ -292,7 +573,7 @@ window.modPayroll = {
     renderItems: () => {
         const tbody = document.getElementById('payroll-tbody');
         const mobContainer = document.getElementById('payroll-mobile-cards');
-        if (window.modPayroll.items.length === 0) {
+        if (!window.modPayroll.items || window.modPayroll.items.length === 0) {
             if (tbody) tbody.innerHTML = '<tr><td colspan="14" class="p-8 text-center text-slate-400 font-bold">Chưa có nhân viên nào trong bảng lương</td></tr>';
             if (mobContainer) mobContainer.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold text-xs">Chưa có nhân viên nào trong bảng lương</div>';
             return;
@@ -303,8 +584,10 @@ window.modPayroll = {
                 const allowances = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
                 const bonusPenalty = (parseFloat(item.bonus_amount) || 0) - (parseFloat(item.deduction_penalty) || 0);
                 const whComm = parseFloat(item.warehouse_commission) || 0;
-                const totalComm = parseFloat(item.total_commission) || 0;
-                const salesComm = Math.max(0, totalComm - whComm);
+                const commEarned = parseFloat(item.total_commission) || 0;
+                const commPaid = parseFloat(item.commission_paid) || 0;
+                const commRetained = parseFloat(item.commission_retained) || 0;
+                const cumRetained = parseFloat(item.cumulative_retained_bonus) || 0;
 
                 return `
                     <tr class="hover:bg-emerald-50/30 transition border-b border-slate-100">
@@ -318,16 +601,20 @@ window.modPayroll = {
                         <td class="p-3 text-right font-bold text-slate-800">${(parseFloat(item.salary_by_days) || 0).toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right text-slate-600">${allowances.toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right">
-                            ${whComm > 0 && salesComm > 0 ? `
-                                <div class="font-black text-amber-600">${totalComm.toLocaleString('vi-VN')} đ</div>
-                                <div class="text-[10px] text-amber-600 font-medium">💼 Sale: +${salesComm.toLocaleString('vi-VN')}đ</div>
-                                <div class="text-[10px] text-purple-700 font-bold font-mono"><i class="fas fa-boxes-packing mr-0.5"></i>Kho: +${whComm.toLocaleString('vi-VN')}đ</div>
-                            ` : whComm > 0 ? `
-                                <div class="font-black text-purple-700">+${whComm.toLocaleString('vi-VN')} đ</div>
-                                <div class="text-[10px] text-purple-600 font-bold font-mono"><i class="fas fa-boxes-packing mr-0.5"></i>KPI Xuất kho</div>
-                            ` : `
-                                <div class="font-black text-amber-600">${totalComm.toLocaleString('vi-VN')} đ</div>
-                            `}
+                            <div class="font-black text-amber-600">${commPaid.toLocaleString('vi-VN')} đ <span class="text-[9.5px] text-slate-400 font-normal">(70%)</span></div>
+                            ${commRetained > 0 ? `
+                                <div class="text-[10px] text-emerald-800 font-black bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5 inline-block">
+                                    🧧 Tết (30%): +${commRetained.toLocaleString('vi-VN')} đ
+                                </div>
+                            ` : ''}
+                            ${cumRetained > 0 ? `
+                                <div class="text-[9.5px] text-amber-800 font-bold mt-0.5">
+                                    ⭐ Lũy kế Tết: ${cumRetained.toLocaleString('vi-VN')} đ
+                                </div>
+                            ` : ''}
+                            ${whComm > 0 ? `
+                                <div class="text-[9.5px] text-purple-700 font-bold font-mono mt-0.5"><i class="fas fa-boxes-packing mr-0.5"></i>Kho: +${whComm.toLocaleString('vi-VN')}đ</div>
+                            ` : ''}
                         </td>
                         <td class="p-3 text-right font-medium ${bonusPenalty >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${bonusPenalty >= 0 ? '+' : ''}${bonusPenalty.toLocaleString('vi-VN')} đ</td>
                         <td class="p-3 text-right font-black text-blue-700">${(parseFloat(item.gross_income) || 0).toLocaleString('vi-VN')} đ</td>
@@ -350,10 +637,11 @@ window.modPayroll = {
 
         if (mobContainer) {
             mobContainer.innerHTML = window.modPayroll.items.map(item => {
-                const allowances = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
+                const commPaid = parseFloat(item.commission_paid) || 0;
+                const commRetained = parseFloat(item.commission_retained) || 0;
+                const cumRetained = parseFloat(item.cumulative_retained_bonus) || 0;
                 const whComm = parseFloat(item.warehouse_commission) || 0;
-                const totalComm = parseFloat(item.total_commission) || 0;
-                const salesComm = Math.max(0, totalComm - whComm);
+
                 return `
                 <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
                     <div class="flex items-center justify-between gap-2">
@@ -374,17 +662,16 @@ window.modPayroll = {
                             <b class="text-slate-700">${(parseFloat(item.base_salary) || 0).toLocaleString('vi-VN')} đ</b>
                         </div>
                         <div class="text-right">
-                            <span class="text-slate-400 block text-[10px]">Hoa hồng:</span>
-                            ${whComm > 0 && salesComm > 0 ? `
-                                <b class="text-amber-600">${totalComm.toLocaleString('vi-VN')} đ</b>
-                                <span class="text-[9px] text-amber-600 block">Sale: +${salesComm.toLocaleString('vi-VN')}đ</span>
-                                <span class="text-[9px] text-purple-700 font-bold block"><i class="fas fa-boxes-packing mr-0.5"></i>Kho: +${whComm.toLocaleString('vi-VN')}đ</span>
-                            ` : whComm > 0 ? `
-                                <b class="text-purple-700">+${whComm.toLocaleString('vi-VN')} đ</b>
-                                <span class="text-[9px] text-purple-600 font-bold block"><i class="fas fa-boxes-packing mr-0.5"></i>KPI Xuất kho</span>
-                            ` : `
-                                <b class="text-amber-600">${totalComm.toLocaleString('vi-VN')} đ</b>
-                            `}
+                            <span class="text-slate-400 block text-[10px]">Hoa hồng thực nhận (70%):</span>
+                            <b class="text-amber-600">${commPaid.toLocaleString('vi-VN')} đ</b>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Quỹ Tết giữ lại (30%):</span>
+                            <span class="text-emerald-700 font-bold">+${commRetained.toLocaleString('vi-VN')} đ</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 block text-[10px]">Lũy kế Quỹ Tết:</span>
+                            <b class="text-amber-700 font-black">${cumRetained.toLocaleString('vi-VN')} đ</b>
                         </div>
                         <div>
                             <span class="text-slate-400 block text-[10px]">Trừ BH (10.5%):</span>
@@ -524,8 +811,9 @@ window.modPayroll = {
         const totalAllowance = (parseFloat(item.allowance_meal) || 0) + (parseFloat(item.allowance_phone_gas) || 0) + (parseFloat(item.allowance_responsibility) || 0);
 
         const whComm = parseFloat(item.warehouse_commission) || 0;
-        const totalComm = parseFloat(item.total_commission) || 0;
-        const salesComm = Math.max(0, totalComm - whComm);
+        const commPaid = parseFloat(item.commission_paid) || 0;
+        const commRetained = parseFloat(item.commission_retained) || 0;
+        const cumRetained = parseFloat(item.cumulative_retained_bonus) || 0;
 
         document.getElementById('ps-body').innerHTML = `
             <div class="border-b border-slate-100 pb-3">
@@ -539,12 +827,31 @@ window.modPayroll = {
                 <div class="flex justify-between text-slate-600"><span>2. Ngày công làm việc:</span><span>${item.actual_working_days} / 26 ngày</span></div>
                 <div class="flex justify-between font-bold text-slate-700"><span>3. Lương theo ngày công:</span><span>${(parseFloat(item.salary_by_days) || 0).toLocaleString('vi-VN')} đ</span></div>
                 <div class="flex justify-between text-slate-600"><span>4. Phụ cấp (Ăn trưa, Xăng xe, Trách nhiệm):</span><span>${totalAllowance.toLocaleString('vi-VN')} đ</span></div>
+                
+                <!-- HOA HỒNG & QUỸ TẾT 30% -->
+                <div class="flex justify-between font-bold text-amber-600">
+                    <span>5a. Hoa hồng bán hàng thực nhận tháng này (70%):</span>
+                    <span>+${commPaid.toLocaleString('vi-VN')} đ</span>
+                </div>
+                ${commRetained > 0 ? `
+                    <div class="flex justify-between text-emerald-700 font-medium pl-3 text-[11px]">
+                        <span>• Trích Quỹ Thưởng Tết cuối năm (30%):</span>
+                        <span>+${commRetained.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                ` : ''}
+
+                <!-- LŨY KẾ QUỸ TẾT NỔI BẬT -->
+                <div class="p-2.5 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-200 space-y-1 my-1">
+                    <div class="flex justify-between items-center text-amber-900 font-black text-xs">
+                        <span><i class="fas fa-piggy-bank text-amber-600 mr-1.5"></i> ⭐ LŨY KẾ QUỸ THƯỞNG TẾT (30%):</span>
+                        <span class="text-sm text-emerald-700 font-black">+${cumRetained.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 font-medium italic">Khoản tiền thưởng Tết của bạn đang được công ty bảo toàn và hoàn trả 100% vào dịp Tết Nguyên Đán.</p>
+                </div>
+
                 ${whComm > 0 ? `
-                    ${salesComm > 0 ? `<div class="flex justify-between font-bold text-amber-600"><span>5a. Hoa hồng bán hàng & dự án:</span><span>+${salesComm.toLocaleString('vi-VN')} đ</span></div>` : ''}
-                    <div class="flex justify-between font-black text-purple-700 bg-purple-50 px-2 py-1 rounded"><span>5b. 📦 Hoa hồng KPI xử lý xuất kho (Đơn & % LNG):</span><span>+${whComm.toLocaleString('vi-VN')} đ</span></div>
-                ` : `
-                    <div class="flex justify-between font-black text-amber-600"><span>5. Hoa hồng bán hàng & dự án:</span><span>+${salesComm.toLocaleString('vi-VN')} đ</span></div>
-                `}
+                    <div class="flex justify-between font-black text-purple-700 bg-purple-50 px-2 py-1 rounded"><span>5b. 📦 Hoa hồng KPI xử lý xuất kho:</span><span>+${whComm.toLocaleString('vi-VN')} đ</span></div>
+                ` : ''}
                 <div class="flex justify-between text-emerald-600 font-bold"><span>6. Thưởng KPI Thu Nợ & Hiệu Quả:</span><span>+${(parseFloat(item.bonus_amount) || 0).toLocaleString('vi-VN')} đ</span></div>
                 <div class="flex justify-between font-black text-blue-700 pt-1.5 border-t border-slate-100 text-sm"><span>TỔNG THU NHẬP (GROSS):</span><span>${(parseFloat(item.gross_income) || 0).toLocaleString('vi-VN')} đ</span></div>
             </div>
@@ -582,6 +889,317 @@ window.modPayroll = {
         const table = document.getElementById('payroll-table');
         const wb = XLSX.utils.table_to_book(table, { sheet: "BangLuong" });
         XLSX.writeFile(wb, `BangLuong_SUNGO_${window.modPayroll.currentPeriod}.xlsx`);
+    },
+
+    // =========================================================================
+    // TAB 2: QUỸ THƯỞNG CUỐI NĂM & THƯỞNG TẾT (YEAR-END BONUS HUB)
+    // =========================================================================
+    loadYearEnd: async () => {
+        const year = document.getElementById('yearend-picker').value || window.modPayroll.currentYear;
+        window.modPayroll.currentYear = year;
+
+        const tbody = document.getElementById('yearend-tbody');
+        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Đang tổng hợp dữ liệu quỹ thưởng cuối năm ' + year + '...</p></td></tr>';
+
+        try {
+            const res = await fetch(`/api/payroll/year-end/${year}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.error || 'Lỗi server');
+
+            window.modPayroll.yearEndData = data;
+            const m = data.company_metrics;
+            const pol = data.policy;
+
+            // Update KPI Cards
+            document.getElementById('yearend-stat-retained').innerText = (m.total_retained_pool || 0).toLocaleString('vi-VN') + ' đ';
+            document.getElementById('yearend-stat-gp').innerText = `${(m.actual_gross_profit || 0).toLocaleString('vi-VN')} đ / ${(m.target_gross_profit || 0).toLocaleString('vi-VN')} đ`;
+            
+            const gpPct = m.target_gross_profit > 0 ? Math.min(100, Math.round((m.actual_gross_profit / m.target_gross_profit) * 100)) : 0;
+            document.getElementById('yearend-gp-progress-bar').style.width = `${gpPct}%`;
+            document.getElementById('yearend-gp-progress-text').innerText = `Đạt ${gpPct}% so với Target (${(m.actual_gross_profit || 0).toLocaleString('vi-VN')} đ)`;
+
+            document.getElementById('yearend-stat-sharing').innerText = (m.profit_sharing_pool || 0).toLocaleString('vi-VN') + ' đ';
+            document.getElementById('yearend-stat-sharing-desc').innerText = `Trích ${m.profit_sharing_percent}% phần vượt LNG để thưởng đại thắng.`;
+
+            document.getElementById('yearend-stat-total').innerText = (m.grand_total_bonus_pool || 0).toLocaleString('vi-VN') + ' đ';
+
+            // Status badge & banner
+            const badge = document.getElementById('yearend-status-badge');
+            const btnPayout = document.getElementById('btn-approve-yearend');
+            if (pol.status === 'PAID') {
+                badge.className = 'px-3 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-wide';
+                badge.innerText = 'ĐÃ DUYỆT CHI THƯỞNG TẾT';
+                btnPayout.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                badge.className = 'px-3 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 uppercase tracking-wide';
+                badge.innerText = 'ĐANG TÍCH LŨY (ACTIVE)';
+                btnPayout.classList.remove('opacity-50', 'pointer-events-none');
+            }
+
+            const banner = document.getElementById('yearend-banner-info');
+            if (m.is_target_achieved) {
+                banner.className = 'p-3.5 rounded-2xl border border-emerald-300 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold flex items-center gap-3 shadow-md';
+                banner.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl shrink-0"><i class="fas fa-fire"></i></div>
+                    <div class="flex-1">
+                        <div class="text-sm font-black uppercase tracking-wide">🎉 ĐẠI THẮNG! CÔNG TY ĐÃ VƯỢT CHỈ TIÊU LỢI NHUẬN GỘP NĂM ${year}!</div>
+                        <div class="text-emerald-100 text-[11px] font-medium mt-0.5">
+                            Phần vượt chỉ tiêu: <b>${(m.excess_gross_profit || 0).toLocaleString('vi-VN')} đ</b>. Quỹ Thưởng Vượt Target Cục 2 (<b>${(m.profit_sharing_pool || 0).toLocaleString('vi-VN')} đ</b>) sẽ được chia thưởng theo tỷ lệ đóng góp của từng anh em!
+                        </div>
+                    </div>
+                `;
+            } else {
+                banner.className = 'p-3.5 rounded-2xl border border-amber-200 bg-amber-50/70 text-amber-900 text-xs font-bold flex items-center gap-3 shadow-2xs';
+                banner.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0"><i class="fas fa-bullseye"></i></div>
+                    <div class="flex-1">
+                        <div class="text-xs font-black uppercase tracking-wide">🎯 TIẾN ĐỘ CHỈ TIÊU LNG NĂM ${year}: ĐẠT ${gpPct}%</div>
+                        <div class="text-slate-600 text-[11px] font-medium mt-0.5">
+                            Quỹ Tích Lũy 30% Cục 1 (<b>${(m.total_retained_pool || 0).toLocaleString('vi-VN')} đ</b>) được công ty bảo toàn 100% chi trả dịp Tết. Khi LNG vượt mốc <b>${(m.target_gross_profit || 0).toLocaleString('vi-VN')} đ</b>, Quỹ Cục 2 sẽ lập tức được kích hoạt thêm!
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Render Table
+            window.modPayroll.renderYearEndItems(data.employees);
+
+        } catch (err) {
+            console.error('Lỗi tải quỹ thưởng Tết:', err);
+            tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-rose-500 font-bold"><i class="fas fa-exclamation-circle mr-1.5"></i>Không thể tải dữ liệu (${err.message || 'Lỗi kết nối'})<br><button onclick="window.modPayroll.loadYearEnd()" class="mt-3 px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-bold hover:bg-slate-700 cursor-pointer"><i class="fas fa-redo mr-1"></i> Thử Lại</button></td></tr>`;
+        }
+    },
+
+    renderYearEndItems: (employees) => {
+        const tbody = document.getElementById('yearend-tbody');
+        const mobContainer = document.getElementById('yearend-mobile-cards');
+
+        if (!employees || employees.length === 0) {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">Chưa có dữ liệu nhân sự cho năm này</td></tr>';
+            if (mobContainer) mobContainer.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold text-xs">Chưa có dữ liệu</div>';
+            return;
+        }
+
+        if (tbody) {
+            tbody.innerHTML = employees.map(emp => {
+                return `
+                    <tr class="hover:bg-amber-50/30 transition border-b border-slate-100">
+                        <td class="p-3 pl-4 font-black text-amber-600 font-mono">${emp.emp_code}</td>
+                        <td class="p-3">
+                            <div class="font-bold text-slate-800">${emp.full_name}</div>
+                            <div class="text-[10px] text-slate-400">${emp.position || 'Nhân viên'} - ${emp.dept_name || 'Phòng ban'}</div>
+                        </td>
+                        <td class="p-3 text-right font-bold text-blue-700 font-mono">${(emp.employee_gross_profit || 0).toLocaleString('vi-VN')} đ</td>
+                        <td class="p-3 text-right font-medium text-slate-600">${(emp.total_commission_earned || 0).toLocaleString('vi-VN')} đ</td>
+                        <td class="p-3 text-right font-medium text-slate-400">${(emp.total_commission_paid || 0).toLocaleString('vi-VN')} đ</td>
+                        <td class="p-3 text-right font-black text-amber-700 bg-amber-50/50">
+                            +${(emp.retained_pool_tier1 || 0).toLocaleString('vi-VN')} đ
+                        </td>
+                        <td class="p-3 text-right font-bold text-purple-700 bg-purple-50/50">
+                            ${emp.target_bonus_tier2 > 0 ? `+${(emp.target_bonus_tier2 || 0).toLocaleString('vi-VN')} đ` : '<span class="text-slate-400 font-normal">0 đ</span>'}
+                        </td>
+                        <td class="p-3 text-right font-black text-emerald-700 bg-emerald-50/70 text-sm">
+                            +${(emp.grand_year_end_bonus || 0).toLocaleString('vi-VN')} đ
+                        </td>
+                        <td class="p-3 text-center pr-4">
+                            <button onclick="window.modPayroll.openYearDetailModal('${emp.emp_code}')" class="text-amber-600 hover:text-amber-800 font-bold text-xs p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer" title="Xem chi tiết thưởng">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        if (mobContainer) {
+            mobContainer.innerHTML = employees.map(emp => {
+                return `
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-black font-mono text-[10px] border border-amber-200">
+                                ${emp.emp_code}
+                            </span>
+                            <h4 class="font-black text-slate-900 text-xs truncate">${emp.full_name}</h4>
+                        </div>
+                        <span class="text-[11px] text-blue-600 font-bold">
+                            LNG: ${(emp.employee_gross_profit || 0).toLocaleString('vi-VN')} đ
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Cục 1 (Tích lũy 30%):</span>
+                            <b class="text-amber-600">+${(emp.retained_pool_tier1 || 0).toLocaleString('vi-VN')} đ</b>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 block text-[10px]">Cục 2 (Vượt Target):</span>
+                            <b class="text-purple-700">+${(emp.target_bonus_tier2 || 0).toLocaleString('vi-VN')} đ</b>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Tổng Thưởng Tết</span>
+                            <strong class="text-sm font-black text-emerald-600">+${(emp.grand_year_end_bonus || 0).toLocaleString('vi-VN')} đ</strong>
+                        </div>
+                        <button type="button" onclick="window.modPayroll.openYearDetailModal('${emp.emp_code}')" class="px-3 py-1 bg-amber-50 text-amber-800 rounded-lg text-xs font-bold transition border border-amber-200 cursor-pointer">
+                            <i class="fas fa-eye mr-1"></i> Chi Tiết
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    },
+
+    openYearTargetModal: () => {
+        if (!window.modPayroll.yearEndData) return;
+        const pol = window.modPayroll.yearEndData.policy;
+        document.getElementById('target-modal-year').value = window.modPayroll.currentYear;
+        document.getElementById('target-modal-gp').value = pol.target_gross_profit || 10000000000;
+        document.getElementById('target-modal-gp-helper').innerText = (parseFloat(pol.target_gross_profit) || 0).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('target-modal-sharing-pct').value = pol.profit_sharing_percent || 10;
+        document.getElementById('target-modal-notes').value = pol.notes || '';
+
+        const m = document.getElementById('yearend-target-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    },
+
+    closeYearTargetModal: () => {
+        const m = document.getElementById('yearend-target-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    },
+
+    saveYearTarget: async () => {
+        const year = window.modPayroll.currentYear;
+        const payload = {
+            target_gross_profit: parseFloat(document.getElementById('target-modal-gp').value) || 0,
+            profit_sharing_percent: parseFloat(document.getElementById('target-modal-sharing-pct').value) || 0,
+            notes: document.getElementById('target-modal-notes').value
+        };
+
+        try {
+            const res = await fetch(`/api/payroll/year-end/${year}/target`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.modPayroll.closeYearTargetModal();
+                window.modPayroll.loadYearEnd();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    approveYearEndPayout: async () => {
+        const year = window.modPayroll.currentYear;
+        if (!confirm(`XÁC NHẬN DUYỆT CHI TOÀN BỘ QUỸ THƯỞNG TẾT NĂM ${year}?\n\nHệ thống sẽ tự động hạch toán Phiếu Chi vào Sổ Quỹ và Báo cáo Chi phí Doanh nghiệp!`)) return;
+
+        try {
+            const res = await fetch(`/api/payroll/year-end/${year}/payout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ approved_by: 'BAN_GIAM_DOC' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.modPayroll.loadYearEnd();
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    },
+
+    openYearDetailModal: (empCode) => {
+        if (!window.modPayroll.yearEndData) return;
+        const emp = window.modPayroll.yearEndData.employees.find(e => e.emp_code === empCode);
+        if (!emp) return;
+
+        const m = window.modPayroll.yearEndData.company_metrics;
+        document.getElementById('yearend-detail-subtitle').innerText = `Nhân sự: ${emp.full_name} (${emp.emp_code}) - Năm ${window.modPayroll.currentYear}`;
+
+        document.getElementById('yearend-detail-body').innerHTML = `
+            <div class="border-b border-slate-100 pb-3">
+                <p class="text-sm font-black text-slate-800">${emp.full_name} <span class="text-amber-600 font-mono text-xs">(${emp.emp_code})</span></p>
+                <p class="text-slate-500 font-medium">${emp.position || 'Nhân viên'} - ${emp.dept_name || 'Phòng ban'}</p>
+                <p class="text-[11px] text-blue-600 font-bold mt-1">Lợi Nhuận Gộp (LNG) mang lại trong năm: <b>${(emp.employee_gross_profit || 0).toLocaleString('vi-VN')} đ</b></p>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between font-medium text-slate-600">
+                    <span>1. Tổng hoa hồng kiếm được trong năm (100%):</span>
+                    <span class="font-bold text-slate-800">${(emp.total_commission_earned || 0).toLocaleString('vi-VN')} đ</span>
+                </div>
+                <div class="flex justify-between text-slate-500 pl-3">
+                    <span>• Đã lĩnh hàng tháng (70%):</span>
+                    <span>${(emp.total_commission_paid || 0).toLocaleString('vi-VN')} đ</span>
+                </div>
+
+                <!-- CỤC 1 -->
+                <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200 space-y-1 mt-2">
+                    <div class="flex justify-between items-center text-amber-900 font-black">
+                        <span><i class="fas fa-piggy-bank text-amber-600 mr-1.5"></i> CỤC 1: QUỸ TÍCH LŨY 30%:</span>
+                        <span class="text-sm font-black text-amber-700">+${(emp.retained_pool_tier1 || 0).toLocaleString('vi-VN')} đ</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500">Được trích đều đặn 30% từ hoa hồng mỗi tháng, tích lũy bảo toàn và hoàn trả 100% dịp Tết.</p>
+                </div>
+
+                <!-- CỤC 2 -->
+                <div class="p-3 rounded-2xl bg-purple-50 border border-purple-200 space-y-1">
+                    <div class="flex justify-between items-center text-purple-900 font-black">
+                        <span><i class="fas fa-trophy text-purple-600 mr-1.5"></i> CỤC 2: THƯỞNG VƯỢT TARGET:</span>
+                        <span class="text-sm font-black text-purple-700">+${(emp.target_bonus_tier2 || 0).toLocaleString('vi-VN')} đ</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500">
+                        ${emp.target_bonus_tier2 > 0 ? 
+                            `Công ty vượt chỉ tiêu LNG, thưởng trích ${m.profit_sharing_percent}% phân bổ theo tỷ lệ đóng góp LNG của bạn.` : 
+                            `Chỉ tiêu năm chưa vượt mốc hoặc chưa phát sinh thưởng vượt target.`
+                        }
+                    </p>
+                </div>
+
+                <!-- TỔNG THƯỞNG TẾT THỰC LĨNH -->
+                <div class="pt-3 border-t-2 border-emerald-500 flex justify-between items-center text-emerald-800 font-black text-base bg-emerald-50/70 p-3.5 rounded-2xl mt-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-gifts text-emerald-600 text-lg"></i>
+                        <span>TỔNG THƯỞNG TẾT THỰC LĨNH:</span>
+                    </div>
+                    <span class="text-lg text-emerald-700 font-black">+${(emp.grand_year_end_bonus || 0).toLocaleString('vi-VN')} đ</span>
+                </div>
+            </div>
+        `;
+
+        const modal = document.getElementById('yearend-detail-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    },
+
+    closeYearDetailModal: () => {
+        const modal = document.getElementById('yearend-detail-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    },
+
+    exportYearEndExcel: () => {
+        if (typeof XLSX === 'undefined') {
+            alert('Thư viện Excel đang được tải, vui lòng thử lại!');
+            return;
+        }
+        const table = document.getElementById('yearend-table');
+        const wb = XLSX.utils.table_to_book(table, { sheet: "ThuongTet" });
+        XLSX.writeFile(wb, `ThuongTet_SUNGO_${window.modPayroll.currentYear}.xlsx`);
     }
 };
 
