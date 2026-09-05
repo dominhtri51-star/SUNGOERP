@@ -254,7 +254,51 @@
                 subtotalVal += q * p;
             });
             const discVal = (parseFloat(o.discount_amount) || 0) + (parseFloat(o.points_discount) || 0);
-            const currentTotal = parseFloat(o.total_amount) || (subtotalVal - discVal);
+
+            // Phụ thu giao vận & bốc xếp
+            const isCustomerPay = (o.fee_payer === 'CUSTOMER');
+            const shipFee = parseFloat(o.shipping_fee) || 0;
+            const stnFee = parseFloat(o.station_fee) || 0;
+            const packFee = parseFloat(o.packaging_fee) || 0;
+            const handFee = parseFloat(o.handling_fee) || 0;
+            const othFee = parseFloat(o.other_fee) || 0;
+            const othNote = (o.other_fee_note || '').trim();
+
+            const feeItems = [
+                { label: 'Phí vận chuyển / Cước xe:', amount: shipFee },
+                { label: 'Phí gửi ra chành xe:', amount: stnFee },
+                { label: 'Phí đóng gói (Pallet/Kiện):', amount: packFee },
+                { label: 'Phí bốc xếp / Nâng hạ:', amount: handFee },
+                { label: othNote ? `Chi phí khác (${othNote}):` : 'Chi phí phát sinh khác:', amount: othFee }
+            ];
+
+            const activeFees = feeItems.filter(f => f.amount > 0);
+            let totalActiveFees = 0;
+            activeFees.forEach(f => totalActiveFees += f.amount);
+
+            let feeRowsHtml = '';
+            if (activeFees.length > 0) {
+                if (isCustomerPay) {
+                    activeFees.forEach(f => {
+                        feeRowsHtml += `
+                        <div class="flex justify-between text-slate-200">
+                            <span>${f.label}</span>
+                            <span class="font-bold text-amber-300">+${fmt(f.amount)} đ</span>
+                        </div>`;
+                    });
+                } else {
+                    activeFees.forEach(f => {
+                        feeRowsHtml += `
+                        <div class="flex justify-between text-slate-400 text-[11px]">
+                            <span>${f.label}</span>
+                            <span><del class="text-slate-500 mr-1">${fmt(f.amount)} đ</del> <b class="text-emerald-400">Shop hỗ trợ (0 đ)</b></span>
+                        </div>`;
+                    });
+                }
+            }
+
+            const feeAddition = isCustomerPay ? totalActiveFees : 0;
+            const currentTotal = parseFloat(o.total_amount) || Math.max(0, subtotalVal - discVal + feeAddition);
             const currentPaid = parseFloat(o.paid_amount) || 0;
             const currentDebt = Math.max(0, currentTotal - currentPaid);
 
@@ -429,6 +473,7 @@
                             <span>Chiết khấu / Giảm:</span>
                             <span class="font-bold">-${fmt(discVal)} đ</span>
                         </div>` : ''}
+                        ${feeRowsHtml}
                         <div class="flex justify-between text-sm font-black border-t border-slate-800 pt-1.5 text-white">
                             <span>Tổng thanh toán:</span>
                             <span>${fmt(currentTotal)} đ</span>

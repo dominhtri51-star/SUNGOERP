@@ -161,7 +161,7 @@ router.post('/', async (req, res) => {
             customer_id, customer_name, total_amount, paid_amount, payment_method, notes, items, 
             employee_id, emp_id, employee_code,
             shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note,
-            discount_amount, points_discount, cost_fund_source, sync_accounting
+            discount_amount, points_discount, cost_fund_source, sync_accounting, fee_payer
         } = req.body;
 
         const order_code = 'DH-' + Date.now().toString().slice(-6) + Math.floor(1000 + Math.random() * 9000);
@@ -178,27 +178,35 @@ router.post('/', async (req, res) => {
         const ptsDiscount = parseSafeNum(points_discount);
         const fundSource = cost_fund_source || 'TIEN_MAT_QUY';
         const shouldSync = sync_accounting !== false;
+        const finalFeePayer = (fee_payer === 'CUSTOMER') ? 'CUSTOMER' : 'SHOP';
 
         // Tự động phân giải Mã Nhân Viên (emp_code / emp_id / user_id) sang employees.id
         let resolvedEmpId = null;
         const rawEmp = employee_id || emp_id || employee_code;
         if (rawEmp) {
-            if (!isNaN(parseInt(rawEmp)) && String(parseInt(rawEmp)) === String(rawEmp).trim()) {
-                const empCheck = await client.query("SELECT id FROM employees WHERE id = $1", [parseInt(rawEmp)]);
-                if (empCheck.rows.length > 0) resolvedEmpId = empCheck.rows[0].id;
-            }
-            if (!resolvedEmpId) {
-                const empCodeCheck = await client.query("SELECT id FROM employees WHERE UPPER(emp_code) = $1", [String(rawEmp).trim().toUpperCase()]);
-                if (empCodeCheck.rows.length > 0) {
-                    resolvedEmpId = empCodeCheck.rows[0].id;
-                } else {
-                    const userMatch = await client.query("SELECT id, user_id FROM users WHERE UPPER(emp_id) = $1 OR UPPER(username) = $1", [String(rawEmp).trim().toUpperCase()]);
-                    if (userMatch.rows.length > 0) {
-                        const uId = userMatch.rows[0].id || userMatch.rows[0].user_id;
-                        const empUserCheck = await client.query("SELECT id FROM employees WHERE user_id = $1", [uId]);
-                        if (empUserCheck.rows.length > 0) resolvedEmpId = empUserCheck.rows[0].id;
-                    }
+            try {
+                const empCheck = await client.query(
+                    `SELECT id FROM employees WHERE id::text = $1 OR emp_code = $1 OR user_id::text = $1 LIMIT 1`,
+                    [String(rawEmp).trim()]
+                );
+                if (empCheck.rows.length > 0) {
+                    resolvedEmpId = empCheck.rows[0].id;
                 }
+            } catch (e) {
+                console.warn('[WARN] Không thể phân giải employee_id:', rawEmp, e.message);
+            }
+        }
+        if (!resolvedEmpId && req.user && req.user.id) {
+            try {
+                const userEmp = await client.query(
+                    `SELECT id FROM employees WHERE user_id = $1 LIMIT 1`,
+                    [req.user.id]
+                );
+                if (userEmp.rows.length > 0) {
+                    resolvedEmpId = userEmp.rows[0].id;
+                }
+            } catch (e) {
+                console.warn('[WARN] Không thể tìm employee theo req.user.id:', req.user.id, e.message);
             }
         }
 
@@ -225,12 +233,13 @@ router.post('/', async (req, res) => {
         }
         if (subtotal === 0 && total_amount) subtotal = parseSafeNum(total_amount);
 
-        const calculatedTotal = Math.max(0, subtotal - discAmount - ptsDiscount);
+        const totalOrderCosts = shipFee + stnFee + packFee + handFee + othFee;
+        const feeAddition = (finalFeePayer === 'CUSTOMER') ? totalOrderCosts : 0;
+        const calculatedTotal = Math.max(0, subtotal - discAmount - ptsDiscount + feeAddition);
         const finalTotal = total_amount !== undefined ? parseSafeNum(total_amount) : calculatedTotal;
         const finalPaid = paid_amount !== undefined ? parseSafeNum(paid_amount) : finalTotal;
         const grossProfit = finalTotal - cogs;
-        const totalOrderCosts = shipFee + stnFee + packFee + handFee + othFee;
-        const netProfit = grossProfit - totalOrderCosts;
+        const netProfit = (finalFeePayer === 'CUSTOMER') ? (Math.max(0, subtotal - discAmount - ptsDiscount) - cogs) : (grossProfit - totalOrderCosts);
 
         // KIỂM TRA HẠN MỨC CÔNG NỢ (DEBT LIMIT CHECK)
         if (customer_id) {
@@ -266,20 +275,20 @@ router.post('/', async (req, res) => {
                 payment_method, notes, status, employee_id,
                 shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note,
                 discount_amount, points_discount, cost_of_goods, gross_profit, net_profit,
-                cost_fund_source, sync_accounting, created_at
+                cost_fund_source, sync_accounting, fee_payer, created_at
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, 
                 $7, $8, 'PENDING', $9,
                 $10, $11, $12, $13, $14, $15,
                 $16, $17, $18, $19, $20,
-                $21, $22, NOW()
+                $21, $22, $23, NOW()
             ) RETURNING id
         `, [
             order_code, customer_id || null, customer_name || 'Khách Lẻ', subtotal, finalTotal, finalPaid,
             finalPaymentMethod, finalNotes, resolvedEmpId,
             shipFee, stnFee, packFee, handFee, othFee, othNote,
             discAmount, ptsDiscount, cogs, grossProfit, netProfit,
-            fundSource, shouldSync
+            fundSource, shouldSync, finalFeePayer
         ]);
         const orderId = orderRes.rows[0].id;
         
@@ -382,7 +391,8 @@ router.put('/:id', async (req, res) => {
             items, cancel_reason, refund_amount,
             customer_id, customer_name, customer_phone, customer_address,
             shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note,
-            discount_amount, points_discount, cost_fund_source, sync_accounting
+            discount_amount, points_discount, cost_fund_source, sync_accounting,
+            fee_payer
         } = req.body;
         
         const oldOrderRes = await client.query('SELECT * FROM orders WHERE id=$1', [req.params.id]);
@@ -480,10 +490,14 @@ router.put('/:id', async (req, res) => {
             newCogs = parseSafeNum(oldOrder.cost_of_goods) || 0;
         }
 
-        const newTotalAmount = Math.max(0, newSubtotal - discAmount - ptsDiscount);
-        const grossProfit = newTotalAmount - newCogs;
+        const finalFeePayer = (fee_payer !== undefined) 
+            ? ((fee_payer === 'CUSTOMER') ? 'CUSTOMER' : 'SHOP') 
+            : (oldOrder.fee_payer || 'SHOP');
         const totalOrderCosts = shipFee + stnFee + packFee + handFee + othFee;
-        const netProfit = grossProfit - totalOrderCosts;
+        const feeAddition = (finalFeePayer === 'CUSTOMER') ? totalOrderCosts : 0;
+        const newTotalAmount = Math.max(0, newSubtotal - discAmount - ptsDiscount + feeAddition);
+        const grossProfit = newTotalAmount - newCogs;
+        const netProfit = (finalFeePayer === 'CUSTOMER') ? (Math.max(0, newSubtotal - discAmount - ptsDiscount) - newCogs) : (grossProfit - totalOrderCosts);
 
         // KỊCH BẢN HỦY ĐƠN: CỘNG LẠI TỒN KHO THỰC TẾ
         let finalNotes = notes || '';
@@ -505,8 +519,9 @@ router.put('/:id', async (req, res) => {
                 shipping_fee=$14, station_fee=$15, packaging_fee=$16, handling_fee=$17, other_fee=$18, other_fee_note=$19,
                 discount_amount=$20, points_discount=$21, cost_of_goods=$22, gross_profit=$23, net_profit=$24,
                 cost_fund_source=$25, sync_accounting=$26,
-                carrier_address=$27, recipient_name=$28, recipient_phone=$29, vehicle_plate=$30, shipping_note=$31
-            WHERE id=$32
+                carrier_address=$27, recipient_name=$28, recipient_phone=$29, vehicle_plate=$30, shipping_note=$31,
+                fee_payer=$32
+            WHERE id=$33
         `, [
             finalCustomerId, finalCustomerName, finalCustomerPhone, finalCustomerAddress,
             finalDeliveryCompany, finalDriverName, finalLicensePlate, finalNotes, 
@@ -516,6 +531,7 @@ router.put('/:id', async (req, res) => {
             discAmount, ptsDiscount, newCogs, grossProfit, netProfit,
             fundSource, shouldSync,
             finalCarrierAddress, finalRecipientName, finalRecipientPhone, finalVehiclePlate, finalShippingNote,
+            finalFeePayer,
             parseInt(req.params.id, 10)
         ]);
         
@@ -1022,10 +1038,10 @@ router.put('/:id/wms-out', async (req, res) => {
             delivery_company, carrier_address, driver_name, vehicle_plate, license_plate, 
             recipient_name, recipient_phone, shipping_note, notes, status, items, delivery_proofs,
             shipping_fee, station_fee, packaging_fee, handling_fee, other_fee, other_fee_note, cost_fund_source,
-            dispatched_by
+            dispatched_by, fee_payer
         } = req.body;
 
-        const hasFeeUpdate = shipping_fee !== undefined || station_fee !== undefined || packaging_fee !== undefined || handling_fee !== undefined || other_fee !== undefined;
+        const hasFeeUpdate = shipping_fee !== undefined || station_fee !== undefined || packaging_fee !== undefined || handling_fee !== undefined || other_fee !== undefined || fee_payer !== undefined;
         const shipFee = shipping_fee !== undefined ? parseSafeNum(shipping_fee) : null;
         const stnFee = station_fee !== undefined ? parseSafeNum(station_fee) : null;
         const packFee = packaging_fee !== undefined ? parseSafeNum(packaging_fee) : null;
@@ -1033,6 +1049,7 @@ router.put('/:id/wms-out', async (req, res) => {
         const othFee = other_fee !== undefined ? parseSafeNum(other_fee) : null;
         const othFeeNote = other_fee_note !== undefined ? other_fee_note : null;
         const fundSource = cost_fund_source !== undefined ? cost_fund_source : null;
+        const feePayerVal = fee_payer !== undefined ? ((fee_payer === 'CUSTOMER') ? 'CUSTOMER' : 'SHOP') : null;
 
         // Xử lý Người xuất kho & Mức hoa hồng xuất kho
         let finalDispatchedBy = dispatched_by ? parseInt(dispatched_by, 10) : null;
@@ -1115,13 +1132,14 @@ router.put('/:id/wms-out', async (req, res) => {
                 cost_fund_source = COALESCE($18, cost_fund_source),
                 dispatched_by = COALESCE($19, dispatched_by),
                 dispatched_at = COALESCE(dispatched_at, NOW()),
-                warehouse_commission = COALESCE(NULLIF(warehouse_commission, 0), $20)
-            WHERE id = $21
+                warehouse_commission = COALESCE(NULLIF(warehouse_commission, 0), $20),
+                fee_payer = COALESCE($21, fee_payer)
+            WHERE id = $22
         `, [
             delivery_company, driver_name, license_plate, notes, status, proofsJson,
             carrier_address, recipient_name, recipient_phone, vehicle_plate, shipping_note,
             shipFee, stnFee, packFee, handFee, othFee, othFeeNote, fundSource,
-            finalDispatchedBy, rateWhCommission,
+            finalDispatchedBy, rateWhCommission, feePayerVal,
             id
         ]);
 

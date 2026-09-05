@@ -252,13 +252,19 @@
                         </div>
                     </div>
 
-                    <!-- THẺ CHI PHÍ GIAO VẬN & BỐC XẾP (CTY CHI) -->
-                    <div class="bg-amber-50/40 rounded-2xl shadow-2xs border border-amber-200/80 p-4 sm:p-5 space-y-3">
-                        <div class="flex items-center justify-between pb-2 border-b border-amber-200/60">
-                            <h3 class="font-black text-amber-800 text-xs sm:text-sm flex items-center gap-2">
-                                <i class="fas fa-truck-loading text-amber-600"></i> CHI PHÍ GIAO VẬN & BỐC XẾP (CTY CHI)
+                    <!-- THẺ CHI PHÍ GIAO VẬN & BỐC XẾP -->
+                    <div id="wms-fees-container" class="bg-amber-50/40 rounded-2xl shadow-2xs border border-amber-200/80 p-4 sm:p-5 space-y-3 transition-all">
+                        <div class="flex flex-wrap items-center justify-between pb-2 border-b border-amber-200/60 gap-2">
+                            <h3 class="font-black text-amber-900 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fas fa-truck-loading text-amber-600"></i> PHỤ THU GIAO VẬN & BỐC XẾP
                             </h3>
-                            <span class="text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold border border-amber-200">Kho Cập Nhật</span>
+                            <!-- Ô TÍCH PHÂN BIỆT: SHOP HỖ TRỢ vs KHÁCH TRẢ -->
+                            <label id="wms-fee-payer-box" class="flex items-center gap-2 cursor-pointer select-none bg-white hover:bg-amber-50/80 px-2.5 py-1.5 rounded-lg border border-amber-300 shadow-2xs transition group" title="Tích chọn nếu khách hàng sẽ trả khoản phụ thu này (cộng vào hóa đơn)">
+                                <input type="checkbox" id="wms-fee-payer-customer" onchange="window.modWmsOut.onFeePayerChange()" class="w-4 h-4 rounded text-emerald-600 accent-emerald-600 cursor-pointer">
+                                <span id="wms-fee-payer-label" class="text-[11px] font-black text-amber-900 flex items-center gap-1">
+                                    <i class="fas fa-hand-holding-heart text-amber-600"></i> <span>Shop hỗ trợ khách hàng (Cty chi)</span>
+                                </span>
+                            </label>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 text-xs">
@@ -865,6 +871,15 @@ window.modWmsOut = {
                     document.getElementById('wms-cost-fund-source').value = o.cost_fund_source || 'TIEN_MAT_QUY';
                 }
 
+                const isCustPayer = (o.fee_payer === 'CUSTOMER');
+                const wmsPayerCheck = document.getElementById('wms-fee-payer-customer');
+                if (wmsPayerCheck) {
+                    wmsPayerCheck.checked = isCustPayer;
+                }
+                if (window.modWmsOut.updateFeePayerUi) {
+                    window.modWmsOut.updateFeePayerUi(isCustPayer);
+                }
+
                 const actionBtn = document.getElementById('btn-wms-save');
                 if (o.status === 'PROCESSING') {
                      actionBtn.innerHTML = '<i class="fas fa-spinner mr-1"></i> CHỜ SALE PHÁT LỆNH';
@@ -997,6 +1012,7 @@ window.modWmsOut = {
             other_fee: window.modWmsOut.parseMoney(document.getElementById('wms-other-fee')?.value),
             other_fee_note: document.getElementById('wms-other-fee-note')?.value || '',
             cost_fund_source: document.getElementById('wms-cost-fund-source')?.value || 'TIEN_MAT_QUY',
+            fee_payer: document.getElementById('wms-fee-payer-customer')?.checked ? 'CUSTOMER' : 'SHOP',
             dispatched_by: document.getElementById('wms-dispatched-by')?.value ? parseInt(document.getElementById('wms-dispatched-by').value, 10) : null,
             delivery_proofs: window.modWmsOut.currentProofs,
             items: window.modWmsOut.currentItems.map(i => ({
@@ -1019,6 +1035,27 @@ window.modWmsOut = {
         } catch (e) { alert("Lỗi mạng!"); } finally {
             btn.innerHTML = oldText;
             btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+
+    onFeePayerChange: () => {
+        const isCustomerPay = Boolean(document.getElementById('wms-fee-payer-customer')?.checked);
+        window.modWmsOut.updateFeePayerUi(isCustomerPay);
+    },
+
+    updateFeePayerUi: (isCustomerPay) => {
+        const box = document.getElementById('wms-fee-payer-box');
+        const label = document.getElementById('wms-fee-payer-label');
+        const container = document.getElementById('wms-fees-container');
+        if (!box || !label) return;
+        if (isCustomerPay) {
+            box.className = "flex items-center gap-2 cursor-pointer select-none bg-emerald-50 hover:bg-emerald-100/70 px-2.5 py-1.5 rounded-lg border border-emerald-400 shadow-2xs transition group";
+            label.innerHTML = '<i class="fas fa-file-invoice-dollar text-emerald-600"></i> <span class="text-emerald-900 font-black">Khách trả phụ thu (Cộng vào Hóa đơn)</span>';
+            if (container) container.className = "bg-emerald-50/30 rounded-2xl shadow-2xs border border-emerald-300/80 p-4 sm:p-5 space-y-3 transition-all";
+        } else {
+            box.className = "flex items-center gap-2 cursor-pointer select-none bg-white hover:bg-amber-50/80 px-2.5 py-1.5 rounded-lg border border-amber-300 shadow-2xs transition group";
+            label.innerHTML = '<i class="fas fa-hand-holding-heart text-amber-600"></i> <span class="text-amber-900 font-black">Shop hỗ trợ khách hàng (Cty chi)</span>';
+            if (container) container.className = "bg-amber-50/40 rounded-2xl shadow-2xs border border-amber-200/80 p-4 sm:p-5 space-y-3 transition-all";
         }
     },
 

@@ -344,11 +344,20 @@
                                 </div>
                             </div>
 
-                            <!-- NHÓM B: CHI PHÍ VẬN HÀNH ĐƠN HÀNG (CÔNG TY CHI TRẢ) -->
-                            <div class="bg-amber-50/40 rounded-xl p-3 border border-amber-200/60 space-y-2.5">
-                                <h4 class="text-[11px] font-black text-amber-800 uppercase flex items-center gap-1.5 border-b border-amber-200 pb-1.5">
-                                    <i class="fas fa-truck-loading text-amber-600"></i> Chi Phí Giao Vận & Bốc Xếp (Cty Chi)
-                                </h4>
+                            <!-- NHÓM B: PHỤ THU GIAO VẬN & BỐC XẾP -->
+                            <div id="dt-fees-container" class="bg-amber-50/40 rounded-xl p-3 border border-amber-200/80 space-y-2.5 transition-all">
+                                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-2">
+                                    <h4 class="text-[11px] font-black text-amber-900 uppercase flex items-center gap-1.5">
+                                        <i class="fas fa-truck-loading text-amber-600"></i> Phụ Thu Giao Vận & Bốc Xếp
+                                    </h4>
+                                    <!-- Ô TÍCH PHÂN BIỆT: SHOP HỖ TRỢ vs KHÁCH TRẢ -->
+                                    <label id="dt-fee-payer-box" class="flex items-center gap-2 cursor-pointer select-none bg-white hover:bg-amber-50/80 px-2.5 py-1.5 rounded-lg border border-amber-300 shadow-2xs transition group" title="Tích chọn nếu khách hàng sẽ trả khoản phụ thu này (cộng vào tổng tiền hóa đơn)">
+                                        <input type="checkbox" id="dt-fee-payer-customer" onchange="window.modOrders.onFeePayerChange()" class="w-4 h-4 rounded text-emerald-600 accent-emerald-600 cursor-pointer">
+                                        <span id="dt-fee-payer-label" class="text-[11px] font-black text-amber-900 flex items-center gap-1">
+                                            <i class="fas fa-hand-holding-heart text-amber-600"></i> <span>Shop hỗ trợ khách hàng (Cty chi)</span>
+                                        </span>
+                                    </label>
+                                </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase mb-0.5">Phí vận chuyển / Cước xe</label>
@@ -565,6 +574,10 @@
                             <div class="flex justify-between items-center text-slate-400" id="dt-discount-row">
                                 <span>Giảm Trừ / Điểm:</span>
                                 <span id="dt-discount-summary" class="font-bold text-rose-400">-0 đ</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 hidden" id="dt-fee-summary-row">
+                                <span id="dt-fee-summary-label">Phụ Thu Giao Vận:</span>
+                                <span id="dt-fee-summary-val" class="font-bold text-amber-300">+0 đ</span>
                             </div>
                         </div>
 
@@ -2056,6 +2069,15 @@ window.modOrders = {
                 document.getElementById('dt-other-fee').value = fmt(o.other_fee || 0);
                 document.getElementById('dt-other-fee-note').value = o.other_fee_note || '';
                 
+                const isCustPayer = (o.fee_payer === 'CUSTOMER');
+                const payerCheck = document.getElementById('dt-fee-payer-customer');
+                if (payerCheck) {
+                    payerCheck.checked = isCustPayer;
+                }
+                if (window.modOrders.updateFeePayerUi) {
+                    window.modOrders.updateFeePayerUi(isCustPayer);
+                }
+                
                 if (document.getElementById('dt-cost-fund-source')) {
                     document.getElementById('dt-cost-fund-source').value = o.cost_fund_source || 'TIEN_MAT_QUY';
                 }
@@ -2585,6 +2607,29 @@ window.modOrders = {
         return new Intl.NumberFormat('vi-VN').format(num);
     },
 
+    onFeePayerChange: () => {
+        const isCustomerPay = Boolean(document.getElementById('dt-fee-payer-customer')?.checked);
+        window.modOrders.updateFeePayerUi(isCustomerPay);
+        window.modOrders.recalcTotal();
+    },
+
+    updateFeePayerUi: (isCustomerPay) => {
+        const box = document.getElementById('dt-fee-payer-box');
+        const label = document.getElementById('dt-fee-payer-label');
+        const container = document.getElementById('dt-fees-container');
+        if (!box || !label) return;
+        
+        if (isCustomerPay) {
+            box.className = "flex items-center gap-2 cursor-pointer select-none bg-emerald-50 hover:bg-emerald-100/70 px-2.5 py-1.5 rounded-lg border border-emerald-400 shadow-2xs transition group";
+            label.innerHTML = '<i class="fas fa-file-invoice-dollar text-emerald-600"></i> <span class="text-emerald-900 font-black">Khách trả phụ thu (Cộng vào Hóa đơn)</span>';
+            if (container) container.className = "bg-emerald-50/30 rounded-xl p-3 border border-emerald-300/80 space-y-2.5 transition-all";
+        } else {
+            box.className = "flex items-center gap-2 cursor-pointer select-none bg-white hover:bg-amber-50/80 px-2.5 py-1.5 rounded-lg border border-amber-300 shadow-2xs transition group";
+            label.innerHTML = '<i class="fas fa-hand-holding-heart text-amber-600"></i> <span class="text-amber-900 font-black">Shop hỗ trợ khách hàng (Cty chi)</span>';
+            if (container) container.className = "bg-amber-50/40 rounded-xl p-3 border border-amber-200/80 space-y-2.5 transition-all";
+        }
+    },
+
     recalcTotal: () => {
         const fmt = (num) => new Intl.NumberFormat('vi-VN').format(num || 0);
         const parseMoney = window.modOrders.parseMoney;
@@ -2617,7 +2662,7 @@ window.modOrders = {
         const pointsDiscount = ptsInput ? parseMoney(ptsInput.value) : 0;
         const totalDiscounts = discountAmount + pointsDiscount;
 
-        // 3. Lấy các chi phí vận hành đơn hàng (Do công ty chi trả)
+        // 3. Lấy các chi phí vận hành đơn hàng
         const shipInput = document.getElementById('dt-shipping-fee');
         const stnInput = document.getElementById('dt-station-fee');
         const packInput = document.getElementById('dt-packaging-fee');
@@ -2631,10 +2676,14 @@ window.modOrders = {
         const otherFee = othInput ? parseMoney(othInput.value) : 0;
         const totalOrderCosts = shippingFee + stationFee + packagingFee + handlingFee + otherFee;
 
+        // KIỂM TRA Ô TÍCH: Khách trả khoản này vs Shop hỗ trợ
+        const isCustomerPay = Boolean(document.getElementById('dt-fee-payer-customer')?.checked);
+        const feeAddition = isCustomerPay ? totalOrderCosts : 0;
+
         // 4. Tính Doanh Thu Thực Thu, Lợi Nhuận Gộp & Lợi Nhuận Ròng
-        const finalTotalPayable = Math.max(0, subtotal - totalDiscounts);
+        const finalTotalPayable = Math.max(0, subtotal - totalDiscounts + feeAddition);
         const grossProfit = finalTotalPayable - cogs;
-        const netProfit = grossProfit - totalOrderCosts;
+        const netProfit = isCustomerPay ? (Math.max(0, subtotal - totalDiscounts) - cogs) : (grossProfit - totalOrderCosts);
 
         const grossMarginPct = finalTotalPayable > 0 ? ((grossProfit / finalTotalPayable) * 100).toFixed(1) : 0;
         const netMarginPct = finalTotalPayable > 0 ? ((netProfit / finalTotalPayable) * 100).toFixed(1) : 0;
@@ -2645,6 +2694,25 @@ window.modOrders = {
 
         const discSummaryEl = document.getElementById('dt-discount-summary');
         if (discSummaryEl) discSummaryEl.innerText = '-' + fmt(totalDiscounts) + ' đ';
+
+        // Cập nhật dòng Phụ thu
+        const feeRowEl = document.getElementById('dt-fee-summary-row');
+        const feeLabelEl = document.getElementById('dt-fee-summary-label');
+        const feeValEl = document.getElementById('dt-fee-summary-val');
+        if (feeRowEl && feeLabelEl && feeValEl) {
+            if (totalOrderCosts > 0) {
+                feeRowEl.classList.remove('hidden');
+                if (isCustomerPay) {
+                    feeLabelEl.innerHTML = '<span class="text-amber-400 font-bold">Phụ Thu (Khách Trả):</span>';
+                    feeValEl.innerHTML = `<span class="text-amber-300 font-black">+${fmt(totalOrderCosts)} đ</span>`;
+                } else {
+                    feeLabelEl.innerHTML = '<span class="text-slate-400">Phụ Thu Giao Vận:</span>';
+                    feeValEl.innerHTML = `<span class="text-emerald-400 font-bold">Shop hỗ trợ (0 đ)</span>`;
+                }
+            } else {
+                feeRowEl.classList.add('hidden');
+            }
+        }
 
         const totalMoneyEl = document.getElementById('dt-total-money');
         if (totalMoneyEl) {
@@ -2776,6 +2844,7 @@ window.modOrders = {
             points_discount: parseMoney(document.getElementById('dt-points-discount')?.value),
             cost_fund_source: document.getElementById('dt-cost-fund-source')?.value || 'TIEN_MAT_QUY',
             sync_accounting: document.getElementById('dt-sync-accounting') ? document.getElementById('dt-sync-accounting').checked : true,
+            fee_payer: document.getElementById('dt-fee-payer-customer')?.checked ? 'CUSTOMER' : 'SHOP',
             cancel_reason: window.modOrders.currentCancelReason || '',
             refund_amount: window.modOrders.currentRefundAmount || 0
         };
@@ -2992,8 +3061,48 @@ window.modOrders = {
         });
 
         const discVal = parseMoney(document.getElementById('dt-discount-amount')?.value) + parseMoney(document.getElementById('dt-points-discount')?.value);
-        const currentTotal = parseFloat(document.getElementById('dt-total-money').getAttribute('data-val')) || (subtotalVal - discVal);
-        const currentPaid = parseMoney(document.getElementById('dt-paid-money').value);
+        
+        // Trích xuất các khoản phụ thu giao vận & bốc xếp
+        const feePayerInput = document.getElementById('dt-fee-payer-customer');
+        const isCustomerPay = feePayerInput ? feePayerInput.checked : (o.fee_payer === 'CUSTOMER');
+
+        const shipFee = parseMoney(document.getElementById('dt-shipping-fee')?.value) || parseFloat(o.shipping_fee) || 0;
+        const stnFee = parseMoney(document.getElementById('dt-station-fee')?.value) || parseFloat(o.station_fee) || 0;
+        const packFee = parseMoney(document.getElementById('dt-packaging-fee')?.value) || parseFloat(o.packaging_fee) || 0;
+        const handFee = parseMoney(document.getElementById('dt-handling-fee')?.value) || parseFloat(o.handling_fee) || 0;
+        const othFee = parseMoney(document.getElementById('dt-other-fee')?.value) || parseFloat(o.other_fee) || 0;
+        const othNote = (document.getElementById('dt-other-fee-note')?.value || o.other_fee_note || '').trim();
+
+        const feeItems = [
+            { label: 'Phí vận chuyển / Cước xe:', amount: shipFee },
+            { label: 'Phí gửi ra chành xe:', amount: stnFee },
+            { label: 'Phí đóng gói (Pallet/Kiện):', amount: packFee },
+            { label: 'Phí bốc xếp / Nâng hạ:', amount: handFee },
+            { label: othNote ? `Chi phí khác (${othNote}):` : 'Chi phí phát sinh khác:', amount: othFee }
+        ];
+
+        const activeFees = feeItems.filter(f => f.amount > 0);
+        let totalActiveFees = 0;
+        activeFees.forEach(f => totalActiveFees += f.amount);
+
+        let feeRowsHtml = '';
+        if (activeFees.length > 0) {
+            if (isCustomerPay) {
+                // Khách hàng thanh toán phụ thu: cộng vào hóa đơn bán hàng
+                activeFees.forEach(f => {
+                    feeRowsHtml += `<tr><td style="color:#0f172a; padding:3.5px 0;">${f.label}</td><td style="color:#0f172a; font-weight:bold; text-align:right;">+${fmt(f.amount)} đ</td></tr>`;
+                });
+            } else {
+                // Shop hỗ trợ khách hàng: hiển thị số tiền có gạch ngang kèm huy hiệu Shop hỗ trợ (0 đ)
+                activeFees.forEach(f => {
+                    feeRowsHtml += `<tr><td style="color:#64748b; padding:3.5px 0;">${f.label}</td><td style="text-align:right;"><del style="color:#94a3b8; font-size:11px; margin-right:4px;">${fmt(f.amount)} đ</del> <strong style="color:#059669; font-size:12px;">Shop hỗ trợ (0 đ)</strong></td></tr>`;
+                });
+            }
+        }
+
+        const feeAddition = isCustomerPay ? totalActiveFees : 0;
+        const currentTotal = parseFloat(document.getElementById('dt-total-money')?.getAttribute('data-val')) || Math.max(0, subtotalVal - discVal + feeAddition);
+        const currentPaid = parseMoney(document.getElementById('dt-paid-money')?.value) || parseFloat(o.paid_amount) || 0;
         const currentDebt = Math.max(0, currentTotal - currentPaid);
 
         const d = new Date();
@@ -3127,10 +3236,11 @@ window.modOrders = {
                 </div>
 
                 <table class="totals-table">
-                    <tr><td>Tiền hàng gốc:</td><td>${fmt(subtotalVal)} đ</td></tr>
-                    ${discVal > 0 ? `<tr><td style="color:#dc2626;">Giảm giá / Chiết khấu:</td><td style="color:#dc2626;">-${fmt(discVal)} đ</td></tr>` : ''}
-                    <tr><td><strong>Tổng cộng:</strong></td><td><strong>${fmt(currentTotal)} đ</strong></td></tr>
-                    <tr><td>Đã thanh toán:</td><td>${fmt(currentPaid)} đ</td></tr>
+                    <tr><td style="padding:4px 0;">Tiền hàng gốc:</td><td style="text-align:right;">${fmt(subtotalVal)} đ</td></tr>
+                    ${discVal > 0 ? `<tr><td style="color:#dc2626; padding:4px 0;">Giảm giá / Chiết khấu:</td><td style="color:#dc2626; text-align:right;">-${fmt(discVal)} đ</td></tr>` : ''}
+                    ${feeRowsHtml}
+                    <tr><td style="padding:6px 0; border-top:1.5px solid #cbd5e1 !important;"><strong>Tổng cộng:</strong></td><td style="padding:6px 0; border-top:1.5px solid #cbd5e1 !important; text-align:right;"><strong>${fmt(currentTotal)} đ</strong></td></tr>
+                    <tr><td style="padding:4px 0;">Đã thanh toán:</td><td style="text-align:right;">${fmt(currentPaid)} đ</td></tr>
                     <tr><td class="grand-total">CÒN PHẢI THU:</td><td class="grand-total">${fmt(currentDebt)} đ</td></tr>
                 </table>
             </div>

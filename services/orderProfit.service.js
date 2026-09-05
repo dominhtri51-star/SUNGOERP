@@ -8,7 +8,7 @@ async function recalculateOrderProfit(orderId, dbClient = null) {
     const client = dbClient || pool;
     try {
         const oRes = await client.query(`
-            SELECT id, order_code, total_amount, cost_of_goods, gross_profit, net_profit,
+            SELECT id, order_code, total_amount, subtotal_amount, discount_amount, points_discount, fee_payer, cost_of_goods, gross_profit, net_profit,
                    COALESCE(NULLIF(shipping_fee, '')::numeric, 0) as ship_fee,
                    COALESCE(NULLIF(station_fee, '')::numeric, 0) as stn_fee,
                    COALESCE(NULLIF(packaging_fee, '')::numeric, 0) as pack_fee,
@@ -38,17 +38,21 @@ async function recalculateOrderProfit(orderId, dbClient = null) {
             newCogs += qty * cost;
         }
 
-        const totalAmount = parseFloat(ord.total_amount) || 0;
-        const grossProfit = totalAmount - newCogs;
+        const isCustomerPay = (ord.fee_payer === 'CUSTOMER');
         const totalFees = parseFloat(ord.ship_fee) + parseFloat(ord.stn_fee) + parseFloat(ord.pack_fee) + parseFloat(ord.hand_fee) + parseFloat(ord.oth_fee);
-        const netProfit = grossProfit - totalFees;
+        const subtotal = parseFloat(ord.subtotal_amount) || 0;
+        const discounts = (parseFloat(ord.discount_amount) || 0) + (parseFloat(ord.points_discount) || 0);
+        const feeAddition = isCustomerPay ? totalFees : 0;
+        const totalAmount = subtotal > 0 ? Math.max(0, subtotal - discounts + feeAddition) : (parseFloat(ord.total_amount) || 0);
+        const grossProfit = totalAmount - newCogs;
+        const netProfit = isCustomerPay ? (Math.max(0, subtotal - discounts) - newCogs) : (grossProfit - totalFees);
 
         // Cập nhật lại orders
         await client.query(`
             UPDATE orders 
-            SET cost_of_goods = $1, gross_profit = $2, net_profit = $3
-            WHERE id = $4
-        `, [newCogs, grossProfit, netProfit, orderId]);
+            SET total_amount = $1, cost_of_goods = $2, gross_profit = $3, net_profit = $4
+            WHERE id = $5
+        `, [totalAmount, newCogs, grossProfit, netProfit, orderId]);
 
         // Đồng bộ lại bảng hoa hồng sales_commissions nếu đơn hàng này đã được ghi nhận hoa hồng
         try {
