@@ -1026,7 +1026,13 @@ window.modWmsOut = {
                     `).join('');
                 }
 
-                try { window.modWmsOut.currentProofs = o.delivery_proofs ? JSON.parse(o.delivery_proofs) : []; } catch(e) { window.modWmsOut.currentProofs = []; }
+                if (Array.isArray(o.delivery_proofs)) {
+                    window.modWmsOut.currentProofs = o.delivery_proofs;
+                } else if (typeof o.delivery_proofs === 'string' && o.delivery_proofs.trim()) {
+                    try { window.modWmsOut.currentProofs = JSON.parse(o.delivery_proofs); } catch(e) { window.modWmsOut.currentProofs = []; }
+                } else {
+                    window.modWmsOut.currentProofs = [];
+                }
                 window.modWmsOut.renderProofs();
 
                 window.modWmsOut.updateRoleUi();
@@ -1082,6 +1088,12 @@ window.modWmsOut = {
         `).join('');
     },
 
+    handleEscKey: (e) => {
+        if (e.key === 'Escape') {
+            window.modWmsOut.closeImagePreview();
+        }
+    },
+
     previewImage: (url) => {
         if (!url) return;
         const modal = document.getElementById('wms-image-preview-modal');
@@ -1093,6 +1105,7 @@ window.modWmsOut = {
         if (newTab) newTab.href = url;
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        document.addEventListener('keydown', window.modWmsOut.handleEscKey);
     },
 
     closeImagePreview: () => {
@@ -1101,6 +1114,7 @@ window.modWmsOut = {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
+        document.removeEventListener('keydown', window.modWmsOut.handleEscKey);
     },
 
     confirmShipment: async (targetStatus) => {
