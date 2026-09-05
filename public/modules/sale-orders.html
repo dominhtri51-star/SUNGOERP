@@ -149,6 +149,40 @@
                         <i class="fas fa-boxes text-slate-500 text-xs"></i>
                         <span id="pos-stock-filter-text" class="hidden sm:inline text-xs">Tất cả kho</span>
                     </button>
+
+                    <!-- BỘ CHỌN 5 KIỂU HIỂN THỊ MẬT ĐỘ CAO -->
+                    <div class="relative shrink-0">
+                        <button type="button" id="pos-view-mode-btn" onclick="window.modPos.toggleViewMenu(event)" class="px-2 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 shadow-2xs transition cursor-pointer" title="Đổi kiểu hiển thị sản phẩm">
+                            <i id="pos-view-mode-icon" class="fas fa-th text-blue-600 text-xs"></i>
+                            <span id="pos-view-mode-label" class="hidden md:inline text-xs">Lưới Siêu Gọn</span>
+                            <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
+                        </button>
+                        <div id="pos-view-dropdown" class="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 hidden p-1.5 space-y-1">
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 py-1 flex items-center justify-between">
+                                <span>Kiểu Hiển Thị (5 Tùy Chọn)</span>
+                            </div>
+                            <button type="button" onclick="window.modPos.setViewMode('compact_grid')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center justify-between transition cursor-pointer">
+                                <span class="flex items-center gap-2"><i class="fas fa-th text-slate-400 w-4 text-center"></i> 1. Lưới Siêu Gọn</span>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-bold">4-5 cột</span>
+                            </button>
+                            <button type="button" onclick="window.modPos.setViewMode('horizontal_list')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center justify-between transition cursor-pointer">
+                                <span class="flex items-center gap-2"><i class="fas fa-list text-slate-400 w-4 text-center"></i> 2. Hàng Ngang Avatar</span>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-bold">POS</span>
+                            </button>
+                            <button type="button" onclick="window.modPos.setViewMode('mini_tile')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center justify-between transition cursor-pointer">
+                                <span class="flex items-center gap-2"><i class="fas fa-grip-horizontal text-slate-400 w-4 text-center"></i> 3. Thẻ Mini Đôi</span>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-bold">2-3 cột</span>
+                            </button>
+                            <button type="button" onclick="window.modPos.setViewMode('app_icon')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center justify-between transition cursor-pointer">
+                                <span class="flex items-center gap-2"><i class="fas fa-shapes text-slate-400 w-4 text-center"></i> 4. Icon App Mật Độ</span>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-bold">Tối đa</span>
+                            </button>
+                            <button type="button" onclick="window.modPos.setViewMode('dense_table')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center justify-between transition cursor-pointer">
+                                <span class="flex items-center gap-2"><i class="fas fa-table-list text-slate-400 w-4 text-center"></i> 5. Bảng Dữ Liệu</span>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-bold">40+ SP</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- CẤP 1: THANH DANH MỤC CHÍNH -->
@@ -174,10 +208,19 @@
                 </div>
             </div>
 
-            <!-- FOOTER CỘT TRÁI: THỐNG KÊ NHANH -->
+            <!-- FOOTER CỘT TRÁI: THỐNG KÊ NHANH & CHUYỂN ĐỔI 5 KIỂU NHANH -->
             <div class="px-2.5 sm:px-3 py-1 border-t border-slate-200 bg-white text-[10px] font-semibold text-slate-500 flex justify-between items-center shrink-0">
                 <span id="pos-product-stat-text">Đang tải sản phẩm...</span>
-                <span class="text-blue-600 font-bold hidden sm:inline"><i class="fas fa-info-circle mr-1"></i>Bấm vào sản phẩm để thêm vào đơn</span>
+                <div class="flex items-center gap-1">
+                    <span class="text-[9px] text-slate-400 font-bold uppercase hidden sm:inline">Kiểu xem:</span>
+                    <div class="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg text-slate-600">
+                        <button type="button" onclick="window.modPos.setViewMode('compact_grid')" id="qbtn-compact_grid" title="Kiểu 1: Lưới Siêu Gọn" class="w-6 h-6 rounded flex items-center justify-center text-xs transition cursor-pointer"><i class="fas fa-th"></i></button>
+                        <button type="button" onclick="window.modPos.setViewMode('horizontal_list')" id="qbtn-horizontal_list" title="Kiểu 2: Hàng Ngang Avatar" class="w-6 h-6 rounded flex items-center justify-center text-xs transition cursor-pointer"><i class="fas fa-list"></i></button>
+                        <button type="button" onclick="window.modPos.setViewMode('mini_tile')" id="qbtn-mini_tile" title="Kiểu 3: Thẻ Mini Đôi" class="w-6 h-6 rounded flex items-center justify-center text-xs transition cursor-pointer"><i class="fas fa-grip-horizontal"></i></button>
+                        <button type="button" onclick="window.modPos.setViewMode('app_icon')" id="qbtn-app_icon" title="Kiểu 4: Icon App Mật Độ" class="w-6 h-6 rounded flex items-center justify-center text-xs transition cursor-pointer"><i class="fas fa-shapes"></i></button>
+                        <button type="button" onclick="window.modPos.setViewMode('dense_table')" id="qbtn-dense_table" title="Kiểu 5: Bảng Dữ Liệu" class="w-6 h-6 rounded flex items-center justify-center text-xs transition cursor-pointer"><i class="fas fa-table-list"></i></button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -352,6 +395,48 @@ window.modPos = {
     editingOrderId: null,
     editingOrderCode: null,
     mobileTab: 'CATALOG', // 'CATALOG' | 'CART'
+    viewMode: localStorage.getItem('sungo_pos_view_mode') || 'compact_grid',
+
+    toggleViewMenu: (e) => {
+        if (e) e.stopPropagation();
+        const drop = document.getElementById('pos-view-dropdown');
+        if (drop) drop.classList.toggle('hidden');
+    },
+
+    setViewMode: (mode) => {
+        window.modPos.viewMode = mode;
+        localStorage.setItem('sungo_pos_view_mode', mode);
+        const drop = document.getElementById('pos-view-dropdown');
+        if (drop) drop.classList.add('hidden');
+        window.modPos.updateViewModeUI();
+        window.modPos.renderProducts();
+    },
+
+    updateViewModeUI: () => {
+        const mode = window.modPos.viewMode || 'compact_grid';
+        const labelEl = document.getElementById('pos-view-mode-label');
+        const iconEl = document.getElementById('pos-view-mode-icon');
+        const map = {
+            'compact_grid': { label: 'Lưới Siêu Gọn', icon: 'fa-th' },
+            'horizontal_list': { label: 'Hàng Ngang', icon: 'fa-list' },
+            'mini_tile': { label: 'Thẻ Mini', icon: 'fa-grip-horizontal' },
+            'app_icon': { label: 'Icon App', icon: 'fa-shapes' },
+            'dense_table': { label: 'Bảng Dữ Liệu', icon: 'fa-table-list' }
+        };
+        if (labelEl && map[mode]) labelEl.innerText = map[mode].label;
+        if (iconEl && map[mode]) iconEl.className = `fas ${map[mode].icon} text-blue-600 text-xs`;
+
+        ['compact_grid', 'horizontal_list', 'mini_tile', 'app_icon', 'dense_table'].forEach(m => {
+            const btn = document.getElementById('qbtn-' + m);
+            if (btn) {
+                if (m === mode) {
+                    btn.className = 'w-6 h-6 rounded flex items-center justify-center bg-white text-blue-600 font-bold shadow-xs text-xs';
+                } else {
+                    btn.className = 'w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 text-xs transition';
+                }
+            }
+        });
+    },
 
     tierNames: {
         1: "VIP 1 • GIÁ LẺ",
@@ -400,6 +485,7 @@ window.modPos = {
             }
 
             window.modPos.renderCategoryTabs();
+            window.modPos.updateViewModeUI();
             window.modPos.renderProducts();
             window.modPos.updateMobileLayout();
 
@@ -730,6 +816,7 @@ window.modPos = {
         if (!grid) return;
 
         if (list.length === 0) {
+            grid.className = "w-full";
             grid.innerHTML = `
                 <div class="col-span-full text-center p-6 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
                     <i class="fas fa-search text-2xl mb-1 text-slate-300"></i>
@@ -740,75 +827,247 @@ window.modPos = {
         }
 
         const curTier = window.modPos.activeTier;
+        const mode = window.modPos.viewMode || 'compact_grid';
 
-        grid.innerHTML = list.map(p => {
-            const stockReal = parseFloat(p.stock_qty || 0);
-            const stockVirt = parseFloat(p.virtual_stock || 0);
-            const totalStock = stockReal + stockVirt;
-            
-            const retailPrice = parseFloat(p.retail_price) || 0;
-            const tierPrice = window.modPos.getPriceForTier(p, curTier);
-            const isVipApplied = curTier > 1 && tierPrice < retailPrice;
-
+        const getImgHtml = (p) => {
             const hasImg = p.image_url && p.image_url.trim() !== '';
             const safeImgUrl = hasImg ? p.image_url.trim().replace(/"/g, '&quot;') : '';
             const safeName = (p.product_name || '').replace(/"/g, '&quot;');
-            const safeSku = (p.sku || 'N/A').replace(/"/g, '&quot;');
+            return hasImg 
+                ? `<img src="${safeImgUrl}" loading="lazy" alt="${safeName}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center text-slate-300\\'><i class=\\'fas fa-solar-panel text-sm\\'></i><span class=\\'text-[7px] font-bold text-slate-400\\'>SUNGO</span></div>';" class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105">` 
+                : `<div class="w-full h-full flex flex-col items-center justify-center text-slate-300"><i class="fas fa-solar-panel text-base text-slate-300"></i><span class="text-[7px] font-black text-slate-400 mt-0.5 uppercase">SUNGO</span></div>`;
+        };
 
-            // Khung ảnh chuẩn object-contain (100% không bị cắt góc / crop)
-            const imgHtml = hasImg 
-                ? `<img src="${safeImgUrl}" loading="lazy" alt="${safeName}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center text-slate-300\'><i class=\'fas fa-solar-panel text-2xl mb-1\'></i><span class=\'text-[9px] font-bold text-slate-400\'>SUNGO</span></div>';" class="w-full h-full object-contain p-1 sm:p-1.5 transition-transform duration-300 group-hover:scale-105">` 
-                : `<div class="w-full h-full flex flex-col items-center justify-center text-slate-300"><i class="fas fa-solar-panel text-2xl sm:text-3xl text-slate-300"></i><span class="text-[8px] font-black text-slate-400 mt-1 uppercase tracking-wider">SUNGO</span></div>`;
+        if (mode === 'horizontal_list') {
+            // KIỂU 2: HÀNG NGANG AVATAR ICON (MẬT ĐỘ RẤT CAO)
+            grid.className = "space-y-1.5 w-full";
+            grid.innerHTML = list.map(p => {
+                const totalStock = (parseFloat(p.stock_qty || 0) + parseFloat(p.virtual_stock || 0));
+                const tierPrice = window.modPos.getPriceForTier(p, curTier);
+                const safeName = (p.product_name || '').replace(/"/g, '&quot;');
+                const safeSku = (p.sku || 'N/A').replace(/"/g, '&quot;');
+                const hasImg = p.image_url && p.image_url.trim() !== '';
+                const safeImgUrl = hasImg ? p.image_url.trim().replace(/"/g, '&quot;') : '';
 
-            const stockBadge = totalStock > 0 
-                ? `<span class="text-[8px] sm:text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-200">Còn: ${totalStock}</span>`
-                : `<span class="text-[8px] sm:text-[9px] font-extrabold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">Hết hàng</span>`;
+                return `
+                <div onclick="window.modPos.addToCart(${p.id})" 
+                     class="w-full bg-white border border-slate-200 hover:border-blue-500 rounded-xl p-2 cursor-pointer transition flex items-center justify-between gap-2.5 group hover:bg-blue-50/30 shadow-2xs">
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div class="w-11 h-11 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center p-1 shrink-0 overflow-hidden relative">
+                            ${getImgHtml(p)}
+                            ${hasImg ? `
+                            <button type="button" onclick="window.modPos.openImgPreview(event, '${safeImgUrl}', '${safeName}', '${safeSku}', '${fmt(tierPrice)} đ')" title="Xem ảnh lớn" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[9px] transition cursor-pointer">
+                                <i class="fas fa-expand"></i>
+                            </button>` : ''}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 mb-0.5">
+                                <span class="text-[9px] font-bold text-slate-400 font-mono">${p.sku || 'N/A'}</span>
+                                ${totalStock > 0 
+                                    ? `<span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-1 rounded border border-emerald-100">Kho: ${totalStock} ${p.unit || ''}</span>`
+                                    : `<span class="text-[9px] text-rose-600 font-bold bg-rose-50 px-1 rounded border border-rose-100">Hết hàng</span>`}
+                            </div>
+                            <h4 class="font-black text-slate-900 text-xs sm:text-sm truncate group-hover:text-blue-600 transition" title="${safeName}">
+                                ${p.product_name}
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <div class="text-right">
+                            <span class="font-black text-blue-700 text-xs sm:text-sm block">${fmt(tierPrice)} đ</span>
+                            <span class="text-[9px] text-slate-400 font-medium">ĐVT: ${p.unit || 'Bộ'}</span>
+                        </div>
+                        <span class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-black group-hover:scale-110 transition shadow-xs">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                    </div>
+                </div>`;
+            }).join('');
 
-            return `
-            <div onclick="window.modPos.addToCart(${p.id})" 
-                 class="pos-prod-card bg-white border border-slate-200 hover:border-blue-500 rounded-xl p-2 sm:p-2.5 cursor-pointer flex flex-col justify-between group relative overflow-hidden shadow-2xs">
-                
-                <div>
-                    <!-- KHUNG HÌNH ẢNH SẢN PHẨM HIỂN THỊ TOÀN VẸN (ASPECT SQUARE + OBJECT CONTAIN) -->
-                    <div class="w-full aspect-square bg-gradient-to-b from-white to-slate-50 border border-slate-100 rounded-lg overflow-hidden flex justify-center items-center mb-2 relative group/img shadow-inner">
-                        ${imgHtml}
+        } else if (mode === 'mini_tile') {
+            // KIỂU 3: THẺ MINI ĐÔI (2-3 CỘT NGANG)
+            grid.className = "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 w-full";
+            grid.innerHTML = list.map(p => {
+                const totalStock = (parseFloat(p.stock_qty || 0) + parseFloat(p.virtual_stock || 0));
+                const tierPrice = window.modPos.getPriceForTier(p, curTier);
+                const safeName = (p.product_name || '').replace(/"/g, '&quot;');
+                const safeSku = (p.sku || 'N/A').replace(/"/g, '&quot;');
+                const hasImg = p.image_url && p.image_url.trim() !== '';
+                const safeImgUrl = hasImg ? p.image_url.trim().replace(/"/g, '&quot;') : '';
 
-                        <!-- Nút xem ảnh to (khi có ảnh) -->
+                return `
+                <div onclick="window.modPos.addToCart(${p.id})" 
+                     class="bg-white border border-slate-200 hover:border-blue-500 rounded-xl p-2 cursor-pointer transition flex items-center gap-2 group hover:bg-slate-50 shadow-2xs">
+                    <div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center p-1 shrink-0 overflow-hidden relative">
+                        ${getImgHtml(p)}
                         ${hasImg ? `
-                        <button type="button" onclick="window.modPos.openImgPreview(event, '${safeImgUrl}', '${safeName}', '${safeSku}', '${fmt(tierPrice)} đ')" 
-                                title="Xem ảnh lớn"
-                                class="absolute bottom-1 left-1 w-6 h-6 rounded-md bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center text-[10px] shadow-sm opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        <button type="button" onclick="window.modPos.openImgPreview(event, '${safeImgUrl}', '${safeName}', '${safeSku}', '${fmt(tierPrice)} đ')" title="Xem ảnh lớn" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[9px] transition cursor-pointer">
                             <i class="fas fa-expand"></i>
                         </button>` : ''}
-
-                        <!-- Nút bấm thêm nhanh (+) -->
-                        <div class="absolute top-1 right-1">
-                            <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-600/90 group-hover:bg-blue-600 text-white flex items-center justify-center text-[10px] sm:text-xs shadow-xs font-bold transition">
-                                <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="font-black text-slate-900 text-xs leading-snug line-clamp-2 group-hover:text-blue-600 transition" title="${safeName}">
+                            ${p.product_name}
+                        </h4>
+                        <div class="flex items-center justify-between mt-1 pt-1 border-t border-slate-100">
+                            <span class="font-black text-blue-700 text-xs">${fmt(tierPrice)} đ</span>
+                            <span class="text-[9px] ${totalStock > 0 ? 'text-emerald-700 font-extrabold' : 'text-rose-600 font-bold'}">
+                                ${totalStock > 0 ? `Còn: ${totalStock}` : 'Hết hàng'}
                             </span>
                         </div>
                     </div>
+                </div>`;
+            }).join('');
 
-                    <!-- THÔNG TIN SẢN PHẨM -->
-                    <div class="flex items-center justify-between gap-1 mb-1">
-                        <span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase truncate">SKU: ${p.sku || 'N/A'}</span>
-                        ${stockBadge}
+        } else if (mode === 'app_icon') {
+            // KIỂU 4: ICON APP MẬT ĐỘ CỰC ĐẠI (4-6 CỘT)
+            grid.className = "grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 w-full";
+            grid.innerHTML = list.map(p => {
+                const totalStock = (parseFloat(p.stock_qty || 0) + parseFloat(p.virtual_stock || 0));
+                const tierPrice = window.modPos.getPriceForTier(p, curTier);
+                const safeName = (p.product_name || '').replace(/"/g, '&quot;');
+                const safeSku = (p.sku || 'N/A').replace(/"/g, '&quot;');
+                const hasImg = p.image_url && p.image_url.trim() !== '';
+                const safeImgUrl = hasImg ? p.image_url.trim().replace(/"/g, '&quot;') : '';
+
+                return `
+                <div onclick="window.modPos.addToCart(${p.id})" 
+                     class="p-2 rounded-2xl hover:bg-blue-50/60 cursor-pointer transition text-center group flex flex-col items-center justify-between border border-transparent hover:border-blue-200">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 border-slate-100 group-hover:border-blue-500 p-1 flex items-center justify-center shadow-xs group-hover:shadow-md transition-all relative">
+                        ${getImgHtml(p)}
+                        ${hasImg ? `
+                        <button type="button" onclick="window.modPos.openImgPreview(event, '${safeImgUrl}', '${safeName}', '${safeSku}', '${fmt(tierPrice)} đ')" title="Xem ảnh lớn" class="absolute bottom-0.5 right-0.5 w-4 h-4 rounded bg-slate-900/70 text-white flex items-center justify-center text-[7px] opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                            <i class="fas fa-expand"></i>
+                        </button>` : ''}
                     </div>
-                    <p class="font-bold text-slate-800 text-[11px] sm:text-xs leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors" title="${safeName}">${p.product_name}</p>
-                </div>
-                
-                <!-- ĐƠN GIÁ & ĐƠN VỊ TÍNH -->
-                <div class="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between">
-                    <div class="text-left min-w-0">
-                        ${isVipApplied ? `<span class="text-[8px] sm:text-[9px] text-slate-400 line-through block leading-none mb-0.5">${fmt(retailPrice)} đ</span>` : ''}
-                        <span class="font-black ${isVipApplied ? 'text-emerald-600' : 'text-blue-600'} text-[11px] sm:text-xs truncate block">${fmt(tierPrice)} đ</span>
+                    <h4 class="font-black text-slate-900 text-[11px] leading-tight line-clamp-2 mt-1.5 group-hover:text-blue-600 transition" title="${safeName}">
+                        ${p.product_name}
+                    </h4>
+                    <div class="mt-1">
+                        <span class="font-black text-blue-700 text-xs block">${fmt(tierPrice)} đ</span>
+                        <span class="text-[9px] ${totalStock > 0 ? 'text-emerald-700' : 'text-rose-500'} font-bold">
+                            ${totalStock > 0 ? `Kho: ${totalStock}` : 'Hết hàng'}
+                        </span>
                     </div>
-                    <span class="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
-                        ${p.unit || 'Bộ'}
-                    </span>
-                </div>
-            </div>`;
-        }).join('');
+                </div>`;
+            }).join('');
+
+        } else if (mode === 'dense_table') {
+            // KIỂU 5: BẢNG DỮ LIỆU TINH GỌN (SUPER DENSE TABLE)
+            grid.className = "w-full overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-2xs";
+            grid.innerHTML = `
+            <table class="w-full text-left text-xs divide-y divide-slate-100">
+                <thead class="bg-slate-100/80 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="p-2 pl-3 w-12 text-center">Ảnh</th>
+                        <th class="p-2">Tên Thiết Bị & SKU</th>
+                        <th class="p-2 text-center">Tồn Kho</th>
+                        <th class="p-2 text-right">Đơn Giá VIP</th>
+                        <th class="p-2 pr-3 text-center w-14">Thêm</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    ${list.map(p => {
+                        const totalStock = (parseFloat(p.stock_qty || 0) + parseFloat(p.virtual_stock || 0));
+                        const tierPrice = window.modPos.getPriceForTier(p, curTier);
+                        const safeName = (p.product_name || '').replace(/"/g, '&quot;');
+                        const safeSku = (p.sku || 'N/A').replace(/"/g, '&quot;');
+                        const hasImg = p.image_url && p.image_url.trim() !== '';
+                        const safeImgUrl = hasImg ? p.image_url.trim().replace(/"/g, '&quot;') : '';
+
+                        return `
+                        <tr onclick="window.modPos.addToCart(${p.id})" class="hover:bg-blue-50/40 transition cursor-pointer">
+                            <td class="p-1.5 pl-3 text-center">
+                                <div class="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center p-0.5 mx-auto overflow-hidden relative group">
+                                    ${getImgHtml(p)}
+                                    ${hasImg ? `
+                                    <button type="button" onclick="window.modPos.openImgPreview(event, '${safeImgUrl}', '${safeName}', '${safeSku}', '${fmt(tierPrice)} đ')" title="Xem ảnh lớn" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[8px] transition cursor-pointer">
+                                        <i class="fas fa-expand"></i>
+                                    </button>` : ''}
+                                </div>
+                            </td>
+                            <td class="p-2">
+                                <div class="font-black text-slate-900 text-xs hover:text-blue-600">${p.product_name}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">SKU: ${p.sku || 'N/A'} | ${p.category || 'Khác'}</div>
+                            </td>
+                            <td class="p-2 text-center">
+                                <span class="px-1.5 py-0.5 text-[10px] font-extrabold rounded ${totalStock > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+                                    ${totalStock > 0 ? `${totalStock} ${p.unit || ''}` : 'Hết'}
+                                </span>
+                            </td>
+                            <td class="p-2 text-right font-black text-blue-700 text-xs">
+                                ${fmt(tierPrice)} đ
+                            </td>
+                            <td class="p-2 pr-3 text-center">
+                                <button type="button" class="w-7 h-7 rounded-lg bg-blue-600 text-white font-black text-xs hover:bg-blue-700 shadow-xs transition">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>`;
+
+        } else {
+            // KIỂU 1: LƯỚI SIÊU GỌN (COMPACT GRID - 3 ĐẾN 5 CỘT)
+            grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-1.5 sm:gap-2 w-full";
+            grid.innerHTML = list.map(p => {
+                const totalStock = (parseFloat(p.stock_qty || 0) + parseFloat(p.virtual_stock || 0));
+                const retailPrice = parseFloat(p.retail_price) || 0;
+                const tierPrice = window.modPos.getPriceForTier(p, curTier);
+                const isVipApplied = curTier > 1 && tierPrice < retailPrice;
+                const safeName = (p.product_name || '').replace(/"/g, '&quot;');
+                const safeSku = (p.sku || 'N/A').replace(/"/g, '&quot;');
+                const hasImg = p.image_url && p.image_url.trim() !== '';
+                const safeImgUrl = hasImg ? p.image_url.trim().replace(/"/g, '&quot;') : '';
+
+                return `
+                <div onclick="window.modPos.addToCart(${p.id})" 
+                     class="pos-prod-card bg-white border border-slate-200 hover:border-blue-500 rounded-xl p-2 cursor-pointer flex flex-col justify-between group relative overflow-hidden shadow-2xs">
+                    <div>
+                        <!-- ICON ẢNH SẢN PHẨM NHỎ GỌN OBJECT-CONTAIN -->
+                        <div class="w-full h-16 sm:h-20 bg-gradient-to-b from-white to-slate-50 border border-slate-100 rounded-lg overflow-hidden flex justify-center items-center mb-1.5 relative group/img shadow-inner">
+                            ${getImgHtml(p)}
+                            ${hasImg ? `
+                            <button type="button" onclick="window.modPos.openImgPreview(event, '${safeImgUrl}', '${safeName}', '${safeSku}', '${fmt(tierPrice)} đ')" 
+                                    title="Xem ảnh lớn"
+                                    class="absolute bottom-1 left-1 w-5 h-5 rounded bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center text-[9px] shadow-sm opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                <i class="fas fa-expand"></i>
+                            </button>` : ''}
+                            <div class="absolute top-1 right-1">
+                                <span class="w-5 h-5 rounded-md bg-blue-600/90 group-hover:bg-blue-600 text-white flex items-center justify-center text-[9px] shadow-xs font-bold transition">
+                                    <i class="fas fa-plus"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- THÔNG TIN: SKU & TỒN KHO -->
+                        <div class="flex items-center justify-between gap-1 mb-0.5">
+                            <span class="text-[8px] font-bold text-slate-400 uppercase truncate">${p.sku || 'N/A'}</span>
+                            ${totalStock > 0 
+                                ? `<span class="text-[8px] font-extrabold text-emerald-700 bg-emerald-50 px-1 rounded border border-emerald-200">Còn: ${totalStock}</span>`
+                                : `<span class="text-[8px] font-extrabold text-rose-700 bg-rose-50 px-1 rounded border border-rose-200">Hết</span>`}
+                        </div>
+                        
+                        <!-- TIÊU ĐỀ SẢN PHẨM NỔI BẬT ĐẬM NÉT -->
+                        <h4 class="font-black text-slate-900 text-[11px] sm:text-xs leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors" title="${safeName}">
+                            ${p.product_name}
+                        </h4>
+                    </div>
+                    
+                    <!-- ĐƠN GIÁ & ĐƠN VỊ TÍNH -->
+                    <div class="mt-1.5 pt-1 border-t border-slate-100 flex items-center justify-between">
+                        <div class="text-left min-w-0">
+                            ${isVipApplied ? `<span class="text-[8px] text-slate-400 line-through block leading-none">${fmt(retailPrice)} đ</span>` : ''}
+                            <span class="font-black ${isVipApplied ? 'text-emerald-600' : 'text-blue-700'} text-[11px] sm:text-xs truncate block">${fmt(tierPrice)} đ</span>
+                        </div>
+                        <span class="text-[8px] font-bold text-slate-500 bg-slate-100 px-1 py-0.2 rounded shrink-0">
+                            ${p.unit || 'Bộ'}
+                        </span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
     },
 
     // Tìm kiếm khách hàng (CRM Search)
@@ -1295,6 +1554,17 @@ window.modPos = {
 // Lắng nghe sự kiện resize màn hình để chuyển đổi mượt mà giữa Mobile & Desktop
 window.addEventListener('resize', () => {
     if (window.modPos) window.modPos.updateMobileLayout();
+});
+
+// Đóng dropdown chọn kiểu xem khi bấm ra ngoài
+document.addEventListener('click', (e) => {
+    const drop = document.getElementById('pos-view-dropdown');
+    const btn = document.getElementById('pos-view-mode-btn');
+    if (drop && !drop.classList.contains('hidden')) {
+        if (!drop.contains(e.target) && !btn?.contains(e.target)) {
+            drop.classList.add('hidden');
+        }
+    }
 });
 
 // Khởi chạy POS khi load module
