@@ -598,9 +598,9 @@
                                 <span class="bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase">VietQR 24/7</span>
                                 <span class="font-bold text-blue-900">Quét mã để thanh toán nhanh</span>
                             </div>
-                            <p class="text-slate-600">Ngân hàng: <strong class="text-slate-900">Techcombank (TCB)</strong></p>
-                            <p class="text-slate-600">Số tài khoản: <strong class="text-blue-700 font-mono text-sm tracking-wider">19036668888019</strong></p>
-                            <p class="text-slate-600">Chủ tài khoản: <strong class="text-slate-900">CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO</strong></p>
+                            <p class="text-slate-600">Ngân hàng: <strong id="debt-unpaid-bank-name" class="text-slate-900">Techcombank (TCB)</strong></p>
+                            <p class="text-slate-600">Số tài khoản: <strong id="debt-unpaid-bank-acc" class="text-blue-700 font-mono text-sm tracking-wider">19134128005010</strong></p>
+                            <p class="text-slate-600">Chủ tài khoản: <strong id="debt-unpaid-bank-holder" class="text-slate-900">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</strong></p>
                             <p class="text-slate-500 text-[11px] italic">Nội dung: <span class="font-bold text-slate-800 font-mono" id="debt-unpaid-transfer-remark">THANH TOAN NO...</span></p>
                         </div>
                     </div>
@@ -1647,9 +1647,42 @@ window.modDebtBook = {
             document.getElementById('debt-unpaid-foot-paid').innerText = window.modDebtBook.fmtMoney(totalPaid) + ' đ';
             document.getElementById('debt-unpaid-foot-remaining').innerText = window.modDebtBook.fmtMoney(totalRemaining) + ' đ';
 
+            // Nạp thông tin tài khoản ngân hàng từ settings hệ thống (nếu có)
+            let bankName = 'Techcombank (TCB)';
+            let bankAcc = '19134128005010';
+            let bankHolder = 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+            let bankCode = '970407'; // Techcombank Napas BIN
+
+            try {
+                if (!window.modDebtBook._sysSettings) {
+                    const setRes = await fetch('/api/settings');
+                    const setJson = await setRes.json();
+                    if (setJson.success && setJson.data) {
+                        window.modDebtBook._sysSettings = setJson.data;
+                    }
+                }
+                const cfg = window.modDebtBook._sysSettings;
+                if (cfg) {
+                    if (cfg.quote_bank_account_number) bankAcc = cfg.quote_bank_account_number;
+                    if (cfg.quote_bank_account_holder) bankHolder = cfg.quote_bank_account_holder;
+                    if (cfg.quote_bank_name) bankName = cfg.quote_bank_name + (cfg.quote_bank_code ? ` (${cfg.quote_bank_code})` : '');
+                    if (cfg.quote_bank_code) {
+                        bankCode = cfg.quote_bank_code === 'TCB' ? '970407' : cfg.quote_bank_code;
+                    }
+                }
+            } catch (e) {}
+
+            const bankNameEl = document.getElementById('debt-unpaid-bank-name');
+            const bankAccEl = document.getElementById('debt-unpaid-bank-acc');
+            const bankHolderEl = document.getElementById('debt-unpaid-bank-holder');
+            if (bankNameEl) bankNameEl.innerText = bankName;
+            if (bankAccEl) bankAccEl.innerText = bankAcc;
+            if (bankHolderEl) bankHolderEl.innerText = bankHolder;
+
             // Generate VietQR 24/7 Napas
             const qrRemark = `THANH TOAN NO ${(p.name || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9 ]/g, "").toUpperCase().trim().substring(0, 20)}`;
-            const qrUrl = `https://img.vietqr.io/image/970407-19036668888019-compact2.png?amount=${Math.round(totalRemaining)}&addInfo=${encodeURIComponent(qrRemark)}&accountName=CONG TY TNHH DIEN MAT TROI SUNGO`;
+            const cleanHolder = (bankHolder || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+            const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAcc}-compact2.png?amount=${Math.round(totalRemaining)}&addInfo=${encodeURIComponent(qrRemark)}&accountName=${encodeURIComponent(cleanHolder)}`;
             
             const qrImg = document.getElementById('debt-unpaid-qr-img');
             if (qrImg) qrImg.src = qrUrl;
@@ -1684,6 +1717,11 @@ window.modDebtBook = {
         const unpaid = data.unpaidOrders || [];
         const totalRem = unpaid.reduce((sum, o) => sum + parseFloat(o.remaining_debt || 0), 0);
 
+        const cfg = window.modDebtBook._sysSettings || {};
+        const bankName = cfg.quote_bank_name ? `${cfg.quote_bank_name} (${cfg.quote_bank_code || 'TCB'})` : 'Techcombank (TCB)';
+        const bankAcc = cfg.quote_bank_account_number || '19134128005010';
+        const bankHolder = cfg.quote_bank_account_holder || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+
         let lines = [];
         lines.push(`Kính gửi Quý khách/Đại lý: ${p.name},`);
         lines.push(`SUNGO xin gửi Bảng kê các đơn hàng còn nợ chưa thanh toán tính đến hôm nay:`);
@@ -1700,9 +1738,9 @@ window.modDebtBook = {
             lines.push(`👉 TỔNG NỢ CẦN THANH TOÁN: ${window.modDebtBook.fmtMoney(totalRem)} đ`);
             lines.push(``);
             lines.push(`THÔNG TIN THANH TOÁN TECHCOMBANK (VIETQR 24/7):`);
-            lines.push(`- Ngân hàng: Techcombank (TCB)`);
-            lines.push(`- Số tài khoản: 19036668888019`);
-            lines.push(`- Chủ tài khoản: CÔNG TY TNHH NĂNG LƯỢNG MẶT TRỜI SUNGO`);
+            lines.push(`- Ngân hàng: ${bankName}`);
+            lines.push(`- Số tài khoản: ${bankAcc}`);
+            lines.push(`- Chủ tài khoản: ${bankHolder}`);
             lines.push(`- Nội dung: THANH TOAN NO ${p.name}`);
             lines.push(``);
             lines.push(`Quý khách có thể chuyển khoản theo STK trên hoặc quét mã QR trên bảng kê để hệ thống tự động gạch nợ. Chúc Quý khách một ngày làm việc hiệu quả!`);
