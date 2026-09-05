@@ -76,7 +76,7 @@
 
         const banner = document.createElement('div');
         banner.id = 'pwa-install-banner';
-        banner.className = 'fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-[9999] bg-slate-900/95 backdrop-blur-md border border-amber-500/40 text-white p-4 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-0 flex flex-col gap-3';
+        banner.className = 'fixed bottom-18 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-35 bg-slate-900/95 backdrop-blur-md border border-amber-500/40 text-white p-4 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-0 flex flex-col gap-3';
         
         banner.innerHTML = `
             <div class="flex items-center gap-3">

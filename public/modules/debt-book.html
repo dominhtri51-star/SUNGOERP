@@ -225,22 +225,22 @@
     <!-- ========================================================================= -->
     <!-- MODAL / BOTTOM SHEET: TẠO GIAO DỊCH NHANH ("TÔI ĐÃ NHẬN" / "TÔI ĐÃ ĐƯA") -->
     <!-- ========================================================================= -->
-    <div id="modal-quick-tx" class="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeQuickTxModal()">
+    <div id="modal-quick-tx" class="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeQuickTxModal()">
         <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-slide-up" onclick="event.stopPropagation()">
             
             <!-- MOBILE TOP DRAG HANDLE -->
             <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2 sm:hidden shrink-0"></div>
 
             <!-- HEADER MODAL GIAO DỊCH -->
-            <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
-                <div class="flex items-center gap-2.5 min-w-0">
+            <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
                     <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs" id="tx-modal-avatar">KH</div>
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                         <h3 class="text-sm font-black text-slate-900 truncate" id="tx-modal-partner-name">Chọn khách hàng</h3>
-                        <p class="text-[11px] text-slate-500 font-medium truncate" id="tx-modal-partner-debt">Số dư nợ: 0 đ</p>
+                        <p class="text-[11px] text-emerald-700 font-bold truncate" id="tx-modal-partner-debt">Số dư nợ: 0 đ</p>
                     </div>
                 </div>
-                <button type="button" onclick="window.modDebtBook.closeQuickTxModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition cursor-pointer">
+                <button type="button" onclick="window.modDebtBook.closeQuickTxModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs transition cursor-pointer shrink-0 ml-2">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -334,7 +334,7 @@
     <!-- ========================================================================= -->
     <!-- MODAL ĐẶT LỊCH NHẮC NỢ -->
     <!-- ========================================================================= -->
-    <div id="modal-reminder" class="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeReminderModal()">
+    <div id="modal-reminder" class="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeReminderModal()">
         <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <h3 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
@@ -642,8 +642,9 @@ window.modDebtBook = {
         const modal = document.getElementById('modal-quick-tx');
         if (!modal) return;
 
-        // Hide floating capsule bar so it doesn't overlap the modal
+        // Hide floating capsule bar & pwa banner so they don't overlap the modal
         document.getElementById('debt-floating-bar')?.classList.add('hidden');
+        document.getElementById('pwa-install-banner')?.classList.add('hidden');
 
         // Nếu đang mở từ chi tiết khách hàng
         const p = window.modDebtBook.currentPartner;
@@ -681,8 +682,9 @@ window.modDebtBook = {
     closeQuickTxModal: () => {
         const modal = document.getElementById('modal-quick-tx');
         if (modal) modal.classList.add('hidden');
-        // Restore floating capsule bar
+        // Restore floating capsule bar & pwa banner
         document.getElementById('debt-floating-bar')?.classList.remove('hidden');
+        document.getElementById('pwa-install-banner')?.classList.remove('hidden');
     },
 
     setTxType: (type) => {
@@ -991,6 +993,7 @@ window.modDebtBook = {
         const modal = document.getElementById('modal-reminder');
         if (modal) {
             document.getElementById('debt-floating-bar')?.classList.add('hidden');
+            document.getElementById('pwa-install-banner')?.classList.add('hidden');
             const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
             document.getElementById('modal-reminder-date').value = nextWeek;
             document.getElementById('modal-reminder-notes').value = `Hẹn nhắc nợ ${p.name} thanh toán`;
@@ -1002,6 +1005,7 @@ window.modDebtBook = {
         const modal = document.getElementById('modal-reminder');
         if (modal) modal.classList.add('hidden');
         document.getElementById('debt-floating-bar')?.classList.remove('hidden');
+        document.getElementById('pwa-install-banner')?.classList.remove('hidden');
     },
 
     saveReminder: async () => {
