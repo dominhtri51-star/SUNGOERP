@@ -391,9 +391,22 @@
         
         <div class="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs">
             <div class="flex flex-col md:flex-row gap-4">
-                <div class="w-24 h-24 shrink-0 bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative shadow-inner">
+                <div id="p-img-preview-box" 
+                     onclick="document.getElementById('p-image-upload').click()"
+                     ondragover="event.preventDefault(); this.classList.add('border-blue-500', 'bg-blue-50');"
+                     ondragleave="this.classList.remove('border-blue-500', 'bg-blue-50');"
+                     ondrop="event.preventDefault(); this.classList.remove('border-blue-500', 'bg-blue-50'); if (event.dataTransfer.files && event.dataTransfer.files.length) { document.getElementById('p-image-upload').files = event.dataTransfer.files; window.modProducts.uploadImage(document.getElementById('p-image-upload')); }"
+                     class="w-24 h-24 shrink-0 bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 hover:border-blue-500 hover:bg-blue-50/40 flex items-center justify-center overflow-hidden relative shadow-inner cursor-pointer group transition select-none"
+                     title="Bấm để chọn file hoặc kéo thả ảnh vào đây">
                     <img id="p-img-preview" src="" class="hidden w-full h-full object-cover">
-                    <i id="p-img-icon" class="fas fa-image text-slate-300 text-2xl"></i>
+                    <div id="p-img-icon" class="flex flex-col items-center justify-center text-slate-400 group-hover:text-blue-600 transition p-1 text-center">
+                        <i class="fas fa-cloud-arrow-up text-2xl mb-1 text-slate-400 group-hover:text-blue-500 transition"></i>
+                        <span class="text-[9px] font-bold leading-tight">Chọn / Thả ảnh</span>
+                    </div>
+                    <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold gap-1">
+                        <i class="fas fa-camera text-sm"></i>
+                        <span>Đổi ảnh</span>
+                    </div>
                 </div>
                 <div class="flex-1 space-y-3">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -459,13 +472,31 @@
             </div>
 
             <div>
-                <label class="block font-bold text-slate-700 mb-1">Hình Ảnh Thiết Bị (Link hoặc Tải lên)</label>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block font-bold text-slate-700">Hình Ảnh Thiết Bị (Tải file hoặc Dán Link Google Drive / Web)</label>
+                    <span id="p-img-drive-badge" class="hidden text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+                        <i class="fab fa-google-drive mr-1"></i> Tự động nhận diện Google Drive
+                    </span>
+                </div>
                 <div class="flex gap-2">
-                    <input type="text" id="p-image" oninput="window.modProducts.previewImage(this.value)" placeholder="Dán link ảnh từ web hoặc bấm nút Tải Ảnh..." class="w-full border border-slate-300 p-2 rounded-lg outline-none focus:border-blue-500 font-medium">
-                    <label class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-3.5 rounded-lg cursor-pointer whitespace-nowrap shadow transition flex items-center gap-1.5 text-xs">
-                        <i class="fas fa-upload"></i> Tải Ảnh
+                    <div class="relative flex-1">
+                        <input type="text" id="p-image" oninput="window.modProducts.onImageInput(this.value)" placeholder="Dán link ảnh từ Google Drive / Web hoặc bấm Tải Ảnh..." class="w-full border border-slate-300 p-2 rounded-lg outline-none focus:border-blue-500 font-medium text-xs pr-7">
+                        <button type="button" id="p-btn-clear-img" onclick="window.modProducts.clearImage()" class="hidden absolute right-2 top-2.5 text-slate-400 hover:text-red-500 text-xs transition" title="Xóa link ảnh">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                    <button type="button" id="p-btn-import-url" onclick="window.modProducts.importFromUrl()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg whitespace-nowrap shadow transition items-center gap-1 text-xs" title="Tải ảnh từ liên kết này và lưu trữ vĩnh viễn trên Google Cloud Storage của SUNGO">
+                        <i class="fas fa-cloud-arrow-down"></i> Lưu Vào Cloud
+                    </button>
+                    <label id="p-btn-upload-label" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3.5 rounded-lg cursor-pointer whitespace-nowrap shadow transition flex items-center gap-1.5 text-xs select-none">
+                        <i id="p-btn-upload-icon" class="fas fa-upload"></i>
+                        <span id="p-btn-upload-text">Tải Ảnh</span>
                         <input type="file" id="p-image-upload" accept="image/*" class="hidden" onchange="window.modProducts.uploadImage(this)">
                     </label>
+                </div>
+                <div class="mt-1 flex items-center justify-between text-[10px] text-slate-500">
+                    <span><i class="fas fa-shield-halved text-emerald-600 mr-1"></i>Lưu trữ vĩnh viễn trên Google Cloud Storage (không mất khi server khởi động lại)</span>
+                    <span class="text-blue-600 font-semibold cursor-pointer hover:underline" onclick="document.getElementById('p-image-upload').click()"><i class="fas fa-folder-open mr-0.5"></i> Chọn file từ máy</span>
                 </div>
             </div>
 
@@ -1590,7 +1621,8 @@
             tbody.innerHTML = paginatedItems.map(p => {
                 const totalStock = (parseInt(p.stock_qty) || 0) + (parseInt(p.virtual_stock) || 0);
                 const hasDocs = p.doc_cocq || p.doc_datasheet || p.doc_catalog || p.doc_manual;
-                const safeImgUrl = (p.image_url || '').replace(/'/g, "\\'");
+                const formattedImg = window.modProducts.formatImageUrl(p.image_url);
+                const safeImgUrl = (formattedImg || '').replace(/'/g, "\\'");
                 const safeName = (p.product_name || 'Chưa đặt tên').replace(/'/g, "\\'");
                 const safeSku = (p.sku || 'SKU').replace(/'/g, "\\'");
 
@@ -1604,10 +1636,10 @@
                                 onclick="window.modProducts.openImageLightbox('${safeImgUrl}', '${safeName}', '${safeSku}')"
                                 style="width: 48px; min-width: 48px; max-width: 48px; height: 48px; min-height: 48px; max-height: 48px;" 
                                 class="bg-slate-100 rounded-lg border border-slate-200 flex justify-center items-center overflow-hidden shrink-0 shadow-sm relative group/thumb cursor-pointer hover:border-blue-500 hover:ring-2 hover:ring-blue-300 transition"
-                                title="${p.image_url ? 'Bấm để xem ảnh phóng to' : 'Chưa có ảnh'}"
+                                title="${formattedImg ? 'Bấm để xem ảnh phóng to' : 'Chưa có ảnh'}"
                             >
-                                ${p.image_url 
-                                    ? `<img src="${p.image_url}" style="width: 48px; height: 48px; object-fit: cover;" class="rounded-md transition duration-200 group-hover/thumb:scale-110" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                ${formattedImg 
+                                    ? `<img src="${formattedImg}" style="width: 48px; height: 48px; object-fit: cover;" class="rounded-md transition duration-200 group-hover/thumb:scale-110" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                        <div class="hidden w-full h-full items-center justify-center bg-slate-100 text-slate-400"><i class="fas fa-solar-panel text-base"></i></div>
                                        <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px]">
                                            <i class="fas fa-search-plus"></i>
@@ -1750,16 +1782,118 @@
             document.getElementById('p-total-stock').value = total;
         },
 
+        formatImageUrl: (url) => {
+            if (!url || typeof url !== 'string') return '';
+            url = url.trim();
+            if (!url) return '';
+            
+            // Xử lý link chia sẻ Google Drive (chuyển đổi sang link CDN trực tiếp của Google)
+            const driveMatch1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+            const driveMatch2 = url.match(/drive\.google\.com\/(?:open|uc)\?(?:.*&)?id=([a-zA-Z0-9_-]+)/i);
+            const fileId = (driveMatch1 && driveMatch1[1]) || (driveMatch2 && driveMatch2[1]);
+            if (fileId) {
+                return `https://lh3.googleusercontent.com/d/${fileId}`;
+            }
+            return url;
+        },
+
         previewImage: (url) => {
             const img = document.getElementById('p-img-preview');
             const icon = document.getElementById('p-img-icon');
-            if (url && url.trim() !== '') {
-                img.src = url;
-                img.classList.remove('hidden');
-                icon.classList.add('hidden');
+            const cleanUrl = window.modProducts.formatImageUrl(url);
+            if (cleanUrl) {
+                img.src = cleanUrl;
+                img.onload = () => {
+                    img.classList.remove('hidden');
+                    icon.classList.add('hidden');
+                };
+                img.onerror = () => {
+                    img.classList.add('hidden');
+                    icon.classList.remove('hidden');
+                };
             } else {
+                img.src = '';
                 img.classList.add('hidden');
                 icon.classList.remove('hidden');
+            }
+        },
+
+        onImageInput: (rawVal) => {
+            let val = (rawVal || '').trim();
+            const driveBadge = document.getElementById('p-img-drive-badge');
+            const importBtn = document.getElementById('p-btn-import-url');
+            const clearBtn = document.getElementById('p-btn-clear-img');
+            
+            if (clearBtn) {
+                if (val) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            const formatted = window.modProducts.formatImageUrl(val);
+            const isDrive = formatted !== val && formatted.includes('googleusercontent.com');
+
+            if (isDrive) {
+                if (driveBadge) driveBadge.classList.remove('hidden');
+                document.getElementById('p-image').value = formatted;
+                val = formatted;
+            } else {
+                if (driveBadge) driveBadge.classList.add('hidden');
+            }
+
+            // Hiện nút "Lưu Vào Cloud" nếu là link ngoài (không thuộc GCS của SUNGO)
+            if (val && !val.includes('storage.googleapis.com/sungo-erp-uploads') && (val.startsWith('http://') || val.startsWith('https://'))) {
+                if (importBtn) {
+                    importBtn.classList.remove('hidden');
+                    importBtn.classList.add('flex');
+                }
+            } else {
+                if (importBtn) {
+                    importBtn.classList.add('hidden');
+                    importBtn.classList.remove('flex');
+                }
+            }
+
+            window.modProducts.previewImage(val);
+        },
+
+        clearImage: () => {
+            const imgInput = document.getElementById('p-image');
+            if (imgInput) imgInput.value = '';
+            window.modProducts.onImageInput('');
+        },
+
+        importFromUrl: async () => {
+            const urlInput = document.getElementById('p-image');
+            const url = (urlInput.value || '').trim();
+            if (!url) return;
+            const btn = document.getElementById('p-btn-import-url');
+            const oldHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Đang lưu...`;
+            }
+            try {
+                const res = await fetch('/api/upload/from-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, subfolder: 'products' })
+                });
+                const data = await res.json();
+                if (data.success && data.url) {
+                    urlInput.value = data.url;
+                    window.modProducts.onImageInput(data.url);
+                    if (window.showToast) window.showToast('success', 'Đã lưu trữ ảnh thành công vào Google Cloud Storage vĩnh viễn!');
+                    else alert('Đã lưu trữ ảnh thành công vào Cloud Storage!');
+                } else {
+                    alert('Không thể lưu ảnh từ link này: ' + (data.error || 'Vui lòng kiểm tra lại'));
+                }
+            } catch (err) {
+                alert('Lỗi kết nối khi lưu ảnh: ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = oldHtml;
+                }
             }
         },
 
@@ -1768,16 +1902,33 @@
             const file = input.files[0];
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('subfolder', 'products');
+
+            const btnLabel = document.getElementById('p-btn-upload-label');
+            const btnIcon = document.getElementById('p-btn-upload-icon');
+            const btnText = document.getElementById('p-btn-upload-text');
+            if (btnLabel) btnLabel.classList.add('opacity-75', 'pointer-events-none');
+            if (btnIcon) btnIcon.className = 'fas fa-spinner fa-spin';
+            if (btnText) btnText.innerText = 'Đang tải...';
+
             try {
                 const res = await fetch('/api/upload', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('p-image').value = data.url;
-                    window.modProducts.previewImage(data.url);
-                    window.showToast('success', 'Tải ảnh lên thành công!');
-                } else alert("Lỗi tải ảnh: " + data.error);
-            } catch (err) { alert("Lỗi kết nối upload ảnh!"); }
-            input.value = '';
+                    window.modProducts.onImageInput(data.url);
+                    if (window.showToast) window.showToast('success', 'Tải ảnh lên Google Cloud Storage thành công!');
+                } else {
+                    alert("Lỗi tải ảnh: " + (data.error || 'Vui lòng thử lại'));
+                }
+            } catch (err) { 
+                alert("Lỗi kết nối upload ảnh: " + err.message); 
+            } finally {
+                if (btnLabel) btnLabel.classList.remove('opacity-75', 'pointer-events-none');
+                if (btnIcon) btnIcon.className = 'fas fa-upload';
+                if (btnText) btnText.innerText = 'Tải Ảnh';
+                input.value = '';
+            }
         },
 
         openModal: (id = null, viewOnly = false) => {
@@ -1854,7 +2005,7 @@
                 document.getElementById('p-price4').value = p.price_4 || 0;
                 document.getElementById('p-price5').value = p.price_5 || 0;
                 document.getElementById('p-price6').value = p.price_6 || 0;
-                window.modProducts.previewImage(p.image_url);
+                window.modProducts.onImageInput(p.image_url || '');
 
                 let totalActualStock = 0;
                 if (p.stocks && typeof p.stocks === 'object') {
@@ -1885,7 +2036,7 @@
                 if (window.modProducts.currentCatName && window.modProducts.currentCatName !== 'Tất Cả Sản Phẩm') {
                     document.getElementById('p-cat-select').value = window.modProducts.currentCatName;
                 }
-                window.modProducts.previewImage('');
+                window.modProducts.onImageInput('');
             }
 
             document.getElementById('product-modal').classList.replace('hidden', 'flex');
@@ -1933,7 +2084,7 @@
                 category_id: matchedCatObj ? matchedCatObj.id : null,
                 description: document.getElementById('p-desc').value.trim(),
                 bin_location: document.getElementById('p-bin-location').value.trim(),
-                image_url: document.getElementById('p-image').value.trim(),
+                image_url: window.modProducts.formatImageUrl(document.getElementById('p-image').value.trim()),
                 doc_cocq: document.getElementById('p-doc-cocq').value.trim(),
                 doc_datasheet: document.getElementById('p-doc-ds').value.trim(),
                 doc_catalog: document.getElementById('p-doc-cat').value.trim(),

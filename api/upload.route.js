@@ -5,7 +5,7 @@ const path = require('path');
 const googleDriveService = require('../services/googleDrive.service');
 
 const ALLOWED_EXTENSIONS = new Set([
-    'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp',
+    'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'heif', 'avif',
     'pdf', 'xlsx', 'xls', 'csv', 'doc', 'docx', 'txt', 'zip'
 ]);
 const BLOCKED_EXTENSIONS = new Set([
@@ -63,7 +63,7 @@ router.post('/', uploadFlexible, async (req, res) => {
         if (!isSafeFile(file.originalname)) {
             return res.status(400).json({
                 success: false,
-                error: '⛔ Định dạng file không được phép tải lên! Hệ thống chỉ hỗ trợ ảnh (.jpg, .png, .webp) và tài liệu (.pdf, .xlsx, .docx).'
+                error: '⛔ Định dạng file không được phép tải lên! Hệ thống chỉ hỗ trợ ảnh (.jpg, .png, .webp, .heic) và tài liệu (.pdf, .xlsx, .docx).'
             });
         }
 
@@ -86,6 +86,87 @@ router.post('/', uploadFlexible, async (req, res) => {
         });
     } catch (error) {
         console.error('LỖI UPLOAD FILE:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/upload/from-url
+ * Tải ảnh từ URL (Google Drive, CDN ngoài, web) và lưu trữ vĩnh viễn trên Cloud Storage
+ */
+router.post('/from-url', async (req, res) => {
+    try {
+        let { url, subfolder = 'products' } = req.body;
+        if (!url || typeof url !== 'string') {
+            return res.status(400).json({ success: false, error: 'Thiếu đường dẫn URL ảnh!' });
+        }
+
+        url = url.trim();
+
+        // Chuyển đổi nếu là link Google Drive
+        const driveMatch1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+        const driveMatch2 = url.match(/drive\.google\.com\/(?:open|uc)\?(?:.*&)?id=([a-zA-Z0-9_-]+)/i);
+        const fileId = (driveMatch1 && driveMatch1[1]) || (driveMatch2 && driveMatch2[1]);
+        
+        let fetchUrl = url;
+        if (fileId) {
+            // Dùng direct download link của Google Drive
+            fetchUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+        }
+
+        const response = await fetch(fetchUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
+
+        if (!response.ok) {
+            // Thử fallback link download dự phòng của Drive
+            if (fileId) {
+                const fallbackRes = await fetch(`https://drive.google.com/uc?export=download&id=${fileId}`);
+                if (fallbackRes.ok) {
+                    const arrayBuf = await fallbackRes.arrayBuffer();
+                    const buffer = Buffer.from(arrayBuf);
+                    const mime = fallbackRes.headers.get('content-type') || 'image/jpeg';
+                    const result = await googleDriveService.uploadFile({
+                        buffer,
+                        originalname: `drive_${fileId}.jpg`,
+                        mimetype: mime,
+                        subfolder: subfolder
+                    });
+                    return res.json({ success: true, ...result });
+                }
+            }
+            return res.status(400).json({ success: false, error: `Không thể tải ảnh từ URL (Mã lỗi: ${response.status})` });
+        }
+
+        const arrayBuf = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuf);
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+        
+        let ext = '.jpg';
+        if (contentType.includes('png')) ext = '.png';
+        else if (contentType.includes('webp')) ext = '.webp';
+        else if (contentType.includes('gif')) ext = '.gif';
+
+        const fileName = fileId ? `drive_${fileId}${ext}` : `imported_${Date.now()}${ext}`;
+
+        const result = await googleDriveService.uploadFile({
+            buffer,
+            originalname: fileName,
+            mimetype: contentType,
+            subfolder: subfolder
+        });
+
+        res.json({
+            success: true,
+            url: result.url,
+            storage: result.storage,
+            fileName: result.fileName,
+            downloadUrl: result.downloadUrl
+        });
+    } catch (error) {
+        console.error('LỖI UPLOAD TỪ URL:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
