@@ -997,6 +997,7 @@ async function loadModule(moduleId, title) {
     try {
         // Dọn dẹp các modal đã được đưa ra document.body từ module trước
         document.querySelectorAll('.teleported-module-modal').forEach(el => el.remove());
+        document.getElementById('mobile-bottom-nav')?.classList.remove('hidden');
 
         let targetFile = moduleId;
         if (targetFile === 'bidding-marketplace') targetFile = 'marketplace';

@@ -226,7 +226,7 @@
     <!-- MODAL / BOTTOM SHEET: TẠO GIAO DỊCH NHANH ("TÔI ĐÃ NHẬN" / "TÔI ĐÃ ĐƯA") -->
     <!-- ========================================================================= -->
     <div id="modal-quick-tx" class="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 hidden animate-fade-in" onclick="window.modDebtBook.closeQuickTxModal()">
-        <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-slide-up" onclick="event.stopPropagation()">
+        <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh] max-h-[90vh] sm:max-h-[85vh] animate-slide-up" onclick="event.stopPropagation()">
             
             <!-- MOBILE TOP DRAG HANDLE -->
             <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2 sm:hidden shrink-0"></div>
@@ -322,9 +322,9 @@
                 </div>
             </div>
 
-            <!-- NÚT LƯU GIAO DỊCH (STICKY ĐÁY) -->
-            <div class="p-3.5 sm:p-4 border-t border-slate-100 bg-white shrink-0">
-                <button type="button" id="btn-tx-modal-save" onclick="window.modDebtBook.submitTransaction()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black py-3 rounded-2xl text-sm transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+            <!-- NÚT LƯU GIAO DỊCH (STICKY ĐÁY CỐ ĐỊNH, AN TOÀN TRÊN MOBILE) -->
+            <div class="p-3.5 sm:p-4 border-t border-slate-100 bg-white shrink-0 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-4 shadow-lg">
+                <button type="button" id="btn-tx-modal-save" onclick="window.modDebtBook.submitTransaction()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black py-3.5 rounded-2xl text-sm transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
                     <i class="fas fa-check"></i> <span>Lưu giao dịch</span>
                 </button>
             </div>
@@ -951,7 +951,14 @@ window.modDebtBook = {
         const modal = document.getElementById('modal-quick-tx');
         if (!modal) return;
 
-        // Hide floating capsule bar & pwa banner so they don't overlap the modal
+        // Teleport to document.body so iOS stacking context never traps it behind bottom nav
+        if (modal.parentElement !== document.body) {
+            modal.classList.add('teleported-module-modal');
+            document.body.appendChild(modal);
+        }
+
+        // Hide mobile bottom nav, floating capsule bar & pwa banner so they don't cover the modal or button
+        document.getElementById('mobile-bottom-nav')?.classList.add('hidden');
         document.getElementById('debt-floating-bar')?.classList.add('hidden');
         document.getElementById('pwa-install-banner')?.classList.add('hidden');
 
@@ -991,7 +998,8 @@ window.modDebtBook = {
     closeQuickTxModal: () => {
         const modal = document.getElementById('modal-quick-tx');
         if (modal) modal.classList.add('hidden');
-        // Restore floating capsule bar & pwa banner
+        // Restore mobile bottom nav, floating capsule bar & pwa banner
+        document.getElementById('mobile-bottom-nav')?.classList.remove('hidden');
         document.getElementById('debt-floating-bar')?.classList.remove('hidden');
         document.getElementById('pwa-install-banner')?.classList.remove('hidden');
     },
@@ -1301,6 +1309,11 @@ window.modDebtBook = {
         if (!p) return;
         const modal = document.getElementById('modal-reminder');
         if (modal) {
+            if (modal.parentElement !== document.body) {
+                modal.classList.add('teleported-module-modal');
+                document.body.appendChild(modal);
+            }
+            document.getElementById('mobile-bottom-nav')?.classList.add('hidden');
             document.getElementById('debt-floating-bar')?.classList.add('hidden');
             document.getElementById('pwa-install-banner')?.classList.add('hidden');
             const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -1313,6 +1326,7 @@ window.modDebtBook = {
     closeReminderModal: () => {
         const modal = document.getElementById('modal-reminder');
         if (modal) modal.classList.add('hidden');
+        document.getElementById('mobile-bottom-nav')?.classList.remove('hidden');
         document.getElementById('debt-floating-bar')?.classList.remove('hidden');
         document.getElementById('pwa-install-banner')?.classList.remove('hidden');
     },
@@ -1361,7 +1375,17 @@ window.modDebtBook = {
             return alert("Vui lòng chọn khách hàng để mở bảng đối chiếu công nợ!");
         }
 
-        // Ẩn thanh floating capsule & PWA banner
+        const modal = document.getElementById('debt-statement-modal');
+        if (modal) {
+            if (modal.parentElement !== document.body) {
+                modal.classList.add('teleported-module-modal');
+                document.body.appendChild(modal);
+            }
+            modal.classList.remove('hidden');
+        }
+
+        // Ẩn thanh bottom nav, floating capsule & PWA banner
+        document.getElementById('mobile-bottom-nav')?.classList.add('hidden');
         document.getElementById('debt-floating-bar')?.classList.add('hidden');
         document.getElementById('pwa-install-banner')?.classList.add('hidden');
 
@@ -1378,15 +1402,13 @@ window.modDebtBook = {
             toInp.value = now.toISOString().slice(0, 10);
         }
 
-        const modal = document.getElementById('debt-statement-modal');
-        if (modal) modal.classList.remove('hidden');
-
         await window.modDebtBook.reloadDebtStatement();
     },
 
     closeDebtStatementModal: () => {
         const modal = document.getElementById('debt-statement-modal');
         if (modal) modal.classList.add('hidden');
+        document.getElementById('mobile-bottom-nav')?.classList.remove('hidden');
         document.getElementById('debt-floating-bar')?.classList.remove('hidden');
         document.getElementById('pwa-install-banner')?.classList.remove('hidden');
     },
@@ -1568,12 +1590,19 @@ window.modDebtBook = {
             return alert("Vui lòng chọn khách hàng để mở danh sách đơn nợ!");
         }
 
-        // Ẩn thanh floating capsule & PWA banner
+        const modal = document.getElementById('debt-unpaid-orders-modal');
+        if (modal) {
+            if (modal.parentElement !== document.body) {
+                modal.classList.add('teleported-module-modal');
+                document.body.appendChild(modal);
+            }
+            modal.classList.remove('hidden');
+        }
+
+        // Ẩn thanh bottom nav, floating capsule & PWA banner
+        document.getElementById('mobile-bottom-nav')?.classList.add('hidden');
         document.getElementById('debt-floating-bar')?.classList.add('hidden');
         document.getElementById('pwa-install-banner')?.classList.add('hidden');
-
-        const modal = document.getElementById('debt-unpaid-orders-modal');
-        if (modal) modal.classList.remove('hidden');
 
         const tbody = document.getElementById('debt-unpaid-table-body');
         if (tbody) {
@@ -1699,6 +1728,7 @@ window.modDebtBook = {
     closeUnpaidOrdersModal: () => {
         const modal = document.getElementById('debt-unpaid-orders-modal');
         if (modal) modal.classList.add('hidden');
+        document.getElementById('mobile-bottom-nav')?.classList.remove('hidden');
         document.getElementById('debt-floating-bar')?.classList.remove('hidden');
         document.getElementById('pwa-install-banner')?.classList.remove('hidden');
     },
