@@ -2525,6 +2525,10 @@ window.modOrders = {
                 quantity: 1,
                 price: parseFloat(p.retail_price) || 0,
                 import_price: parseFloat(p.import_price) || 0,
+                unit: p.unit || 'Bộ',
+                vat_rate: p.vat_rate !== undefined && p.vat_rate !== null ? parseFloat(p.vat_rate) : 8,
+                accounting_code: p.accounting_code || '',
+                accounting_name: p.accounting_name || '',
                 serial_number: ''
             });
         }
@@ -3506,7 +3510,7 @@ window.modOrders = {
         const showQr = sys.quote_show_qr !== false;
 
         const finalCustomerName = (o.customer_name ? o.customer_name.trim() : 'Khach Le');
-        const transferContent = 'TT ' + o.order_code + ' - ' + finalCustomerName;
+        const transferContent = 'TT ' + o.order_code;
 
         let qrImgHtml = '';
         if (showQr && bankAcc) {
@@ -3528,21 +3532,58 @@ window.modOrders = {
             ? `<img src="${storeLogo}" alt="Logo" style="max-height:65px; max-width:200px; object-fit:contain; margin-bottom:8px;">` 
             : `<h1 style="color:${primaryColor}; font-size:24px; margin:0; font-weight:900;">${storeName}</h1>`;
 
-        const tableHeader = '<tr><th style="width:35px; text-align:center;">STT</th><th style="text-align:left;">Sản Phẩm / Thiết Bị</th><th style="width:50px; text-align:center;">ĐVT</th><th style="width:45px; text-align:center;">SL</th><th style="width:110px; text-align:right;">Đơn Giá</th><th style="width:125px; text-align:right;">Thành Tiền</th></tr>';
+        const getCleanUnit = (unit, name) => {
+            if (unit && isNaN(unit) && String(unit).trim().length > 0) return String(unit).trim();
+            if (name && /tấm|pin/i.test(name)) return 'Tấm';
+            return 'Bộ';
+        };
+
+        const tableHeader = '<tr><th style="width:35px; text-align:center;">STT</th><th style="text-align:left;">Sản Phẩm / Thiết Bị</th><th style="width:45px; text-align:center;">ĐVT</th><th style="width:45px; text-align:center;">SL</th><th style="width:120px; text-align:right;">Đơn Giá (chưa VAT)</th><th style="width:55px; text-align:center;">% VAT</th><th style="width:130px; text-align:right;">Thành Tiền (chưa VAT)</th></tr>';
         
+        let totalNet = 0;
+        const vatGroups = {};
+
         const itemsRows = window.modOrders.currentItems.map((i, idx) => {
             const q = parseFloat(document.getElementById('qty-input-' + i.id)?.value) || parseFloat(document.getElementById('m-qty-input-' + i.id)?.value) || parseFloat(i.quantity) || 1;
-            const p = parseMoney(document.getElementById('price-input-' + i.id)?.value) || parseMoney(document.getElementById('m-price-input-' + i.id)?.value) || parseFloat(i.price) || 0;
+            const pGross = parseMoney(document.getElementById('price-input-' + i.id)?.value) || parseMoney(document.getElementById('m-price-input-' + i.id)?.value) || parseFloat(i.price) || 0;
+            const lineGross = q * pGross;
+            
+            // Thuế suất VAT (%) kế toán: lấy từ sản phẩm (mặc định 8% nếu chưa gán)
+            const vatRate = (i.vat_rate !== undefined && i.vat_rate !== null && !isNaN(parseFloat(i.vat_rate))) ? parseFloat(i.vat_rate) : 8;
+            
+            // Tính ngược giá trước VAT và thành tiền trước VAT chuẩn mực kế toán
+            const netTotal = vatRate > 0 ? Math.round(lineGross / (1 + vatRate / 100)) : lineGross;
+            const netUnitPrice = q > 0 ? (vatRate > 0 ? Math.round(pGross / (1 + vatRate / 100)) : pGross) : 0;
+            const lineVat = lineGross - netTotal;
+            
+            totalNet += netTotal;
+            if (vatRate > 0) {
+                vatGroups[vatRate] = (vatGroups[vatRate] || 0) + lineVat;
+            }
+
+            const unitStr = getCleanUnit(i.unit, i.product_name);
             const serialText = (i.serial_number && i.serial_number.trim()) ? `<br><small style="color:#64748b; font-family:monospace; font-size:11px;">Mã Serial: ${i.serial_number.trim()}</small>` : '';
+            const vatBadgeText = vatRate > 0 ? `${vatRate}%` : '0%';
+
             return `<tr>
                 <td style="text-align:center; padding:8px 6px;">${idx+1}</td>
                 <td style="padding:8px 8px;"><strong>${i.product_name || 'Sản phẩm'}</strong><br><small style="color:#64748b;">SKU: ${i.sku || 'N/A'}</small>${serialText}</td>
-                <td style="text-align:center; padding:8px 6px;">Bộ</td>
+                <td style="text-align:center; padding:8px 6px;">${unitStr}</td>
                 <td style="text-align:center; font-weight:bold; font-size:14px; padding:8px 6px;">${q}</td>
-                <td style="text-align:right; padding:8px 8px;">${fmt(p)} đ</td>
-                <td style="text-align:right; font-weight:bold; padding:8px 8px;">${fmt(q*p)} đ</td>
+                <td style="text-align:right; padding:8px 8px;">${fmt(netUnitPrice)} đ</td>
+                <td style="text-align:center; font-weight:bold; color:#1e40af; padding:8px 6px;">${vatBadgeText}</td>
+                <td style="text-align:right; font-weight:bold; padding:8px 8px;">${fmt(netTotal)} đ</td>
             </tr>`;
         }).join('');
+
+        let vatSummaryRowsHtml = '';
+        const sortedVatRates = Object.keys(vatGroups).map(Number).sort((a,b) => a - b);
+        sortedVatRates.forEach(rate => {
+            const vatAmt = vatGroups[rate];
+            if (vatAmt > 0) {
+                vatSummaryRowsHtml += `<tr><td style="padding:3.5px 0; color:#334155;">Tiền thuế GTGT (${rate}%):</td><td style="text-align:right; font-weight:bold; color:#0f172a;">+${fmt(vatAmt)} đ</td></tr>`;
+            }
+        });
 
         const printHTML = `<html><head><title>${quoteTitle} - ${o.order_code}</title>
             <style>
@@ -3558,7 +3599,7 @@ window.modOrders = {
             td { border-bottom: 1px solid #e2e8f0; }
             .summary-container { display: flex; justify-content: space-between; align-items: stretch; margin-top: 16px; gap: 15px; }
             .payment-info { flex: 1; padding: 12px 14px; border: 1px dashed #cbd5e1; background: #f8fafc; border-radius: 10px; font-size: 12.5px; line-height: 1.5; display: flex; justify-content: space-between; align-items: center; }
-            .totals-table { width: 260px; border-collapse: collapse; font-size: 13px; }
+            .totals-table { width: 310px; border-collapse: collapse; font-size: 13px; }
             .totals-table td { border: none !important; padding: 5px 0; }
             .totals-table td:last-child { text-align: right; font-weight: bold; }
             .grand-total { font-size: 16px; color: #dc2626; border-top: 2px solid #0f172a !important; padding-top: 8px !important; font-weight: 900; }
@@ -3614,10 +3655,11 @@ window.modOrders = {
                 </div>
 
                 <table class="totals-table">
-                    <tr><td style="padding:4px 0;">Tiền hàng gốc:</td><td style="text-align:right;">${fmt(subtotalVal)} đ</td></tr>
+                    <tr><td style="padding:4px 0;">Tổng tiền hàng (chưa VAT):</td><td style="text-align:right;">${fmt(totalNet)} đ</td></tr>
+                    ${vatSummaryRowsHtml}
                     ${discVal > 0 ? `<tr><td style="color:#dc2626; padding:4px 0;">Giảm giá / Chiết khấu:</td><td style="color:#dc2626; text-align:right;">-${fmt(discVal)} đ</td></tr>` : ''}
                     ${feeRowsHtml}
-                    <tr><td style="padding:6px 0; border-top:1.5px solid #cbd5e1 !important;"><strong>Tổng cộng:</strong></td><td style="padding:6px 0; border-top:1.5px solid #cbd5e1 !important; text-align:right;"><strong>${fmt(currentTotal)} đ</strong></td></tr>
+                    <tr><td style="padding:6px 0; border-top:1.5px solid #cbd5e1 !important;"><strong>Tổng thanh toán (đã có VAT):</strong></td><td style="padding:6px 0; border-top:1.5px solid #cbd5e1 !important; text-align:right;"><strong>${fmt(currentTotal)} đ</strong></td></tr>
                     <tr><td style="padding:4px 0;">Đã thanh toán:</td><td style="text-align:right;">${fmt(currentPaid)} đ</td></tr>
                     <tr><td class="grand-total">CÒN PHẢI THU:</td><td class="grand-total">${fmt(currentDebt)} đ</td></tr>
                 </table>
@@ -3891,7 +3933,7 @@ window.modOrders = {
                    '<td style="padding: 8px; border-bottom: 1px solid #ccc;"><strong style="font-size: 13px;">' + i.product_name + '</strong><br><small style="color:#555">SKU: ' + (i.sku || '') + '</small></td>' +
                    (showSerial ? '<td style="padding: 8px; border-bottom: 1px solid #ccc; text-align: center; font-size: 12px; text-transform: uppercase;">' + serial + '</td>' : '') +
                    '<td style="padding: 8px; border-bottom: 1px solid #ccc; text-align: center; font-size: 14px; font-weight: bold;">' + qty + '</td>' +
-                   (showUnit ? '<td style="padding: 8px; border-bottom: 1px solid #ccc; text-align: center;">' + (i.sku || 'Bộ') + '</td>' : '') +
+                   (showUnit ? '<td style="padding: 8px; border-bottom: 1px solid #ccc; text-align: center;">' + (i.unit && isNaN(i.unit) ? i.unit : (i.product_name && /tấm|pin/i.test(i.product_name) ? 'Tấm' : 'Bộ')) + '</td>' : '') +
                    (showNoteCol ? '<td style="padding: 8px; border-bottom: 1px solid #ccc; font-size: 11px; color: #555;">Mới 100%</td>' : '') +
                    '</tr>';
         }).join('');

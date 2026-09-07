@@ -311,7 +311,7 @@
             const bankAcc = sys.quote_bank_account_number || sys.bank_account_number || '';
             const bankHolder = sys.quote_bank_account_holder || sys.bank_account_holder || storeName;
             const showQr = sys.quote_show_qr !== false;
-            const transferContent = 'TT ' + o.order_code + ' - ' + (o.customer_name || 'Khach Le');
+            const transferContent = 'TT ' + o.order_code;
 
             let qrImgHtml = '';
             if (showQr && bankAcc) {
@@ -324,11 +324,35 @@
                 </div>`;
             }
 
+            const getCleanUnit = (unit, name) => {
+                if (unit && isNaN(unit) && String(unit).trim().length > 0) return String(unit).trim();
+                if (name && /tấm|pin/i.test(name)) return 'Tấm';
+                return 'Bộ';
+            };
+
+            let totalNet = 0;
+            const vatGroups = {};
+
             // Danh sách hàng hóa
             const itemsRows = (o.items || []).map((i, idx) => {
                 const q = parseFloat(i.quantity) || 1;
-                const p = parseFloat(i.price) || 0;
+                const pGross = parseFloat(i.price) || 0;
+                const lineGross = q * pGross;
+                const vatRate = (i.vat_rate !== undefined && i.vat_rate !== null && !isNaN(parseFloat(i.vat_rate))) ? parseFloat(i.vat_rate) : 8;
+
+                const netTotal = vatRate > 0 ? Math.round(lineGross / (1 + vatRate / 100)) : lineGross;
+                const netUnitPrice = q > 0 ? (vatRate > 0 ? Math.round(pGross / (1 + vatRate / 100)) : pGross) : 0;
+                const lineVat = lineGross - netTotal;
+
+                totalNet += netTotal;
+                if (vatRate > 0) {
+                    vatGroups[vatRate] = (vatGroups[vatRate] || 0) + lineVat;
+                }
+
+                const unitStr = getCleanUnit(i.unit, i.product_name);
                 const serialText = (i.serial_number && i.serial_number.trim()) ? `<div class="text-[10px] text-slate-400 font-mono mt-0.5">Serial: ${i.serial_number.trim()}</div>` : '';
+                const vatBadgeText = vatRate > 0 ? `${vatRate}%` : '0%';
+
                 return `
                 <tr class="border-b border-slate-100 hover:bg-slate-50/50">
                     <td class="text-center py-2.5 px-2 font-bold text-slate-400">${idx + 1}</td>
@@ -337,12 +361,26 @@
                         <div class="text-[11px] text-slate-400 font-mono">SKU: ${i.sku || 'N/A'}</div>
                         ${serialText}
                     </td>
-                    <td class="text-center py-2.5 px-2 text-slate-600">${i.unit || 'Bộ'}</td>
+                    <td class="text-center py-2.5 px-2 text-slate-600">${unitStr}</td>
                     <td class="text-center py-2.5 px-2 font-black text-slate-900">${q}</td>
-                    <td class="text-right py-2.5 px-3 font-semibold text-slate-700">${fmt(p)} đ</td>
-                    <td class="text-right py-2.5 px-3 font-black text-slate-900">${fmt(q * p)} đ</td>
+                    <td class="text-right py-2.5 px-3 font-semibold text-slate-700">${fmt(netUnitPrice)} đ</td>
+                    <td class="text-center py-2.5 px-2 font-bold text-blue-600">${vatBadgeText}</td>
+                    <td class="text-right py-2.5 px-3 font-black text-slate-900">${fmt(netTotal)} đ</td>
                 </tr>`;
             }).join('');
+
+            let vatSummaryRowsHtml = '';
+            const sortedVatRates = Object.keys(vatGroups).map(Number).sort((a,b) => a - b);
+            sortedVatRates.forEach(rate => {
+                const vatAmt = vatGroups[rate];
+                if (vatAmt > 0) {
+                    vatSummaryRowsHtml += `
+                    <div class="flex justify-between text-slate-300">
+                        <span>Tiền thuế GTGT (${rate}%):</span>
+                        <span class="font-bold">+${fmt(vatAmt)} đ</span>
+                    </div>`;
+                }
+            });
 
             // Chữ ký bên Khách Hàng (Party A)
             let custSigBox = '';
@@ -440,8 +478,9 @@
                                 <th class="py-2.5 px-3">Sản Phẩm / Thiết Bị</th>
                                 <th class="py-2.5 px-2 text-center w-14">ĐVT</th>
                                 <th class="py-2.5 px-2 text-center w-12">SL</th>
-                                <th class="py-2.5 px-3 text-right w-28">Đơn Giá</th>
-                                <th class="py-2.5 px-3 text-right w-32">Thành Tiền</th>
+                                <th class="py-2.5 px-3 text-right w-28">Đơn Giá (chưa VAT)</th>
+                                <th class="py-2.5 px-2 text-center w-14">% VAT</th>
+                                <th class="py-2.5 px-3 text-right w-32">Thành Tiền (chưa VAT)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -463,11 +502,12 @@
                         ${qrImgHtml}
                     </div>
 
-                    <div class="w-full sm:w-72 bg-slate-900 text-white p-4 rounded-2xl shadow-md space-y-2 text-xs">
+                    <div class="w-full sm:w-80 bg-slate-900 text-white p-4 rounded-2xl shadow-md space-y-2 text-xs">
                         <div class="flex justify-between text-slate-300">
-                            <span>Tiền hàng gốc:</span>
-                            <span class="font-bold">${fmt(subtotalVal)} đ</span>
+                            <span>Tổng tiền hàng (chưa VAT):</span>
+                            <span class="font-bold">${fmt(totalNet)} đ</span>
                         </div>
+                        ${vatSummaryRowsHtml}
                         ${discVal > 0 ? `
                         <div class="flex justify-between text-amber-400">
                             <span>Chiết khấu / Giảm:</span>
@@ -475,7 +515,7 @@
                         </div>` : ''}
                         ${feeRowsHtml}
                         <div class="flex justify-between text-sm font-black border-t border-slate-800 pt-1.5 text-white">
-                            <span>Tổng thanh toán:</span>
+                            <span>Tổng thanh toán (đã có VAT):</span>
                             <span>${fmt(currentTotal)} đ</span>
                         </div>
                         <div class="flex justify-between text-slate-400 text-[11px]">

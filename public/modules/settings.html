@@ -949,10 +949,10 @@ window.modSettings = {
         }
 
         const sampleItems = [
-            { name: 'Tấm pin năng lượng mặt trời Jinko 620wp Tiger Neo (SP0266)', sku: 'JK-620N', serial: 'JK260824001', qty: 18, price: '2.418.000 đ', total: '43.524.000 đ' },
-            { name: 'Biến tần Inverter hòa lưới bám tải Cergy 10kW 3 Pha', sku: 'CG-10KT', serial: 'CG10K2026889', qty: 1, price: '15.500.000 đ', total: '15.500.000 đ' },
-            { name: 'Đồng hồ đo thông minh Smart Meter 3 Pha Zero-Export', sku: 'SM-3P', serial: 'SM3P99201', qty: 1, price: '3.800.000 đ', total: '3.800.000 đ' },
-            { name: 'Tủ điện đóng cắt bảo vệ AC/DC 3 Pha tích hợp chống sét', sku: 'TD-3P10K', serial: '', qty: 1, price: '3.500.000 đ', total: '3.500.000 đ' }
+            { name: 'Tấm pin năng lượng mặt trời Jinko 620wp Tiger Neo (SP0266)', sku: 'JK-620N', serial: 'JK260824001', unit: 'Tấm', qty: 18, price: '2.238.889 đ', vat: '8%', total: '40.300.000 đ' },
+            { name: 'Biến tần Inverter hòa lưới bám tải Cergy 10kW 3 Pha', sku: 'CG-10KT', serial: 'CG10K2026889', unit: 'Bộ', qty: 1, price: '14.090.909 đ', vat: '10%', total: '14.090.909 đ' },
+            { name: 'Đồng hồ đo thông minh Smart Meter 3 Pha Zero-Export', sku: 'SM-3P', serial: 'SM3P99201', unit: 'Bộ', qty: 1, price: '3.518.519 đ', vat: '8%', total: '3.518.519 đ' },
+            { name: 'Tủ điện đóng cắt bảo vệ AC/DC 3 Pha tích hợp chống sét', sku: 'TD-3P10K', serial: '', unit: 'Tủ', qty: 1, price: '3.240.741 đ', vat: '8%', total: '3.240.741 đ' }
         ];
 
         const itemsRowsHtml = sampleItems.map((item, idx) => `
@@ -962,9 +962,10 @@ window.modSettings = {
                     <strong>${item.name}</strong><br>
                     <small style="color:#64748b; font-size:8.5px;">SKU: ${item.sku} ${item.serial ? '| SN: ' + item.serial : ''}</small>
                 </td>
-                <td style="padding:4px 6px; text-align:center;">Bộ</td>
+                <td style="padding:4px 6px; text-align:center;">${item.unit}</td>
                 <td style="padding:4px 6px; text-align:center; font-weight:bold;">${item.qty}</td>
                 <td style="padding:4px 6px; text-align:right;">${item.price}</td>
+                <td style="padding:4px 6px; text-align:center; font-weight:bold; color:#1e40af;">${item.vat}</td>
                 <td style="padding:4px 6px; text-align:right; font-weight:bold;">${item.total}</td>
             </tr>
         `).join('');
@@ -1003,12 +1004,13 @@ window.modSettings = {
         <table style="width:100%; border-collapse:collapse; font-size:9px; margin-bottom:8px;">
             <thead>
                 <tr style="background:#f1f5f9; border-top:1px solid #cbd5e1; border-bottom:1px solid #cbd5e1;">
-                    <th style="padding:4px 6px; text-align:center; width:24px;">STT</th>
+                    <th style="padding:4px 6px; text-align:center; width:22px;">STT</th>
                     <th style="padding:4px 6px; text-align:left;">Sản Phẩm / Thiết Bị</th>
-                    <th style="padding:4px 6px; text-align:center; width:35px;">ĐVT</th>
-                    <th style="padding:4px 6px; text-align:center; width:30px;">SL</th>
-                    <th style="padding:4px 6px; text-align:right; width:65px;">Đơn Giá</th>
-                    <th style="padding:4px 6px; text-align:right; width:75px;">Thành Tiền</th>
+                    <th style="padding:4px 6px; text-align:center; width:30px;">ĐVT</th>
+                    <th style="padding:4px 6px; text-align:center; width:24px;">SL</th>
+                    <th style="padding:4px 6px; text-align:right; width:65px;">Đơn Giá (chưa VAT)</th>
+                    <th style="padding:4px 6px; text-align:center; width:35px;">% VAT</th>
+                    <th style="padding:4px 6px; text-align:right; width:75px;">Thành Tiền (chưa VAT)</th>
                 </tr>
             </thead>
             <tbody>
@@ -1028,13 +1030,14 @@ window.modSettings = {
                 ${qrImgHtml}
             </div>
 
-            <div style="width:145px; text-align:right; font-size:9px; line-height:1.4; display:flex; flex-direction:column; justify-content:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 8px;">
-                <div style="display:flex; justify-content:space-between;"><span>Tiền hàng:</span> <strong>66.324.000 đ</strong></div>
-                <div style="display:flex; justify-content:space-between; color:#059669;"><span>Giảm trừ:</span> <strong>- 1.500.000 đ</strong></div>
-                <div style="display:flex; justify-content:space-between; color:#475569;"><span>VAT (10%):</span> <strong>6.482.400 đ</strong></div>
+            <div style="width:165px; text-align:right; font-size:8.5px; line-height:1.4; display:flex; flex-direction:column; justify-content:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 8px;">
+                <div style="display:flex; justify-content:space-between;"><span>Tiền hàng (chưa VAT):</span> <strong>61.150.169 đ</strong></div>
+                <div style="display:flex; justify-content:space-between; color:#334155;"><span>Thuế GTGT (8%):</span> <strong>+3.765.831 đ</strong></div>
+                <div style="display:flex; justify-content:space-between; color:#334155;"><span>Thuế GTGT (10%):</span> <strong>+1.409.091 đ</strong></div>
+                <div style="display:flex; justify-content:space-between; color:#dc2626;"><span>Giảm trừ:</span> <strong>-1.500.000 đ</strong></div>
                 <div style="border-top:1.5px solid #0f172a; margin-top:2px; padding-top:2px; display:flex; justify-content:space-between;">
-                    <span style="font-weight:bold;">Tổng cộng:</span>
-                    <strong style="color:#dc2626; font-size:10.5px;">71.306.400 đ</strong>
+                    <span style="font-weight:bold;">Tổng thanh toán:</span>
+                    <strong style="color:#dc2626; font-size:10px;">64.825.091 đ</strong>
                 </div>
             </div>
         </div>

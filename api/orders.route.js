@@ -69,7 +69,12 @@ router.get('/', async (req, res) => {
             // Tối ưu hóa: Lấy thông tin thiết bị kèm giá vốn để kiểm tra cảnh báo lời ảo
             const itemsRes = await pool.query(`
                 SELECT oi.id, oi.order_id, COALESCE(oi.product_name, p.product_name, 'Thiết bị') as product_name, 
-                       COALESCE(oi.sku, p.sku, 'N/A') as sku, oi.price, COALESCE(oi.quantity, 1) as quantity, oi.product_id,
+                       COALESCE(oi.sku, p.sku, 'N/A') as sku, 
+                       COALESCE(p.unit, 'Bộ') as unit,
+                       COALESCE(p.vat_rate, 8)::numeric as vat_rate,
+                       p.accounting_code,
+                       p.accounting_name,
+                       oi.price, COALESCE(oi.quantity, 1) as quantity, oi.product_id,
                        COALESCE(p.import_price, 0)::numeric as import_price
                 FROM order_items oi 
                 LEFT JOIN products p ON oi.product_id = p.id 
@@ -132,10 +137,24 @@ router.get('/:id', async (req, res) => {
         if(orderRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
         
         const itemsRes = await pool.query(`
-            SELECT oi.*, p.product_name, p.sku, COALESCE(p.import_price, 0) as import_price 
+            SELECT oi.id, 
+                   oi.order_id, 
+                   oi.product_id, 
+                   oi.quantity, 
+                   oi.price, 
+                   oi.total, 
+                   oi.serial_number,
+                   COALESCE(oi.product_name, p.product_name, 'Thiết bị') as product_name, 
+                   COALESCE(oi.sku, p.sku, 'N/A') as sku,
+                   COALESCE(p.unit, 'Bộ') as unit,
+                   COALESCE(p.vat_rate, 8)::numeric as vat_rate,
+                   p.accounting_code,
+                   p.accounting_name,
+                   COALESCE(p.import_price, 0) as import_price 
             FROM order_items oi 
             LEFT JOIN products p ON oi.product_id = p.id 
             WHERE oi.order_id = $1
+            ORDER BY oi.id ASC
         `, [id]);
         const docsRes = await pool.query('SELECT * FROM order_docs WHERE order_id = $1 ORDER BY id DESC', [id]);
         const expensesRes = await pool.query('SELECT * FROM cash_transactions WHERE order_id = $1 ORDER BY id ASC', [id]);
@@ -1852,6 +1871,9 @@ router.get('/public-quote/:idOrToken', async (req, res) => {
                    COALESCE(oi.product_name, p.product_name, 'Thiết bị') as product_name, 
                    COALESCE(oi.sku, p.sku, 'N/A') as sku, 
                    COALESCE(p.unit, 'Bộ') as unit,
+                   COALESCE(p.vat_rate, 8)::numeric as vat_rate,
+                   p.accounting_code,
+                   p.accounting_name,
                    oi.price, 
                    COALESCE(oi.quantity, 1) as quantity, 
                    oi.product_id, 
