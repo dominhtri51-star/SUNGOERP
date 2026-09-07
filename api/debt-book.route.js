@@ -447,6 +447,7 @@ router.post('/transaction', async (req, res) => {
             source_fund,    // 'TK_CONG_TY' hoặc 'TIEN_MAT_QUY'
             notes,
             reminder_date,
+            transaction_date, // Thời gian nhận / đưa tiền cụ thể
             auto_settle_orders // Tự động cấn trừ đơn hàng cũ
         } = req.body;
 
@@ -485,18 +486,20 @@ router.post('/transaction', async (req, res) => {
         const fund = source_fund || (method === 'Tiền Mặt' ? 'TIEN_MAT_QUY' : 'TK_CONG_TY');
         const txCode = (transaction_type === 'RECEIVE' ? 'GDN-' : 'GDC-') + Date.now().toString().slice(-8);
         const userName = req.user?.full_name || req.user?.username || 'Kế Toán';
+        const txDate = (transaction_date && !isNaN(new Date(transaction_date).getTime())) ? new Date(transaction_date) : new Date();
 
         // 2. Ghi nhận giao dịch vào debt_transactions
         const insertTx = await client.query(`
             INSERT INTO debt_transactions 
             (code, customer_id, customer_name, transaction_type, amount, payment_method, source_fund, notes, reminder_date, created_by, created_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING id, code, created_at
         `, [
             txCode, custId, custName, transaction_type, amt, 
             method, fund, notes || (transaction_type === 'RECEIVE' ? 'Tôi đã nhận tiền' : 'Tôi đã đưa tiền'),
             reminder_date ? new Date(reminder_date) : null,
-            userName
+            userName,
+            txDate
         ]);
 
         // 3. ĐỒNG BỘ VÀO SỔ QUỸ KẾ TOÁN (cash_transactions)
@@ -508,11 +511,12 @@ router.post('/transaction', async (req, res) => {
         await client.query(`
             INSERT INTO cash_transactions 
             (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, customer_id, created_at)
-            VALUES ($1, $2, $3, $4, $5, $6, 'KHONG_HOA_DON', $7, $8, $9, NOW())
+            VALUES ($1, $2, $3, $4, $5, $6, 'KHONG_HOA_DON', $7, $8, $9, $10)
         `, [
             txCode, cashType, custName, amt, method, cashCategory, fund, 
             notes || `Giao dịch nhanh Sổ Nợ: ${transaction_type === 'RECEIVE' ? 'Thu' : 'Chi'} ${custName}`,
-            custId
+            custId,
+            txDate
         ]);
 
         // 4. Nếu là "Tôi đã nhận" (RECEIVE) và được bật auto_settle_orders: cấn trừ đơn hàng cũ
@@ -573,7 +577,186 @@ router.post('/transaction', async (req, res) => {
 });
 
 // =========================================================================
-// 5. POST /api/debt-book/reminder : ĐẶT LỊCH NHẮC NỢ CHO KHÁCH HÀNG
+// 5. PUT /api/debt-book/transaction/:id : SỬA LẠI GIAO DỊCH SAI SỐ TIỀN / NGÀY GIỜ / HÌNH THỨC
+// =========================================================================
+router.put('/transaction/:id', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const { id } = req.params;
+        const {
+            amount,
+            transaction_type, // 'RECEIVE' hoặc 'PAY'
+            payment_method,
+            source_fund,
+            notes,
+            transaction_date
+        } = req.body;
+
+        const txRes = await client.query("SELECT * FROM debt_transactions WHERE id = $1 FOR UPDATE", [id]);
+        if (txRes.rows.length === 0) {
+            throw new Error("Không tìm thấy giao dịch cần sửa!");
+        }
+        const oldTx = txRes.rows[0];
+
+        const newAmt = parseFloat(amount);
+        if (!newAmt || newAmt <= 0) {
+            throw new Error("Vui lòng nhập số tiền giao dịch hợp lệ (> 0 VNĐ)!");
+        }
+
+        const newType = transaction_type || oldTx.transaction_type;
+        if (!['RECEIVE', 'PAY'].includes(newType)) {
+            throw new Error("Loại giao dịch không hợp lệ ('RECEIVE' hoặc 'PAY')!");
+        }
+
+        const method = payment_method || oldTx.payment_method || 'Chuyển Khoản';
+        const fund = source_fund || oldTx.source_fund || 'TK_CONG_TY';
+        const newDate = (transaction_date && !isNaN(new Date(transaction_date).getTime())) 
+            ? new Date(transaction_date) 
+            : oldTx.created_at;
+
+        // Xử lý cấn trừ đơn hàng nếu có thay đổi số tiền hoặc loại giao dịch
+        const custId = oldTx.customer_id;
+        const oldAmt = parseFloat(oldTx.amount || 0);
+        const oldType = oldTx.transaction_type;
+
+        if (custId) {
+            // Trường hợp 1: RECEIVE -> PAY: Thu hồi toàn bộ tiền đã cấn trừ trên đơn
+            if (oldType === 'RECEIVE' && newType === 'PAY') {
+                let toRollback = oldAmt;
+                const paidOrders = await client.query(`
+                    SELECT id, order_code, total_amount, paid_amount 
+                    FROM orders 
+                    WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                      AND paid_amount > 0
+                    ORDER BY created_at DESC FOR UPDATE
+                `, [custId]);
+
+                for (const ord of paidOrders.rows) {
+                    if (toRollback <= 0) break;
+                    const curPaid = parseFloat(ord.paid_amount || 0);
+                    const rollback = Math.min(toRollback, curPaid);
+                    await client.query("UPDATE orders SET paid_amount = $1 WHERE id = $2", [curPaid - rollback, ord.id]);
+                    toRollback -= rollback;
+                }
+            }
+            // Trường hợp 2: PAY -> RECEIVE: Cấn trừ số tiền mới vào đơn nợ cũ
+            else if (oldType === 'PAY' && newType === 'RECEIVE') {
+                let toApply = newAmt;
+                const unpaidOrders = await client.query(`
+                    SELECT id, order_code, total_amount, paid_amount 
+                    FROM orders 
+                    WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                      AND (total_amount - COALESCE(paid_amount, 0)) > 0
+                    ORDER BY created_at ASC FOR UPDATE
+                `, [custId]);
+
+                for (const ord of unpaidOrders.rows) {
+                    if (toApply <= 0) break;
+                    const unpaid = Math.max(0, parseFloat(ord.total_amount) - parseFloat(ord.paid_amount || 0));
+                    if (unpaid > 0) {
+                        const apply = Math.min(toApply, unpaid);
+                        const newPaid = parseFloat(ord.paid_amount || 0) + apply;
+                        await client.query("UPDATE orders SET paid_amount = $1 WHERE id = $2", [newPaid, ord.id]);
+                        toApply -= apply;
+                    }
+                }
+            }
+            // Trường hợp 3: Cùng là RECEIVE nhưng thay đổi số tiền
+            else if (oldType === 'RECEIVE' && newType === 'RECEIVE') {
+                if (newAmt < oldAmt) {
+                    // Giảm tiền thu -> Thu hồi phần chênh lệch (oldAmt - newAmt)
+                    let toRollback = oldAmt - newAmt;
+                    const paidOrders = await client.query(`
+                        SELECT id, order_code, total_amount, paid_amount 
+                        FROM orders 
+                        WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                          AND paid_amount > 0
+                        ORDER BY created_at DESC FOR UPDATE
+                    `, [custId]);
+
+                    for (const ord of paidOrders.rows) {
+                        if (toRollback <= 0) break;
+                        const curPaid = parseFloat(ord.paid_amount || 0);
+                        const rollback = Math.min(toRollback, curPaid);
+                        await client.query("UPDATE orders SET paid_amount = $1 WHERE id = $2", [curPaid - rollback, ord.id]);
+                        toRollback -= rollback;
+                    }
+                } else if (newAmt > oldAmt) {
+                    // Tăng tiền thu -> Cấn trừ thêm phần chênh lệch (newAmt - oldAmt)
+                    let toApply = newAmt - oldAmt;
+                    const unpaidOrders = await client.query(`
+                        SELECT id, order_code, total_amount, paid_amount 
+                        FROM orders 
+                        WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                          AND (total_amount - COALESCE(paid_amount, 0)) > 0
+                        ORDER BY created_at ASC FOR UPDATE
+                    `, [custId]);
+
+                    for (const ord of unpaidOrders.rows) {
+                        if (toApply <= 0) break;
+                        const unpaid = Math.max(0, parseFloat(ord.total_amount) - parseFloat(ord.paid_amount || 0));
+                        if (unpaid > 0) {
+                            const apply = Math.min(toApply, unpaid);
+                            const newPaid = parseFloat(ord.paid_amount || 0) + apply;
+                            await client.query("UPDATE orders SET paid_amount = $1 WHERE id = $2", [newPaid, ord.id]);
+                            toApply -= apply;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 1. Cập nhật debt_transactions
+        await client.query(`
+            UPDATE debt_transactions
+            SET transaction_type = $1, amount = $2, payment_method = $3,
+                source_fund = $4, notes = $5, created_at = $6
+            WHERE id = $7
+        `, [newType, newAmt, method, fund, notes !== undefined ? notes : oldTx.notes, newDate, id]);
+
+        // 2. Cập nhật cash_transactions nếu có code
+        if (oldTx.code) {
+            const cashType = newType === 'RECEIVE' ? 'THU' : 'CHI';
+            const cashCategory = newType === 'RECEIVE' 
+                ? 'Thu tiền cọc / công nợ khách hàng' 
+                : 'Chi hoàn cọc / trả khách hàng';
+            await client.query(`
+                UPDATE cash_transactions
+                SET type = $1, amount = $2, payment_method = $3,
+                    source_fund = $4, notes = $5, category = $6, created_at = $7
+                WHERE code = $8
+            `, [cashType, newAmt, method, fund, notes !== undefined ? notes : oldTx.notes, cashCategory, newDate, oldTx.code]);
+        }
+
+        // 3. Cập nhật lại số dư công nợ của khách hàng
+        let netBal = 0;
+        if (custId) {
+            netBal = await calculatePartnerBalance(client, custId);
+            const curDebt = netBal > 0 ? netBal : 0;
+            const payDebt = netBal < 0 ? Math.abs(netBal) : 0;
+            await client.query("UPDATE customers SET current_debt = $1, payable_debt = $2 WHERE id = $3", [curDebt, payDebt, custId]);
+            await client.query("UPDATE debt_transactions SET balance_after = $1 WHERE id = $2", [netBal, id]);
+        }
+
+        await client.query('COMMIT');
+
+        res.json({
+            success: true,
+            message: `✅ Đã cập nhật giao dịch thành công! Số tiền mới: ${new Intl.NumberFormat('vi-VN').format(newAmt)} đ`,
+            net_balance: netBal
+        });
+    } catch(err) {
+        await client.query('ROLLBACK');
+        console.error('Lỗi PUT /api/debt-book/transaction/:id:', err);
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// =========================================================================
+// 6. POST /api/debt-book/reminder : ĐẶT LỊCH NHẮC NỢ CHO KHÁCH HÀNG
 // =========================================================================
 router.post('/reminder', async (req, res) => {
     try {
@@ -604,7 +787,7 @@ router.post('/reminder', async (req, res) => {
 });
 
 // =========================================================================
-// 6. DELETE /api/debt-book/transaction/:id : XÓA GIAO DỊCH SAI & HOÀN LẠI DƯ NỢ
+// 7. DELETE /api/debt-book/transaction/:id : XÓA GIAO DỊCH SAI & HOÀN LẠI DƯ NỢ
 // =========================================================================
 router.delete('/transaction/:id', async (req, res) => {
     const client = await pool.connect();
@@ -623,10 +806,30 @@ router.delete('/transaction/:id', async (req, res) => {
             await client.query("DELETE FROM cash_transactions WHERE code = $1", [tx.code]);
         }
 
-        // 2. Xóa giao dịch trong debt_transactions
+        // 2. Thu hồi cấn trừ đơn hàng nếu là RECEIVE
+        if (tx.transaction_type === 'RECEIVE' && tx.customer_id) {
+            let toRollback = parseFloat(tx.amount || 0);
+            const paidOrders = await client.query(`
+                SELECT id, order_code, total_amount, paid_amount 
+                FROM orders 
+                WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                  AND paid_amount > 0
+                ORDER BY created_at DESC FOR UPDATE
+            `, [tx.customer_id]);
+
+            for (const ord of paidOrders.rows) {
+                if (toRollback <= 0) break;
+                const curPaid = parseFloat(ord.paid_amount || 0);
+                const rollback = Math.min(toRollback, curPaid);
+                await client.query("UPDATE orders SET paid_amount = $1 WHERE id = $2", [curPaid - rollback, ord.id]);
+                toRollback -= rollback;
+            }
+        }
+
+        // 3. Xóa giao dịch trong debt_transactions
         await client.query("DELETE FROM debt_transactions WHERE id = $1", [id]);
 
-        // 3. Tính toán lại số dư của khách
+        // 4. Tính toán lại số dư của khách
         if (tx.customer_id) {
             const netBal = await calculatePartnerBalance(client, tx.customer_id);
             const curDebt = netBal > 0 ? netBal : 0;
