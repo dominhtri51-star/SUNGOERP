@@ -818,6 +818,12 @@
                 </div>
             </div>
             <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <button type="button" id="btn-order-export-image" onclick="window.modOrders.exportAsImage()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-black text-xs px-2.5 sm:px-3.5 py-2 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer shrink-0" title="Tải ảnh hoặc chia sẻ ngay qua Zalo">
+                    <i class="fas fa-camera text-emerald-200"></i> <span class="hidden sm:inline">LƯU ẢNH / ZALO</span><span class="sm:hidden">Ảnh/Zalo</span>
+                </button>
+                <button type="button" onclick="window.modOrders.openInNewTab()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer shrink-0" title="Mở trang in trong tab riêng">
+                    <i class="fas fa-external-link-alt text-amber-400"></i> <span class="hidden sm:inline">Tab Mới</span>
+                </button>
                 <button type="button" onclick="window.modOrders.openQuoteSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer shrink-0" title="Cài đặt mẫu in">
                     <i class="fas fa-cog text-amber-400"></i> <span class="hidden sm:inline">Cài Đặt Mẫu In</span>
                 </button>
@@ -839,11 +845,14 @@
         <div class="bg-slate-50 p-2.5 sm:p-3 border-t border-slate-200 flex items-center justify-between shrink-0">
             <span class="text-[11px] text-slate-500 font-bold hidden sm:inline"><i class="fas fa-mobile-alt mr-1 text-amber-500"></i> Hỗ trợ in qua AirPrint (iOS) & Google Print (Android)</span>
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <button type="button" onclick="window.modOrders.closePrintModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1 shrink-0">
-                    <i class="fas fa-times text-xs"></i> <span>Đóng Thoát</span>
+                <button type="button" onclick="window.modOrders.closePrintModal()" class="px-3 sm:px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1 shrink-0">
+                    <i class="fas fa-times text-xs"></i> <span>Đóng</span>
                 </button>
-                <button type="button" onclick="window.modOrders.triggerIframePrint()" class="flex-1 sm:flex-initial px-4 sm:px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
-                    <i class="fas fa-file-pdf"></i> <span>XUẤT PDF / IN</span>
+                <button type="button" id="btn-order-export-image-m" onclick="window.modOrders.exportAsImage()" class="flex-1 sm:flex-initial px-3 sm:px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                    <i class="fas fa-camera text-emerald-200"></i> <span>LƯU ẢNH / ZALO</span>
+                </button>
+                <button type="button" onclick="window.modOrders.triggerIframePrint()" class="flex-1 sm:flex-initial px-3 sm:px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                    <i class="fas fa-print"></i> <span>XUẤT PDF / IN</span>
                 </button>
             </div>
         </div>
@@ -3851,6 +3860,15 @@ window.modOrders = {
             sys = setRes.data || {};
         } catch(e) {}
 
+        const deliveryName = document.getElementById('dt-delivery')?.value.trim() || o.delivery_company || '........................................';
+        const carrierAddress = document.getElementById('dt-carrier-address')?.value.trim() || o.carrier_address || '';
+        const deliveryPhone = document.getElementById('dt-driver')?.value.trim() || o.driver_name || '....................';
+        const shippingNote = document.getElementById('dt-shipping-note')?.value.trim() || o.carrier_notes || o.notes || '';
+        
+        const finalRecipient = document.getElementById('dt-recipient-name')?.value.trim() || o.recipient_name || o.customer_name || 'Khách Lẻ';
+        const finalPhone = document.getElementById('dt-recipient-phone')?.value.trim() || o.recipient_phone || o.customer_phone || o.phone || '';
+        const finalAddress = document.getElementById('dt-address')?.value.trim() || o.license_plate || o.customer_address || o.address || '';
+
         const title = sys.shipping_title || 'PHIẾU GỬI HÀNG CHÀNH XE';
         const warning = shippingNote || sys.shipping_warning_text || '⚠️ HÀNG ĐIỆN TỬ - DỄ VỠ XIN NHẸ TAY • KHÔNG ĐÈ NẶNG';
         const storeName = sys.shipping_sender_name || sys.store_name || 'CÔNG TY ĐIỆN MẶT TRỜI SUNGO';
@@ -4015,6 +4033,10 @@ window.modOrders = {
         const previewFrame = document.getElementById('print-modal-preview-frame');
         const iframe = document.getElementById('order-print-iframe');
 
+        window.modOrders.currentPrintHTML = printHTML;
+        window.modOrders.currentPrintTitle = docTitle || 'Xem Trước Bản In';
+        window.modOrders.currentPrintOrderCode = (window.modOrders.currentData?.order_code || 'DON-HANG');
+
         if (titleEl) titleEl.innerText = docTitle || 'Xem Trước Bản In';
 
         // Ghi vào iframe xem trước trực tiếp (Cách ly tuyệt đối 100% CSS, không bao giờ làm vỡ layout trang chủ)
@@ -4052,7 +4074,100 @@ window.modOrders = {
         }
     },
 
+    openInNewTab: () => {
+        const html = window.modOrders.currentPrintHTML;
+        if (!html) return;
+        const printWin = window.open('', '_blank');
+        if (printWin) {
+            printWin.document.open();
+            printWin.document.write(html);
+            printWin.document.close();
+        } else {
+            alert('Trình duyệt đã chặn cửa sổ pop-up. Vui lòng cho phép mở pop-up để xem tab mới!');
+        }
+    },
+
+    exportAsImage: async () => {
+        const btnHeader = document.getElementById('btn-order-export-image');
+        const btnFooter = document.getElementById('btn-order-export-image-m');
+        const origHText = btnHeader ? btnHeader.innerHTML : '';
+        const origFText = btnFooter ? btnFooter.innerHTML : '';
+        if (btnHeader) btnHeader.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Đang tạo ảnh...</span>';
+        if (btnFooter) btnFooter.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Đang tạo ảnh...</span>';
+
+        try {
+            const pFrame = document.getElementById('print-modal-preview-frame');
+            const targetEl = pFrame ? (pFrame.contentDocument?.body || pFrame.contentWindow?.document?.body) : null;
+            if (!targetEl) throw new Error("Không tìm thấy nội dung bản in!");
+
+            if (typeof html2canvas === 'undefined') {
+                throw new Error("Thư viện tạo ảnh chưa sẵn sàng, vui lòng thử lại sau giây lát!");
+            }
+
+            const bar = targetEl.querySelector('#erp-action-bar');
+            if (bar) bar.style.display = 'none';
+
+            const canvas = await html2canvas(targetEl, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff'
+            });
+
+            const orderCode = window.modOrders.currentPrintOrderCode || 'DON-HANG';
+            const docTitle = window.modOrders.currentPrintTitle || 'Phieu';
+            const cleanTitle = docTitle.replace(/[^a-zA-Z0-9\-_]/g, '_');
+            const filename = `${cleanTitle}_${orderCode}.png`;
+            const dataUrl = canvas.toDataURL('image/png');
+
+            const blob = await (await fetch(dataUrl)).blob();
+            const file = new File([blob], filename, { type: 'image/png' });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: docTitle,
+                        text: `${docTitle} - Đơn hàng ${orderCode}`,
+                        files: [file]
+                    });
+                    return;
+                } catch(shareErr) {
+                    if (shareErr.name !== 'AbortError') console.warn('Share error:', shareErr);
+                }
+            }
+
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            alert(`✅ Đã lưu ảnh "${filename}"!\nBạn có thể gửi ngay qua Zalo cho nhà xe hoặc khách hàng.`);
+        } catch(err) {
+            console.error('Export image error:', err);
+            alert("❌ Không thể xuất ảnh: " + (err.message || err));
+        } finally {
+            if (btnHeader) btnHeader.innerHTML = origHText;
+            if (btnFooter) btnFooter.innerHTML = origFText;
+        }
+    },
+
     triggerIframePrint: () => {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const html = window.modOrders.currentPrintHTML;
+        
+        if (isMobile && html) {
+            const printWin = window.open('', '_blank');
+            if (printWin) {
+                const autoPrintHTML = html.replace('</body>', '<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 350); };<\/script></body>');
+                printWin.document.open();
+                printWin.document.write(autoPrintHTML);
+                printWin.document.close();
+                return;
+            }
+        }
+
         const previewFrame = document.getElementById('print-modal-preview-frame');
         const iframe = document.getElementById('order-print-iframe');
         const target = previewFrame || iframe;
