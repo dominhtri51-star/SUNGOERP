@@ -349,10 +349,33 @@ router.put('/:id/status', async (req, res) => {
     }
 });
 
-// [DELETE] Xóa Đơn Mua Hàng
+// [DELETE] Xóa Đơn Mua Hàng (Chỉ cho phép xóa đơn nháp hoặc đã hủy)
 router.delete('/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);
+        if (!id) return res.status(400).json({ success: false, error: 'ID không hợp lệ' });
+
+        // Kiểm tra trạng thái đơn hàng trước khi xóa
+        let currentStatus = null;
+        if (pool && typeof pool.query === 'function') {
+            const checkRes = await pool.query("SELECT status, po_code FROM purchases WHERE id = $1", [id]);
+            if (checkRes.rows.length > 0) {
+                currentStatus = checkRes.rows[0].status;
+            }
+        }
+        if (!currentStatus) {
+            let data = readFallbackDB();
+            const found = data.find(x => Number(x.id) === Number(id));
+            if (found) currentStatus = found.status;
+        }
+
+        if (currentStatus === 'Hoàn Tất Nhập Kho') {
+            return res.status(400).json({
+                success: false,
+                error: 'Không thể xóa đơn mua hàng đã Hoàn Tất Nhập Kho để đảm bảo tính toàn vẹn của tồn kho!'
+            });
+        }
+
         if (pool && typeof pool.query === 'function') {
             await pool.query("DELETE FROM purchases WHERE id = $1", [id]);
         }

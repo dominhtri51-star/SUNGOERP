@@ -11,6 +11,27 @@
             </button>
         </div>
         
+        <!-- Search & Filter Toolbar -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <div class="relative flex-1">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="pur-search-input" oninput="window.modPurchase.applyFilter()" placeholder="Tìm theo mã PO, nhà cung cấp, ghi chú..." class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-emerald-500 font-medium text-slate-700">
+            </div>
+            <div class="flex items-center gap-2">
+                <select id="pur-filter-status" onchange="window.modPurchase.applyFilter()" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg outline-none focus:border-emerald-500 cursor-pointer shrink-0">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Chờ Duyệt">Chờ Duyệt (Nháp)</option>
+                    <option value="Đã Duyệt - Đợi Giao">Đã Duyệt - Đợi Giao</option>
+                    <option value="Đang Vận Chuyển">Đang Vận Chuyển</option>
+                    <option value="Hoàn Tất Nhập Kho">Hoàn Tất Nhập Kho</option>
+                    <option value="Đã Hủy">Đã Hủy</option>
+                </select>
+                <button onclick="window.modPurchase.load()" class="p-1.5 px-2.5 text-slate-500 hover:text-emerald-600 bg-white border border-slate-200 hover:border-emerald-300 rounded-lg transition text-xs shrink-0 cursor-pointer flex items-center gap-1 font-semibold" title="Tải lại danh sách">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+            </div>
+        </div>
+
         <!-- 1. Desktop Table View -->
         <div class="hidden md:block overflow-x-auto flex-1 border border-slate-200 rounded-xl">
             <table class="w-full text-left text-xs whitespace-nowrap">
@@ -110,9 +131,12 @@
                     <i class="fas fa-lock mr-1"></i> Đã Nhập Kho (Khóa bởi WMS)
                 </div>
             </div>
-            <div class="flex gap-3 ml-auto">
-                <button onclick="document.getElementById('purchase-form-modal').classList.replace('flex', 'hidden')" class="px-5 py-2.5 bg-slate-200 text-slate-700 rounded font-bold hover:bg-slate-300 transition">Hủy</button>
-                <button id="btn-save-pur" onclick="window.modPurchase.savePO()" class="px-5 py-2.5 bg-emerald-600 text-white rounded font-bold hover:bg-emerald-700 transition shadow-md"><i class="fas fa-save mr-1"></i> Lưu Đơn Đặt Hàng</button>
+            <div class="flex items-center gap-2 ml-auto">
+                <button id="btn-delete-pur-modal" onclick="window.modPurchase.deleteCurrentPO()" class="hidden px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg font-bold transition text-xs flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-trash-alt"></i> Xóa đơn này
+                </button>
+                <button onclick="document.getElementById('purchase-form-modal').classList.replace('flex', 'hidden')" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300 transition text-xs cursor-pointer">Hủy</button>
+                <button id="btn-save-pur" onclick="window.modPurchase.savePO()" class="px-5 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition shadow-md text-xs cursor-pointer"><i class="fas fa-save mr-1"></i> Lưu Đơn Đặt Hàng</button>
             </div>
         </div>
     </div>
@@ -147,98 +171,187 @@
             } catch (e) { console.error("Lỗi tải danh mục:", e); }
         },
 
+        isDeletable: (status) => {
+            if (!status) return true;
+            const s = String(status).trim().toLowerCase();
+            return s === 'chờ duyệt' || s === 'đã hủy' || s === 'đã huỷ' || s === 'draft' || s === 'cancelled' || s === 'canceled';
+        },
+
+        deletePO: async (id, poCode) => {
+            const item = window.modPurchase.list.find(x => Number(x.id) === Number(id));
+            const code = poCode || (item ? item.po_code : ('#' + id));
+
+            if (item && !window.modPurchase.isDeletable(item.status)) {
+                alert('⚠️ Không thể xóa đơn mua hàng ở trạng thái "' + item.status + '"!\nChỉ có thể xóa đơn ở trạng thái Đã Hủy hoặc Chờ Duyệt (nháp).');
+                return;
+            }
+
+            if (!confirm(`⚠️ XÁC NHẬN XÓA ĐƠN MUA HÀNG: ${code}?\n\nThao tác này sẽ xóa vĩnh viễn đơn mua hàng khỏi hệ thống và không thể hoàn tác.`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/purchases/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    if (Number(window.modPurchase.editId) === Number(id)) {
+                        document.getElementById('purchase-form-modal').classList.replace('flex', 'hidden');
+                    }
+                    await window.modPurchase.load();
+                    alert('✅ Đã xóa đơn mua hàng ' + code + ' thành công!');
+                } else {
+                    alert('❌ Lỗi: ' + (data.error || 'Không thể xóa đơn'));
+                }
+            } catch (e) {
+                alert('❌ Mất kết nối server: ' + e.message);
+            }
+        },
+
+        deleteCurrentPO: () => {
+            if (!window.modPurchase.editId) return;
+            const item = window.modPurchase.list.find(x => Number(x.id) === Number(window.modPurchase.editId));
+            window.modPurchase.deletePO(window.modPurchase.editId, item ? item.po_code : '');
+        },
+
         load: async () => {
             try {
-                const res = await fetch('/api/purchases');
+                const res = await fetch('/api/purchases?t=' + Date.now());
                 const data = await res.json();
                 if(data.success) {
-                    window.modPurchase.list = data.data;
-                    const tbody = document.getElementById('tbl-purchases');
-                    
-                    if(data.data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Chưa có đơn mua hàng nào.</td></tr>`;
-
-                    tbody.innerHTML = data.data.map(i => {
-                        let statusColor = 'bg-slate-100 text-slate-600 border-slate-200';
-                        if (i.status === 'Đã Duyệt - Đợi Giao') statusColor = 'bg-blue-100 text-blue-700 border-blue-200';
-                        if (i.status === 'Đang Vận Chuyển') statusColor = 'bg-amber-100 text-amber-700 border-amber-200';
-                        if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
-                        if (i.status === 'Đã Hủy') statusColor = 'bg-red-100 text-red-700 border-red-200';
-
-                        const dateStr = new Date(i.created_at).toLocaleDateString('vi-VN');
-                        const itemCount = i.items ? i.items.length : 0;
-
-                        return `
-                            <tr class="hover:bg-emerald-50/50 transition">
-                                <td class="p-3 pl-4">
-                                    <p class="font-mono font-bold text-emerald-700 text-xs"><i class="fas fa-file-invoice text-slate-400"></i> ${i.po_code}</p>
-                                    <p class="text-[10px] text-slate-400 font-normal mt-0.5"><i class="far fa-calendar-alt"></i> ${dateStr}</p>
-                                </td>
-                                <td class="p-3">
-                                    <p class="font-bold text-slate-800 text-xs">${i.supplier_name}</p>
-                                    ${i.note ? `<p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1 italic"><i class="fas fa-comment-dots text-slate-400 mr-1"></i>${i.note}</p>` : ''}
-                                </td>
-                                <td class="p-3 text-right">
-                                    <p class="font-black text-red-600 text-xs">${window.modPurchase.fmt(i.total_amount)} đ</p>
-                                    <p class="text-[9.5px] text-slate-400 font-bold">${itemCount} danh mục</p>
-                                </td>
-                                <td class="p-3 text-center"><span class="${statusColor} px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase border">${i.status || 'Chờ Duyệt'}</span></td>
-                                <td class="p-3 pr-4 text-center">
-                                    <button onclick="window.modPurchase.openEdit(${i.id})" class="bg-white hover:bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold transition shadow-2xs border text-xs flex items-center justify-center gap-1 mx-auto cursor-pointer">
-                                        <i class="fas fa-edit text-emerald-500"></i> Xem / Sửa
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-
-                    // Render Mobile Cards
-                    const mobEl = document.getElementById('tbl-purchases-mobile');
-                    if (mobEl) {
-                        mobEl.innerHTML = data.data.map(i => {
-                            let statusColor = 'bg-slate-100 text-slate-600 border-slate-200';
-                            if (i.status === 'Đã Duyệt - Đợi Giao') statusColor = 'bg-blue-100 text-blue-700 border-blue-200';
-                            if (i.status === 'Đang Vận Chuyển') statusColor = 'bg-amber-100 text-amber-700 border-amber-200';
-                            if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
-                            if (i.status === 'Đã Hủy') statusColor = 'bg-red-100 text-red-700 border-red-200';
-
-                            const dateStr = new Date(i.created_at).toLocaleDateString('vi-VN');
-                            const itemCount = i.items ? i.items.length : 0;
-
-                            return `
-                            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="font-mono font-bold text-emerald-700 text-xs flex items-center gap-1.5" onclick="window.modPurchase.openEdit(${i.id})">
-                                        <i class="fas fa-file-invoice text-slate-400"></i> ${i.po_code}
-                                    </span>
-                                    <span class="${statusColor} px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase border">
-                                        ${i.status || 'Chờ Duyệt'}
-                                    </span>
-                                </div>
-
-                                <div>
-                                    <h4 class="font-bold text-slate-900 text-xs sm:text-sm">${i.supplier_name}</h4>
-                                    ${i.note ? `<p class="text-[11px] text-slate-600 bg-slate-50 p-1.5 rounded-lg mt-1 border border-slate-100 italic">${i.note}</p>` : ''}
-                                </div>
-
-                                <div class="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                    <div class="text-slate-500 text-[10px]">
-                                        ${dateStr} • ${itemCount} vật tư
-                                    </div>
-                                    <div class="font-black text-red-600 text-xs">
-                                        ${window.modPurchase.fmt(i.total_amount)} đ
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center justify-end pt-1 border-t border-slate-100">
-                                    <button type="button" onclick="window.modPurchase.openEdit(${i.id})" class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer">
-                                        <i class="fas fa-edit text-emerald-600"></i> Xem Chi Tiết / Sửa
-                                    </button>
-                                </div>
-                            </div>`;
-                        }).join('');
-                    }
+                    window.modPurchase.list = data.data || [];
+                    window.modPurchase.applyFilter();
                 }
             } catch(e) { console.log('Lỗi tải dữ liệu:', e); }
+        },
+
+        applyFilter: () => {
+            const searchVal = (document.getElementById('pur-search-input')?.value || '').toLowerCase().trim();
+            const statusFilter = document.getElementById('pur-filter-status')?.value || '';
+
+            let filtered = window.modPurchase.list || [];
+
+            if (statusFilter) {
+                filtered = filtered.filter(i => (i.status || 'Chờ Duyệt') === statusFilter);
+            }
+
+            if (searchVal) {
+                filtered = filtered.filter(i => {
+                    const po = (i.po_code || '').toLowerCase();
+                    const sup = (i.supplier_name || '').toLowerCase();
+                    const note = (i.note || '').toLowerCase();
+                    return po.includes(searchVal) || sup.includes(searchVal) || note.includes(searchVal);
+                });
+            }
+
+            window.modPurchase.renderList(filtered);
+        },
+
+        renderList: (dataList) => {
+            const tbody = document.getElementById('tbl-purchases');
+            const mobEl = document.getElementById('tbl-purchases-mobile');
+
+            if (!dataList || dataList.length === 0) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Không tìm thấy đơn mua hàng nào.</td></tr>`;
+                if (mobEl) mobEl.innerHTML = `<div class="p-8 text-center text-slate-400 font-medium bg-slate-50 rounded-xl border border-slate-200">Không tìm thấy đơn mua hàng nào.</div>`;
+                return;
+            }
+
+            // Render Desktop Table
+            if (tbody) {
+                tbody.innerHTML = dataList.map(i => {
+                    let statusColor = 'bg-slate-100 text-slate-600 border-slate-200';
+                    if (i.status === 'Đã Duyệt - Đợi Giao') statusColor = 'bg-blue-100 text-blue-700 border-blue-200';
+                    if (i.status === 'Đang Vận Chuyển') statusColor = 'bg-amber-100 text-amber-700 border-amber-200';
+                    if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                    if (i.status === 'Đã Hủy') statusColor = 'bg-red-100 text-red-700 border-red-200';
+
+                    const dateStr = i.created_at ? new Date(i.created_at).toLocaleDateString('vi-VN') : '';
+                    const itemCount = i.items ? i.items.length : 0;
+                    const canDelete = window.modPurchase.isDeletable(i.status);
+
+                    return `
+                        <tr class="hover:bg-emerald-50/50 transition">
+                            <td class="p-3 pl-4">
+                                <p class="font-mono font-bold text-emerald-700 text-xs"><i class="fas fa-file-invoice text-slate-400"></i> ${i.po_code}</p>
+                                <p class="text-[10px] text-slate-400 font-normal mt-0.5"><i class="far fa-calendar-alt"></i> ${dateStr}</p>
+                            </td>
+                            <td class="p-3">
+                                <p class="font-bold text-slate-800 text-xs">${i.supplier_name}</p>
+                                ${i.note ? `<p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1 italic"><i class="fas fa-comment-dots text-slate-400 mr-1"></i>${i.note}</p>` : ''}
+                            </td>
+                            <td class="p-3 text-right">
+                                <p class="font-black text-red-600 text-xs">${window.modPurchase.fmt(i.total_amount)} đ</p>
+                                <p class="text-[9.5px] text-slate-400 font-bold">${itemCount} danh mục</p>
+                            </td>
+                            <td class="p-3 text-center"><span class="${statusColor} px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase border">${i.status || 'Chờ Duyệt'}</span></td>
+                            <td class="p-3 pr-4 text-center">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <button onclick="window.modPurchase.openEdit(${i.id})" class="bg-white hover:bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold transition shadow-2xs border text-xs flex items-center gap-1 cursor-pointer">
+                                        <i class="fas fa-edit text-emerald-500"></i> Xem / Sửa
+                                    </button>
+                                    ${canDelete ? `
+                                    <button onclick="window.modPurchase.deletePO(${i.id}, '${i.po_code}')" class="bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 px-2 py-1 rounded-lg font-bold transition shadow-2xs text-xs flex items-center gap-1 cursor-pointer" title="Xóa đơn ${i.status}">
+                                        <i class="fas fa-trash-alt"></i> Xóa
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Render Mobile Cards
+            if (mobEl) {
+                mobEl.innerHTML = dataList.map(i => {
+                    let statusColor = 'bg-slate-100 text-slate-600 border-slate-200';
+                    if (i.status === 'Đã Duyệt - Đợi Giao') statusColor = 'bg-blue-100 text-blue-700 border-blue-200';
+                    if (i.status === 'Đang Vận Chuyển') statusColor = 'bg-amber-100 text-amber-700 border-amber-200';
+                    if (i.status === 'Hoàn Tất Nhập Kho') statusColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                    if (i.status === 'Đã Hủy') statusColor = 'bg-red-100 text-red-700 border-red-200';
+
+                    const dateStr = i.created_at ? new Date(i.created_at).toLocaleDateString('vi-VN') : '';
+                    const itemCount = i.items ? i.items.length : 0;
+                    const canDelete = window.modPurchase.isDeletable(i.status);
+
+                    return `
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-mono font-bold text-emerald-700 text-xs flex items-center gap-1.5" onclick="window.modPurchase.openEdit(${i.id})">
+                                <i class="fas fa-file-invoice text-slate-400"></i> ${i.po_code}
+                            </span>
+                            <span class="${statusColor} px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase border">
+                                ${i.status || 'Chờ Duyệt'}
+                            </span>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-xs sm:text-sm">${i.supplier_name}</h4>
+                            ${i.note ? `<p class="text-[11px] text-slate-600 bg-slate-50 p-1.5 rounded-lg mt-1 border border-slate-100 italic">${i.note}</p>` : ''}
+                        </div>
+
+                        <div class="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100">
+                            <div class="text-slate-500 text-[10px]">
+                                ${dateStr} • ${itemCount} vật tư
+                            </div>
+                            <div class="font-black text-red-600 text-xs">
+                                ${window.modPurchase.fmt(i.total_amount)} đ
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                            ${canDelete ? `
+                            <button type="button" onclick="window.modPurchase.deletePO(${i.id}, '${i.po_code}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                <i class="fas fa-trash-alt text-red-500"></i> Xóa đơn
+                            </button>
+                            ` : ''}
+                            <button type="button" onclick="window.modPurchase.openEdit(${i.id})" class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                <i class="fas fa-edit text-emerald-600"></i> Xem Chi Tiết / Sửa
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
         },
 
         searchProduct: (index, keyword) => {
@@ -292,6 +405,9 @@
             document.getElementById('btn-save-pur').innerHTML = '<i class="fas fa-save mr-1"></i> Lưu Đơn Mua Hàng';
             document.getElementById('pur-status-zone').classList.add('hidden');
             
+            const delBtn = document.getElementById('btn-delete-pur-modal');
+            if (delBtn) delBtn.classList.add('hidden');
+
             document.getElementById('p-po').value = '';
             document.getElementById('p-note').value = '';
             document.getElementById('p-sup').value = '';
@@ -333,17 +449,26 @@
             // LOGIC BẢO VỆ DỮ LIỆU ĐÃ NHẬP KHO
             const selectStatus = document.getElementById('p-status');
             const lockedStatus = document.getElementById('p-status-locked');
+            const delBtn = document.getElementById('btn-delete-pur-modal');
             
             if (item.status === 'Hoàn Tất Nhập Kho') {
                 selectStatus.classList.add('hidden');
                 lockedStatus.classList.remove('hidden');
                 // Ẩn nút Lưu để ngăn chặn việc sửa chữa số lượng sau khi kho đã chốt
                 document.getElementById('btn-save-pur').classList.add('hidden'); 
+                if (delBtn) delBtn.classList.add('hidden');
             } else {
                 selectStatus.classList.remove('hidden');
                 lockedStatus.classList.add('hidden');
                 selectStatus.value = item.status || 'Chờ Duyệt';
                 document.getElementById('btn-save-pur').classList.remove('hidden');
+                if (delBtn) {
+                    if (window.modPurchase.isDeletable(item.status)) {
+                        delBtn.classList.remove('hidden');
+                    } else {
+                        delBtn.classList.add('hidden');
+                    }
+                }
             }
             
             window.modPurchase.currentItems = item.items ? JSON.parse(JSON.stringify(item.items)) : [];
@@ -510,11 +635,23 @@
             if(!id) return;
             try {
                 await fetch(`/api/purchases/${id}/status`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus }) });
+                const item = window.modPurchase.list.find(x => Number(x.id) === Number(id));
+                if (item) item.status = newStatus;
+                const delBtn = document.getElementById('btn-delete-pur-modal');
+                if (delBtn) {
+                    if (window.modPurchase.isDeletable(newStatus)) {
+                        delBtn.classList.remove('hidden');
+                    } else {
+                        delBtn.classList.add('hidden');
+                    }
+                }
                 window.modPurchase.load();
             } catch(e) {}
         }
     };
     
+    window.modPurchases = window.modPurchase;
+
     window.modPurchase.initData().then(() => {
         window.modPurchase.load();
     });
