@@ -449,14 +449,14 @@
                             <tr>
                                 <th class="border border-slate-800 p-1.5 w-8">STT</th>
                                 <th class="border border-slate-800 p-1.5 w-24">NGÀY</th>
-                                <th class="border border-slate-800 p-1.5 text-left">TÊN HÀNG / NỘI DUNG & LÝ DO GIAO DỊCH</th>
+                                <th class="border border-slate-800 p-1.5 text-left">TÊN HÀNG</th>
                                 <th class="border border-slate-800 p-1.5 w-12">ĐVT</th>
-                                <th class="border border-slate-800 p-1.5 w-12 text-center">SL</th>
+                                <th class="border border-slate-800 p-1.5 w-12 text-center">SỐ LƯỢNG</th>
                                 <th class="border border-slate-800 p-1.5 text-right w-24">ĐƠN GIÁ</th>
-                                <th class="border border-slate-800 p-1.5 text-right w-24">THÀNH TIỀN</th>
-                                <th class="border border-slate-800 p-1.5 text-right w-28 text-rose-700">TỔNG ĐƠN / ĐÃ ĐƯA</th>
-                                <th class="border border-slate-800 p-1.5 text-right w-28 text-emerald-700">ĐÃ THU / ĐÃ NHẬN</th>
-                                <th class="border border-slate-800 p-1.5 text-right w-28 text-slate-900">DƯ NỢ LŨY KẾ</th>
+                                <th class="border border-slate-800 p-1.5 text-right w-28">THÀNH TIỀN</th>
+                                <th class="border border-slate-800 p-1.5 text-right w-28 text-rose-700">TỔNG ĐƠN</th>
+                                <th class="border border-slate-800 p-1.5 text-right w-28 text-emerald-700">ĐÃ THANH TOÁN</th>
+                                <th class="border border-slate-800 p-1.5 text-right w-28 text-rose-700">CÒN LẠI / PHẢI THU</th>
                             </tr>
                         </thead>
                         <tbody id="debt-stmt-table-body" class="text-[11px] text-slate-800 divide-y divide-slate-300">
@@ -464,22 +464,28 @@
                         </tbody>
                         <tfoot class="font-bold text-xs border-t-2 border-slate-800">
                             <tr class="bg-slate-50">
-                                <td colspan="7" class="border border-slate-800 p-2 text-right uppercase font-black">TỔNG PHÁT SINH TĂNG (DOANH SỐ + TIỀN ĐÃ ĐƯA)</td>
+                                <td colspan="7" class="border border-slate-800 p-2 text-right uppercase font-black">TỔNG ĐƠN (DOANH SỐ)</td>
                                 <td class="border border-slate-800 p-2 text-right font-black text-rose-700 text-sm" id="debt-stmt-foot-total-gross">0 đ</td>
                                 <td class="border border-slate-800 p-2"></td>
                                 <td class="border border-slate-800 p-2"></td>
                             </tr>
+                            <tr class="bg-slate-50">
+                                <td colspan="7" class="border border-slate-800 p-2 text-right uppercase font-bold text-slate-700">HÀNG KHÁCH TRẢ / ĐIỀU CHỈNH (NẾU CÓ)</td>
+                                <td class="border border-slate-800 p-2 text-right font-bold text-slate-700" id="debt-stmt-foot-returned">0 đ</td>
+                                <td class="border border-slate-800 p-2"></td>
+                                <td class="border border-slate-800 p-2"></td>
+                            </tr>
                             <tr class="bg-emerald-50/50">
-                                <td colspan="7" class="border border-slate-800 p-2 text-right uppercase font-bold text-emerald-800">TỔNG PHÁT SINH GIẢM (TIỀN ĐÃ THU / TÔI ĐÃ NHẬN)</td>
+                                <td colspan="7" class="border border-slate-800 p-2 text-right uppercase font-bold text-emerald-800">TỔNG ĐÃ THANH TOÁN</td>
                                 <td class="border border-slate-800 p-2"></td>
                                 <td class="border border-slate-800 p-2 text-right font-black text-emerald-700 text-sm" id="debt-stmt-foot-paid">0 đ</td>
                                 <td class="border border-slate-800 p-2"></td>
                             </tr>
                             <tr class="bg-amber-100/80">
-                                <td colspan="7" class="border border-slate-800 p-2.5 text-right uppercase font-black text-slate-900 text-sm">DƯ NỢ CUỐI KỲ (CÒN LẠI)</td>
+                                <td colspan="7" class="border border-slate-800 p-2.5 text-right uppercase font-black text-slate-900 text-sm">CÒN LẠI / PHẢI THU (DƯ NỢ CUỐI KỲ)</td>
                                 <td class="border border-slate-800 p-2"></td>
                                 <td class="border border-slate-800 p-2"></td>
-                                <td class="border border-slate-800 p-2.5 text-right font-black text-slate-950 text-base" id="debt-stmt-foot-remaining">0 đ</td>
+                                <td class="border border-slate-800 p-2.5 text-right font-black text-rose-700 text-base" id="debt-stmt-foot-remaining">0 đ</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -1406,7 +1412,27 @@ window.modDebtBook = {
         const p = window.modDebtBook.currentPartner || {};
         const cust = d.customer || p;
         const sum = d.summary || {};
-        const ledger = d.ledger || [];
+        const orders = d.orders || [];
+        const transactions = d.transactions || [];
+
+        const timeline = [];
+        orders.forEach(ord => {
+            timeline.push({
+                type: 'ORDER',
+                date: new Date(ord.order_date).getTime(),
+                dateStr: new Date(ord.order_date).toLocaleDateString('vi-VN'),
+                order: ord
+            });
+        });
+        transactions.forEach(tx => {
+            timeline.push({
+                type: tx.transaction_type,
+                date: new Date(tx.date || tx.created_at).getTime(),
+                dateStr: new Date(tx.date || tx.created_at).toLocaleDateString('vi-VN'),
+                tx: tx
+            });
+        });
+        timeline.sort((a, b) => a.date - b.date);
 
         let csv = "\uFEFFCÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO\n";
         csv += "Địa chỉ: 419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM\n";
@@ -1414,38 +1440,37 @@ window.modDebtBook = {
         csv += `BẢNG ĐỐI CHIẾU CÔNG NỢ CHI TIẾT - ${(cust.name || p.name || '').toUpperCase()}\n`;
         csv += `Từ ngày: ${new Date(d.date_range?.from_date || Date.now()).toLocaleDateString('vi-VN')} Đến ngày: ${new Date(d.date_range?.to_date || Date.now()).toLocaleDateString('vi-VN')}\n\n`;
 
-        csv += "STT,NGÀY,MÃ CHỨNG TỪ,PHÂN LOẠI,NỘI DUNG / TÊN THIẾT BỊ / LÝ DO THU NHẬN,ĐVT,SỐ LƯỢNG,ĐƠN GIÁ (VNĐ),THÀNH TIỀN (VNĐ),PHÁT SINH TĂNG (VNĐ),PHÁT SINH GIẢM (VNĐ),DƯ NỢ LŨY KẾ (VNĐ)\n";
+        csv += "STT,NGÀY,MÃ CHỨNG TỪ,TÊN HÀNG / LÝ DO GIAO DỊCH,ĐVT,SỐ LƯỢNG,ĐƠN GIÁ (VNĐ),THÀNH TIỀN (VNĐ),TỔNG ĐƠN (VNĐ),ĐÃ THANH TOÁN (VNĐ),CÒN LẠI / PHẢI THU (VNĐ)\n";
 
         let stt = 1;
-        ledger.forEach(entry => {
-            const dateObj = new Date(entry.date);
-            const dateStr = dateObj.toLocaleDateString('vi-VN') + ' ' + dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-
-            if (entry.entry_type === 'ORDER') {
-                const items = (entry.items && entry.items.length > 0) ? entry.items : [
-                    { product_name: `Đơn hàng ${entry.code}`, unit: 'Đơn', quantity: 1, price: entry.debit, total: entry.debit }
+        timeline.forEach(item => {
+            if (item.type === 'ORDER') {
+                const ord = item.order;
+                const items = (ord.items && ord.items.length > 0) ? ord.items : [
+                    { product_name: `Đơn hàng ${ord.order_code}`, unit: 'Đơn', quantity: 1, price: ord.total_amount, total: ord.total_amount }
                 ];
-                items.forEach((item, idx) => {
-                    const safeName = `"${(item.product_name || '').replace(/"/g, '""')}"`;
-                    const totalOrd = idx === 0 ? entry.debit : '';
-                    const remOrd = idx === 0 ? entry.running_balance : '';
-                    csv += `${stt++},${dateStr},${entry.code},Đơn hàng bán,${safeName},${item.unit || 'Bộ'},${item.quantity || 1},${item.price || 0},${item.total || 0},${totalOrd},,${remOrd}\n`;
+                items.forEach((it, idx) => {
+                    const safeName = `"${(it.product_name || '').replace(/"/g, '""')}"`;
+                    const totalOrd = idx === 0 ? ord.total_amount : '';
+                    const paidOrd = idx === 0 ? (ord.paid_amount > 0 ? ord.paid_amount : '') : '';
+                    const remOrd = idx === 0 ? (ord.remaining_debt != null ? ord.remaining_debt : ord.total_amount - (ord.paid_amount || 0)) : '';
+                    csv += `${stt++},${item.dateStr},${ord.order_code || ''},${safeName},${it.unit || 'Bộ'},${it.quantity || 1},${it.price || 0},${it.total || 0},${totalOrd},${paidOrd},${remOrd}\n`;
                 });
-            } else if (entry.entry_type === 'RECEIVE') {
-                const safeNotes = `"[TÔI ĐÃ NHẬN TIỀN] ${(entry.notes || 'Khách thanh toán / cọc').replace(/"/g, '""')} (${entry.payment_method || 'CK'} - ${entry.source_fund || ''})"`;
-                csv += `${stt++},${dateStr},${entry.code},Tôi đã nhận tiền,${safeNotes},Lần,1,-,-,,${entry.credit},${entry.running_balance}\n`;
-            } else if (entry.entry_type === 'PAY') {
-                const safeNotes = `"[TÔI ĐÃ ĐƯA TIỀN] ${(entry.notes || 'Chi trả khách / cọc').replace(/"/g, '""')} (${entry.payment_method || 'TM'} - ${entry.source_fund || ''})"`;
-                csv += `${stt++},${dateStr},${entry.code},Tôi đã đưa tiền,${safeNotes},Lần,1,-,-,${entry.debit},,${entry.running_balance}\n`;
+            } else if (item.type === 'RECEIVE') {
+                const tx = item.tx;
+                const safeNote = `"[TÔI ĐÃ NHẬN TIỀN] ${(tx.notes || 'Thu nợ / cọc').replace(/"/g, '""')} (${tx.payment_method || 'CK'})"`;
+                csv += `${stt++},${item.dateStr},${tx.code || ''},${safeNote},-,-,-,-,-,${tx.amount || 0},-\n`;
+            } else if (item.type === 'PAY') {
+                const tx = item.tx;
+                const safeNote = `"[TÔI ĐÃ ĐƯA TIỀN] ${(tx.notes || 'Chi tiền / trả cọc').replace(/"/g, '""')} (${tx.payment_method || 'TM'})"`;
+                csv += `${stt++},${item.dateStr},${tx.code || ''},${safeNote},-,-,-,-,${tx.amount || 0},-,-\n`;
             }
         });
 
-        const totalDebit = sum.total_debit !== undefined ? sum.total_debit : (sum.total_gross_amount || 0);
-        const totalCredit = sum.total_credit !== undefined ? sum.total_credit : (sum.total_paid_amount || 0);
-
-        csv += `\n,,,,,,,,,TỔNG PHÁT SINH TĂNG (DOANH SỐ + TIỀN ĐÃ ĐƯA),${totalDebit},\n`;
-        csv += `,,,,,,,,,TỔNG PHÁT SINH GIẢM (TIỀN ĐÃ THU / ĐÃ NHẬN),,${totalCredit}\n`;
-        csv += `,,,,,,,,,DƯ NỢ CUỐI KỲ (${sum.debt_label || 'CÒN NỢ'}),,,${sum.remaining_balance || 0}\n`;
+        csv += `\n,,,,,,,TỔNG ĐƠN (DOANH SỐ),${sum.total_gross_amount || 0},,\n`;
+        csv += `,,,,,,,HÀNG KHÁCH TRẢ / ĐIỀU CHỈNH,${sum.total_returned_amount || 0},,\n`;
+        csv += `,,,,,,,TỔNG ĐÃ THANH TOÁN,,${sum.total_paid_amount || 0},\n`;
+        csv += `,,,,,,,CÒN LẠI / PHẢI THU (DƯ NỢ CUỐI KỲ),,,${sum.remaining_balance || 0}\n`;
 
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
@@ -1616,7 +1641,8 @@ window.modDebtBook = {
         const p = window.modDebtBook.currentPartner || {};
         const cust = data.customer || p;
         const sum = data.summary || {};
-        const ledger = (data.ledger && data.ledger.length > 0) ? data.ledger : (data.orders || []);
+        const orders = data.orders || [];
+        const transactions = data.transactions || [];
         const dateRange = data.date_range || {};
 
         // 1. Render Header Text
@@ -1635,113 +1661,144 @@ window.modDebtBook = {
         const signCustEl = document.getElementById('debt-stmt-sign-customer-name');
         if (signCustEl) signCustEl.innerText = cust.name || p.name || 'Khách Hàng';
 
-        // 2. Render Table Body (10 cột chuẩn)
+        // 2. Build Timeline (Orders + Transactions) sorted by date
+        const timeline = [];
+        orders.forEach(ord => {
+            timeline.push({
+                type: 'ORDER',
+                date: new Date(ord.order_date).getTime(),
+                dateStr: new Date(ord.order_date).toLocaleDateString('vi-VN'),
+                order: ord
+            });
+        });
+        transactions.forEach(tx => {
+            timeline.push({
+                type: tx.transaction_type, // 'RECEIVE' or 'PAY'
+                date: new Date(tx.date || tx.created_at).getTime(),
+                dateStr: new Date(tx.date || tx.created_at).toLocaleDateString('vi-VN'),
+                tx: tx
+            });
+        });
+        timeline.sort((a, b) => a.date - b.date);
+
+        // 3. Render Table Body (10 cột chuẩn)
         const tbody = document.getElementById('debt-stmt-table-body');
         if (!tbody) return;
 
-        if (ledger.length === 0) {
+        if (timeline.length === 0) {
             tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400 italic">Không có giao dịch hoặc đơn hàng nào phát sinh trong khoảng thời gian này.</td></tr>`;
         } else {
             let stt = 1;
             let rowsHtml = '';
 
-            ledger.forEach(entry => {
-                const dateObj = new Date(entry.date || entry.order_date || Date.now());
-                const dateStr = dateObj.toLocaleDateString('vi-VN') + '<br><span class="text-[9px] text-slate-400">' + dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + '</span>';
-
-                if (entry.entry_type === 'ORDER' || (!entry.entry_type && entry.order_code)) {
-                    // Dòng Đơn hàng bán
-                    const items = (entry.items && entry.items.length > 0) ? entry.items : [
-                        { product_name: `Đơn hàng #${entry.code || entry.order_code}`, unit: 'Đơn', quantity: 1, price: entry.debit || entry.total_amount, total: entry.debit || entry.total_amount }
+            timeline.forEach(item => {
+                if (item.type === 'ORDER') {
+                    const ord = item.order;
+                    const dateStr = item.dateStr;
+                    const items = (ord.items && ord.items.length > 0) ? ord.items : [
+                        { product_name: `Đơn hàng ${ord.order_code}`, unit: 'Đơn', quantity: 1, price: ord.total_amount, total: ord.total_amount }
                     ];
+                    const itemRowspan = items.length;
 
-                    items.forEach((it, itemIdx) => {
-                        const isFirst = (itemIdx === 0);
-                        const rowCount = items.length;
+                    items.forEach((it, idx) => {
+                        const isFirst = (idx === 0);
+                        const rowStt = stt++;
+                        const isPaid = (ord.paid_amount > 0);
 
                         rowsHtml += `
                         <tr class="hover:bg-slate-50 transition border-b border-slate-200">
-                            <td class="border border-slate-800 p-1.5 text-center font-bold text-slate-600">${stt++}</td>
-                            <td class="border border-slate-800 p-1.5 text-center font-mono text-[10px] leading-tight">${dateStr}</td>
-                            <td class="border border-slate-800 p-1.5 font-bold text-slate-900">
-                                ${isFirst ? `<div class="text-[10px] font-mono text-blue-700 font-black mb-0.5 flex items-center gap-1"><i class="fas fa-receipt text-blue-500"></i><span>ĐƠN #${entry.code || entry.order_code}</span>${entry.notes ? ` <span class="font-sans font-normal text-slate-500 italic">(${entry.notes})</span>` : ''}</div>` : ''}
-                                <span>${it.product_name || '---'}</span>
-                            </td>
+                            <td class="border border-slate-800 p-1.5 text-center font-bold text-slate-600">${rowStt}</td>
+                            ${isFirst ? `
+                            <td rowspan="${itemRowspan}" class="border border-slate-800 p-1.5 text-center font-mono text-[11px] align-middle">
+                                <div class="font-bold text-slate-900">${dateStr}</div>
+                                <div class="text-[10px] text-blue-600 font-mono font-medium">${ord.order_code || ''}</div>
+                            </td>` : ''}
+                            <td class="border border-slate-800 p-1.5 font-bold text-slate-900">${it.product_name || '---'}</td>
                             <td class="border border-slate-800 p-1.5 text-center text-slate-600">${it.unit || 'Bộ'}</td>
                             <td class="border border-slate-800 p-1.5 text-center font-bold font-mono">${it.quantity || 1}</td>
-                            <td class="border border-slate-800 p-1.5 text-right font-mono">${window.modDebtBook.fmtMoney(it.price || 0)}</td>
-                            <td class="border border-slate-800 p-1.5 text-right font-mono font-bold">${window.modDebtBook.fmtMoney(it.total || 0)}</td>
+                            <td class="border border-slate-800 p-1.5 text-right font-mono">${window.modDebtBook.fmtMoney(it.price || 0)} đ</td>
+                            <td class="border border-slate-800 p-1.5 text-right font-mono font-bold">${window.modDebtBook.fmtMoney(it.total || 0)} đ</td>
                             
                             ${isFirst ? `
-                            <td rowspan="${rowCount}" class="border border-slate-800 p-1.5 text-right font-mono font-black text-rose-700 bg-rose-50/20 align-top">
-                                ${window.modDebtBook.fmtMoney(entry.debit || entry.total_amount || 0)}
+                            <td rowspan="${itemRowspan}" class="border border-slate-800 p-1.5 text-right font-mono font-black text-rose-700 bg-rose-50/10 align-middle">
+                                ${window.modDebtBook.fmtMoney(ord.total_amount || 0)} đ
                             </td>
-                            <td rowspan="${rowCount}" class="border border-slate-800 p-1.5 text-center font-mono text-slate-300 align-top">
-                                -
+                            <td rowspan="${itemRowspan}" class="border border-slate-800 p-1.5 text-right font-mono font-black text-emerald-700 bg-emerald-50/10 align-middle">
+                                ${isPaid ? window.modDebtBook.fmtMoney(ord.paid_amount) + ' đ' : '-'}
                             </td>
-                            <td rowspan="${rowCount}" class="border border-slate-800 p-1.5 text-right font-mono font-black text-slate-900 bg-amber-50/20 align-top">
-                                ${window.modDebtBook.fmtMoney(entry.running_balance !== undefined ? entry.running_balance : (entry.remaining_debt || 0))}
+                            <td rowspan="${itemRowspan}" class="border border-slate-800 p-1.5 text-right font-mono font-black text-rose-700 bg-amber-50/20 align-middle">
+                                ${window.modDebtBook.fmtMoney(ord.remaining_debt != null ? ord.remaining_debt : (ord.total_amount - (ord.paid_amount || 0)))} đ
                             </td>
                             ` : ''}
                         </tr>
                         `;
                     });
-                } else if (entry.entry_type === 'RECEIVE') {
-                    // Dòng Tôi đã nhận tiền (Thu nợ / Khách chuyển tiền cọc)
+                } else if (item.type === 'RECEIVE') {
+                    const tx = item.tx;
+                    const dateStr = item.dateStr;
+                    const rowStt = stt++;
+
                     rowsHtml += `
-                    <tr class="hover:bg-emerald-50/50 bg-emerald-50/20 transition border-b border-slate-200">
-                        <td class="border border-slate-800 p-1.5 text-center font-bold text-slate-600">${stt++}</td>
-                        <td class="border border-slate-800 p-1.5 text-center font-mono text-[10px] leading-tight font-bold text-emerald-900">${dateStr}</td>
-                        <td class="border border-slate-800 p-1.5" colspan="5">
+                    <tr class="bg-emerald-50/40 hover:bg-emerald-50 transition border-b border-emerald-200">
+                        <td class="border border-slate-800 p-1.5 text-center font-bold text-slate-600">${rowStt}</td>
+                        <td class="border border-slate-800 p-1.5 text-center font-mono text-[11px] align-middle">
+                            <div class="font-bold text-slate-900">${dateStr}</div>
+                            <div class="text-[10px] text-emerald-700 font-mono font-medium">${tx.code || ''}</div>
+                        </td>
+                        <td class="border border-slate-800 p-1.5">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-black text-[10px] uppercase border border-emerald-300 inline-flex items-center gap-1 shrink-0">
-                                    <i class="fas fa-arrow-down text-emerald-600"></i> TÔI ĐÃ NHẬN TIỀN
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap">
+                                    <i class="fas fa-arrow-down mr-1"></i>TÔI ĐÃ NHẬN TIỀN
                                 </span>
-                                <span class="font-bold text-slate-900 text-xs">${entry.notes || 'Khách thanh toán / chuyển khoản cọc'}</span>
+                                <span class="font-bold text-slate-900">${tx.notes || 'Thu nợ / Khách cọc trước'}</span>
                             </div>
-                            <div class="text-[10px] text-slate-500 mt-1 flex items-center gap-2 flex-wrap font-sans">
-                                <span>Chứng từ: <b class="font-mono text-slate-700">${entry.code}</b></span>
-                                <span>• Hình thức: <b>${entry.payment_method || 'Chuyển Khoản'}</b></span>
-                                <span>• Quỹ: <b>${entry.source_fund === 'TIEN_MAT_QUY' ? 'Tiền mặt' : 'TK Công ty'}</b></span>
-                                ${entry.created_by ? `<span>• Người lập: <b>${entry.created_by}</b></span>` : ''}
+                            <div class="text-[10px] text-slate-500 font-normal mt-0.5">
+                                Hình thức: <b>${tx.payment_method || 'Chuyển Khoản'}</b>${tx.source_fund ? ' • Quỹ: ' + (tx.source_fund === 'TIEN_MAT_QUY' ? 'Tiền mặt' : 'TK Công ty') : ''}${tx.created_by ? ' • Người lập: ' + tx.created_by : ''}
                             </div>
                         </td>
-                        <td class="border border-slate-800 p-1.5 text-center font-mono text-slate-300">-</td>
-                        <td class="border border-slate-800 p-1.5 text-right font-mono font-black text-emerald-700 bg-emerald-100/40 text-xs">
-                            ${window.modDebtBook.fmtMoney(entry.credit || 0)}
+                        <td class="border border-slate-800 p-1.5 text-center text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-center text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-right text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-right text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-right text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-right font-mono font-black text-emerald-700 bg-emerald-100/30 align-middle">
+                            ${window.modDebtBook.fmtMoney(tx.amount || 0)} đ
                         </td>
-                        <td class="border border-slate-800 p-1.5 text-right font-mono font-black text-slate-900 bg-amber-50/20 text-xs">
-                            ${window.modDebtBook.fmtMoney(entry.running_balance || 0)}
-                        </td>
+                        <td class="border border-slate-800 p-1.5 text-right text-slate-400 font-mono">-</td>
                     </tr>
                     `;
-                } else if (entry.entry_type === 'PAY') {
-                    // Dòng Tôi đã đưa tiền (Chi hoàn cọc / Trả tiền)
+                } else if (item.type === 'PAY') {
+                    const tx = item.tx;
+                    const dateStr = item.dateStr;
+                    const rowStt = stt++;
+
                     rowsHtml += `
-                    <tr class="hover:bg-rose-50/50 bg-rose-50/20 transition border-b border-slate-200">
-                        <td class="border border-slate-800 p-1.5 text-center font-bold text-slate-600">${stt++}</td>
-                        <td class="border border-slate-800 p-1.5 text-center font-mono text-[10px] leading-tight font-bold text-rose-900">${dateStr}</td>
-                        <td class="border border-slate-800 p-1.5" colspan="5">
+                    <tr class="bg-rose-50/40 hover:bg-rose-50 transition border-b border-rose-200">
+                        <td class="border border-slate-800 p-1.5 text-center font-bold text-slate-600">${rowStt}</td>
+                        <td class="border border-slate-800 p-1.5 text-center font-mono text-[11px] align-middle">
+                            <div class="font-bold text-slate-900">${dateStr}</div>
+                            <div class="text-[10px] text-rose-700 font-mono font-medium">${tx.code || ''}</div>
+                        </td>
+                        <td class="border border-slate-800 p-1.5">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 font-black text-[10px] uppercase border border-rose-300 inline-flex items-center gap-1 shrink-0">
-                                    <i class="fas fa-arrow-up text-rose-600"></i> TÔI ĐÃ ĐƯA TIỀN
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap">
+                                    <i class="fas fa-arrow-up mr-1"></i>TÔI ĐÃ ĐƯA TIỀN
                                 </span>
-                                <span class="font-bold text-slate-900 text-xs">${entry.notes || 'Chi hoàn trả khách / tiền cọc'}</span>
+                                <span class="font-bold text-slate-900">${tx.notes || 'Chi tiền hoàn cọc / Trả nợ'}</span>
                             </div>
-                            <div class="text-[10px] text-slate-500 mt-1 flex items-center gap-2 flex-wrap font-sans">
-                                <span>Chứng từ: <b class="font-mono text-slate-700">${entry.code}</b></span>
-                                <span>• Hình thức: <b>${entry.payment_method || 'Tiền Mặt'}</b></span>
-                                <span>• Quỹ: <b>${entry.source_fund === 'TIEN_MAT_QUY' ? 'Tiền mặt' : 'TK Công ty'}</b></span>
-                                ${entry.created_by ? `<span>• Người lập: <b>${entry.created_by}</b></span>` : ''}
+                            <div class="text-[10px] text-slate-500 font-normal mt-0.5">
+                                Hình thức: <b>${tx.payment_method || 'Tiền Mặt'}</b>${tx.source_fund ? ' • Quỹ: ' + (tx.source_fund === 'TIEN_MAT_QUY' ? 'Tiền mặt' : 'TK Công ty') : ''}${tx.created_by ? ' • Người lập: ' + tx.created_by : ''}
                             </div>
                         </td>
-                        <td class="border border-slate-800 p-1.5 text-right font-mono font-black text-rose-700 bg-rose-100/40 text-xs">
-                            ${window.modDebtBook.fmtMoney(entry.debit || 0)}
+                        <td class="border border-slate-800 p-1.5 text-center text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-center text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-right text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-right text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-right font-mono font-black text-rose-700 bg-rose-100/30 align-middle">
+                            ${window.modDebtBook.fmtMoney(tx.amount || 0)} đ
                         </td>
-                        <td class="border border-slate-800 p-1.5 text-center font-mono text-slate-300">-</td>
-                        <td class="border border-slate-800 p-1.5 text-right font-mono font-black text-slate-900 bg-amber-50/20 text-xs">
-                            ${window.modDebtBook.fmtMoney(entry.running_balance || 0)}
-                        </td>
+                        <td class="border border-slate-800 p-1.5 text-right text-slate-400 font-mono">-</td>
+                        <td class="border border-slate-800 p-1.5 text-right text-slate-400 font-mono">-</td>
                     </tr>
                     `;
                 }
@@ -1750,25 +1807,19 @@ window.modDebtBook = {
             tbody.innerHTML = rowsHtml;
         }
 
-        // 3. Render Footers
+        // 4. Render Footers
         const footGross = document.getElementById('debt-stmt-foot-total-gross');
+        const footRet = document.getElementById('debt-stmt-foot-returned');
         const footPaid = document.getElementById('debt-stmt-foot-paid');
         const footRem = document.getElementById('debt-stmt-foot-remaining');
 
-        const totalDebit = sum.total_debit !== undefined ? sum.total_debit : (sum.total_gross_amount || 0);
-        const totalCredit = sum.total_credit !== undefined ? sum.total_credit : (sum.total_paid_amount || 0);
-        const remBal = sum.remaining_balance !== undefined ? sum.remaining_balance : 0;
-
-        if (footGross) footGross.innerText = window.modDebtBook.fmtMoney(totalDebit) + ' đ';
-        if (footPaid) footPaid.innerText = window.modDebtBook.fmtMoney(totalCredit) + ' đ';
+        if (footGross) footGross.innerText = window.modDebtBook.fmtMoney(sum.total_gross_amount || 0) + ' đ';
+        if (footRet) footRet.innerText = window.modDebtBook.fmtMoney(sum.total_returned_amount || 0) + ' đ';
+        if (footPaid) footPaid.innerText = window.modDebtBook.fmtMoney(sum.total_paid_amount || 0) + ' đ';
         if (footRem) {
-            if (remBal > 0) {
-                footRem.innerHTML = `<span class="text-rose-700 font-black">TÔI PHẢI THU: ${window.modDebtBook.fmtMoney(remBal)} đ</span>`;
-            } else if (remBal < 0) {
-                footRem.innerHTML = `<span class="text-amber-600 font-black">TÔI PHẢI TRẢ: ${window.modDebtBook.fmtMoney(Math.abs(remBal))} đ</span>`;
-            } else {
-                footRem.innerHTML = `<span class="text-emerald-600 font-black">0 đ (HẾT NỢ)</span>`;
-            }
+            const rem = sum.remaining_balance || 0;
+            footRem.innerText = window.modDebtBook.fmtMoney(rem) + ' đ';
+            footRem.className = `border border-slate-800 p-2.5 text-right font-black text-base ${rem > 0 ? 'text-rose-700' : (rem < 0 ? 'text-amber-700' : 'text-emerald-700')}`;
         }
     },
 
