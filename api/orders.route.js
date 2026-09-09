@@ -1559,18 +1559,13 @@ router.delete('/:id/proofs', async (req, res) => {
     }
 });
 
-// TỰ ĐỘNG DỌN DẸP ĐƠN CHỜ XÁC NHẬN QUÁ 30 NGÀY (AUTO-CLEANUP)
-(async () => {
-    try {
-        await pool.query("DELETE FROM orders WHERE status = 'PENDING' AND created_at < NOW() - INTERVAL '30 days'");
-        console.log("[Auto-Cleanup] Đã dọn dẹp các đơn PENDING quá hạn 30 ngày lúc Server khởi động.");
-    } catch(e) {}
-})();
-setInterval(async () => {
-    try {
-        await pool.query("DELETE FROM orders WHERE status = 'PENDING' AND created_at < NOW() - INTERVAL '30 days'");
-    } catch(e) {}
-}, 60 * 60 * 1000); // Rà soát đều đặn mỗi tiếng một lần
+// [VÔ HIỆU HÓA AUTO-CLEANUP ĐỂ BẢO TỒN DỮ LIỆU ĐƠN HÀNG LỊCH SỬ]
+// Không tự động DELETE bất kỳ đơn hàng nào của công ty trong nền.
+// (async () => {
+//     try {
+//         await pool.query("DELETE FROM orders WHERE status = 'PENDING' AND created_at < NOW() - INTERVAL '30 days'");
+//     } catch(e) {}
+// })();
 
 // [BULK ACTION] XÓA HÀNG LOẠT ĐƠN HÀNG (DÀNH CHO ADMIN)
 router.post('/bulk-delete', async (req, res) => {
