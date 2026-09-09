@@ -255,6 +255,8 @@ function detectIntent(text, context) {
         norm.includes('dat mua hang') || norm.includes('mua hang') || norm.includes('nhap hang') ||
         norm.includes('nhap kho') || norm.includes('tao po') || norm.includes('len po') || norm.includes('don po') ||
         norm.includes('dat ncc') || norm.includes('nha cung cap') || norm.includes('ncc') ||
+        norm.includes('mua ben') || norm.includes('mua tu') || norm.includes('dat ben') ||
+        (norm.includes('mua') && (norm.includes('solar e') || norm.includes('cergy') || norm.includes('tin trung') || norm.includes('hung viet hao') || norm.includes('heropower'))) ||
         (norm.includes('dat mua') && !norm.includes('khach'))
     ) {
         return 'CREATE_PURCHASE';
@@ -538,14 +540,14 @@ function extractSpecs(str, excludeNums = []) {
 
 function extractQuantity(text) {
     // 1. Từ khóa rõ ràng: số lượng X, sl X, lấy X, bán X, mua X, đặt X
-    const explicitWithUnit = text.match(/(?:số lượng|sl|lấy|bán|mua|đặt)\s*[:=]?\s*(\d+)\s*(?:tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp)\b/i);
+    const explicitWithUnit = text.match(/(?:số lượng|sl|lấy|bán|mua|đặt)\s*[:=]?\s*(\d+)\s*(?:tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp)(?![a-zà-ỹ0-9])/i);
     if (explicitWithUnit) return parseInt(explicitWithUnit[1], 10);
 
     const explicit = text.match(/(?:số lượng|sl)\s*[:=]?\s*(\d+)/i);
     if (explicit) return parseInt(explicit[1], 10);
 
     // 2. Số kèm đơn vị đếm thực tế: 5 tấm, 5 bộ, 5 cái, 5 chiếc, 5 con, 5 cuộn, 5 thùng, 5 hộp
-    const unitMatch = text.match(/(\d+)\s*(?:tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp)\b/i);
+    const unitMatch = text.match(/(\d+)\s*(?:tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp)(?![a-zà-ỹ0-9])/i);
     if (unitMatch) return parseInt(unitMatch[1], 10);
 
     // 3. Động từ hành động theo sau là số lượng: bán 5..., mua 10..., đặt 20...
@@ -687,10 +689,13 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
                             else { hasConflictSpec = true; }
                         } else if (req.unit !== 'v' && ps.unit !== 'v' && ps.unit !== 'ah') {
                             const ratio = ps.val / req.val;
-                            // Gần bằng: ví dụ 15kw gần với 15.3kwh hoặc 16kwh
-                            if (ratio >= 0.85 && ratio <= 1.15) {
+                            // ƯU TIÊN TUYỆT ĐỐI KHỚP THÔNG SỐ CHÍNH XÁC (EXACT SPEC MATCH)
+                            if (Math.abs(ps.val - req.val) < 0.05) {
                                 hasNearSpec = true;
-                                score += 500;
+                                score += 800; // Khớp chuẩn 100% công suất: 6.6kw <-> 6.6kw
+                            } else if (ratio >= 0.85 && ratio <= 1.15) {
+                                hasNearSpec = true;
+                                score += 350; // Gần đúng: ví dụ 15kw gần với 15.3kwh hoặc 16kwh
                             } else if (Math.abs(ps.val - req.val) > 2) {
                                 hasConflictSpec = true;
                             }
@@ -711,7 +716,7 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
                 if (prodHasBrand) {
                     score += 350;
                 } else {
-                    score -= 1000; // Phạt nặng nếu sản phẩm không đúng hãng người dùng đã chỉ định
+                    score -= 3000; // Phạt cực nặng nếu người dùng đã chỉ định hãng nhưng sản phẩm thuộc hãng khác
                 }
             }
 
@@ -789,8 +794,12 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
         // Nếu người dùng yêu cầu công suất cụ thể (ví dụ 15kW) mà kho không có dòng khớp, nhưng có dòng khác công suất (ví dụ 45kW)
         if (reqSpecs.length > 0) {
             const req = reqSpecs[0];
-            const conflictCandidates = pRes.rows.filter(p => {
+            const BRANDS = ['deye', 'canadian', 'apess', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'solis', 'lumentree', 'luxpower', 'goodwe', 'sofar', 'xpower', 'voltique', 'solpump', 'anern'];
+            const mentionedBrands = BRANDS.filter(b => cleanNorm.includes(b) || (b === 'canadian' && cleanNorm.includes('cana')) || (b === 'apess' && cleanNorm.includes('apec')));
+
+            let conflictCandidates = pRes.rows.filter(p => {
                 const pNameNorm = removeVietnameseTones(p.product_name || '');
+                if (mentionedBrands.length > 0 && !mentionedBrands.some(b => pNameNorm.includes(b))) return false;
                 const hasDevice = (isBatteryQuery && /pin|luu tru|lithium|kwh/i.test(pNameNorm)) ||
                                   (isInverterQuery && /bien tan|inverter/i.test(pNameNorm)) ||
                                   (isPanelQuery && /tam pin/i.test(pNameNorm)) ||
@@ -799,6 +808,19 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
                 const pSpecs = extractSpecs(p.product_name);
                 return pSpecs.some(ps => ps.unit === req.unit && Math.abs(ps.val - req.val) > 2);
             });
+
+            if (conflictCandidates.length === 0 && mentionedBrands.length === 0) {
+                conflictCandidates = pRes.rows.filter(p => {
+                    const pNameNorm = removeVietnameseTones(p.product_name || '');
+                    const hasDevice = (isBatteryQuery && /pin|luu tru|lithium|kwh/i.test(pNameNorm)) ||
+                                      (isInverterQuery && /bien tan|inverter/i.test(pNameNorm)) ||
+                                      (isPanelQuery && /tam pin/i.test(pNameNorm)) ||
+                                      sTokens.some(tok => pNameNorm.includes(tok));
+                    if (!hasDevice) return false;
+                    const pSpecs = extractSpecs(p.product_name);
+                    return pSpecs.some(ps => ps.unit === req.unit && Math.abs(ps.val - req.val) > 2);
+                });
+            }
 
             if (conflictCandidates.length > 0) {
                 const confProd = conflictCandidates[0];
@@ -1673,8 +1695,23 @@ async function handleCreateOrder(text, context, user) {
     }
 
     if (items.length === 0) {
+        context.draft_order = {
+            type: 'SALE',
+            status: custRes.found ? 'NEED_PRODUCT' : 'NEED_CUSTOMER_AND_PRODUCT',
+            partner_name: custRes.found ? custRes.customerName : null,
+            customer_id: custRes.found ? custRes.customerId : null,
+            customer_code: custRes.found ? custRes.customerCode : null,
+            partner_phone: custRes.phone || null,
+            product: null,
+            qty: 1,
+            unitPrice: 0,
+            totalAmount: 0,
+            notes: ''
+        };
         return {
-            text: `⚠️ Chưa rõ sản phẩm cần bán. Cho em xin tên hoặc mã SKU sản phẩm có trong kho nhé!`,
+            text: custRes.found
+                ? `Đã nhận khách hàng: **${custRes.customerName}** (\`${custRes.customerCode}\`). Cho em xin Tên thiết bị và Số lượng cần lên đơn nhé!`
+                : `⚠️ Cho em xin Tên thiết bị và Số lượng cần tạo đơn hàng nhé!`,
             card: null,
             action_type: 'ORDER_NEED_INFO',
             quick_replies: ['10 tấm pin Canadian 600W', '1 biến tần Deye 12kW', 'Hủy đơn']
@@ -2032,7 +2069,7 @@ async function handleUpdateDraftOrder(text, context, user) {
 
     let updatedFields = [];
 
-    // 1. Cập nhật số lượng (hỗ trợ cả tuyệt đối: "5 bộ" và tương đối: "+1", "-1", "tăng 2", "giảm 1")
+    // 1. Cập nhật số lượng (hỗ trợ cả tuyệt đối: "5 bộ", "đổi thành 10", "sl: 5" và tương đối: "+1", "-1", "tăng 2", "giảm 1")
     let deltaQty = null;
     const deltaMatch = cleanText.match(/^([+-]\s*\d+)$/) || cleanText.match(/(?:tăng|thêm)\s*(\d+)/i) || cleanText.match(/(?:giảm|bớt)\s*(\d+)/i);
     if (deltaMatch) {
@@ -2045,7 +2082,9 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
     }
 
-    const qtyMatch = cleanText.match(/(?:đổi thành|thành|sửa thành|số lượng|lấy|mua|bán)\s*(\d+)/i) || cleanText.match(/^(\d+)\s*(?:tấm|bộ|chiếc|cái|inverter|pin)?$/i);
+    const qtyExplicit = cleanText.match(/(?:đổi thành|thành|sửa thành|số lượng|sl|lấy|mua|bán)\s*[:=]?\s*(\d+)/i) ||
+                        cleanText.match(/(\d+)\s*(?:tấm|bộ|chiếc|cái|inverter|pin|thùng|cuộn|hộp)(?![a-zà-ỹ0-9])/i) ||
+                        cleanText.match(/^(\d+)$/);
     
     if (deltaQty !== null) {
         const currentQty = draft.qty || (draft.items && draft.items[0] && draft.items[0].qty) || 1;
@@ -2059,8 +2098,8 @@ async function handleUpdateDraftOrder(text, context, user) {
             draft.totalAmount = newQty * draft.unitPrice;
         }
         updatedFields.push(`số lượng ${deltaQty > 0 ? 'tăng' : 'giảm'} thành **${newQty}**`);
-    } else if (qtyMatch) {
-        const newQty = parseInt(qtyMatch[1], 10);
+    } else if (qtyExplicit) {
+        const newQty = parseInt(qtyExplicit[1], 10);
         if (newQty > 0) {
             draft.qty = newQty;
             if (draft.items && draft.items.length > 0) {
@@ -2093,7 +2132,13 @@ async function handleUpdateDraftOrder(text, context, user) {
     const hasProductIndicator = wantsChangeProduct || 
         /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|pin\s*\d+|tu dien|kep|bat\b|lumentree|solis|luxpower|growatt|huawei|sungrow|longi|goodwe|sofar/i.test(norm) ||
         /\d+(?:\.\d+)?\s*(?:kw|kwh|w|wp|v|ah)\b/i.test(norm);
-    const mentionsProduct = !deltaMatch && !qtyMatch && !priceMatch && (hasProductIndicator || (!draft.product && (!draft.items || draft.items.length === 0)));
+
+    const isPureCustomerOnly = /^(?:khach|khach hang|doi tac)\s+/i.test(cleanText) || (/cho khach\s+[a-zà-ỹ\s]+/i.test(cleanText) && !hasProductIndicator);
+    const isPureSupplierOnly = /^(?:ncc|nha cung cap|cty|cong ty)\s+/i.test(cleanText) && !hasProductIndicator;
+    const isPurePriceOnly = priceMatch && !hasProductIndicator;
+    const isPureQtyOnly = deltaMatch || (isChangeQtyOnly) || (cleanText.match(/^(\d+)\s*(?:bộ|tấm|cái)?$/i) && draft.product);
+
+    const mentionsProduct = hasProductIndicator || (!draft.product && !isPureCustomerOnly && !isPureSupplierOnly && !isPurePriceOnly && !isPureQtyOnly);
 
     // 3. Cập nhật Đối tác (Khách CRM hoặc NCC)
     // KHÓA CỨNG: TUYỆT ĐỐI KHÔNG BAO GIỜ NHẬN SANG KHÁCH HÀNG KHI ĐANG NÓI VỀ SẢN PHẨM HOẶC CÓ TỪ KHÓA THIẾT BỊ!
@@ -2101,7 +2146,7 @@ async function handleUpdateDraftOrder(text, context, user) {
     if (!hasProductIndicator && !wantsChangeProduct) {
         const explicitCustomer = /\b(?:khach|khach hang|doi tac|doi sang khach|cho khach|doi khach|sdt|kh\s*\d+)\b/i.test(norm) ||
                                  /\b(?:cho\s+anh|cho\s+chi|cho\s+bac|cho\s+chu|cho\s+ong|cho\s+ba)\s+[a-zà-ỹ]+/i.test(norm);
-        const needCustomerFallback = (!qtyMatch && !priceMatch && !mentionsProduct && !draft.partner_name);
+        const needCustomerFallback = (!qtyExplicit && !priceMatch && !mentionsProduct && !draft.partner_name);
         mentionsCustomer = (explicitCustomer && !/so luong|sl|gia|don gia/i.test(norm)) || needCustomerFallback;
     }
 
@@ -2134,7 +2179,13 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
     }
 
-    const mentionsSupplier = !hasProductIndicator && !wantsChangeProduct && (/ncc|nha cung cap|cty|cong ty|solar|cergy|tin trung|hung viet hao|heropower|tu nha cung cap/i.test(norm) || (!qtyMatch && !priceMatch && !mentionsProduct && !draft.partner_name));
+    // BÓC TÁCH NHÀ CUNG CẤP (PO) - KHÔNG BỊ KHÓA KHI CÂU LỆNH CÓ SẢN PHẨM
+    let supTokens = [];
+    const mentionsSupplier = (draft.type === 'PURCHASE') && (
+        /ncc|nha cung cap|cty|cong ty|solar|cergy|tin trung|hung viet hao|heropower|tu nha cung cap|mua ben|ben solar|ben cergy|ben tin trung|ben hung viet hao|ben heropower/i.test(norm) ||
+        cleanText.match(/(?:bên|từ|mua bên|ncc)\s+/i) ||
+        (!draft.partner_name && !hasProductIndicator && !qtyExplicit && !priceMatch)
+    );
     if (draft.type === 'PURCHASE' && mentionsSupplier) {
         const supRes = await extractSupplier(cleanText, norm, context);
         if (supRes.notFoundInList) {
@@ -2149,6 +2200,7 @@ async function handleUpdateDraftOrder(text, context, user) {
             draft.partner_name = supRes.supplierName;
             draft.supplier_id = supRes.supplierId;
             draft.supplier_code = supRes.supplierCode;
+            supTokens = removeVietnameseTones(supRes.supplierName || '').split(/[^a-z0-9]+/i).filter(Boolean);
             updatedFields.push(`Nhà cung cấp là **${supRes.supplierName}**`);
         }
     }
@@ -2166,7 +2218,9 @@ async function handleUpdateDraftOrder(text, context, user) {
             };
         }
 
-        const prodRes = await findMatchingProduct(cleanText, norm, context);
+        const excludeTokens = [...supTokens];
+        if (draft.qty > 1) excludeTokens.push(String(draft.qty));
+        const prodRes = await findMatchingProduct(cleanText, norm, context, excludeTokens);
         if (prodRes.matched) {
             draft.product = prodRes.product;
             const newPrice = draft.type === 'SALE' ? (parseFloat(prodRes.product.retail_price) || 0) : (parseFloat(prodRes.product.import_price) || 2500000);
@@ -2196,6 +2250,14 @@ async function handleUpdateDraftOrder(text, context, user) {
             draft.compat_warning = comp.compatWarning || comp.techTip || comp.accessoryTip;
 
             updatedFields.push(`sản phẩm thành **${prodRes.product.product_name}**`);
+        } else if (prodRes.ambiguous) {
+            const cands = prodRes.candidates || [];
+            return {
+                text: `Dạ bên mình có các dòng: **${cands[0].product_name}** (\`${cands[0].sku}\`) và **${cands[1].product_name}** (\`${cands[1].sku}\`). Anh/Chị muốn chọn dòng nào ạ?`,
+                card: null,
+                action_type: 'ORDER_NEED_DISAMBIGUATION',
+                quick_replies: [...cands.map(c => c.product_name), 'Hủy đơn']
+            };
         } else if (prodRes.notFoundInCatalog) {
             const topSugg = (prodRes.suggestions || []).filter(p => p.score >= 10).slice(0, 3);
             let suggText = '';
@@ -2227,22 +2289,38 @@ async function handleUpdateDraftOrder(text, context, user) {
     const isSale = draft.type === 'SALE';
     if (!draft.product) {
         draft.status = 'NEED_PRODUCT';
+        let feedback = '';
+        if (updatedFields.length > 0) {
+            feedback = `Đã cập nhật: ${updatedFields.join(', ')}.\n\n`;
+        }
+        if (draft.qty && draft.qty > 1) {
+            return {
+                text: `${feedback}👉 Cho em xin Tên sản phẩm hoặc thiết bị cần ${isSale ? 'bán' : 'mua'} nhé! (Số lượng hiện tại: **${draft.qty}**)`,
+                card: null,
+                action_type: 'ORDER_NEED_INFO',
+                quick_replies: isSale ? ['10 tấm pin Canadian 600W', '1 biến tần Deye 12kW', 'Hủy đơn'] : ['20 tấm pin Canadian 600W', '5 biến tần Deye 12kW', 'Hủy đơn']
+            };
+        }
         return {
-            text: `Đã cập nhật ${updatedFields.join(', ')}. Cho em xin Tên sản phẩm và Số lượng nhé!`,
+            text: `${feedback}👉 Cho em xin Tên sản phẩm và Số lượng nhé!`,
             card: null,
             action_type: 'ORDER_NEED_INFO',
-            quick_replies: ['10 tấm pin Canadian 600W', '1 biến tần Deye 12kW', 'Hủy đơn']
+            quick_replies: isSale ? ['10 tấm pin Canadian 600W', '1 biến tần Deye 12kW', 'Hủy đơn'] : ['20 tấm pin Canadian 600W', '5 biến tần Deye 12kW', 'Hủy đơn']
         };
     }
 
     if (!draft.partner_name) {
         draft.status = isSale ? 'NEED_CUSTOMER' : 'NEED_SUPPLIER';
         const pLabel = isSale ? 'Khách hàng CRM' : 'Nhà cung cấp';
+        let feedback = '';
+        if (updatedFields.length > 0) {
+            feedback = `Đã chọn: ${updatedFields.join(', ')}.\n\n`;
+        }
         return {
-            text: `Đã cập nhật ${updatedFields.join(', ')}. Cho em xin tên ${pLabel} nhé!`,
+            text: `${feedback}👉 Cho em xin tên ${pLabel} nhé!`,
             card: null,
             action_type: isSale ? 'ORDER_NEED_CUSTOMER' : 'PURCHASE_NEED_SUPPLIER',
-            quick_replies: isSale ? ['Khách Võ Anh Phong', 'Khách Bin Bụng Bự'] : ['Công ty Solar E', 'Công ty Cergy']
+            quick_replies: isSale ? ['Khách Võ Anh Phong', 'Khách Bin Bụng Bự', 'Hủy đơn'] : ['Công ty Solar E', 'Công ty Cergy', 'Công ty Tín Trung', 'H Hùng Việt Hào', 'Công ty HeroPower', 'Hủy đơn']
         };
     }
 
@@ -2424,11 +2502,34 @@ async function handleCreatePurchase(text, context, user) {
     const prodRes = await findMatchingProduct(cleanText, norm, context, excludeList);
 
     if (!prodRes || prodRes.missing) {
+        context.draft_order = {
+            type: 'PURCHASE',
+            status: supRes.found ? 'NEED_PRODUCT' : 'NEED_PRODUCT_AND_SUPPLIER',
+            partner_name: supRes.found ? supRes.supplierName : null,
+            supplier_id: supRes.found ? supRes.supplierId : null,
+            supplier_code: supRes.found ? supRes.supplierCode : null,
+            product: null,
+            qty: qty > 1 ? qty : 1,
+            unitPrice: 0,
+            totalAmount: 0,
+            notes: ''
+        };
         return {
-            text: `⚠️ Cho em xin Tên thiết bị và Số lượng cần lập phiếu mua hàng nhé!`,
+            text: supRes.found 
+                ? `Đã nhận Nhà cung cấp: **${supRes.supplierName}**. Cho em xin Tên thiết bị và Số lượng cần đặt mua nhé!`
+                : `⚠️ Cho em xin Tên thiết bị và Số lượng cần lập phiếu mua hàng nhé!`,
             card: null,
             action_type: 'PURCHASE_NEED_INFO',
             quick_replies: ['20 tấm pin Canadian 600W', '5 biến tần Deye 12kW', 'Hủy đơn']
+        };
+    }
+    if (prodRes.ambiguous) {
+        const cands = prodRes.candidates || [];
+        return {
+            text: `Dạ bên mình có các dòng: **${cands[0].product_name}** (\`${cands[0].sku}\`) và **${cands[1].product_name}** (\`${cands[1].sku}\`). Anh/Chị muốn lập phiếu mua cho dòng nào ạ?`,
+            card: null,
+            action_type: 'PURCHASE_NEED_DISAMBIGUATION',
+            quick_replies: [...cands.map(c => c.product_name), 'Hủy đơn']
         };
     }
     if (prodRes.notFoundInCatalog) {
