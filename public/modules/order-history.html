@@ -3605,7 +3605,8 @@ window.modOrders = {
             }
         });
 
-        const printHTML = `<html><head><title>${quoteTitle} - ${o.order_code}</title>
+        const printDocTitle = `${o.order_code} - ${finalCustomerName}`;
+        const printHTML = `<html><head><title>${printDocTitle}</title>
             <style>
             body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #0f172a; margin: 0; padding: 30px; font-size: 13px; line-height: 1.5; }
             .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2.5px solid ${primaryColor}; padding-bottom: 12px; }
@@ -3711,7 +3712,7 @@ window.modOrders = {
             </div>
             </body></html>`;
 
-        window.modOrders.executePrint(printHTML, (quoteTitle || 'Hóa Đơn / Báo Giá') + ' - ' + (o.order_code || ''));
+        window.modOrders.executePrint(printHTML, printDocTitle, o.order_code, finalCustomerName);
     },
 
     validatePhone: (input) => {
@@ -3888,11 +3889,14 @@ window.modOrders = {
         const carrierNote = sys.shipping_carrier_note ? '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;font-size:12px;color:#92400e;margin-bottom:12px;"><b>Lưu ý:</b> ' + sys.shipping_carrier_note + '</div>' : '';
         const footerText = sys.shipping_footer_text || 'Ký nhận của chành xe: ........................';
 
+        const finalCustomer = ((finalRecipient && finalRecipient !== 'Khách Lẻ') ? finalRecipient : (o.customer_name || 'Khách Hàng')).trim();
+        const printDocTitle = `${o.order_code} - ${finalCustomer}`;
+
         const actionBarHTML = '<div id="erp-action-bar" style="background: #1e293b; padding: 12px 20px; text-align: center; border-bottom: 4px solid #f59e0b; position: sticky; top: 0; z-index: 99999; margin: -20px -20px 20px -20px; font-family: Arial, sans-serif;">' +
             '<button onclick="window.print()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-right: 15px;">🖨️ IN TEM DÁN THÙNG</button>' +
             '</div><style>@media print { #erp-action-bar { display: none !important; } body { padding: 0 !important; } }</style>';
 
-        const printHTML = '<html><head><title>Phiếu Gửi Hàng - ' + o.order_code + '</title>' +
+        const printHTML = '<html><head><title>' + printDocTitle + '</title>' +
             '<style>' +
             'body { font-family: Arial, sans-serif; padding: 20px; color: #000; max-width: 500px; margin: 0 auto; border: 2px dashed #000; }' +
             'h1 { text-align: center; font-size: 26px; margin-bottom: 8px; text-transform: uppercase; font-weight: 900; }' +
@@ -3931,7 +3935,7 @@ window.modOrders = {
             '</div>' +
             '</body></html>';
 
-        window.modOrders.executePrint(printHTML, 'Phiếu Gửi Hàng Chành Xe - ' + (o.order_code || ''));
+        window.modOrders.executePrint(printHTML, printDocTitle, o.order_code, finalCustomer);
     },
 
     printDeliveryNote: async () => {
@@ -3944,6 +3948,9 @@ window.modOrders = {
             const setRes = await setReq.json(); 
             sys = setRes.data || {};
         } catch(e) {}
+
+        const finalCustomer = (document.getElementById('wms-recipient-name')?.value || o.recipient_name || o.customer_name || 'Khách Hàng').trim();
+        const printDocTitle = `${o.order_code} - ${finalCustomer}`;
 
         const carrierAddress = document.getElementById('dt-carrier-address')?.value.trim() || o.carrier_address || '';
         const showSerial = sys.delivery_show_serial !== false;
@@ -3983,7 +3990,7 @@ window.modOrders = {
 
         let logoHtml = sys.store_logo ? '<img src="' + sys.store_logo + '" style="max-height:50px; display:inline-block;"/>' : '';
 
-        const printHTML = '<html><head><title>Phiếu Xuất Kho - ' + o.order_code + '</title>' +
+        const printHTML = '<html><head><title>' + printDocTitle + '</title>' +
             '<style>' +
             'body { font-family: "Times New Roman", serif; padding: 30px; color: #000; }' +
             '.header { text-align: center; margin-bottom: 20px; }' +
@@ -4032,23 +4039,28 @@ window.modOrders = {
             '</div>' +
             '</body></html>';
 
-        window.modOrders.executePrint(printHTML, 'Phiếu Xuất Kho Kiêm Giao Hàng - ' + (o.order_code || ''));
+        window.modOrders.executePrint(printHTML, printDocTitle, o.order_code, finalCustomer);
     },
 
     // ====================================================================
     // BỘ ĐIỀU KHIỂN IN ẤN ĐA NỀN TẢNG (UNIVERSAL IN-APP PRINT ENGINE)
     // ====================================================================
-    executePrint: (printHTML, docTitle) => {
+    executePrint: (printHTML, docTitle, orderCode = null, customerName = null) => {
         const modal = document.getElementById('modal-order-print-preview');
         const titleEl = document.getElementById('print-modal-title');
         const previewFrame = document.getElementById('print-modal-preview-frame');
         const iframe = document.getElementById('order-print-iframe');
 
-        window.modOrders.currentPrintHTML = printHTML;
-        window.modOrders.currentPrintTitle = docTitle || 'Xem Trước Bản In';
-        window.modOrders.currentPrintOrderCode = (window.modOrders.currentData?.order_code || 'DON-HANG');
+        const oCode = orderCode || window.modOrders.currentData?.order_code || 'DON-HANG';
+        const cName = (customerName || window.modOrders.currentData?.customer_name || 'Khach Hang').trim();
+        const printFileName = `${oCode} - ${cName}`;
 
-        if (titleEl) titleEl.innerText = docTitle || 'Xem Trước Bản In';
+        window.modOrders.currentPrintHTML = printHTML;
+        window.modOrders.currentPrintTitle = docTitle || printFileName;
+        window.modOrders.currentPrintOrderCode = oCode;
+        window.modOrders.currentPrintCustomerName = cName;
+
+        if (titleEl) titleEl.innerText = docTitle || printFileName;
 
         // Ghi vào iframe xem trước trực tiếp (Cách ly tuyệt đối 100% CSS, không bao giờ làm vỡ layout trang chủ)
         if (previewFrame) {
@@ -4057,6 +4069,7 @@ window.modOrders = {
                 pDoc.open();
                 pDoc.write(printHTML);
                 pDoc.close();
+                pDoc.title = printFileName;
 
                 // Ẩn thanh action bar thừa nếu có trong bản xem trước
                 setTimeout(() => {
@@ -4075,6 +4088,7 @@ window.modOrders = {
                 frameDoc.open();
                 frameDoc.write(printHTML);
                 frameDoc.close();
+                frameDoc.title = printFileName;
             } catch(e) { console.error('Iframe write error:', e); }
         }
 
@@ -4088,10 +4102,20 @@ window.modOrders = {
     openInNewTab: () => {
         const html = window.modOrders.currentPrintHTML;
         if (!html) return;
+        const oCode = window.modOrders.currentPrintOrderCode || 'DON-HANG';
+        const cName = window.modOrders.currentPrintCustomerName || 'Khach Hang';
+        const printFileName = `${oCode} - ${cName}`;
+
         const printWin = window.open('', '_blank');
         if (printWin) {
+            let titledHTML = html;
+            if (titledHTML.includes('<title>')) {
+                titledHTML = titledHTML.replace(/<title>.*?<\/title>/i, `<title>${printFileName}</title>`);
+            } else {
+                titledHTML = titledHTML.replace('</head>', `<title>${printFileName}</title></head>`);
+            }
             printWin.document.open();
-            printWin.document.write(html);
+            printWin.document.write(titledHTML);
             printWin.document.close();
         } else {
             alert('Trình duyệt đã chặn cửa sổ pop-up. Vui lòng cho phép mở pop-up để xem tab mới!');
@@ -4126,9 +4150,9 @@ window.modOrders = {
             });
 
             const orderCode = window.modOrders.currentPrintOrderCode || 'DON-HANG';
-            const docTitle = window.modOrders.currentPrintTitle || 'Phieu';
-            const cleanTitle = docTitle.replace(/[^a-zA-Z0-9\-_]/g, '_');
-            const filename = `${cleanTitle}_${orderCode}.png`;
+            const customerName = window.modOrders.currentPrintCustomerName || 'Khach_Hang';
+            const cleanCustomer = customerName.replace(/[^a-zA-Z0-9\-_À-ỹà-ỹ\s]/g, '').trim().replace(/\s+/g, '_');
+            const filename = `${orderCode}_${cleanCustomer}.png`;
             const dataUrl = canvas.toDataURL('image/png');
 
             const blob = await (await fetch(dataUrl)).blob();
@@ -4137,8 +4161,8 @@ window.modOrders = {
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
                     await navigator.share({
-                        title: docTitle,
-                        text: `${docTitle} - Đơn hàng ${orderCode}`,
+                        title: `${orderCode} - ${customerName}`,
+                        text: `Đơn hàng ${orderCode} - ${customerName}`,
                         files: [file]
                     });
                     return;
@@ -4167,11 +4191,26 @@ window.modOrders = {
     triggerIframePrint: () => {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const html = window.modOrders.currentPrintHTML;
-        
+        const oCode = window.modOrders.currentPrintOrderCode || 'DON-HANG';
+        const cName = (window.modOrders.currentPrintCustomerName || window.modOrders.currentData?.customer_name || 'Khach Hang').trim();
+        const printFileName = `${oCode} - ${cName}`;
+
+        const origTitle = document.title;
+        document.title = printFileName;
+
+        const restoreTitle = () => {
+            document.title = origTitle;
+            window.removeEventListener('afterprint', restoreTitle);
+        };
+        window.addEventListener('afterprint', restoreTitle);
+        setTimeout(restoreTitle, 4000);
+
         if (isMobile && html) {
             const printWin = window.open('', '_blank');
             if (printWin) {
-                const autoPrintHTML = html.replace('</body>', '<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 350); };<\/script></body>');
+                const autoPrintHTML = html
+                    .replace(/<title>.*?<\/title>/i, `<title>${printFileName}</title>`)
+                    .replace('</body>', '<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 350); };<\/script></body>');
                 printWin.document.open();
                 printWin.document.write(autoPrintHTML);
                 printWin.document.close();
@@ -4184,6 +4223,9 @@ window.modOrders = {
         const target = previewFrame || iframe;
         if (target && target.contentWindow) {
             try {
+                if (target.contentWindow.document) {
+                    target.contentWindow.document.title = printFileName;
+                }
                 target.contentWindow.focus();
                 target.contentWindow.print();
             } catch(e) {

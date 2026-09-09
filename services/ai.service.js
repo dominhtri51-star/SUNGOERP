@@ -377,7 +377,13 @@ const CUST_STOP_WORDS = new Set([
     'bien', 'tan', 'inverter', 'bo', 'cai', 'chiec', 'thanh', 'sang', 'thay', 'sua',
     'nghe', 'nha', 'nhen', 'nhe', 'nhi', 'a', 'ha', 'ne', 'roi', 'di', 'dum', 'giup', 'ho',
     'nao', 'coi', 'nhung', 'ma', 'lai', 'thong', 'bao', 'chac', 'lac', 'oc', 'cho',
-    'dit', 'me', 'dm', 'dcm', 'vcl', 'clgt'
+    'dit', 'me', 'dm', 'dcm', 'vcl', 'clgt',
+    // Bổ sung từ khóa sản phẩm, đại từ và kỹ thuật để tránh nhận nhầm thành tên khách hàng
+    'san', 'pham', 'thiet', 'bi', 'nay', 'do', 'kia', 'no', 'con', 'thang', 'may', 'cuc', 
+    'mat', 'vat', 'tu', 'phu', 'kien', 'day', 'kho', 'them', 'bot', 'giam', 'tang',
+    'deye', 'growatt', 'luxpower', 'huawei', 'sungrow', 'jinko', 'longi', 'canadian', 'ja', 
+    'apess', 'apec', 'sofar', 'solis', 'solax', 'goodwe', 'sve', 'kep', 'hybrid', 'bess', 
+    'storage', 'solar', 'mono', 'poly', 'watt', 'kw', 'kwh', 'ah', 'kva', 'ampere', 'volt'
 ]);
 
 const PRODUCT_STOP_WORDS = new Set([
@@ -390,7 +396,8 @@ const PRODUCT_STOP_WORDS = new Set([
     'lap', 'phieu', 'yeu', 'cau', 'gui', 'ngay', 'lien', 'he', 'giup', 'minh', 'lay', 'dat',
     'nghe', 'nha', 'nhen', 'nhe', 'nhi', 'a', 'ha', 'ne', 'roi', 'di', 'dum', 'giup', 'ho',
     'dit', 'me', 'dm', 'dcm', 'vcl', 'oc', 'cho', 'chac', 'lac',
-    'cap', 'nhat', 'san', 'pham', 'ten', 'chu', 'khong', 'phai', 'doi', 'thay', 'sao', 'lai', 'ma', 'nua'
+    'cap', 'nhat', 'san', 'pham', 'ten', 'chu', 'khong', 'phai', 'doi', 'thay', 'sao', 'lai', 'ma', 'nua',
+    'nay', 'do', 'kia', 'no', 'con', 'thang', 'cai', 'dong', 'mat'
 ]);
 
 const VN_PROVINCES = [
@@ -611,6 +618,16 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
         const cleanNorm = (norm || removeVietnameseTones(text)).replace(/\b(?:dit me|dcm|dm|vcl|clgt|oc cho|ngu|me kiep|chac lac)\b/g, '').trim();
         const pRes = await pool.query('SELECT id, sku, product_name, category, retail_price, import_price, stock_qty, unit FROM products');
         
+        // 0. GIẢI QUYẾT ĐẠI TỪ THAY THẾ (COREFERENCE RESOLUTION)
+        // "sản phẩm này", "thiết bị này", "con này", "thằng này", "máy này", "nó", "cái này", "tấm này", "cục này", "mã này", "dòng này", "loại này"
+        const isCoreference = /\b(?:san pham nay|thiet bi nay|may nay|con nay|thang nay|cai nay|no|hang nay|cuc nay|tam nay|ma nay|dong nay|loai nay|mat hang nay)\b/i.test(cleanNorm) ||
+                              /(?:san pham|thiet bi|con|thang|cai|may|tam|cuc)\s+do\b/i.test(cleanNorm);
+        const activeProd = context && (context.active_product || context.last_viewed_product || context.last_mentioned_product);
+        if (isCoreference && activeProd && activeProd.id) {
+            const fullProd = pRes.rows.find(p => p.id === activeProd.id) || activeProd;
+            return { matched: true, product: fullProd, autoGuessed: false };
+        }
+
         // 1. Khớp trực tiếp SKU chính xác
         for (const p of pRes.rows) {
             const skuNorm = removeVietnameseTones(p.sku || '');
@@ -883,9 +900,20 @@ async function extractCustomer(text, norm, context) {
 
         // 3. Trích xuất tên khách hàng ứng viên & địa điểm (tỉnh/thành phố)
         let candidateQuery = '';
-        const explicitMatch = text.match(/(?:cho khách|khách hàng|khách|đối tác|cho anh|cho chị|cho bác|cho chú)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+\d+|\s+tấm|\s+bộ|\s+biến\s*tần|\s+inverter|\s+pin|\s+sđt|\s+sdt|\s+số|\s+điện|\s+đt|\s+phone|\s+mua|\s+lấy|\s+đặt|\s+gồm|\s+với|$))/i);
+        const explicitMatch = text.match(/(?:cho khách|khách hàng|khách|đối tác|cho anh|cho chị|cho bác|cho chú|cho ông|cho bà|bán cho|giao cho|lên đơn cho|tạo đơn cho)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+\d+|\s+tấm|\s+bộ|\s+biến\s*tần|\s+inverter|\s+pin|\s+sđt|\s+sdt|\s+số|\s+điện|\s+đt|\s+phone|\s+mua|\s+lấy|\s+đặt|\s+gồm|\s+với|$))/i);
         if (explicitMatch && explicitMatch[1].trim().length > 1) {
             candidateQuery = explicitMatch[1].trim();
+        }
+
+        // TƯỜNG LỬA CHẶN ĐẠI TỪ SẢN PHẨM TRỞ THÀNH TÊN KHÁCH HÀNG CRM
+        if (candidateQuery) {
+            const candNorm = removeVietnameseTones(candidateQuery).trim();
+            const isProductPronoun = /^(?:san pham|thiet bi|con|thang|cai|may|mat hang|hang|combo|bo|tam|cuc)?\s*(?:nay|do|kia|no|day|ay)$/i.test(candNorm);
+            const candTokens = candNorm.split(/[^a-z0-9]+/i).filter(Boolean);
+            const allStopWords = candTokens.length > 0 && candTokens.every(t => CUST_STOP_WORDS.has(t) || PRODUCT_STOP_WORDS.has(t));
+            if (isProductPronoun || allStopWords) {
+                candidateQuery = '';
+            }
         }
 
         const queryNorm = removeVietnameseTones(candidateQuery || cleanNorm);
@@ -996,10 +1024,14 @@ async function extractCustomer(text, norm, context) {
             }
         }
 
+        if (!candidateQuery) {
+            return { found: false, missing: true };
+        }
+
         return {
             found: false,
             notFoundInCRM: true,
-            queryCustomer: candidateQuery || qTokens.join(' ') || text,
+            queryCustomer: candidateQuery,
             suggestions: scored.slice(0, 3)
         };
     } catch (e) {
@@ -1311,7 +1343,7 @@ async function tool_mutate_sales_order_draft(action, draftId = null, itemSku = n
 }
 
 // TOOL 4: fetch_technical_datasheet (Tra cứu tài liệu kỹ thuật chuẩn)
-async function tool_fetch_technical_datasheet(query, category = null) {
+async function tool_fetch_technical_datasheet(query, category = null, context = {}) {
     const cleanQuery = (query || '').trim();
     const norm = removeVietnameseTones(cleanQuery);
 
@@ -1323,11 +1355,22 @@ async function tool_fetch_technical_datasheet(query, category = null) {
     `);
 
     let matched = null;
-    for (const p of pRes.rows) {
-        const pNorm = removeVietnameseTones(p.product_name + ' ' + p.sku);
-        if (norm.includes(pNorm) || (p.sku && norm.includes(removeVietnameseTones(p.sku)))) {
-            matched = p;
-            break;
+
+    // 0. Hỗ trợ đại từ chỉ định: "sản phẩm này", "thiết bị này", "con này"
+    const isCoreference = /\b(?:san pham nay|thiet bi nay|may nay|con nay|thang nay|cai nay|no|hang nay|cuc nay|tam nay|ma nay|dong nay|loai nay|mat hang nay)\b/i.test(norm) ||
+                          /(?:san pham|thiet bi|con|thang|cai|may|tam|cuc)\s+do\b/i.test(norm);
+    const activeProd = context && (context.active_product || context.last_viewed_product || context.last_mentioned_product);
+    if (isCoreference && activeProd && activeProd.id) {
+        matched = pRes.rows.find(p => p.id === activeProd.id) || activeProd;
+    }
+
+    if (!matched) {
+        for (const p of pRes.rows) {
+            const pNorm = removeVietnameseTones(p.product_name + ' ' + p.sku);
+            if (norm.includes(pNorm) || (p.sku && norm.includes(removeVietnameseTones(p.sku)))) {
+                matched = p;
+                break;
+            }
         }
     }
 
@@ -2721,7 +2764,8 @@ async function handleReportBusinessHealth(text, context, user) {
 
 // 7. KIỂM TRA HÀNG TỒN KHO
 async function handleCheckInventory(text, context, user) {
-    const norm = removeVietnameseTones(text);
+    const cleanText = text.trim();
+    const norm = removeVietnameseTones(cleanText);
 
     if (norm.includes('sap het') || norm.includes('canh bao') || norm.includes('duoi 5')) {
         const lowRes = await pool.query(`
@@ -2760,52 +2804,98 @@ async function handleCheckInventory(text, context, user) {
         };
     }
 
-    const pRes = await pool.query(`
-        SELECT id, sku, product_name, category, retail_price, stock_qty, virtual_stock, unit, bin_location 
-        FROM products 
-        ORDER BY stock_qty DESC 
-        LIMIT 100
-    `);
-
     let matched = [];
-    const keywords = ['canadian', 'deye', 'growatt', 'jinko', 'gigabox', 'sungrow', 'longi', 'luxpower', 'pin', 'inverter'];
-    
-    for (const p of pRes.rows) {
-        const pNorm = removeVietnameseTones(p.product_name + ' ' + p.sku);
-        if (norm.includes(pNorm) || (p.sku && norm.includes(removeVietnameseTones(p.sku)))) {
-            matched.push(p);
+
+    // 1. TIỀN XỬ LÝ ĐẠI TỪ THAY THẾ (COREFERENCE RESOLUTION)
+    // "sản phẩm này", "thiết bị này", "con này", "thằng này", "máy này", "nó", "cái này", "mặt hàng này", "mã này"
+    const isPronounQuery = /\b(?:san pham nay|thiet bi nay|may nay|con nay|thang nay|cai nay|no|hang nay|cuc nay|tam nay|ma nay|dong nay|loai nay|mat hang nay)\b/i.test(norm) ||
+                           /(?:san pham|thiet bi|con|thang|cai|may|tam|cuc)\s+do\b/i.test(norm);
+
+    if (isPronounQuery) {
+        const activeProd = context && (context.active_product || context.last_viewed_product || context.last_mentioned_product);
+        if (activeProd && activeProd.id) {
+            // Truy vấn trực tiếp sản phẩm vừa tương tác từ CSDL (chính xác 100%, không phụ thuộc stock_qty = 0 hay > 0)
+            const pRes = await pool.query(`
+                SELECT id, sku, product_name, category, retail_price, stock_qty, virtual_stock, unit, bin_location 
+                FROM products 
+                WHERE id = $1
+            `, [activeProd.id]);
+            if (pRes.rows.length > 0) {
+                matched = pRes.rows;
+            }
+        } else {
+            // KHÓA CHẶT: Tuyệt đối CẤM query bừa khi người dùng hỏi đại từ mà chưa có sản phẩm trong phiên!
+            return {
+                text: `⚠️ Em chưa rõ anh/chị muốn kiểm tra tồn kho cho sản phẩm nào.\n\n👉 Anh/Chị vui lòng cung cấp Tên hoặc Mã sản phẩm cụ thể (Ví dụ: **Biến tần Deye 6kW**, **Tấm pin Canadian 600W**...) nhé!`,
+                card: null,
+                action_type: 'INVENTORY_NEED_PRODUCT',
+                quick_replies: ['Tấm pin Canadian 600W', 'Deye Hybrid 6kw GS04 1 pha', 'Pin lưu trữ Apess 15.3kwh']
+            };
         }
     }
 
+    // 2. NẾU CÓ TÊN SẢN PHẨM CỤ THỂ: DÙNG findMatchingProduct TÌM KIẾM TRÊN TOÀN BỘ DANH MỤC
     if (matched.length === 0) {
-        for (const kw of keywords) {
-            if (norm.includes(kw)) {
-                matched = pRes.rows.filter(p => removeVietnameseTones(p.product_name + ' ' + p.sku).includes(kw));
-                break;
+        const cleanProductQuery = cleanText.replace(/(?:kiểm tra|xem|tra cứu|cho xem|báo|check)\s+(?:tồn kho|kho|tồn)\s*(?:của|cho)?\s*/gi, '').trim();
+        if (cleanProductQuery && cleanProductQuery.length >= 2) {
+            const prodRes = await findMatchingProduct(cleanProductQuery, removeVietnameseTones(cleanProductQuery), context);
+            if (prodRes.matched && prodRes.product) {
+                const pRes = await pool.query(`
+                    SELECT id, sku, product_name, category, retail_price, stock_qty, virtual_stock, unit, bin_location 
+                    FROM products 
+                    WHERE id = $1
+                `, [prodRes.product.id]);
+                if (pRes.rows.length > 0) {
+                    matched = pRes.rows;
+                }
             }
         }
     }
 
-    if (matched.length === 0 && context.active_product) {
-        const found = pRes.rows.find(p => p.id === context.active_product.id);
-        if (found) matched = [found];
+    // 3. NẾU VẪN CHƯA CÓ, THỬ TÌM THEO BRAND SOLAR HOẶC TỪ KHÓA
+    if (matched.length === 0) {
+        const brands = ['canadian', 'deye', 'growatt', 'jinko', 'gigabox', 'sungrow', 'longi', 'luxpower', 'apess', 'solis', 'lumentree', 'xpower', 'voltique'];
+        for (const b of brands) {
+            if (norm.includes(b)) {
+                const bRes = await pool.query(`
+                    SELECT id, sku, product_name, category, retail_price, stock_qty, virtual_stock, unit, bin_location 
+                    FROM products 
+                    WHERE product_name ILIKE $1 OR sku ILIKE $1
+                    ORDER BY stock_qty DESC 
+                    LIMIT 10
+                `, [`%${b}%`]);
+                if (bRes.rows.length > 0) {
+                    matched = bRes.rows;
+                    break;
+                }
+            }
+        }
     }
 
+    // 4. KHÓA CHẶT BACKEND: NẾU HOÀN TOÀN KHÔNG KHỚP -> CẤM TUYỆT ĐỐI SELECT BỪA "KẸP GIỮA"!
     if (matched.length === 0) {
-        matched = pRes.rows.slice(0, 5);
+        return {
+            text: `⚠️ Không tìm thấy thông tin tồn kho cho "${cleanText}".\n\n👉 Anh/Chị vui lòng kiểm tra lại tên hoặc mã sản phẩm (Ví dụ: **Biến tần Deye 6kW**, **Tấm pin Canadian 600W**...) nhé!`,
+            card: null,
+            action_type: 'INVENTORY_NOT_FOUND',
+            quick_replies: ['Tấm pin Canadian 600W', 'Deye Hybrid 6kw GS04 1 pha', 'Pin lưu trữ Apess 15.3kwh']
+        };
     }
+
+    // 5. HIỂN THỊ KẾT QUẢ TỒN KHO CHUẨN XÁC & CẬP NHẬT ACTIVE PRODUCT
+    const top = matched[0];
+    context.active_product = top;
+    context.last_viewed_product = top;
+    context.last_mentioned_product = top;
 
     const items = matched.slice(0, 5).map(p => ({
         name: p.product_name,
         sku: p.sku,
         stock: `${p.stock_qty} ${p.unit || 'Bộ'}`,
         virtual_stock: `${p.virtual_stock || 0}`,
-        location: p.bin_location || 'Kệ A-01',
+        location: p.bin_location || 'Kho Tổng',
         price: formatVND(p.retail_price)
     }));
-
-    const top = matched[0];
-    context.active_product = top;
 
     return {
         text: `Kết quả tồn kho cho thiết bị **${top.product_name}**: Tồn thực tế: **${top.stock_qty} ${top.unit || 'Bộ'}** (Vị trí: **${top.bin_location || 'Kho Tổng'}**).`,
@@ -2822,7 +2912,7 @@ async function handleCheckInventory(text, context, user) {
 
 // 8. GỬI THÔNG TIN VÀ TÀI LIỆU SẢN PHẨM CHO KHÁCH
 async function handleSendProductDocs(text, context, user) {
-    const res = await tool_fetch_technical_datasheet(text, null);
+    const res = await tool_fetch_technical_datasheet(text, null, context);
     if (!res.found) {
         return {
             text: res.message,
@@ -2833,6 +2923,8 @@ async function handleSendProductDocs(text, context, user) {
     }
 
     context.active_product = res.product;
+    context.last_viewed_product = res.product;
+    context.last_mentioned_product = res.product;
 
     return {
         text: res.text,

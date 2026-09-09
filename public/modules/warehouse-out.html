@@ -1457,17 +1457,22 @@ window.modWmsOut = {
     },
 
     // IN TEM VÀ IN PHIẾU XUẤT QUA MODAL XEM TRƯỚC (100% TƯƠNG THÍCH MOBILE, KHÔNG BỊ POPUP BLOCKER)
-    executePrint: (printHTML, title) => {
+    executePrint: (printHTML, title, orderCode = null, customerName = null) => {
         const modal = document.getElementById('modal-wms-print-preview');
         const container = document.getElementById('wms-print-preview-container');
         const titleEl = document.getElementById('wms-print-modal-title');
         const iframe = document.getElementById('wms-print-iframe');
 
-        window.modWmsOut.currentPrintHTML = printHTML;
-        window.modWmsOut.currentPrintTitle = title || 'Xem Trước Bản In';
-        window.modWmsOut.currentPrintOrderCode = (window.modWmsOut.currentData?.order_code || 'DON-HANG');
+        const oCode = orderCode || window.modWmsOut.currentData?.order_code || 'DON-HANG';
+        const cName = (customerName || window.modWmsOut.currentData?.recipient_name || window.modWmsOut.currentData?.customer_name || 'Khach Hang').trim();
+        const printFileName = `${oCode} - ${cName}`;
 
-        if (titleEl) titleEl.innerText = title;
+        window.modWmsOut.currentPrintHTML = printHTML;
+        window.modWmsOut.currentPrintTitle = title || printFileName;
+        window.modWmsOut.currentPrintOrderCode = oCode;
+        window.modWmsOut.currentPrintCustomerName = cName;
+
+        if (titleEl) titleEl.innerText = title || printFileName;
         if (container) container.innerHTML = `<div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 max-w-2xl mx-auto">${printHTML}</div>`;
         if (modal) modal.classList.remove('hidden');
 
@@ -1475,8 +1480,9 @@ window.modWmsOut = {
             try {
                 const doc = iframe.contentWindow.document;
                 doc.open();
-                doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title><style>@page{size:auto;margin:10mm;} body{font-family:"Arial",sans-serif;color:#000;margin:0;padding:10px;}</style></head><body>' + printHTML + '</body></html>');
+                doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + printFileName + '</title><style>@page{size:auto;margin:10mm;} body{font-family:"Arial",sans-serif;color:#000;margin:0;padding:10px;}</style></head><body>' + printHTML + '</body></html>');
                 doc.close();
+                doc.title = printFileName;
             } catch(e) {
                 console.error("Lỗi ghi iframe print", e);
             }
@@ -1496,11 +1502,14 @@ window.modWmsOut = {
     openInNewTab: () => {
         const html = window.modWmsOut.currentPrintHTML;
         if (!html) return;
-        const title = window.modWmsOut.currentPrintTitle || 'In phiếu';
+        const oCode = window.modWmsOut.currentPrintOrderCode || 'DON-HANG';
+        const cName = window.modWmsOut.currentPrintCustomerName || 'Khach Hang';
+        const printFileName = `${oCode} - ${cName}`;
+
         const printWin = window.open('', '_blank');
         if (printWin) {
             printWin.document.open();
-            printWin.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title><style>@page{size:auto;margin:10mm;} body{font-family:"Arial",sans-serif;color:#000;margin:0;padding:20px;background:#f8fafc;}</style></head><body><div style="max-width:650px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">' + html + '</div></body></html>');
+            printWin.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + printFileName + '</title><style>@page{size:auto;margin:10mm;} body{font-family:"Arial",sans-serif;color:#000;margin:0;padding:20px;background:#f8fafc;}</style></head><body><div style="max-width:650px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">' + html + '</div></body></html>');
             printWin.document.close();
         } else {
             alert('Trình duyệt đã chặn cửa sổ pop-up. Vui lòng cho phép mở pop-up để xem tab mới!');
@@ -1531,9 +1540,9 @@ window.modWmsOut = {
             });
 
             const orderCode = window.modWmsOut.currentPrintOrderCode || 'DON-HANG';
-            const docTitle = window.modWmsOut.currentPrintTitle || 'Phieu';
-            const cleanTitle = docTitle.replace(/[^a-zA-Z0-9\-_]/g, '_');
-            const filename = `${cleanTitle}_${orderCode}.png`;
+            const customerName = window.modWmsOut.currentPrintCustomerName || 'Khach_Hang';
+            const cleanCustomer = customerName.replace(/[^a-zA-Z0-9\-_À-ỹà-ỹ\s]/g, '').trim().replace(/\s+/g, '_');
+            const filename = `${orderCode}_${cleanCustomer}.png`;
             const dataUrl = canvas.toDataURL('image/png');
 
             const blob = await (await fetch(dataUrl)).blob();
@@ -1542,8 +1551,8 @@ window.modWmsOut = {
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
                     await navigator.share({
-                        title: docTitle,
-                        text: `${docTitle} - Đơn hàng ${orderCode}`,
+                        title: `${orderCode} - ${customerName}`,
+                        text: `Phiếu xuất ${orderCode} - ${customerName}`,
                         files: [file]
                     });
                     return;
@@ -1572,12 +1581,24 @@ window.modWmsOut = {
     triggerIframePrint: () => {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const html = window.modWmsOut.currentPrintHTML;
-        const title = window.modWmsOut.currentPrintTitle || 'In phiếu';
-        
+        const oCode = window.modWmsOut.currentPrintOrderCode || 'DON-HANG';
+        const cName = (window.modWmsOut.currentPrintCustomerName || window.modWmsOut.currentData?.recipient_name || window.modWmsOut.currentData?.customer_name || 'Khach Hang').trim();
+        const printFileName = `${oCode} - ${cName}`;
+
+        const origTitle = document.title;
+        document.title = printFileName;
+
+        const restoreTitle = () => {
+            document.title = origTitle;
+            window.removeEventListener('afterprint', restoreTitle);
+        };
+        window.addEventListener('afterprint', restoreTitle);
+        setTimeout(restoreTitle, 4000);
+
         if (isMobile && html) {
             const printWin = window.open('', '_blank');
             if (printWin) {
-                const fullHTML = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>' + title + '</title><style>@page{size:auto;margin:8mm;} body{font-family:"Arial",sans-serif;color:#000;margin:0;padding:12px;}</style></head><body>' + html + '<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 350); };<\/script></body></html>';
+                const fullHTML = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>' + printFileName + '</title><style>@page{size:auto;margin:8mm;} body{font-family:"Arial",sans-serif;color:#000;margin:0;padding:12px;}</style></head><body>' + html + '<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 350); };<\/script></body></html>';
                 printWin.document.open();
                 printWin.document.write(fullHTML);
                 printWin.document.close();
@@ -1588,6 +1609,9 @@ window.modWmsOut = {
         const iframe = document.getElementById('wms-print-iframe');
         if (iframe && iframe.contentWindow) {
             try {
+                if (iframe.contentWindow.document) {
+                    iframe.contentWindow.document.title = printFileName;
+                }
                 iframe.contentWindow.focus();
                 iframe.contentWindow.print();
             } catch(e) {
@@ -1677,7 +1701,7 @@ window.modWmsOut = {
             </div>
         `;
 
-        window.modWmsOut.executePrint(printHTML, "Phiếu Gửi Hàng - " + o.order_code);
+        window.modWmsOut.executePrint(printHTML, "Phiếu Gửi Hàng - " + o.order_code, o.order_code, finalRecipient);
     },
 
     printDeliveryNote: async () => {
@@ -1758,7 +1782,8 @@ window.modWmsOut = {
             </div>
         `;
 
-        window.modWmsOut.executePrint(printHTML, "Phiếu Xuất Kho - " + o.order_code);
+        const finalDeliveryCustomer = document.getElementById('wms-recipient-name')?.value || o.recipient_name || o.customer_name || 'Khách Lẻ';
+        window.modWmsOut.executePrint(printHTML, "Phiếu Xuất Kho - " + o.order_code, o.order_code, finalDeliveryCustomer);
     },
 
     showList: () => {

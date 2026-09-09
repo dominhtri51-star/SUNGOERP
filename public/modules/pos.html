@@ -1346,6 +1346,16 @@ window.modPos = {
             </div>
         `;
 
+        const printDocTitle = `${order.order_code} - ${order.customer_name || 'Khách Lẻ'}`;
+        const origTitle = document.title;
+        document.title = printDocTitle;
+        const restoreTitle = () => {
+            document.title = origTitle;
+            window.removeEventListener('afterprint', restoreTitle);
+        };
+        window.addEventListener('afterprint', restoreTitle);
+        setTimeout(restoreTitle, 4000);
+
         window.print();
     },
 
