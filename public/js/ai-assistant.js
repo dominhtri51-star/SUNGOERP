@@ -276,6 +276,109 @@
                     </div>
                 `;
 
+            case 'DRAFT_ORDER_CARD': {
+                const isSale = card.order_type === 'SALE';
+                const borderColor = isSale ? 'border-amber-500/50' : 'border-indigo-500/50';
+                const tagBg = isSale ? 'bg-amber-500/20 text-amber-300' : 'bg-indigo-500/20 text-indigo-300';
+                const tagText = isSale ? 'BÁN HÀNG (SO)' : 'MUA HÀNG (PO)';
+                const btnConfirmBg = isSale ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 hover:brightness-110' : 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:brightness-110';
+                const item = (card.items && card.items[0]) || {};
+
+                return `
+                    <div class="mt-3 bg-slate-900/95 border-2 ${borderColor} rounded-2xl p-4 shadow-2xl relative overflow-hidden">
+                        <div class="absolute -right-8 -top-8 w-24 h-24 ${isSale ? 'bg-amber-500/10' : 'bg-indigo-500/10'} rounded-full blur-xl pointer-events-none"></div>
+                        
+                        <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full ${isSale ? 'bg-amber-400' : 'bg-indigo-400'} animate-ping"></span>
+                                <h4 class="font-black text-white text-xs tracking-wide uppercase">${card.title || 'Bản Xem Trước'}</h4>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full ${tagBg} text-[10px] font-black tracking-wider">${tagText}</span>
+                        </div>
+
+                        <div class="mt-3 space-y-2 text-xs">
+                            <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 space-y-1.5">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-400 font-medium">${card.partner_label || (isSale ? 'Khách hàng' : 'Nhà cung cấp')}:</span>
+                                    <strong class="text-white text-right">${card.partner_name || 'Chưa rõ'}</strong>
+                                </div>
+                                ${card.partner_phone ? `
+                                    <div class="flex justify-between items-center text-[11px]">
+                                        <span class="text-slate-400">Số điện thoại:</span>
+                                        <span class="text-slate-200 font-mono">${card.partner_phone}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 space-y-1.5">
+                                <div class="text-slate-300 font-bold flex items-center justify-between">
+                                    <span class="truncate max-w-[190px] text-white">${item.name || 'Thiết bị'}</span>
+                                    <span class="text-[11px] text-amber-400 font-mono">${item.sku ? '[' + item.sku + ']' : ''}</span>
+                                </div>
+                                <div class="flex justify-between text-[11px] text-slate-400">
+                                    <span>Số lượng: <strong class="text-emerald-400">${item.qty || 1} ${item.unit || 'Bộ'}</strong></span>
+                                    <span>Đơn giá: <strong class="text-slate-200">${item.price || '0đ'}</strong></span>
+                                </div>
+                                <div class="flex justify-between pt-1 border-t border-slate-800 font-bold ${isSale ? 'text-amber-400' : 'text-indigo-400'}">
+                                    <span>Tạm tính:</span>
+                                    <span class="text-sm font-mono">${card.total_amount || '0đ'}</span>
+                                </div>
+                            </div>
+
+                            ${card.notes ? `
+                                <div class="text-[11px] text-slate-400 italic bg-slate-950/40 px-2.5 py-1.5 rounded-lg border border-slate-800/50">
+                                    <i class="fas fa-info-circle mr-1"></i> Ghi chú: ${card.notes}
+                                </div>
+                            ` : ''}
+
+                            <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 font-medium text-center">
+                                💬 <em>Anh/Chị kiểm tra lại thông tin đã đúng chưa? Cần chỉnh sửa bổ sung gì không?</em>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="mt-3.5 space-y-2">
+                            <button onclick="window.SungoAI.ask('Xác nhận tạo đơn')" class="w-full ${btnConfirmBg} font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-amber-500/20 active:scale-95">
+                                <i class="fas fa-check-circle text-sm"></i> Xác Nhận Tạo Đơn Ngay
+                            </button>
+                            <div class="flex gap-2">
+                                <button onclick="window.SungoAI.ask('Đổi số lượng')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-xl text-[11px] flex items-center justify-center gap-1 transition cursor-pointer active:scale-95">
+                                    <i class="fas fa-edit text-[10px]"></i> Đổi Số Lượng
+                                </button>
+                                <button onclick="window.SungoAI.ask('Hủy bỏ đơn này')" class="flex-1 bg-red-950/50 hover:bg-red-900/60 text-red-300 border border-red-500/30 font-bold py-2 rounded-xl text-[11px] flex items-center justify-center gap-1 transition cursor-pointer active:scale-95">
+                                    <i class="fas fa-times-circle text-[10px]"></i> Hủy Bỏ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            case 'PURCHASE_CARD':
+                return `
+                    <div class="mt-3 bg-slate-900/90 border border-indigo-500/40 rounded-2xl p-4 shadow-xl">
+                        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                                <h4 class="font-black text-white text-xs tracking-wide">${card.title}</h4>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">${card.status}</span>
+                        </div>
+                        <div class="mt-2.5 space-y-1.5 text-xs text-slate-300">
+                            <div class="flex justify-between"><span class="text-slate-400">Nhà cung cấp:</span> <strong class="text-white">${card.supplier}</strong></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Số lượng đặt:</span> <span class="text-emerald-400 font-bold">${card.quantity}</span></div>
+                            <div class="flex justify-between pt-1 border-t border-slate-800 font-bold text-indigo-400">
+                                <span>Tổng chi phí:</span> <span class="text-sm">${card.total_cost}</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2 flex gap-2">
+                            <button onclick="window.loadModule && window.loadModule('purchases')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                                <i class="fas fa-external-link-alt text-[10px]"></i> Xem Danh Sách Đơn Mua
+                            </button>
+                        </div>
+                    </div>
+                `;
+
             case 'PRODUCT_CARD':
                 return `
                     <div class="mt-3 bg-slate-900/90 border border-blue-500/40 rounded-2xl p-4 shadow-xl">

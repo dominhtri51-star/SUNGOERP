@@ -152,6 +152,10 @@ async function updateContextState(conversationId, newState) {
  */
 function checkPermission(userRole, intent) {
     if (!userRole) return false;
+    // Các thao tác đối thoại xác nhận, cập nhật hoặc hủy bản nháp đơn hàng được cho phép trong phiên
+    if (['CONFIRM_DRAFT_ORDER', 'UPDATE_DRAFT_ORDER', 'CANCEL_DRAFT_ORDER'].includes(intent)) {
+        return true;
+    }
     const role = String(userRole).toUpperCase().trim();
     const perms = RBAC_PERMISSIONS[role] || [];
     if (perms.includes('*')) return true;
@@ -164,36 +168,54 @@ function checkPermission(userRole, intent) {
 function detectIntent(text, context) {
     const norm = removeVietnameseTones(text);
 
-    // 1. Tạo đơn hàng nhanh
-    if (
-        (norm.includes('tao don') || norm.includes('len don') || norm.includes('ban cho') || norm.includes('lap don') || norm.includes('dat mua')) &&
-        !norm.includes('nha cung cap') && !norm.includes('mua hang') && !norm.includes('nhap hang') && !norm.includes('po')
-    ) {
-        return 'CREATE_ORDER';
+    // =========================================================================
+    // 0. XỬ LÝ KHI ĐANG CÓ BẢN NHÁP ĐƠN HÀNG TRONG NGỮ CẢNH (DRAFT ORDER STATE)
+    // =========================================================================
+    if (context && context.draft_order) {
+        // Hủy bỏ bản nháp đơn hàng
+        if (norm.includes('huy') || norm.includes('khong tao nua') || norm.includes('bo qua') || norm.includes('xoa nhap') || norm.includes('dung lai') || norm.includes('thoi')) {
+            return 'CANCEL_DRAFT_ORDER';
+        }
+
+        // Xác nhận tạo đơn chính thức
+        if (
+            norm.includes('tao don') || norm.includes('len don') || norm.includes('xac nhan') || norm.includes('dong y') ||
+            norm.includes('ok') || norm.includes('luu don') || norm.includes('dung roi') || norm.includes('chuan roi') ||
+            norm.includes('tien hanh') || norm.includes('bat dau lam') || norm.includes('lam di') || norm.includes('tao di')
+        ) {
+            return 'CONFIRM_DRAFT_ORDER';
+        }
+
+        // Người dùng đang trả lời thông tin đối tác, số lượng hoặc chỉnh sửa bản nháp
+        return 'UPDATE_DRAFT_ORDER';
     }
 
-    // 2. Tạo sản phẩm nhanh
+    // =========================================================================
+    // 4. LÊN ĐƠN ĐẶT MUA HÀNG NHANH / PHIẾU MUA HÀNG (PO - PURCHASE ORDER)
+    // =========================================================================
     if (
-        norm.includes('tao san pham') || norm.includes('them san pham') || norm.includes('tao thiet bi') ||
-        norm.includes('them thiet bi') || norm.includes('nhap san pham moi') || norm.includes('them ma pin')
-    ) {
-        return 'CREATE_PRODUCT';
-    }
-
-    // 3. Tạo báo giá nhanh
-    if (
-        norm.includes('bao gia') || norm.includes('lap bao gia') || norm.includes('tao bao gia') ||
-        norm.includes('tinh gia hybrid') || norm.includes('tinh gia ongrid') || norm.includes('tinh gia boq')
-    ) {
-        return 'CREATE_QUOTATION';
-    }
-
-    // 4. Lên đơn đặt mua hàng nhanh (PO)
-    if (
-        norm.includes('mua hang') || norm.includes('dat hang mua hang') || norm.includes('nhap hang tu') ||
-        norm.includes('tao po') || norm.includes('don mua hang') || norm.includes('dat ncc') || norm.includes('nha cung cap')
+        norm.includes('phieu mua hang') || norm.includes('phieu mua') || norm.includes('don mua hang') ||
+        norm.includes('don mua') || norm.includes('don dat mua') || norm.includes('dat hang mua') ||
+        norm.includes('dat mua hang') || norm.includes('mua hang') || norm.includes('nhap hang') ||
+        norm.includes('nhap kho') || norm.includes('tao po') || norm.includes('len po') || norm.includes('don po') ||
+        norm.includes('dat ncc') || norm.includes('nha cung cap') || norm.includes('ncc') ||
+        (norm.includes('dat mua') && !norm.includes('khach'))
     ) {
         return 'CREATE_PURCHASE';
+    }
+
+    // =========================================================================
+    // 1. TẠO ĐƠN HÀNG BÁN NHANH (SO - SALES ORDER)
+    // =========================================================================
+    if (
+        (norm.includes('don hang ban') || norm.includes('don ban hang') || norm.includes('ban cho') || 
+         norm.includes('ban hang') || norm.includes('khach mua') || norm.includes('len don ban') || 
+         norm.includes('tao don ban') || norm.includes('lap don ban') || norm.includes('tao don hang') || 
+         norm.includes('tao don') || norm.includes('len don') || norm.includes('lap don') ||
+         norm.includes('ban')) &&
+        !norm.includes('nha cung cap') && !norm.includes('phieu mua') && !norm.includes('don mua') && !norm.includes('nhap hang') && !norm.includes('po')
+    ) {
+        return 'CREATE_ORDER';
     }
 
     // 5. Báo cáo doanh thu
@@ -286,160 +308,525 @@ function detectIntent(text, context) {
  * =========================================================================
  */
 
-// 1. TẠO ĐƠN HÀNG NHANH
-async function handleCreateOrder(text, context, user) {
-    const norm = removeVietnameseTones(text);
+// =========================================================================
+// CÁC HÀM TRỢ GIÚP CHO QUY TRÌNH ĐỐI THOẠI 2 CHIỀU & BẢN NHÁP ĐƠN HÀNG
+// =========================================================================
 
-    // Trích xuất số điện thoại (10 chữ số)
-    const phoneMatch = text.match(/(0[3|5|7|8|9][0-9]{8})/);
-    const phone = phoneMatch ? phoneMatch[1] : '';
-
-    // Trích xuất tên khách hàng (từ ngữ cảnh hoặc text)
-    let customerName = '';
-    const nameMatch = text.match(/(?:cho|khách|anh|chị|bác|chú)\s+([A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*)/);
-    if (nameMatch) {
-        customerName = nameMatch[1];
-    } else if (context.active_customer && (norm.includes('anh nay') || norm.includes('khach nay') || norm.includes('chi ay') || norm.includes('cho anh') || norm.includes('cho chi'))) {
-        customerName = context.active_customer.name || context.active_customer.full_name;
-    }
-
-    // Tìm kiếm khách hàng trong DB
-    let customerId = null;
-    if (phone) {
-        const cRes = await pool.query('SELECT id, full_name, name, phone, tier FROM customers WHERE phone = $1 LIMIT 1', [phone]);
-        if (cRes.rows.length > 0) {
-            customerId = cRes.rows[0].id;
-            customerName = cRes.rows[0].full_name || cRes.rows[0].name;
-        }
-    } else if (customerName) {
-        const cRes = await pool.query(
-            'SELECT id, full_name, name, phone, tier FROM customers WHERE LOWER(full_name) LIKE $1 OR LOWER(name) LIKE $1 LIMIT 1',
-            [`%${customerName.toLowerCase()}%`]
-        );
-        if (cRes.rows.length > 0) {
-            customerId = cRes.rows[0].id;
-            customerName = cRes.rows[0].full_name || cRes.rows[0].name;
-        }
-    }
-
-    if (!customerId && context.active_customer) {
-        if (!customerName || customerName === 'Khách Lẻ' || norm.includes('khach nay') || norm.includes('anh nay') || norm.includes('chi ay') || norm.includes('anh ay') || norm.includes('cho anh') || norm.includes('cho chi') || norm.includes('cho khach')) {
-            customerId = context.active_customer.id;
-            customerName = context.active_customer.name || context.active_customer.full_name;
-        }
-    }
-
-    if (!customerName) {
-        customerName = 'Khách Lẻ';
-    }
-
-    // Trích xuất số lượng và tìm sản phẩm
+function extractQuantity(text) {
     let qty = 1;
-    const qtyMatch = text.match(/(\d+)\s*(tấm|bộ|cái|chiếc|cuộn|thùng|hộp|inverter|pin)/i);
+    const qtyMatch = text.match(/(\d+)\s*(?:tấm|bộ|cái|chiếc|cuộn|thùng|hộp|inverter|pin|m|met)?/i);
     if (qtyMatch) {
         qty = parseInt(qtyMatch[1], 10);
     }
+    return qty > 0 ? qty : 1;
+}
 
-    // Tìm kiếm sản phẩm phù hợp nhất trong kho
-    const pRes = await pool.query(`
-        SELECT id, sku, product_name, category, retail_price, import_price, stock_qty, unit 
-        FROM products 
-        ORDER BY id DESC 
-        LIMIT 50
-    `);
-    
-    let matchedProduct = null;
-    for (const p of pRes.rows) {
-        const pNorm = removeVietnameseTones(p.product_name + ' ' + p.sku);
-        if (norm.includes(pNorm) || (p.sku && norm.includes(removeVietnameseTones(p.sku)))) {
-            matchedProduct = p;
-            break;
+async function findMatchingProduct(text, norm, context) {
+    try {
+        const pRes = await pool.query(`
+            SELECT id, sku, product_name, category, retail_price, import_price, stock_qty, unit 
+            FROM products 
+            ORDER BY id DESC 
+            LIMIT 100
+        `);
+
+        let matched = null;
+        // 1. So khớp chính xác sku hoặc tên
+        for (const p of pRes.rows) {
+            const pNorm = removeVietnameseTones(p.product_name + ' ' + (p.sku || ''));
+            if (norm.includes(pNorm) || (p.sku && norm.includes(removeVietnameseTones(p.sku)))) {
+                matched = p;
+                break;
+            }
+        }
+
+        // 2. So khớp từ khóa thương hiệu / thiết bị
+        if (!matched) {
+            const keywords = ['canadian', 'deye', 'growatt', 'jinko', 'gigabox', 'sungrow', 'longi', 'luxpower', 'ja solar', 'huawei', 'apess', 'lumentree', 'kep'];
+            for (const kw of keywords) {
+                if (norm.includes(kw)) {
+                    matched = pRes.rows.find(p => removeVietnameseTones(p.product_name + ' ' + (p.sku || '')).includes(kw));
+                    if (matched) break;
+                }
+            }
+        }
+
+        // 3. So khớp chung chung tấm pin hoặc biến tần
+        if (!matched && (norm.includes('tam pin') || norm.includes('pin'))) {
+            matched = pRes.rows.find(p => removeVietnameseTones(p.product_name).includes('pin') || removeVietnameseTones(p.category || '').includes('pin'));
+        }
+        if (!matched && (norm.includes('bien tan') || norm.includes('inverter'))) {
+            matched = pRes.rows.find(p => removeVietnameseTones(p.product_name).includes('deye') || removeVietnameseTones(p.product_name).includes('inverter') || removeVietnameseTones(p.category || '').includes('inverter'));
+        }
+
+        // 4. Nếu vẫn chưa thấy nhưng context có active_product
+        if (!matched && context && context.active_product) {
+            matched = context.active_product;
+        }
+
+        return matched;
+    } catch (e) {
+        console.warn('findMatchingProduct warning:', e.message);
+        return null;
+    }
+}
+
+async function extractCustomer(text, norm, context) {
+    const phoneMatch = text.match(/(0[3|5|7|8|9][0-9]{8})/);
+    const phone = phoneMatch ? phoneMatch[1] : '';
+
+    let customerName = '';
+    let customerId = null;
+
+    if (phone) {
+        try {
+            const cRes = await pool.query('SELECT id, full_name, name, phone FROM customers WHERE phone = $1 LIMIT 1', [phone]);
+            if (cRes.rows.length > 0) {
+                customerId = cRes.rows[0].id;
+                customerName = cRes.rows[0].full_name || cRes.rows[0].name;
+            }
+        } catch (e) {}
+    }
+
+    if (!customerName) {
+        const nameMatch = text.match(/(?:cho khách|khách hàng|khách|cho anh|cho chị|cho bác|cho chú)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+sđt|\s+sdt|\s+số|\s+điện|\s+đt|\s+phone|\s+mua|\s+lấy|\s+đặt|\s+gồm|\s+với|$))/i);
+        if (nameMatch && nameMatch[1].trim().length > 1) {
+            customerName = nameMatch[1].trim();
         }
     }
 
-    // Nếu chưa tìm thấy chính xác, thử tìm theo từ khóa phổ biến
-    if (!matchedProduct) {
-        const keywords = ['canadian', 'deye', 'growatt', 'jinko', 'gigabox', 'sungrow', 'longi', 'luxpower', 'ja solar', 'huawei', 'apess', 'lumentree', 'kep'];
-        for (const kw of keywords) {
-            if (norm.includes(kw)) {
-                matchedProduct = pRes.rows.find(p => removeVietnameseTones(p.product_name + ' ' + p.sku).includes(kw));
-                if (matchedProduct) break;
+    if (!customerId && customerName) {
+        try {
+            const cRes = await pool.query(
+                'SELECT id, full_name, name, phone FROM customers WHERE LOWER(full_name) LIKE $1 OR LOWER(name) LIKE $1 LIMIT 1',
+                [`%${customerName.toLowerCase()}%`]
+            );
+            if (cRes.rows.length > 0) {
+                customerId = cRes.rows[0].id;
+                customerName = cRes.rows[0].full_name || cRes.rows[0].name;
+            }
+        } catch (e) {}
+    }
+
+    if (!customerName && context && context.active_customer && (norm.includes('khach nay') || norm.includes('anh nay') || norm.includes('chi ay') || norm.includes('cho anh') || norm.includes('cho chi') || norm.includes('cho khach'))) {
+        customerId = context.active_customer.id;
+        customerName = context.active_customer.name || context.active_customer.full_name;
+    }
+
+    return { customerId, customerName: customerName ? customerName.trim() : null, phone };
+}
+
+async function extractSupplier(text, norm, context) {
+    let supplierName = null;
+    let supplierId = null;
+
+    try {
+        const sRes = await pool.query('SELECT id, name FROM suppliers ORDER BY id ASC LIMIT 50');
+        for (const s of sRes.rows) {
+            const sNorm = removeVietnameseTones(s.name);
+            if (sNorm && norm.includes(sNorm)) {
+                supplierName = s.name;
+                supplierId = s.id;
+                break;
+            }
+        }
+    } catch (e) {}
+
+    if (!supplierName) {
+        const supMatch = text.match(/(?:nhà cung cấp|ncc|từ ncc|từ)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+sản phẩm|\s+vật tư|\s+số lượng|\s+gồm|\s+đặt|\s+mua|\s+nhập|$))/i);
+        if (supMatch && supMatch[1].trim().length > 1) {
+            supplierName = supMatch[1].trim();
+        }
+    }
+
+    if (!supplierName) {
+        const brands = [
+            { key: 'canadian', name: 'Canadian Solar' },
+            { key: 'deye', name: 'Deye Solar VN' },
+            { key: 'jinko', name: 'Jinko Solar' },
+            { key: 'growatt', name: 'Growatt New Energy' },
+            { key: 'longi', name: 'LONGi Solar' },
+            { key: 'huawei', name: 'Huawei FusionSolar' },
+            { key: 'sungrow', name: 'Sungrow Power' },
+            { key: 'alena', name: 'Công ty Alena Energy' },
+            { key: 'solar e', name: 'Công ty Solar E' },
+            { key: 'gigabox', name: 'GigaBox Lithium' }
+        ];
+        for (const b of brands) {
+            if (norm.includes(b.key)) {
+                supplierName = b.name;
+                break;
             }
         }
     }
 
-    // Nếu hỏi chung chung "tấm pin" hoặc "biến tần"
-    if (!matchedProduct && (norm.includes('tam pin') || norm.includes('pin'))) {
-        matchedProduct = pRes.rows.find(p => removeVietnameseTones(p.product_name).includes('pin') || removeVietnameseTones(p.category).includes('pin'));
-    }
-    if (!matchedProduct && (norm.includes('bien tan') || norm.includes('inverter'))) {
-        matchedProduct = pRes.rows.find(p => removeVietnameseTones(p.product_name).includes('deye') || removeVietnameseTones(p.product_name).includes('inverter') || removeVietnameseTones(p.category).includes('inverter'));
-    }
+    return { supplierId, supplierName: supplierName ? supplierName.trim() : null };
+}
 
-    // Nếu vẫn chưa có mà ngữ cảnh có active_product
-    if (!matchedProduct && context.active_product) {
-        matchedProduct = context.active_product;
-    }
+function buildDraftPreviewResponse(draft) {
+    const isSale = draft.type === 'SALE';
+    const partnerLabel = isSale ? 'Khách hàng' : 'Nhà cung cấp';
+    const priceLabel = isSale ? 'Đơn giá bán niêm yết' : 'Đơn giá nhập dự tính';
+    const orderTitle = isSale ? 'ĐƠN HÀNG BÁN (SO)' : 'PHIẾU MUA HÀNG / ĐƠN ĐẶT MUA (PO)';
+    const partnerDisplay = draft.partner_name + (draft.partner_phone ? ` (SĐT: ${draft.partner_phone})` : '');
+    const unitStr = (draft.product && draft.product.unit) || 'Bộ';
 
+    const text = `Dạ em đã tiếp nhận và tổng hợp thông tin **${orderTitle}** như sau:\n\n` +
+        `📋 **BẢN XEM TRƯỚC ĐƠN HÀNG:**\n` +
+        `• **Loại đơn**: ${isSale ? '🛒 ĐƠN HÀNG BÁN (SO)' : '📦 PHIẾU MUA HÀNG / ĐƠN ĐẶT MUA (PO)'}\n` +
+        `• **${partnerLabel}**: **${partnerDisplay}**\n` +
+        `• **Sản phẩm / Vật tư**: **${draft.product.product_name}** (Mã: \`${draft.product.sku || 'N/A'}\`)\n` +
+        `• **Số lượng**: **${draft.qty} ${unitStr}**\n` +
+        `• **${priceLabel}**: **${formatVND(draft.unitPrice)}** / ${unitStr}\n` +
+        `• **Tổng tiền tạm tính**: **${formatVND(draft.totalAmount)}**\n` +
+        (draft.notes ? `• **Ghi chú**: ${draft.notes}\n` : '') +
+        `\n👉 **Anh/Chị kiểm tra lại thông tin tiếp nhận đã đúng chưa ạ? Có cần chỉnh sửa hay bổ sung gì không ạ?**\n` +
+        `*(Anh/Chị có thể yêu cầu: đổi số lượng, đổi ${partnerLabel}, sửa giá, thêm ghi chú...)*\n\n` +
+        `Khi nào Anh/Chị nói **"Tạo đơn"** hoặc bấm nút **"Xác Nhận Tạo Đơn Ngay"** bên dưới, em mới chính thức lưu đơn vào hệ thống nhé!`;
+
+    const card = {
+        type: 'DRAFT_ORDER_CARD',
+        order_type: draft.type,
+        title: isSale ? 'Bản Nháp: Đơn Hàng Bán (SO)' : 'Bản Nháp: Phiếu Mua Hàng (PO)',
+        partner_label: partnerLabel,
+        partner_name: draft.partner_name,
+        partner_phone: draft.partner_phone || '',
+        items: [
+            {
+                name: draft.product.product_name,
+                sku: draft.product.sku || '',
+                qty: draft.qty,
+                unit: unitStr,
+                price: formatVND(draft.unitPrice),
+                total: formatVND(draft.totalAmount)
+            }
+        ],
+        total_amount: formatVND(draft.totalAmount),
+        notes: draft.notes || '',
+        status: 'Chờ Nhân Viên Xác Nhận'
+    };
+
+    return {
+        text: text,
+        card: card,
+        action_type: 'DRAFT_ORDER_AWAITING_CONFIRMATION',
+        quick_replies: ['Xác nhận tạo đơn', 'Đổi số lượng', isSale ? 'Đổi khách hàng' : 'Đổi Nhà cung cấp', 'Hủy bỏ']
+    };
+}
+
+// 1. TẠO ĐƠN HÀNG BÁN NHANH (SO - SALES ORDER)
+async function handleCreateOrder(text, context, user) {
+    const norm = removeVietnameseTones(text);
+
+    // 1. Trích xuất thông tin khách hàng
+    const { customerId, customerName, phone } = await extractCustomer(text, norm, context);
+
+    // 2. Trích xuất số lượng & sản phẩm
+    let qty = extractQuantity(text);
+    const matchedProduct = await findMatchingProduct(text, norm, context);
+
+    // Nếu chưa nhận diện được sản phẩm
     if (!matchedProduct) {
+        context.draft_order = {
+            type: 'SALE',
+            status: 'NEED_PRODUCT',
+            partner_name: customerName,
+            partner_phone: phone,
+            customer_id: customerId,
+            qty: qty,
+            notes: ''
+        };
         return {
-            text: `Dạ em chưa nhận diện được sản phẩm anh/chị muốn lên đơn. Vui lòng cho em biết tên sản phẩm hoặc mã SKU (Ví dụ: "Tạo đơn 10 tấm pin Canadian 550W cho anh Tuấn SĐT 0987654321").`,
+            text: `Dạ em chưa nhận diện được sản phẩm/thiết bị cần bán. Anh/Chị cho em xin **Tên sản phẩm và Số lượng** cần lên đơn nhé?\n*(Ví dụ: "10 tấm pin Canadian 550W" hoặc "2 biến tần Deye 5kW")*`,
             card: null,
             action_type: 'ORDER_NEED_INFO',
-            quick_replies: ['Tạo đơn 10 tấm pin Canadian', 'Tạo đơn biến tần Deye 5kW', 'Xem danh sách sản phẩm']
+            quick_replies: ['10 tấm pin Canadian 550W', '1 biến tần Deye 5kW', 'Hủy đơn']
         };
     }
 
     const unitPrice = parseFloat(matchedProduct.retail_price) || 0;
     const totalAmount = unitPrice * qty;
-    const orderCode = 'DH-' + Date.now().toString().slice(-6) + Math.floor(1000 + Math.random() * 9000);
 
-    // Lấy employee_id nếu có
-    let empId = null;
-    if (user && user.id) {
-        const empRes = await pool.query('SELECT id FROM employees WHERE user_id = $1 LIMIT 1', [user.id]);
-        if (empRes.rows.length > 0) empId = empRes.rows[0].id;
+    // NẾU THIẾU TÊN KHÁCH HÀNG -> HỎI LẠI NHÂN VIÊN
+    if (!customerName) {
+        context.draft_order = {
+            type: 'SALE',
+            status: 'NEED_CUSTOMER',
+            partner_name: null,
+            partner_phone: phone || '',
+            customer_id: null,
+            product: matchedProduct,
+            qty: qty,
+            unitPrice: unitPrice,
+            totalAmount: totalAmount,
+            notes: ''
+        };
+        return {
+            text: `Dạ em đã ghi nhận thông tin sản phẩm: **${qty} ${matchedProduct.product_name}** (Đơn giá niêm yết: **${formatVND(unitPrice)}**/${matchedProduct.unit || 'Bộ'}, Tạm tính: **${formatVND(totalAmount)}**).\n\n⚠️ Tuy nhiên em **chưa có thông tin Khách hàng**. Anh/Chị cho em xin **Tên khách hàng hoặc Số điện thoại** để lên đơn bán hàng nhé?`,
+            card: null,
+            action_type: 'ORDER_NEED_CUSTOMER',
+            quick_replies: ['Khách Lẻ thanh toán ngay', 'Khách anh Tuấn 0988123456', 'Hủy đơn']
+        };
     }
 
-    // Tạo đơn hàng vào CSDL
-    const insertOrderRes = await pool.query(`
-        INSERT INTO orders (
-            order_code, customer_id, customer_name, total_amount, paid_amount, 
-            status, payment_method, employee_id, notes
-        ) VALUES ($1, $2, $3, $4, 0, 'PENDING', 'TIEN_MAT', $5, $6)
-        RETURNING *
-    `, [orderCode, customerId, customerName, totalAmount, empId, `Tạo tự động qua Trợ lý AI bởi ${user.full_name || 'Người dùng'}`]);
-
-    const orderId = insertOrderRes.rows[0].id;
-
-    // Thêm chi tiết đơn hàng
-    await pool.query(`
-        INSERT INTO order_items (order_id, product_id, quantity, price, total)
-        VALUES ($1, $2, $3, $4, $5)
-    `, [orderId, matchedProduct.id, qty, unitPrice, totalAmount]);
-
-    // Cập nhật context memory
-    context.active_customer = { id: customerId, name: customerName, phone: phone };
-    context.active_product = matchedProduct;
-    context.last_order = { id: orderId, code: orderCode, total: totalAmount };
-
-    return {
-        text: `Đã tạo đơn hàng thành công! Mã đơn là **${orderCode}** cho khách hàng **${customerName}**, tổng giá trị **${formatVND(totalAmount)}**.`,
-        card: {
-            type: 'ORDER_CARD',
-            title: `Đơn Hàng Mới: ${orderCode}`,
-            status: 'Chờ Xử Lý (PENDING)',
-            customer: customerName,
-            phone: phone || 'Chưa cập nhật',
-            items: [
-                { name: matchedProduct.product_name, sku: matchedProduct.sku, qty: qty, price: formatVND(unitPrice), total: formatVND(totalAmount) }
-            ],
-            total_amount: formatVND(totalAmount),
-            link: `modules/admin-orders.html`
-        },
-        action_type: 'ORDER_CREATED',
-        quick_replies: ['Xem chi tiết đơn hàng', 'Tạo hợp đồng cho đơn này', 'Kiểm tra công nợ khách']
+    // ĐÃ ĐỦ THÔNG TIN BẮT BUỘC -> CHỜ NHÂN VIÊN XÁC NHẬN
+    context.draft_order = {
+        type: 'SALE',
+        status: 'AWAITING_CONFIRMATION',
+        partner_name: customerName,
+        partner_phone: phone || '',
+        customer_id: customerId,
+        product: matchedProduct,
+        qty: qty,
+        unitPrice: unitPrice,
+        totalAmount: totalAmount,
+        notes: ''
     };
+
+    return buildDraftPreviewResponse(context.draft_order);
+}
+
+// XÁC NHẬN TẠO ĐƠN CHÍNH THỨC (CONFIRM DRAFT ORDER)
+async function handleConfirmDraftOrder(text, context, user) {
+    const draft = context.draft_order;
+    if (!draft) {
+        return {
+            text: `Dạ hiện tại không có bản nháp đơn hàng nào đang chờ xử lý. Anh/Chị muốn **Tạo đơn hàng bán** cho khách hay **Lập phiếu mua hàng (PO)** từ Nhà cung cấp ạ?`,
+            card: null,
+            action_type: 'NO_ACTIVE_DRAFT',
+            quick_replies: ['Tạo đơn hàng bán', 'Lập phiếu mua hàng từ NCC', 'Kiểm tra tồn kho']
+        };
+    }
+
+    if (!draft.product) {
+        return {
+            text: `Dạ bản nháp vẫn chưa có thông tin sản phẩm. Anh/Chị vui lòng cho em biết tên thiết bị và số lượng trước khi tạo nhé!`,
+            card: null,
+            action_type: 'DRAFT_MISSING_INFO',
+            quick_replies: ['10 tấm pin Canadian 550W', 'Hủy bỏ đơn này']
+        };
+    }
+
+    if (!draft.partner_name) {
+        const pLabel = draft.type === 'SALE' ? 'Khách hàng' : 'Nhà cung cấp';
+        return {
+            text: `Dạ bản nháp vẫn đang thiếu thông tin **${pLabel}**. Anh/Chị vui lòng cho em xin tên **${pLabel}** trước khi xác nhận tạo đơn nhé!`,
+            card: null,
+            action_type: 'DRAFT_MISSING_INFO',
+            quick_replies: draft.type === 'SALE' ? ['Khách Lẻ thanh toán ngay', 'Khách anh Tuấn'] : ['NCC Alena Energy', 'NCC Deye Solar VN']
+        };
+    }
+
+    // BẮT ĐẦU LƯU VÀO DATABASE KHI ĐƯỢC XÁC NHẬN CHÍNH THỨC
+    if (draft.type === 'SALE') {
+        const orderCode = 'DH-' + Date.now().toString().slice(-6) + Math.floor(1000 + Math.random() * 9000);
+        let empId = null;
+        if (user && user.id) {
+            try {
+                const empRes = await pool.query('SELECT id FROM employees WHERE user_id = $1 LIMIT 1', [user.id]);
+                if (empRes.rows.length > 0) empId = empRes.rows[0].id;
+            } catch (e) {}
+        }
+
+        const insertOrderRes = await pool.query(`
+            INSERT INTO orders (
+                order_code, customer_id, customer_name, customer_phone, total_amount, paid_amount, 
+                status, payment_method, employee_id, notes
+            ) VALUES ($1, $2, $3, $4, $5, 0, 'PENDING', 'TIEN_MAT', $6, $7)
+            RETURNING *
+        `, [orderCode, draft.customer_id, draft.partner_name, draft.partner_phone || '', draft.totalAmount, empId, draft.notes || `Tạo tự động qua Trợ lý AI bởi ${user.full_name || 'Người dùng'}`]);
+
+        const orderId = insertOrderRes.rows[0].id;
+
+        await pool.query(`
+            INSERT INTO order_items (order_id, product_id, quantity, price, total, sku, product_name)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `, [orderId, draft.product.id, draft.qty, draft.unitPrice, draft.totalAmount, draft.product.sku || '', draft.product.product_name]);
+
+        context.active_customer = { id: draft.customer_id, name: draft.partner_name, phone: draft.partner_phone };
+        context.active_product = draft.product;
+        context.last_order = { id: orderId, code: orderCode, total: draft.totalAmount, customer: draft.partner_name };
+        context.draft_order = null; // Xóa nháp để kết thúc phiên
+
+        return {
+            text: `🎉 **ĐÃ TẠO ĐƠN HÀNG BÁN THÀNH CÔNG!**\n\nMã đơn hàng: **${orderCode}**\nKhách hàng: **${draft.partner_name}**\nTổng giá trị: **${formatVND(draft.totalAmount)}**\nTrạng thái: **Chờ Xử Lý (PENDING)**.\n\nĐơn hàng đã được lưu vào hệ thống bán hàng SUNGO ERP.`,
+            card: {
+                type: 'ORDER_CARD',
+                title: `Đơn Hàng Bán: ${orderCode}`,
+                status: 'Chờ Xử Lý (PENDING)',
+                customer: draft.partner_name,
+                phone: draft.partner_phone || 'Chưa cập nhật',
+                items: [
+                    { name: draft.product.product_name, sku: draft.product.sku, qty: draft.qty, price: formatVND(draft.unitPrice), total: formatVND(draft.totalAmount) }
+                ],
+                total_amount: formatVND(draft.totalAmount),
+                link: 'modules/order-history.html'
+            },
+            action_type: 'ORDER_CREATED',
+            quick_replies: ['Xem chi tiết đơn hàng', 'Tạo hợp đồng cho đơn này', 'Kiểm tra công nợ khách', 'Tạo đơn mới']
+        };
+    } else {
+        // ĐƠN MUA HÀNG / PHIẾU MUA HÀNG (PO)
+        const poCode = 'PO-' + Date.now().toString().slice(-6);
+        const items = [{
+            id: draft.product.id,
+            name: draft.product.product_name,
+            sku: draft.product.sku || '',
+            quantity: draft.qty,
+            price: draft.unitPrice,
+            amount: draft.totalAmount,
+            unit: draft.product.unit || 'Bộ'
+        }];
+
+        const insRes = await pool.query(`
+            INSERT INTO purchases (po_code, supplier_id, supplier_name, note, status, items, total_amount)
+            VALUES ($1, $2, $3, $4, 'Chờ Duyệt', $5, $6)
+            RETURNING *
+        `, [poCode, draft.supplier_id, draft.partner_name, draft.notes || `Lập qua Trợ lý AI bởi ${user.full_name || 'Người dùng'}`, JSON.stringify(items), draft.totalAmount]);
+
+        context.last_purchase = { id: insRes.rows[0].id, code: poCode, total: draft.totalAmount, supplier: draft.partner_name };
+        context.active_product = draft.product;
+        context.draft_order = null; // Xóa nháp để kết thúc phiên
+
+        return {
+            text: `🎉 **ĐÃ LẬP PHIẾU MUA HÀNG THÀNH CÔNG!**\n\nMã phiếu mua: **${poCode}**\nNhà cung cấp: **${draft.partner_name}**\nSố lượng đặt mua: **${draft.qty} ${draft.product.unit || 'thiết bị'}**\nTổng chi phí dự toán: **${formatVND(draft.totalAmount)}**\nTrạng thái: **Chờ Duyệt (PENDING)**.\n\nPhiếu mua hàng đã được lưu vào hệ thống kho vận & thu mua.`,
+            card: {
+                type: 'PURCHASE_CARD',
+                title: `Phiếu Mua Hàng: ${poCode}`,
+                supplier: draft.partner_name,
+                quantity: `${draft.qty} ${draft.product.unit || 'thiết bị'}`,
+                total_cost: formatVND(draft.totalAmount),
+                status: 'Chờ Duyệt (PENDING)',
+                link: 'modules/purchases.html'
+            },
+            action_type: 'PURCHASE_CREATED',
+            quick_replies: ['Xem danh sách đơn mua hàng', 'Kiểm tra tồn kho', 'Lập phiếu mua mới']
+        };
+    }
+}
+
+// HỦY BỎ BẢN NHÁP (CANCEL DRAFT ORDER)
+function handleCancelDraftOrder(text, context, user) {
+    const hadDraft = !!context.draft_order;
+    context.draft_order = null;
+    return {
+        text: hadDraft 
+            ? `Dạ em đã **hủy bản nháp đơn hàng** theo yêu cầu của Anh/Chị. Ngữ cảnh đã được giải phóng. Anh/Chị cần em hỗ trợ công việc gì tiếp theo ạ?`
+            : `Dạ hiện tại không có bản nháp nào đang mở. Em sẵn sàng hỗ trợ anh/chị tạo đơn bán hàng hoặc lập phiếu mua hàng bất cứ lúc nào!`,
+        card: null,
+        action_type: 'DRAFT_ORDER_CANCELLED',
+        quick_replies: ['Tạo đơn hàng bán', 'Lập phiếu mua hàng', 'Kiểm tra tồn kho', 'Báo cáo doanh thu']
+    };
+}
+
+// CHỈNH SỬA / BỔ SUNG BẢN NHÁP (UPDATE DRAFT ORDER)
+async function handleUpdateDraftOrder(text, context, user) {
+    const draft = context.draft_order;
+    if (!draft) {
+        return handleCreateOrder(text, context, user);
+    }
+    const norm = removeVietnameseTones(text);
+    let updatedFields = [];
+
+    // 1. Kiểm tra cập nhật số lượng
+    const qtyMatch = text.match(/(?:đổi thành|thành|sửa thành|số lượng|lấy|mua|bán)\s*(\d+)/i) || text.match(/^(\d+)\s*(?:tấm|bộ|chiếc|cái|inverter|pin)?$/i);
+    if (qtyMatch) {
+        const newQty = parseInt(qtyMatch[1], 10);
+        if (newQty > 0) {
+            draft.qty = newQty;
+            if (draft.unitPrice) {
+                draft.totalAmount = draft.qty * draft.unitPrice;
+            }
+            updatedFields.push(`số lượng thành **${newQty}**`);
+        }
+    }
+
+    // 2. Kiểm tra cập nhật giá
+    const priceMatch = text.match(/(?:giá|đơn giá|sửa giá)\s*[:=]?\s*([\d.,]+)\s*(?:đ|vnd|k|tr|triệu)?/i);
+    if (priceMatch) {
+        let rawP = priceMatch[1].replace(/\./g, '').replace(/,/g, '');
+        let newPrice = parseFloat(rawP) || 0;
+        if (text.toLowerCase().includes('triệu') && newPrice < 1000) newPrice *= 1000000;
+        else if (text.toLowerCase().includes('k') && newPrice < 10000) newPrice *= 1000;
+        if (newPrice > 0) {
+            draft.unitPrice = newPrice;
+            draft.totalAmount = draft.qty * newPrice;
+            updatedFields.push(`đơn giá thành **${formatVND(newPrice)}**`);
+        }
+    }
+
+    // 3. Kiểm tra cập nhật Đối tác
+    if (draft.type === 'SALE') {
+        const { customerId, customerName, phone } = await extractCustomer(text, norm, context);
+        if (customerName && customerName !== 'Khách Lẻ') {
+            draft.partner_name = customerName;
+            draft.customer_id = customerId;
+            if (phone) draft.partner_phone = phone;
+            updatedFields.push(`khách hàng là **${customerName}**`);
+        } else if (phone && !draft.partner_phone) {
+            draft.partner_phone = phone;
+            updatedFields.push(`số điện thoại **${phone}**`);
+        }
+    } else {
+        const { supplierId, supplierName } = await extractSupplier(text, norm, context);
+        if (supplierName) {
+            draft.partner_name = supplierName;
+            draft.supplier_id = supplierId;
+            updatedFields.push(`Nhà cung cấp là **${supplierName}**`);
+        }
+    }
+
+    // 4. Kiểm tra cập nhật sản phẩm nếu bản nháp đang thiếu sản phẩm
+    if (!draft.product) {
+        const matched = await findMatchingProduct(text, norm, context);
+        if (matched) {
+            draft.product = matched;
+            draft.unitPrice = draft.type === 'SALE' ? (parseFloat(matched.retail_price) || 0) : (parseFloat(matched.import_price) || 2500000);
+            draft.totalAmount = draft.qty * draft.unitPrice;
+            updatedFields.push(`sản phẩm là **${matched.product_name}**`);
+        }
+    }
+
+    // 5. Kiểm tra cập nhật ghi chú
+    const noteMatch = text.match(/(?:ghi chú|note|lưu ý)\s*[:=]?\s*(.+)/i);
+    if (noteMatch) {
+        draft.notes = noteMatch[1].trim();
+        updatedFields.push(`ghi chú: "${draft.notes}"`);
+    }
+
+    // Kiểm tra xem đã đủ thông tin bắt buộc chưa
+    const isSale = draft.type === 'SALE';
+    const partnerMissing = !draft.partner_name;
+    const productMissing = !draft.product;
+
+    if (productMissing) {
+        draft.status = 'NEED_PRODUCT';
+        return {
+            text: `Dạ em đã cập nhật ${updatedFields.join(', ')}. Tuy nhiên em vẫn chưa rõ **Tên sản phẩm và Số lượng**. Anh/Chị cho em biết thêm nhé!`,
+            card: null,
+            action_type: 'ORDER_NEED_INFO',
+            quick_replies: ['10 tấm pin Canadian', '1 biến tần Deye 5kW', 'Hủy đơn']
+        };
+    }
+
+    if (partnerMissing) {
+        draft.status = isSale ? 'NEED_CUSTOMER' : 'NEED_SUPPLIER';
+        const pLabel = isSale ? 'Khách hàng' : 'Nhà cung cấp';
+        return {
+            text: `Dạ em đã cập nhật ${updatedFields.join(', ')}. Tuy nhiên em vẫn chưa có thông tin **${pLabel}**. Anh/Chị cho em xin tên **${pLabel}** nhé!`,
+            card: null,
+            action_type: isSale ? 'ORDER_NEED_CUSTOMER' : 'PURCHASE_NEED_SUPPLIER',
+            quick_replies: isSale ? ['Khách Lẻ thanh toán ngay', 'Khách anh Tuấn', 'Hủy đơn'] : ['NCC Alena Energy', 'NCC Deye Solar VN', 'Hủy đơn']
+        };
+    }
+
+    // ĐÃ ĐỦ THÔNG TIN BẮT BUỘC -> HIỂN THỊ LẠI BẢN XEM TRƯỚC
+    draft.status = 'AWAITING_CONFIRMATION';
+    const res = buildDraftPreviewResponse(draft);
+    if (updatedFields.length > 0) {
+        res.text = `Dạ em đã cập nhật ${updatedFields.join(', ')} thành công!\n\n` + res.text;
+    }
+    return res;
 }
 
 // 2. TẠO SẢN PHẨM NHANH
@@ -581,62 +968,79 @@ async function handleCreateQuotation(text, context, user) {
     };
 }
 
-// 4. LÊN ĐƠN ĐẶT MUA HÀNG NHANH (PURCHASE ORDER)
+// 4. LÊN ĐƠN ĐẶT MUA HÀNG NHANH / PHIẾU MUA HÀNG (PO - PURCHASE ORDER)
 async function handleCreatePurchase(text, context, user) {
     const cleanText = text.trim();
     const norm = removeVietnameseTones(cleanText);
 
-    // Trích xuất số lượng
-    let qty = 10;
-    const qtyMatch = cleanText.match(/(\d+)\s*(?:bộ|tấm|chiếc|cái|inverter|pin|cuộn)/i);
-    if (qtyMatch) qty = parseInt(qtyMatch[1], 10);
+    // 1. Trích xuất Nhà Cung Cấp
+    const { supplierId, supplierName } = await extractSupplier(cleanText, norm, context);
 
-    // Trích xuất Nhà Cung Cấp
-    let supplierName = 'Nhà Cung Cấp Tổng Hợp';
-    let supplierId = null;
-    const sRes = await pool.query('SELECT id, name FROM suppliers ORDER BY id ASC LIMIT 20');
-    for (const s of sRes.rows) {
-        if (norm.includes(removeVietnameseTones(s.name))) {
-            supplierName = s.name;
-            supplierId = s.id;
-            break;
-        }
+    // 2. Trích xuất số lượng & sản phẩm
+    let qty = extractQuantity(cleanText);
+    const matchedProduct = await findMatchingProduct(cleanText, norm, context);
+
+    // Nếu chưa nhận diện được sản phẩm
+    if (!matchedProduct) {
+        context.draft_order = {
+            type: 'PURCHASE',
+            status: 'NEED_PRODUCT',
+            partner_name: supplierName,
+            supplier_id: supplierId,
+            qty: qty,
+            notes: ''
+        };
+        return {
+            text: `Dạ em chưa nhận diện được sản phẩm/thiết bị cần mua. Anh/Chị cho em xin **Tên thiết bị và Số lượng** cần lập phiếu mua hàng nhé?\n*(Ví dụ: "Nhập 20 tấm pin Canadian 550W" hoặc "Đặt mua 5 biến tần Deye 10kW")*`,
+            card: null,
+            action_type: 'PURCHASE_NEED_INFO',
+            quick_replies: ['20 tấm pin Canadian 550W', '5 biến tần Deye 10kW', 'Hủy đơn']
+        };
     }
 
-    if (!supplierId) {
-        const supKey = ['alena', 'sunpower', 'deye', 'jinko', 'canadian', 'solar e', 'gigabox'];
-        for (const k of supKey) {
-            if (norm.includes(k)) {
-                supplierName = 'Nhà Cung Cấp ' + k.toUpperCase();
-                break;
-            }
-        }
+    // Giá nhập dự toán hoặc lấy từ import_price / retail_price * 0.75
+    let unitPrice = parseFloat(matchedProduct.import_price) || 0;
+    if (unitPrice === 0) {
+        const retail = parseFloat(matchedProduct.retail_price) || 0;
+        unitPrice = retail > 0 ? Math.round(retail * 0.8) : 2500000;
+    }
+    const totalAmount = unitPrice * qty;
+
+    // NẾU THIẾU NHÀ CUNG CẤP -> HỎI LẠI NHÂN VIÊN
+    if (!supplierName) {
+        context.draft_order = {
+            type: 'PURCHASE',
+            status: 'NEED_SUPPLIER',
+            partner_name: null,
+            supplier_id: null,
+            product: matchedProduct,
+            qty: qty,
+            unitPrice: unitPrice,
+            totalAmount: totalAmount,
+            notes: ''
+        };
+        return {
+            text: `Dạ em đã ghi nhận thiết bị cần đặt mua: **${qty} ${matchedProduct.product_name}** (Đơn giá nhập ước tính: **${formatVND(unitPrice)}**/${matchedProduct.unit || 'Bộ'}, Tổng dự toán: **${formatVND(totalAmount)}**).\n\n⚠️ Tuy nhiên em **chưa có thông tin Nhà Cung Cấp**. Anh/Chị cho em xin **Tên Nhà Cung Cấp** (ví dụ: Alena, Deye Solar, Solar E, Jinko...) để hoàn tất phiếu mua hàng nhé?`,
+            card: null,
+            action_type: 'PURCHASE_NEED_SUPPLIER',
+            quick_replies: ['NCC Alena Energy', 'Công ty Solar E', 'Công ty Cergy', 'Hủy đơn']
+        };
     }
 
-    const poCode = 'PO-' + Date.now().toString().slice(-6);
-    const estimatedCost = qty * 3500000;
-
-    // Lưu vào bảng purchases
-    const insRes = await pool.query(`
-        INSERT INTO purchases (po_code, supplier_id, supplier_name, note, status, total_amount)
-        VALUES ($1, $2, $3, $4, 'Chờ Duyệt', $5)
-        RETURNING *
-    `, [poCode, supplierId, supplierName, `Lên đơn PO qua Trợ lý AI bởi ${user.full_name || 'Người dùng'}`, estimatedCost]);
-
-    return {
-        text: `Đã lập đơn mua hàng **${poCode}** gửi **${supplierName}**, số lượng dự kiến **${qty} thiết bị**, tổng chi phí dự toán **${formatVND(estimatedCost)}**. Trạng thái: Chờ Duyệt.`,
-        card: {
-            type: 'PURCHASE_CARD',
-            title: `Đơn Mua Hàng: ${poCode}`,
-            supplier: supplierName,
-            quantity: `${qty} thiết bị`,
-            total_cost: formatVND(estimatedCost),
-            status: 'Chờ Duyệt (PENDING)',
-            link: 'modules/purchases.html'
-        },
-        action_type: 'PURCHASE_CREATED',
-        quick_replies: ['Xem danh sách đơn mua hàng', 'Kiểm tra tồn kho']
+    // ĐÃ ĐỦ THÔNG TIN BẮT BUỘC -> CHỜ NHÂN VIÊN XÁC NHẬN
+    context.draft_order = {
+        type: 'PURCHASE',
+        status: 'AWAITING_CONFIRMATION',
+        partner_name: supplierName,
+        supplier_id: supplierId,
+        product: matchedProduct,
+        qty: qty,
+        unitPrice: unitPrice,
+        totalAmount: totalAmount,
+        notes: ''
     };
+
+    return buildDraftPreviewResponse(context.draft_order);
 }
 
 // 5. BÁO CÁO DOANH THU
@@ -1342,6 +1746,15 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
 
     try {
         switch (intent) {
+            case 'CONFIRM_DRAFT_ORDER':
+                actionResult = await handleConfirmDraftOrder(messageText, context, userObj);
+                break;
+            case 'CANCEL_DRAFT_ORDER':
+                actionResult = await handleCancelDraftOrder(messageText, context, userObj);
+                break;
+            case 'UPDATE_DRAFT_ORDER':
+                actionResult = await handleUpdateDraftOrder(messageText, context, userObj);
+                break;
             case 'CREATE_ORDER':
                 actionResult = await handleCreateOrder(messageText, context, userObj);
                 break;
