@@ -669,10 +669,51 @@
                 : 'bg-slate-800/90 text-slate-200 border border-slate-700/80 rounded-tl-xs backdrop-blur-md'
         }`;
 
+        const feedbackBar = !isUser ? `
+            <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-700/60 text-[10px] text-slate-400">
+                <span class="text-slate-400 flex items-center gap-1"><i class="fas fa-brain text-amber-400"></i> Copilot ReAct Engine</span>
+                <div class="flex items-center gap-2.5 ai-feedback-actions">
+                    <button class="ai-rate-btn hover:text-emerald-400 transition" data-rating="UP" title="Phản hồi chính xác"><i class="far fa-thumbs-up"></i></button>
+                    <button class="ai-rate-btn hover:text-rose-400 transition" data-rating="DOWN" title="Phản hồi sai / cần sửa"><i class="far fa-thumbs-down"></i></button>
+                    <button class="ai-rate-btn hover:text-amber-400 transition font-medium" data-rating="STANDARD" title="Lưu thành mẫu chuẩn để AI tự học"><i class="far fa-star text-amber-400"></i> Mẫu chuẩn</button>
+                </div>
+            </div>
+        ` : '';
+
         bubble.innerHTML = `
             <div class="whitespace-pre-line">${isUser ? safeEscapeHtml(content) : formatMarkdown(content)}</div>
             ${card ? renderCard(card) : ''}
+            ${feedbackBar}
         `;
+
+        // Bắt sự kiện đánh giá phản hồi để AI tự học
+        if (!isUser) {
+            const btns = bubble.querySelectorAll('.ai-rate-btn');
+            btns.forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const rating = btn.getAttribute('data-rating');
+                    const actionsBox = bubble.querySelector('.ai-feedback-actions');
+                    if (actionsBox) {
+                        actionsBox.innerHTML = `<span class="text-emerald-400 font-medium"><i class="fas fa-check-circle mr-1"></i>Đã ghi nhận (${rating === 'STANDARD' ? 'Mẫu chuẩn' : rating})</span>`;
+                    }
+                    try {
+                        await fetch('/api/ai/feedback', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sessionId: state.sessionId,
+                                userPrompt: '',
+                                feedbackRating: rating,
+                                correctionType: rating === 'STANDARD' ? 'STANDARD_GROUND_TRUTH' : 'USER_RATING'
+                            })
+                        });
+                    } catch (err) {
+                        console.warn('Gửi feedback thất bại:', err);
+                    }
+                });
+            });
+        }
 
         if (isUser) {
             msgWrapper.appendChild(bubble);
@@ -686,6 +727,7 @@
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
+    let typingTimer = null;
     function appendTypingIndicator(id) {
         const chatBody = document.getElementById('sungo-ai-chat-body');
         if (!chatBody) return;
@@ -697,18 +739,35 @@
             <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 shadow-md">
                 <i class="fas fa-robot animate-spin"></i>
             </div>
-            <div class="bg-slate-800/90 text-amber-400 rounded-2xl rounded-tl-xs px-4 py-3 border border-slate-700/80 flex items-center gap-1.5 text-xs">
+            <div class="bg-slate-800/90 text-amber-400 rounded-2xl rounded-tl-xs px-4 py-3 border border-slate-700/80 flex items-center gap-2 text-xs">
                 <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce"></span>
                 <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
                 <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
-                <span class="ml-1 text-[11px] font-bold text-slate-400">Trợ lý AI đang xử lý...</span>
+                <span id="${id}-text" class="ml-1 text-[11px] font-bold text-slate-300">🔍 Nhịp 1: Bóc tách thực thể & lọc nhiễu...</span>
             </div>
         `;
         chatBody.appendChild(indicator);
         chatBody.scrollTop = chatBody.scrollHeight;
+
+        const stages = [
+            '🔍 Nhịp 1: Bóc tách thực thể & lọc nhiễu...',
+            '⚡ Nhịp 2: Tra cứu kho & đối chiếu thông số...',
+            '🛡️ Nhịp 3: Kiểm duyệt logic & tính giá...'
+        ];
+        let step = 0;
+        if (typingTimer) clearInterval(typingTimer);
+        typingTimer = setInterval(() => {
+            step = (step + 1) % stages.length;
+            const textEl = document.getElementById(`${id}-text`);
+            if (textEl) textEl.textContent = stages[step];
+        }, 750);
     }
 
     function removeTypingIndicator(id) {
+        if (typingTimer) {
+            clearInterval(typingTimer);
+            typingTimer = null;
+        }
         const el = document.getElementById(id);
         if (el) el.remove();
     }

@@ -176,4 +176,73 @@ router.post('/config', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/ai/feedback
+ * Ghi nhận đánh giá phản hồi (👍/👎) hoặc sửa đổi của người dùng để AI tự học
+ */
+router.post('/feedback', async (req, res) => {
+    try {
+        const { sessionId, userPrompt, aiGeneratedSku, aiGeneratedName, userCorrectedSku, userCorrectedName, correctionType, feedbackRating } = req.body;
+        const user = req.user || {};
+
+        await pool.query(`
+            INSERT INTO ai_correction_logs (session_id, user_id, user_prompt, ai_generated_sku, ai_generated_name, user_corrected_sku, user_corrected_name, correction_type, feedback_rating)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `, [
+            sessionId || null,
+            user.id || null,
+            userPrompt || '',
+            aiGeneratedSku || null,
+            aiGeneratedName || null,
+            userCorrectedSku || null,
+            userCorrectedName || null,
+            correctionType || 'FEEDBACK',
+            feedbackRating || 'UP'
+        ]);
+
+        return res.json({ success: true, message: 'Đã lưu phản hồi thành công! Dữ liệu sẽ dùng để huấn luyện và nâng cấp độ thông minh của AI.' });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * GET /api/ai/rules
+ * Lấy danh sách quy tắc kinh doanh đang hoạt động
+ */
+router.get('/rules', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM ai_business_rules ORDER BY id ASC');
+        return res.json({ success: true, data: result.rows });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * POST /api/ai/rules
+ * Thêm hoặc cập nhật quy tắc kinh doanh
+ */
+router.post('/rules', async (req, res) => {
+    try {
+        const { rule_code, rule_name, rule_condition, rule_action, is_active } = req.body;
+        if (!rule_code || !rule_name) {
+            return res.status(400).json({ success: false, error: 'Thiếu mã hoặc tên quy tắc!' });
+        }
+        await pool.query(`
+            INSERT INTO ai_business_rules (rule_code, rule_name, rule_condition, rule_action, is_active)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (rule_code) DO UPDATE 
+            SET rule_name = EXCLUDED.rule_name,
+                rule_condition = EXCLUDED.rule_condition,
+                rule_action = EXCLUDED.rule_action,
+                is_active = EXCLUDED.is_active
+        `, [rule_code, rule_name, rule_condition || '', rule_action || '', is_active !== false]);
+
+        return res.json({ success: true, message: 'Đã lưu quy tắc nghiệp vụ thành công!' });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 module.exports = router;

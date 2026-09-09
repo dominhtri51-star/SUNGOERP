@@ -1010,10 +1010,48 @@ async function autoInitDatabase() {
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
 
+                -- Bảng Sổ tay Quy tắc Nghiệp vụ Doanh nghiệp (AI Business Rules)
+                CREATE TABLE IF NOT EXISTS ai_business_rules (
+                    id SERIAL PRIMARY KEY,
+                    rule_code VARCHAR(50) UNIQUE NOT NULL,
+                    rule_name VARCHAR(255) NOT NULL,
+                    rule_condition TEXT NOT NULL,
+                    rule_action TEXT NOT NULL,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                -- Bảng Ghi vết Sửa đổi của Người dùng để Tự học (AI Correction Logs)
+                CREATE TABLE IF NOT EXISTS ai_correction_logs (
+                    id SERIAL PRIMARY KEY,
+                    session_id VARCHAR(100),
+                    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                    user_prompt TEXT,
+                    ai_generated_sku VARCHAR(100),
+                    ai_generated_name VARCHAR(255),
+                    user_corrected_sku VARCHAR(100),
+                    user_corrected_name VARCHAR(255),
+                    correction_type VARCHAR(100),
+                    feedback_rating VARCHAR(10),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_ai_conversations_user ON ai_conversations(user_id);
                 CREATE INDEX IF NOT EXISTS idx_ai_messages_conv ON ai_messages(conversation_id);
+                CREATE INDEX IF NOT EXISTS idx_ai_rules_active ON ai_business_rules(is_active);
+                CREATE INDEX IF NOT EXISTS idx_ai_corr_session ON ai_correction_logs(session_id);
+
+                -- Nạp các quy tắc nghiệp vụ mặc định ban đầu nếu chưa có
+                INSERT INTO ai_business_rules (rule_code, rule_name, rule_condition, rule_action)
+                VALUES 
+                    ('RULE_101', 'Zero-tolerance mismatch 15kW vs 45kW', 'Yêu cầu 15kW nhưng kho chỉ có 45kW', 'Báo không có hàng 15kW, không tự ý gán 45kW'),
+                    ('RULE_102', 'Phân tách Pack Pin và Cell Pin 32140', 'Yêu cầu pin lưu trữ / pin solar', 'Tuyệt đối cấm gán sang linh kiện Cell Pin 32140 rời'),
+                    ('RULE_103', 'Không bịa datasheet Jinko khi không có trong kho', 'Hỏi datasheet Jinko nhưng kho chỉ có Canadian/Longi', 'Báo không có datasheet Jinko, không ném file bừa'),
+                    ('RULE_104', 'Ánh xạ chuẩn pin APEC 15kW', 'Người dùng gọi pin APEC / Apess 15 kW', 'Ánh xạ trực tiếp sang Pin lưu trữ Apess 15.3kwh (SP0259)'),
+                    ('RULE_105', 'Lọc từ đệm miền Nam', 'Từ ngữ nghe, nhen, nhé, nè, dùm, hộ, á', 'Loại bỏ hoàn toàn, không bóc tách thành tên khách hay sản phẩm')
+                ON CONFLICT (rule_code) DO NOTHING;
             `);
-            console.log("✅ Khởi tạo bảng ai_conversations và ai_messages thành công!");
+            console.log("✅ Khởi tạo bảng ai_conversations, ai_messages, ai_business_rules, ai_correction_logs thành công!");
         } catch(aiErr) {
             console.error("⚠️ Lỗi khởi tạo bảng AI Assistant:", aiErr.message);
         }

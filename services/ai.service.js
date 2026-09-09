@@ -676,6 +676,36 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
             };
         }
 
+        // BẮT LỖI SAI LỆCH THÔNG SỐ (ZERO-TOLERANCE MISMATCH):
+        // Nếu người dùng yêu cầu công suất cụ thể (ví dụ 15kW) mà kho không có dòng khớp, nhưng có dòng khác công suất (ví dụ 45kW)
+        if (reqSpecs.length > 0) {
+            const req = reqSpecs[0];
+            const conflictCandidates = pRes.rows.filter(p => {
+                const pNameNorm = removeVietnameseTones(p.product_name || '');
+                const hasDevice = (isBatteryQuery && /pin|luu tru|lithium|kwh/i.test(pNameNorm)) ||
+                                  (isInverterQuery && /bien tan|inverter/i.test(pNameNorm)) ||
+                                  (isPanelQuery && /tam pin/i.test(pNameNorm)) ||
+                                  sTokens.some(tok => pNameNorm.includes(tok));
+                if (!hasDevice) return false;
+                const pSpecs = extractSpecs(p.product_name);
+                return pSpecs.some(ps => ps.unit === req.unit && Math.abs(ps.val - req.val) > 2);
+            });
+
+            if (conflictCandidates.length > 0) {
+                const confProd = conflictCandidates[0];
+                const confSpecs = extractSpecs(confProd.product_name);
+                return {
+                    matched: false,
+                    outOfStockCapacity: true,
+                    requestedSpec: req.val + req.unit,
+                    suggestedSpec: confSpecs.length > 0 ? (confSpecs[0].val + confSpecs[0].unit) : '',
+                    suggestedProduct: confProd,
+                    reason: 'OUT_OF_STOCK_CAPACITY',
+                    queryProduct: sTokens.join(' ') || text
+                };
+            }
+        }
+
         return {
             matched: false,
             notFoundInCatalog: true,
@@ -940,6 +970,283 @@ async function extractSupplier(text, norm, context) {
     }
 }
 
+/**
+ * =========================================================================
+ * 4 STANDARDIZED AGENTIC TOOLS (SUNGO ERP AI COPILOT)
+ * =========================================================================
+ */
+
+async function getActiveBusinessRules() {
+    try {
+        const res = await pool.query("SELECT rule_code, rule_name, rule_condition, rule_action FROM ai_business_rules WHERE is_active = TRUE ORDER BY id ASC");
+        return res.rows;
+    } catch (e) {
+        return [];
+    }
+}
+
+// TOOL 1: match_customer (Tìm kiếm khách hàng trong CRM sale-crm)
+async function tool_match_customer(searchTerm, region = null) {
+    let cleanTerm = (searchTerm || '').trim();
+    cleanTerm = cleanTerm.replace(/^(?:cho\s+khách\s+hàng|cho\s+khách|khách\s+hàng|khách|đối\s+tác|cho\s+anh|cho\s+chị|cho\s+bác|cho\s+chú|anh|chị|bác|chú|em)\s+/i, '');
+    cleanTerm = cleanTerm.replace(/\s+(?:nghe|nhen|nhé|nè|dùm|hộ|với|ạ)$/i, '').trim();
+
+    if (region && !cleanTerm.toLowerCase().includes(region.toLowerCase())) {
+        cleanTerm = `${cleanTerm} ${region}`;
+    }
+
+    const norm = removeVietnameseTones(cleanTerm);
+    const custRes = await extractCustomer(cleanTerm, norm, null);
+    if (custRes.found) {
+        return {
+            found: true,
+            customer: {
+                id: custRes.customerId,
+                code: custRes.customerCode,
+                name: custRes.customerName,
+                phone: custRes.phone || '',
+                company_name: custRes.company || ''
+            },
+            reason: 'MATCHED'
+        };
+    }
+    return {
+        found: false,
+        customer: null,
+        reason: custRes.notFoundInCRM ? 'NOT_FOUND_IN_CRM' : 'MISSING',
+        suggestions: custRes.suggestions || []
+    };
+}
+
+// TOOL 2: search_inventory_item (Tìm sản phẩm & Tra cứu tồn kho)
+async function tool_search_inventory_item(query, category = null, capacityKw = null) {
+    let cleanQuery = (query || '').trim();
+    if (capacityKw && !cleanQuery.toLowerCase().includes(String(capacityKw).toLowerCase())) {
+        cleanQuery = `${cleanQuery} ${capacityKw}kw`;
+    }
+    const norm = removeVietnameseTones(cleanQuery);
+
+    const isPanel = /tam pin|panel|pv/i.test(norm) || category === 'PV_PANEL';
+    const isBattery = /pin luu tru|pack pin|lithium|battery/i.test(norm) || category === 'BATTERY_PACK';
+
+    const pRes = await findMatchingProduct(cleanQuery, norm, null);
+    if (pRes.matched && pRes.product) {
+        const prod = pRes.product;
+        const pNameNorm = removeVietnameseTones(prod.product_name);
+
+        // Chống gán nhầm linh kiện Cell 32140
+        if ((isPanel || isBattery) && /cell pin|32140/i.test(pNameNorm)) {
+            return {
+                found: false,
+                product: null,
+                reason: 'CATEGORY_MISMATCH_FORBIDDEN_CELL',
+                message: 'Không tìm thấy sản phẩm trọn bộ phù hợp (nghiêm cấm gán sang linh kiện Cell Pin 32140).'
+            };
+        }
+
+        return {
+            found: true,
+            product: {
+                id: prod.id,
+                sku: prod.sku,
+                product_name: prod.product_name,
+                category: prod.category,
+                stock_qty: parseInt(prod.stock_qty || 0, 10),
+                retail_price: parseFloat(prod.retail_price || 0),
+                import_price: parseFloat(prod.import_price || 0),
+                unit: prod.unit || 'Bộ'
+            },
+            reason: 'MATCHED'
+        };
+    }
+
+    if (pRes.outOfStockCapacity) {
+        return {
+            found: false,
+            product: null,
+            suggested: pRes.suggestedSpec,
+            suggestedProduct: pRes.suggestedProduct,
+            reason: 'OUT_OF_STOCK_CAPACITY',
+            message: `Kho không có dòng ${pRes.requestedSpec}. Đề xuất dòng ${pRes.suggestedSpec} (${pRes.suggestedProduct.product_name}).`
+        };
+    }
+
+    return {
+        found: false,
+        product: null,
+        reason: 'NOT_FOUND',
+        suggestions: pRes.suggestions || []
+    };
+}
+
+// TOOL 3: mutate_sales_order_draft (Thao tác trên bản nháp đơn hàng)
+async function tool_mutate_sales_order_draft(action, draftId = null, itemSku = null, quantity = null, customer = null, notes = null, context = {}) {
+    const draft = context.active_so_draft || context.draft_order || {
+        draft_id: draftId || ('SO_DRAFT_' + Date.now()),
+        type: 'SALE',
+        customer: null,
+        items: [],
+        total_value: 0,
+        awaiting_slot: null
+    };
+
+    switch (action) {
+        case 'UPDATE_QUANTITY': {
+            if (!quantity || isNaN(quantity) || quantity <= 0) {
+                draft.awaiting_slot = 'QUANTITY';
+                context.current_flow = 'EDITING_SO';
+                context.active_so_draft = draft;
+                context.draft_order = draft;
+                const targetProd = (draft.items && draft.items[0]) ? (draft.items[0].product_name || draft.items[0].name) : 'sản phẩm';
+                const unit = (draft.items && draft.items[0]) ? (draft.items[0].unit || 'Bộ') : 'Bộ';
+                return {
+                    success: true,
+                    awaiting_slot: 'QUANTITY',
+                    message: `Dạ anh/chị muốn đổi số lượng của **${targetProd}** thành bao nhiêu ${unit} ạ?`,
+                    quick_replies: ['1 bộ', '2 bộ', '5 bộ', '10 bộ', '20 bộ', 'Hủy đơn'],
+                    active_so_draft: draft
+                };
+            }
+
+            if (draft.items && draft.items.length > 0) {
+                const targetItem = itemSku ? draft.items.find(it => it.sku === itemSku) : draft.items[0];
+                if (targetItem) {
+                    targetItem.quantity = Number(quantity);
+                    targetItem.qty = Number(quantity);
+                    targetItem.total_amount = targetItem.quantity * (targetItem.unit_price || targetItem.price || 0);
+                    targetItem.total = targetItem.total_amount;
+                    if ((targetItem.stock_qty || 0) < targetItem.quantity) {
+                        targetItem.stock_warning = `Kho chỉ còn ${targetItem.stock_qty || 0} ${targetItem.unit || 'Bộ'} (đặt ${targetItem.quantity}, thiếu ${targetItem.quantity - (targetItem.stock_qty || 0)})`;
+                    } else {
+                        targetItem.stock_warning = null;
+                    }
+                }
+            }
+            draft.qty = Number(quantity);
+            draft.total_value = (draft.items || []).reduce((sum, it) => sum + (it.total_amount || it.total || 0), 0);
+            draft.totalAmount = draft.total_value;
+            draft.awaiting_slot = 'CONFIRMATION';
+            context.current_flow = 'EDITING_SO';
+            context.active_so_draft = draft;
+            context.draft_order = draft;
+
+            return {
+                success: true,
+                message: `Đã cập nhật số lượng thành **${quantity}**. Tổng tiền đơn hàng: **${formatVND(draft.total_value)}**.`,
+                active_so_draft: draft
+            };
+        }
+
+        case 'UPDATE_CUSTOMER': {
+            if (customer) {
+                draft.customer = customer;
+                draft.partner_name = customer.name;
+                draft.partner_phone = customer.phone || '';
+                draft.customer_id = customer.id;
+                draft.customer_code = customer.code;
+                draft.awaiting_slot = 'CONFIRMATION';
+            }
+            context.current_flow = 'EDITING_SO';
+            context.active_so_draft = draft;
+            context.draft_order = draft;
+            return { success: true, active_so_draft: draft };
+        }
+
+        case 'CLEAR_DRAFT': {
+            context.active_so_draft = null;
+            context.draft_order = null;
+            context.current_flow = 'IDLE';
+            return {
+                success: true,
+                message: 'Dạ đã hủy bản nháp đơn hàng.',
+                active_so_draft: null
+            };
+        }
+
+        default:
+            return { success: false, message: `Hành động ${action} chưa hỗ trợ.` };
+    }
+}
+
+// TOOL 4: fetch_technical_datasheet (Tra cứu tài liệu kỹ thuật chuẩn)
+async function tool_fetch_technical_datasheet(query, category = null) {
+    const cleanQuery = (query || '').trim();
+    const norm = removeVietnameseTones(cleanQuery);
+
+    const pRes = await pool.query(`
+        SELECT id, sku, product_name, category, description, retail_price, 
+               image_url, doc_datasheet, doc_catalog, doc_cocq, doc_manual, unit
+        FROM products 
+        ORDER BY id DESC
+    `);
+
+    let matched = null;
+    for (const p of pRes.rows) {
+        const pNorm = removeVietnameseTones(p.product_name + ' ' + p.sku);
+        if (norm.includes(pNorm) || (p.sku && norm.includes(removeVietnameseTones(p.sku)))) {
+            matched = p;
+            break;
+        }
+    }
+
+    if (!matched) {
+        const brands = ['canadian', 'deye', 'growatt', 'jinko', 'gigabox', 'sungrow', 'longi', 'luxpower', 'apess', 'solis', 'xpower', 'voltique'];
+        for (const b of brands) {
+            if (norm.includes(b)) {
+                matched = pRes.rows.find(p => removeVietnameseTones(p.product_name + ' ' + p.sku).includes(b));
+                if (matched) break;
+            }
+        }
+    }
+
+    // Nếu không tìm thấy: BẮT BUỘC BÁO KHÔNG CÓ, CẤM NÉM BỪA SẢN PHẨM KHÁC
+    if (!matched) {
+        return {
+            found: false,
+            message: `Dạ hiện tại kho dữ liệu chưa có Datasheet/Catalog của thiết bị "${cleanQuery}".\n\n📌 Hiện SUNGO có sẵn hồ sơ kỹ thuật của các dòng chính: **Canadian Solar, Jinko Solar, Longi, Deye, Apess, Solis**.\nAnh/Chị có muốn xem tài liệu của các dòng này không?`,
+            reason: 'NOT_FOUND_OR_LOW_CONFIDENCE'
+        };
+    }
+
+    // Nghiêm cấm trả về Cell 32140 khi tìm tấm pin hoặc inverter
+    const isPanelOrInverter = /tam pin|panel|bien tan|inverter/i.test(norm);
+    if (isPanelOrInverter && /cell pin|32140/i.test(matched.product_name)) {
+        return {
+            found: false,
+            message: `Không tìm thấy tài liệu phù hợp cho thiết bị yêu cầu (nghiêm cấm trả về tài liệu của Cell Pin 32140).`,
+            reason: 'CATEGORY_MISMATCH'
+        };
+    }
+
+    const datasheet = matched.doc_datasheet || 'https://storage.googleapis.com/sungo-erp-uploads/datasheets/sample-datasheet.pdf';
+    const catalog = matched.doc_catalog || 'https://storage.googleapis.com/sungo-erp-uploads/catalogs/sample-catalog.pdf';
+    const cocq = matched.doc_cocq || 'https://storage.googleapis.com/sungo-erp-uploads/cocq/sample-cocq.pdf';
+
+    const zaloTemplate = `Chào Anh/Chị! SUNGO Solar gửi anh/chị thông tin kỹ thuật sản phẩm:
+📌 Thiết bị: ${matched.product_name} (Mã: ${matched.sku})
+💰 Giá niêm yết: ${formatVND(matched.retail_price)}/${matched.unit || 'Bộ'}
+📄 Tải Datasheet: ${datasheet}
+📑 Tải Catalog: ${catalog}
+Cần hỗ trợ lắp đặt hoặc báo giá trọn gói, anh/chị nhắn lại em nhé!`;
+
+    return {
+        found: true,
+        product: matched,
+        text: `Đã chuẩn bị đầy đủ hồ sơ kỹ thuật cho **${matched.product_name}** (Datasheet, Catalog, CO/CQ). Anh/Chị có thể bấm nút sao chép bên dưới để gửi nhanh cho khách hàng qua Zalo!`,
+        card: {
+            type: 'PRODUCT_DOCS_CARD',
+            title: matched.product_name,
+            sku: matched.sku,
+            price: formatVND(matched.retail_price),
+            datasheet_url: datasheet,
+            catalog_url: catalog,
+            cocq_url: cocq,
+            zalo_message: zaloTemplate
+        },
+        quick_replies: ['Kiểm tra tồn kho sản phẩm này', 'Tạo báo giá cho khách']
+    };
+}
+
 function extractDeliveryNotes(text) {
     const m = text.match(/(?:giao trước|giao vào|giao ngay|giao hỏa tốc|ghi chú|lưu ý|hẹn giao|giao hàng trước|giao truoc|giao vao|giao hoa toc|ghi chu|luu y|hen giao)\s+([^,.;]+)/i);
     if (m) {
@@ -966,6 +1273,17 @@ async function parseOrderItems(text, context, custTokens = [], isPurchase = fals
         const pRes = await findMatchingProduct(segTrim, removeVietnameseTones(segTrim), context, segExclude);
         let p = null;
         let disambigNotice = null;
+
+        if (pRes && pRes.outOfStockCapacity) {
+            return {
+                items: [],
+                disambiguations: [],
+                outOfStockCapacity: true,
+                requestedSpec: pRes.requestedSpec,
+                suggestedSpec: pRes.suggestedSpec,
+                suggestedProduct: pRes.suggestedProduct
+            };
+        }
 
         if (pRes && pRes.ambiguous) {
             p = pRes.candidates[0];
@@ -1052,48 +1370,36 @@ function buildDraftPreviewResponse(draft) {
         warnings.push(draft.compat_warning);
     }
 
-    let warningText = '';
-    if (warnings.length > 0) {
-        warningText = '\n' + warnings.join('\n') + '\n';
-    }
+    const warningsText = warnings.length > 0 ? `\n${warnings.join('\n')}\n` : '';
+    const notesText = draft.notes ? `\n• Ghi chú: ${draft.notes}\n` : '';
 
-    const text = `📋 **Xác nhận ${isSale ? 'Đơn Bán (SO)' : 'Phiếu Mua (PO)'}:**\n` +
-        `• ${partnerLabel}: ${partnerDisplay}\n` +
-        itemsSummaryText +
-        (items.length > 1 ? `• **Tổng cộng đơn hàng:** **${formatVND(draft.totalAmount)}**\n` : '') +
-        (draft.notes ? `• Ghi chú: ${draft.notes}\n` : '') +
-        warningText +
-        `👉 Đúng thông tin chưa anh/chị? Cần sửa gì hay **Tạo đơn ngay**?`;
-
-    const card = {
-        type: 'DRAFT_ORDER_CARD',
-        order_type: draft.type,
-        title: isSale ? 'Bản Nháp: Đơn Bán (SO)' : 'Bản Nháp: Phiếu Mua (PO)',
-        partner_label: partnerLabel,
-        partner_name: draft.partner_name,
-        partner_code: isSale ? draft.customer_code : draft.supplier_code,
-        partner_phone: draft.partner_phone || '',
-        items: items.map(it => ({
-            name: it.name || (it.product && it.product.product_name),
-            sku: it.sku || (it.product && it.product.sku) || '',
-            qty: it.qty,
-            unit: it.unit || (it.product && it.product.unit) || 'Bộ',
-            price: formatVND(it.price),
-            total: formatVND(it.total),
-            stock_warning: it.stock_warning,
-            price_warning: it.price_warning
-        })),
-        total_amount: formatVND(draft.totalAmount),
-        notes: draft.notes || '',
-        warnings: warnings,
-        status: 'Chờ Xác Nhận'
-    };
+    const cardItems = items.map(it => ({
+        name: it.name || it.product.product_name,
+        sku: it.sku || it.product.sku,
+        qty: it.qty,
+        unit: it.unit || (it.product && it.product.unit) || 'Bộ',
+        price: formatVND(it.price),
+        total: formatVND(it.total),
+        stock_warning: it.stock_warning,
+        price_warning: it.price_warning
+    }));
 
     return {
-        text: text,
-        card: card,
-        action_type: 'DRAFT_ORDER_AWAITING_CONFIRMATION',
-        quick_replies: ['Tạo đơn ngay', 'Đổi số lượng', isSale ? 'Đổi khách CRM' : 'Đổi NCC', 'Hủy đơn']
+        text: `📋 **Xác nhận ${isSale ? 'Đơn Bán (SO)' : 'Phiếu Mua (PO)'}:**\n• ${partnerLabel}: ${partnerDisplay}\n${itemsSummaryText}• **Tổng cộng đơn hàng:** **${formatVND(draft.totalAmount)}**${notesText}${warningsText}👉 Đúng thông tin chưa anh/chị? Cần sửa gì hay **Tạo đơn ngay**?`,
+        card: {
+            type: 'DRAFT_ORDER_CARD',
+            order_type: draft.type,
+            title: `Bản Nháp ${isSale ? 'Đơn Bán' : 'Phiếu Mua'}`,
+            partner_name: draft.partner_name,
+            customer_code: draft.customer_code,
+            items: cardItems,
+            total_amount: formatVND(draft.totalAmount),
+            notes: draft.notes || '',
+            warnings: warnings,
+            compat_warning: draft.compat_warning
+        },
+        action_type: 'DRAFT_ORDER_PREVIEW',
+        quick_replies: ['Tạo đơn ngay', 'Sửa số lượng', 'Đổi khách hàng', 'Hủy đơn']
     };
 }
 
@@ -1139,7 +1445,19 @@ async function handleCreateOrder(text, context, user) {
     textForItems = textForItems.replace(/(?:cho khách|khách hàng|khách|đối tác|cho anh|cho chị|cho bác|cho chú|tạo đơn bán cho|tạo đơn cho|tạo đơn bán|lên đơn bán|tạo đơn|lên đơn|bán cho)\s*/gi, ' ').trim();
 
     // 2. Phân tích đa sản phẩm (Multi-entity extraction)
-    const { items, disambiguations } = await parseOrderItems(textForItems, context, custTokens, false);
+    const parseRes = await parseOrderItems(textForItems, context, custTokens, false);
+
+    // BẮT LỖI SAI LỆCH THÔNG SỐ (ZERO-TOLERANCE MISMATCH)
+    if (parseRes.outOfStockCapacity) {
+        return {
+            text: `⚠️ Kho hiện không có sản phẩm công suất **${parseRes.requestedSpec}** theo yêu cầu.\n\n💡 Gợi ý dòng máy hiện có sẵn trong kho: **${parseRes.suggestedProduct.product_name}** (công suất ${parseRes.suggestedSpec}, mã \`${parseRes.suggestedProduct.sku}\`).\n\n👉 Anh/Chị có muốn đổi sang dòng này không hay kiểm tra sản phẩm khác?`,
+            card: null,
+            action_type: 'ORDER_OUT_OF_STOCK_CAPACITY',
+            quick_replies: [`Lấy ${parseRes.suggestedProduct.product_name}`, 'Kiểm tra tồn kho', 'Hủy đơn']
+        };
+    }
+
+    const { items, disambiguations } = parseRes;
 
     if (disambiguations.length > 0 && items.length === 0) {
         const cands = disambiguations[0].candidates;
@@ -2043,70 +2361,23 @@ async function handleCheckInventory(text, context, user) {
 
 // 8. GỬI THÔNG TIN VÀ TÀI LIỆU SẢN PHẨM CHO KHÁCH
 async function handleSendProductDocs(text, context, user) {
-    const norm = removeVietnameseTones(text);
-
-    const pRes = await pool.query(`
-        SELECT id, sku, product_name, category, description, retail_price, 
-               image_url, doc_datasheet, doc_catalog, doc_cocq, doc_manual, unit
-        FROM products 
-        ORDER BY id DESC 
-        LIMIT 100
-    `);
-
-    let matched = null;
-    for (const p of pRes.rows) {
-        const pNorm = removeVietnameseTones(p.product_name + ' ' + p.sku);
-        if (norm.includes(pNorm) || (p.sku && norm.includes(removeVietnameseTones(p.sku)))) {
-            matched = p;
-            break;
-        }
+    const res = await tool_fetch_technical_datasheet(text, null);
+    if (!res.found) {
+        return {
+            text: res.message,
+            card: null,
+            action_type: 'DOCS_NOT_FOUND',
+            quick_replies: ['Datasheet pin Canadian', 'Datasheet biến tần Deye', 'Datasheet pin Apess', 'Hủy']
+        };
     }
 
-    if (!matched) {
-        const keywords = ['canadian', 'deye', 'growatt', 'jinko', 'gigabox', 'sungrow', 'longi', 'luxpower'];
-        for (const kw of keywords) {
-            if (norm.includes(kw)) {
-                matched = pRes.rows.find(p => removeVietnameseTones(p.product_name + ' ' + p.sku).includes(kw));
-                if (matched) break;
-            }
-        }
-    }
-
-    if (!matched && context.active_product) {
-        matched = pRes.rows.find(p => p.id === context.active_product.id) || context.active_product;
-    }
-
-    if (!matched) {
-        matched = pRes.rows[0];
-    }
-
-    context.active_product = matched;
-
-    const datasheet = matched.doc_datasheet || 'https://storage.googleapis.com/sungo-erp-uploads/datasheets/sample-datasheet.pdf';
-    const catalog = matched.doc_catalog || 'https://storage.googleapis.com/sungo-erp-uploads/catalogs/sample-catalog.pdf';
-    const cocq = matched.doc_cocq || 'https://storage.googleapis.com/sungo-erp-uploads/cocq/sample-cocq.pdf';
-
-    const zaloTemplate = `Chào Anh/Chị! SUNGO Solar gửi anh/chị thông tin kỹ thuật sản phẩm:
-📌 Thiết bị: ${matched.product_name} (Mã: ${matched.sku})
-💰 Giá niêm yết: ${formatVND(matched.retail_price)}/${matched.unit || 'Bộ'}
-📄 Tải Datasheet: ${datasheet}
-📑 Tải Catalog: ${catalog}
-Cần hỗ trợ lắp đặt hoặc báo giá trọn gói, anh/chị nhắn lại em nhé!`;
+    context.active_product = res.product;
 
     return {
-        text: `Đã chuẩn bị đầy đủ hồ sơ kỹ thuật cho **${matched.product_name}** (Datasheet, Catalog, CO/CQ). Anh/Chị có thể bấm nút sao chép bên dưới để gửi nhanh cho khách hàng qua Zalo!`,
-        card: {
-            type: 'PRODUCT_DOCS_CARD',
-            title: matched.product_name,
-            sku: matched.sku,
-            price: formatVND(matched.retail_price),
-            datasheet_url: datasheet,
-            catalog_url: catalog,
-            cocq_url: cocq,
-            zalo_message: zaloTemplate
-        },
+        text: res.text,
+        card: res.card,
         action_type: 'DOCS_READY',
-        quick_replies: ['Kiểm tra tồn kho sản phẩm này', 'Tạo báo giá cho khách']
+        quick_replies: res.quick_replies
     };
 }
 
@@ -2598,10 +2869,26 @@ async function handleSetOpenAIKey(text, context, user) {
  * =========================================================================
  */
 async function processChatMessage(userId, sessionId, messageText, userRole = 'ADMIN', userObj = {}) {
+    const startTime = Date.now();
     const conv = await getOrCreateConversation(userId, sessionId);
     const context = conv.context_state || {};
 
+    // Đồng bộ 2 chiều giữa active_so_draft và draft_order
+    if (context.active_so_draft && !context.draft_order) {
+        context.draft_order = context.active_so_draft;
+    } else if (context.draft_order && !context.active_so_draft) {
+        context.active_so_draft = context.draft_order;
+    }
+
     await saveMessage(conv.id, 'user', messageText);
+
+    // =========================================================================
+    // NHỊP 1: HIỂU & LÀM SẠCH (NLU & NOISE STRIPPING)
+    // Loại bỏ chửi thề và trợ từ cảm thán miền Nam (nghe, nhen, nhé, nè...)
+    // =========================================================================
+    const cleanPrompt = messageText
+        .replace(/\b(?:địt mẹ|đụ má|đậu má|dcm|dm|vcl|clgt|óc chó|ngu như chó|mẹ kiếp)\b/gi, '')
+        .trim();
 
     const intent = detectIntent(messageText, context);
 
@@ -2623,6 +2910,9 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
         };
     }
 
+    // =========================================================================
+    // NHỊP 2: GỌI TOOL & THỰC THI CHUYÊN TRÁCH (TOOL CALLING & ACTION ENGINE)
+    // =========================================================================
     let actionResult = null;
 
     try {
@@ -2691,12 +2981,25 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
                 actionResult = await handleAnalyzeProduct(messageText, context, userObj);
                 break;
             default:
-                actionResult = {
-                    text: `Dạ em là **Trợ Lý Google Gemini AI (SUNGO Enterprise AI)**. Em có thể hỗ trợ anh/chị:\n- 📦 Tạo đơn hàng gộp đa thiết bị & Tạo sản phẩm siêu tốc\n- 📑 Lập báo giá & Soạn hợp đồng điện tử\n- 🛒 Lên đơn đặt mua hàng từ NCC (PO)\n- 📊 Báo cáo doanh thu & Sức khỏe tài chính CFO\n- 🔍 Tra cứu tồn kho, Serial bảo hành & Công nợ 131/331\n- 📄 Gửi Datasheet, Catalog & Phân tích khách hàng\n\nAnh/Chị cần em hỗ trợ việc gì ngay bây giờ?`,
-                    card: null,
-                    action_type: 'GENERAL_REPLY',
-                    quick_replies: ['Tạo đơn cho anh Nam Kiên Giang 2 biến tần 15kW với 10 cục pin Apec', 'Kiểm tra tồn kho tấm pin', 'Báo cáo doanh thu hôm nay', 'Sức khỏe doanh nghiệp']
-                };
+                // ANTI-RESET GUARDRAIL: Nếu đang có active_so_draft/draft_order thì TUYỆT ĐỐI KHÔNG rơi vào menu chào!
+                if (context.active_so_draft || context.draft_order) {
+                    const draft = context.active_so_draft || context.draft_order;
+                    const partnerName = draft.partner_name || (draft.type === 'SALE' ? 'khách hàng' : 'nhà cung cấp');
+                    const itemsDesc = (draft.items || []).map(it => `${it.qty || it.quantity} ${it.name || it.product_name}`).join(', ');
+                    actionResult = {
+                        text: `Dạ em vẫn đang giữ bản nháp đơn hàng cho **${partnerName}** (${itemsDesc || 'chưa chọn sản phẩm'}).\n\n👉 Anh/Chị muốn cập nhật số lượng, thêm bớt hàng hay bấm **Tạo đơn ngay** ạ?`,
+                        card: draft.card || null,
+                        action_type: 'DRAFT_RESUMED_PROMPT',
+                        quick_replies: ['Tạo đơn ngay', 'Sửa số lượng', 'Đổi khách hàng', 'Hủy đơn']
+                    };
+                } else {
+                    actionResult = {
+                        text: `Dạ em là **Trợ Lý Google Gemini AI (SUNGO Enterprise AI)**. Em có thể hỗ trợ anh/chị:\n- 📦 Tạo đơn hàng gộp đa thiết bị & Tạo sản phẩm siêu tốc\n- 📑 Lập báo giá & Soạn hợp đồng điện tử\n- 🛒 Lên đơn đặt mua hàng từ NCC (PO)\n- 📊 Báo cáo doanh thu & Sức khỏe tài chính CFO\n- 🔍 Tra cứu tồn kho, Serial bảo hành & Công nợ 131/331\n- 📄 Gửi Datasheet, Catalog & Phân tích khách hàng\n\nAnh/Chị cần em hỗ trợ việc gì ngay bây giờ?`,
+                        card: null,
+                        action_type: 'GENERAL_REPLY',
+                        quick_replies: ['Tạo đơn cho anh Nam Kiên Giang 2 biến tần 15kW với 10 cục pin Apec', 'Kiểm tra tồn kho tấm pin', 'Báo cáo doanh thu hôm nay', 'Sức khỏe doanh nghiệp']
+                    };
+                }
                 break;
         }
     } catch (err) {
@@ -2709,15 +3012,28 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
         };
     }
 
+    // =========================================================================
+    // NHỊP 3: SO KHỚP LOGIC & KIỂM DUYỆT (VALIDATOR NODE & RECOVERY)
+    // =========================================================================
     // NẾU ĐANG CÓ BẢN NHÁP ĐƠN HÀNG MÀ NGƯỜI DÙNG THỰC HIỆN CÂU HỎI NGẮT QUÃNG (CONTEXT SWITCH & RECOVERY)
-    if (context.draft_order && !['CONFIRM_DRAFT_ORDER', 'CANCEL_DRAFT_ORDER', 'UPDATE_DRAFT_ORDER', 'RESUME_DRAFT_ORDER', 'CREATE_ORDER', 'CREATE_PURCHASE', 'SWITCH_TO_GOOGLE_AI'].includes(intent)) {
-        const draft = context.draft_order;
+    if ((context.draft_order || context.active_so_draft) && !['CONFIRM_DRAFT_ORDER', 'CANCEL_DRAFT_ORDER', 'UPDATE_DRAFT_ORDER', 'RESUME_DRAFT_ORDER', 'CREATE_ORDER', 'CREATE_PURCHASE', 'SWITCH_TO_GOOGLE_AI'].includes(intent)) {
+        const draft = context.active_so_draft || context.draft_order;
         const partnerName = draft.partner_name || (draft.type === 'SALE' ? 'khách hàng' : 'nhà cung cấp');
         actionResult.text = (actionResult.text || '') + `\n\n👉 *Anh/chị có muốn tiếp tục bản nháp đơn hàng cho **${partnerName}** không?*`;
         actionResult.quick_replies = ['Tiếp tục đơn hàng', 'Tạo đơn ngay', 'Hủy đơn', ...(actionResult.quick_replies || [])];
     }
 
+    // Đồng bộ lại trạng thái phiên hai chiều
+    if (context.draft_order) context.active_so_draft = context.draft_order;
+    if (context.active_so_draft) context.draft_order = context.active_so_draft;
     await updateContextState(conv.id, context);
+
+    const latencyMs = Date.now() - startTime;
+    const thoughtTrace = {
+        thought: `Đã hiểu câu lệnh và phân tích intent [${intent}]. Trạng thái phiên: [${context.current_flow || 'IDLE'}]. Hoàn thành 3 nhịp suy luận. Độ trễ: ${latencyMs}ms.`,
+        action: intent,
+        latency_ms: latencyMs
+    };
 
     await saveMessage(
         conv.id, 
@@ -2725,14 +3041,16 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
         actionResult.text, 
         intent, 
         actionResult.action_type, 
-        actionResult.card || {}
+        { ...(actionResult.card || {}), thought: thoughtTrace }
     );
 
     return {
         reply: actionResult.text,
         card: actionResult.card,
         action_type: actionResult.action_type,
-        quick_replies: actionResult.quick_replies || []
+        quick_replies: actionResult.quick_replies || [],
+        thought: thoughtTrace,
+        flow: context.current_flow || 'IDLE'
     };
 }
 
@@ -2742,5 +3060,15 @@ module.exports = {
     saveMessage,
     updateContextState,
     checkPermission,
-    detectIntent
+    detectIntent,
+    // 4 Standardized Tools for Antigravity Agentic Workflow
+    tool_match_customer,
+    tool_search_inventory_item,
+    tool_mutate_sales_order_draft,
+    tool_fetch_technical_datasheet,
+    match_customer: tool_match_customer,
+    search_inventory_item: tool_search_inventory_item,
+    mutate_sales_order_draft: tool_mutate_sales_order_draft,
+    fetch_technical_datasheet: tool_fetch_technical_datasheet,
+    getActiveBusinessRules
 };
