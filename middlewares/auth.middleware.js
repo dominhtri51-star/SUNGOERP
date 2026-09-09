@@ -14,7 +14,8 @@ const PUBLIC_PREFIXES = [
     "/api/orders/public-quote",
     "/api/quotations/public",
     "/api/backup/run",
-    "/api/upload"
+    "/api/upload",
+    "/api/ai"
 ];
 
 /**
