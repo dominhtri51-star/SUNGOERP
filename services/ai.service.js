@@ -292,7 +292,14 @@ function detectIntent(text, context) {
     // 1. TẠO ĐƠN HÀNG BÁN NHANH (SO - SALES ORDER)
     // Ưu tiên cao hơn để bắt các câu phủ định: "đơn bán hàng không phải mua hàng", "tạo đơn bán"
     // =========================================================================
+    // Nhận diện câu lệnh bắt đầu trực tiếp bằng số lượng + thiết bị (ví dụ: "5 cái cb dc 2p sunpeace", "1 biến tần cergy 6kw")
+    const isDirectItemOrder = (!norm.includes('nha cung cap') && !norm.includes('phieu mua') && !norm.includes('don mua') && !norm.includes('nhap hang') && !norm.includes('po') && !norm.includes('datasheet') && !norm.includes('tai lieu') && !norm.includes('ton kho') && !norm.includes('bao hanh')) && (
+        /^(?:ban\s+|lay\s+|mua\s+|cho\s+)?(\d+)\s*(?:cai|bo|tam|chiec|cuon|thanh|m|met|hop|thung|con)\s+[a-z0-9\s]+/i.test(norm) ||
+        /^(?:ban\s+|lay\s+|mua\s+|cho\s+)?(\d+)\s*(?:bien tan|inverter|pin|tam pin|cb|mcb|mccb|ats|day dc|day ac|rail|kep|cergy|sunpeace|deye|canadian|jinko|longi|apess|lumentree)\b/i.test(norm)
+    );
+
     if (
+        isDirectItemOrder ||
         norm.includes('don ban hang khong phai mua hang') || norm.includes('ban chu khong phai mua') || 
         norm.includes('khong phai mua hang') || norm.includes('don hang ban') || norm.includes('don ban hang') || 
         norm.includes('ban cho') || norm.includes('ban hang') || norm.includes('khach mua') || 
@@ -597,23 +604,29 @@ function extractSpecs(str, excludeNums = []) {
 
 function extractQuantity(text) {
     // 1. Từ khóa rõ ràng: số lượng X, sl X, lấy X, bán X, mua X, đặt X
-    const explicitWithUnit = text.match(/(?:số lượng|sl|lấy|bán|mua|đặt)\s*[:=]?\s*(\d+)\s*(?:tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp)(?![a-zà-ỹ0-9])/i);
+    const explicitWithUnit = text.match(/(?:số lượng|sl|lấy|bán|mua|đặt)\s*[:=]?\s*(\d+)\s*(?:m\b|met\b|mét\b|tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp|cặp|thanh|sợi)(?![a-zà-ỹ0-9])/i);
     if (explicitWithUnit) return parseInt(explicitWithUnit[1], 10);
 
     const explicit = text.match(/(?:số lượng|sl)\s*[:=]?\s*(\d+)/i);
     if (explicit) return parseInt(explicit[1], 10);
 
-    // 2. Số kèm đơn vị đếm thực tế: 5 tấm, 5 bộ, 5 cái, 5 chiếc, 5 con, 5 cuộn, 5 thùng, 5 hộp
-    const unitMatch = text.match(/(\d+)\s*(?:tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp)(?![a-zà-ỹ0-9])/i);
+    // 2. Số kèm đơn vị đếm thực tế (hỗ trợ m, met, mét cho dây điện / thanh rail)
+    const unitMatch = text.match(/(\d+)\s*(?:m\b|met\b|mét\b|tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp|cặp|thanh|sợi)(?![a-zà-ỹ0-9])/i);
     if (unitMatch) return parseInt(unitMatch[1], 10);
 
     // 3. Động từ hành động theo sau là số lượng: bán 5..., mua 10..., đặt 20...
-    const verbNum = text.match(/(?:bán|mua|lấy|đặt|tạo đơn|lên đơn)\s+(\d+)\s+(?!w|kw|kwh|v|ah|hp|m3|pha|mm|cm|m\b|triệu|k\b)/i);
+    const verbNum = text.match(/(?:bán|mua|lấy|đặt|tạo đơn|lên đơn|thêm)\s+(\d+)\s+(?!w|kw|kwh|v|ah|hp|m3|pha|mm|cm|triệu|k\b)/i);
     if (verbNum) return parseInt(verbNum[1], 10);
 
-    // 4. Quét từng token để tìm số lượng, bỏ qua số đi kèm thông số kỹ thuật (12kw, 600w, 24v...) hoặc đứng sau tên hãng
+    // 4. Token gắn liền đơn vị như 100m, 50m, 10bộ, 5cái
+    const directUnitMatch = text.match(/\b(\d+)(m|met|mét|cái|bộ|tấm|cuộn)\b/i);
+    if (directUnitMatch && !/mm|cm/i.test(directUnitMatch[2])) {
+        return parseInt(directUnitMatch[1], 10);
+    }
+
+    // 5. Quét từng token để tìm số lượng, bỏ qua số đi kèm thông số kỹ thuật (12kw, 600w, 24v...) hoặc đứng sau tên hãng
     const tokens = text.split(/\s+/);
-    const DEVICE_BRANDS = new Set(['deye', 'canadian', 'cana', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'apess', 'solis', 'lumentree', 'pin', 'bien', 'tan', 'inverter', 'hybrid', 'mcb', 'ma', 'mã', 'loai', 'loại']);
+    const DEVICE_BRANDS = new Set(['deye', 'canadian', 'cana', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'apess', 'solis', 'lumentree', 'cergy', 'zeno', 'sunpeace', 'cadivi', 'leader', 'srne', 'pin', 'bien', 'tan', 'inverter', 'hybrid', 'mcb', 'mccb', 'ma', 'mã', 'loai', 'loại']);
 
     for (let i = 0; i < tokens.length; i++) {
         const t = tokens[i];
@@ -623,7 +636,7 @@ function extractQuantity(text) {
             if (num > 1000) continue; // SĐT, mã SKU
 
             const nextTok = (tokens[i + 1] || '').toLowerCase();
-            if (/^(w|kw|kwh|v|ah|hp|m3|pha|3pha|1pha|mm|cm|m|nam|thang|ngay|trieu|ty|k)$/.test(nextTok)) continue;
+            if (/^(w|kw|kwh|v|ah|hp|m3|pha|3pha|1pha|mm|cm|nam|thang|ngay|trieu|ty|k)$/.test(nextTok)) continue;
 
             const prevTok = (tokens[i - 1] || '').toLowerCase();
             if (DEVICE_BRANDS.has(prevTok)) continue; // e.g. "deye 12", "cana 600"
@@ -775,8 +788,8 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
                 }
             }
 
-            // NẾU NGƯỜI DÙNG CÓ NÓI TÊN THƯƠNG HIỆU HÃNG (Deye, Canadian, Apess, Jinko, Solis, Longi, Lumentree, Luxpower...)
-            const BRANDS = ['deye', 'canadian', 'apess', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'solis', 'lumentree', 'luxpower', 'goodwe', 'sofar', 'xpower', 'voltique', 'solpump', 'anern'];
+            // NẾU NGƯỜI DÙNG CÓ NÓI TÊN THƯƠNG HIỆU HÃNG (Deye, Canadian, Apess, Jinko, Solis, Longi, Lumentree, Luxpower, Cergy, Sunpeace, Zeno, Cadivi...)
+            const BRANDS = ['deye', 'canadian', 'apess', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'solis', 'lumentree', 'luxpower', 'goodwe', 'sofar', 'xpower', 'voltique', 'solpump', 'anern', 'cergy', 'sunpeace', 'zeno', 'cadivi', 'leader', 'srne'];
             const mentionedBrands = BRANDS.filter(b => cleanNorm.includes(b) || (b === 'canadian' && cleanNorm.includes('cana')) || (b === 'apess' && cleanNorm.includes('apec')));
             if (mentionedBrands.length > 0) {
                 const prodHasBrand = mentionedBrands.some(b => pNameNorm.includes(b) || (b === 'canadian' && pNameNorm.includes('cana')) || (b === 'apess' && pNameNorm.includes('apec')));
@@ -785,6 +798,20 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
                 } else {
                     score -= 3000; // Phạt cực nặng nếu người dùng đã chỉ định hãng nhưng sản phẩm thuộc hãng khác
                 }
+            }
+
+            // PHÂN BIỆT MÀU SẮC ĐỐI KHÁNG (Dây DC / Thiết bị: Đỏ vs Đen)
+            const wantsRed = /\b(do|red)\b/i.test(cleanNorm) && !/\b(dong|do\s+luong)\b/i.test(cleanNorm);
+            const wantsBlack = /\b(den|black)\b/i.test(cleanNorm) && !/\b(den\s+chieu|den\s+led)\b/i.test(cleanNorm);
+            const prodIsRed = /\b(do|red)\b/i.test(pNameNorm);
+            const prodIsBlack = /\b(den|black)\b/i.test(pNameNorm);
+            if (wantsRed) {
+                if (prodIsRed) score += 400;
+                if (prodIsBlack) score -= 2000;
+            }
+            if (wantsBlack) {
+                if (prodIsBlack) score += 400;
+                if (prodIsRed) score -= 2000;
             }
 
             // Khớp nguyên văn tên sản phẩm
@@ -806,7 +833,7 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
                 if (nameWords.has(tok)) {
                     tokMatched = true;
                     if (/^\d+(w|kw|kwh|v|ah|hp|m3)$/.test(tok)) score += 60;
-                    else if (['canadian', 'deye', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'apess', 'solis', 'lumentree', 'anern', 'xpower', 'voltique', 'solpump'].includes(tok)) score += 80;
+                    else if (['canadian', 'deye', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'apess', 'solis', 'lumentree', 'cergy', 'sunpeace', 'zeno', 'cadivi', 'leader', 'srne', 'anern', 'xpower', 'voltique', 'solpump'].includes(tok)) score += 80;
                     else score += 35;
                 } else {
                     // Tự đoán tiền tố / viết tắt (ví dụ: "cana" -> "canadian", "600" -> "600w", "12" -> "12kw")
@@ -861,7 +888,7 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
         // Nếu người dùng yêu cầu công suất cụ thể (ví dụ 15kW) mà kho không có dòng khớp, nhưng có dòng khác công suất (ví dụ 45kW)
         if (reqSpecs.length > 0) {
             const req = reqSpecs[0];
-            const BRANDS = ['deye', 'canadian', 'apess', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'solis', 'lumentree', 'luxpower', 'goodwe', 'sofar', 'xpower', 'voltique', 'solpump', 'anern'];
+            const BRANDS = ['deye', 'canadian', 'apess', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'solis', 'lumentree', 'luxpower', 'goodwe', 'sofar', 'xpower', 'voltique', 'solpump', 'anern', 'cergy', 'sunpeace', 'zeno', 'cadivi', 'leader', 'srne'];
             const mentionedBrands = BRANDS.filter(b => cleanNorm.includes(b) || (b === 'canadian' && cleanNorm.includes('cana')) || (b === 'apess' && cleanNorm.includes('apec')));
 
             let conflictCandidates = pRes.rows.filter(p => {
@@ -1504,13 +1531,28 @@ function extractDeliveryNotes(text) {
 }
 
 async function parseOrderItems(text, context, custTokens = [], isPurchase = false) {
-    let preprocessed = text.replace(/\bapec\b/gi, 'apess');
-    const rawSegments = preprocessed.split(/\s+(?:với|và|kèm theo|kèm|cộng|\+|voi|va|kem|cong)\s+|,\s*(?=\d+\s*(?:tấm|bộ|cái|chiếc|biến tần|inverter|pin|pack|cục|thùng))/i);
+    let preprocessed = text.replace(/^(?:lấy\s+)?(?:thêm|kèm\s+thêm|cộng\s+thêm|cho\s+thêm)\s+/i, '');
+    preprocessed = preprocessed.replace(/\bapec\b/gi, 'apess');
+    const rawSegments = preprocessed.split(/\s*(?:với|và|kèm theo|kèm|cộng|\+|voi|va|kem|cong)\s+|,\s*|\s+(?=\d+\s*(?:m\b|met\b|mét\b|cuộn\b|hộp\b|cặp\b|thanh\b|tấm\b|bộ\b|cái\b|chiếc\b|biến tần\b|inverter\b|pin\b|pack\b|cục\b|thùng\b))/i);
     const parsedItems = [];
+    let lastProductContext = null;
 
-    for (const seg of rawSegments) {
-        const segTrim = seg.trim().replace(/^[,.\s]+|[,.\s]+$/g, '');
+    for (let seg of rawSegments) {
+        let segTrim = seg.trim().replace(/^[,.\s]+|[,.\s]+$/g, '');
         if (!segTrim || segTrim.length < 2) continue;
+
+        // XỬ LÝ CÂU TỈNH LƯỢC (ELLIPTICAL RESOLUTION):
+        // Ví dụ: "100m dây dc apess đen 100m đỏ" -> phân đoạn sau là "100m đỏ"
+        // Nếu phân đoạn không có tên thương hiệu và không có danh từ thiết bị, kế thừa từ phân đoạn trước
+        const BRANDS = ['deye', 'canadian', 'apess', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'solis', 'lumentree', 'luxpower', 'goodwe', 'sofar', 'xpower', 'voltique', 'solpump', 'anern', 'cergy', 'sunpeace', 'zeno', 'cadivi', 'leader', 'srne'];
+        const segNorm = removeVietnameseTones(segTrim);
+        const hasBrand = BRANDS.some(b => segNorm.includes(b));
+        const hasDeviceNoun = /bien tan|inverter|pin|day|mcb|mccb|ats|rail|kep|tu dien|chong set|combo|tam pin/i.test(segNorm);
+
+        if (!hasBrand && !hasDeviceNoun && lastProductContext) {
+            segTrim = `${segTrim} ${lastProductContext}`;
+        }
+
         const qty = extractQuantity(segTrim);
         const segExclude = [...custTokens];
         if (qty > 1) segExclude.push(String(qty));
@@ -1538,6 +1580,15 @@ async function parseOrderItems(text, context, custTokens = [], isPurchase = fals
         }
 
         if (p) {
+            // Lưu lại context để kế thừa cho câu tỉnh lược liền sau (ví dụ: dây dc apess 4mm)
+            const pCleanName = (p.product_name || '')
+                .replace(/đỏ|đen|do|den|\b\d+(?:kw|kwh|w|v|ah|a|m)\b/gi, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            if (pCleanName.length >= 3) {
+                lastProductContext = pCleanName;
+            }
+
             const unitPrice = isPurchase 
                 ? (parseFloat(p.import_price || p.cost_price || p.retail_price * 0.8) || 0) 
                 : (parseFloat(p.retail_price) || 0);
@@ -1553,13 +1604,24 @@ async function parseOrderItems(text, context, custTokens = [], isPurchase = fals
                 priceWarning = `Giá bán ${formatVND(unitPrice)} thấp hơn giá vốn (${formatVND(p.cost_price)})`;
             }
 
+            let itemUnit = 'Bộ';
+            if (p.unit && !/^\d+$/.test(p.unit)) {
+                itemUnit = p.unit;
+            } else if (/day|dây|cable/i.test(p.product_name)) {
+                itemUnit = 'Mét';
+            } else if (/tam pin|tấm pin/i.test(p.product_name)) {
+                itemUnit = 'Tấm';
+            } else if (/mcb|mccb|ats|jack/i.test(p.product_name)) {
+                itemUnit = 'Cái';
+            }
+
             parsedItems.push({
                 product: p,
                 id: p.id,
                 name: p.product_name,
                 sku: p.sku || '',
                 qty: qty,
-                unit: (p.unit && !/^\d+$/.test(p.unit)) ? p.unit : 'Bộ',
+                unit: itemUnit,
                 price: unitPrice,
                 total: total,
                 stock_warning: stockWarning,
@@ -2200,24 +2262,32 @@ async function handleUpdateDraftOrder(text, context, user) {
         draft.product = draft.items[0].product || draft.items[0];
     }
 
+    // Ý ĐỊNH ĐỔI SẢN PHẨM / THIẾT BỊ HOẶC CÓ CHỈ DẪN SẢN PHẨM
+    const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai|sang bien tan|sang pin|sang tam/i.test(norm);
+    const hasProductIndicator = wantsChangeProduct || 
+        /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|pin\s*\d+|tu dien|kep|bat\b|lumentree|solis|luxpower|growatt|huawei|sungrow|longi|goodwe|sofar|cergy|sunpeace|zeno|cadivi|leader|srne|mcb|mccb|\bcb\b|\bats\b|day dc|day ac|\bday\b|cap dc|cap ac|jack|mc4|chong set|rail/i.test(norm) ||
+        /\d+(?:\.\d+)?\s*(?:kw|kwh|w|wp|v|ah)\b/i.test(norm);
+
     let updatedFields = [];
 
-    // 1. Cập nhật số lượng (hỗ trợ cả tuyệt đối: "5 bộ", "đổi thành 10", "sl: 5" và tương đối: "+1", "-1", "tăng 2", "giảm 1")
+    // 1. Cập nhật số lượng (CHỈ KÍCH HOẠT KHI KHÔNG NÓI VỀ SẢN PHẨM MỚI!)
     let deltaQty = null;
-    const deltaMatch = cleanText.match(/^([+-]\s*\d+)$/) || cleanText.match(/(?:tăng|thêm)\s*(\d+)/i) || cleanText.match(/(?:giảm|bớt)\s*(\d+)/i);
-    if (deltaMatch) {
+    const isPureDeltaMatch = cleanText.match(/^([+-]\s*\d+)$/) || (!hasProductIndicator && cleanText.match(/^(?:tăng|thêm|giảm|bớt)\s*(\d+)(?:\s*(?:bộ|tấm|cái|chiếc|con|cuộn|thùng|hộp|m\b))?$/i));
+    if (isPureDeltaMatch) {
         if (cleanText.startsWith('-') || /giảm|bớt/i.test(cleanText)) {
-            const val = parseInt(deltaMatch[1].replace(/[^0-9]/g, ''), 10);
+            const val = parseInt(isPureDeltaMatch[1].replace(/[^0-9]/g, ''), 10);
             deltaQty = -val;
         } else {
-            const val = parseInt(deltaMatch[1].replace(/[^0-9]/g, ''), 10);
+            const val = parseInt(isPureDeltaMatch[1].replace(/[^0-9]/g, ''), 10);
             deltaQty = val;
         }
     }
 
-    const qtyExplicit = cleanText.match(/(?:đổi thành|thành|sửa thành|số lượng|sl|lấy|mua|bán)\s*[:=]?\s*(\d+)/i) ||
-                        cleanText.match(/(\d+)\s*(?:tấm|bộ|chiếc|cái|inverter|pin|thùng|cuộn|hộp)(?![a-zà-ỹ0-9])/i) ||
-                        cleanText.match(/^(\d+)$/);
+    const qtyExplicit = (!hasProductIndicator) ? (
+        cleanText.match(/(?:đổi thành|thành|sửa thành|số lượng|sl|lấy|mua|bán)\s*[:=]?\s*(\d+)/i) ||
+        cleanText.match(/(\d+)\s*(?:tấm|bộ|chiếc|cái|cuộn|hộp)(?![a-zà-ỹ0-9])/i) ||
+        cleanText.match(/^(\d+)$/)
+    ) : null;
     
     if (deltaQty !== null) {
         const currentQty = draft.qty || (draft.items && draft.items[0] && draft.items[0].qty) || 1;
@@ -2255,21 +2325,21 @@ async function handleUpdateDraftOrder(text, context, user) {
         else if (cleanText.toLowerCase().includes('k') && newPrice < 10000) newPrice *= 1000;
         if (newPrice > 0) {
             draft.unitPrice = newPrice;
-            draft.totalAmount = draft.qty * newPrice;
+            if (draft.items && draft.items.length > 0) {
+                draft.items[0].price = newPrice;
+                draft.items[0].total = (draft.items[0].qty || 1) * newPrice;
+                draft.totalAmount = draft.items.reduce((acc, it) => acc + (it.total || 0), 0);
+            } else {
+                draft.totalAmount = draft.qty * newPrice;
+            }
             updatedFields.push(`đơn giá thành **${formatVND(newPrice)}**`);
         }
     }
 
-    // Kiểm tra ý định đổi sản phẩm / thiết bị
-    const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai|sang bien tan|sang pin|sang tam/i.test(norm);
-    const hasProductIndicator = wantsChangeProduct || 
-        /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|pin\s*\d+|tu dien|kep|bat\b|lumentree|solis|luxpower|growatt|huawei|sungrow|longi|goodwe|sofar/i.test(norm) ||
-        /\d+(?:\.\d+)?\s*(?:kw|kwh|w|wp|v|ah)\b/i.test(norm);
-
     const isPureCustomerOnly = /^(?:khach|khach hang|doi tac)\s+/i.test(cleanText) || (/cho khach\s+[a-zà-ỹ\s]+/i.test(cleanText) && !hasProductIndicator);
     const isPureSupplierOnly = /^(?:ncc|nha cung cap|cty|cong ty)\s+/i.test(cleanText) && !hasProductIndicator;
     const isPurePriceOnly = priceMatch && !hasProductIndicator;
-    const isPureQtyOnly = deltaMatch || (isChangeQtyOnly) || (cleanText.match(/^(\d+)\s*(?:bộ|tấm|cái)?$/i) && draft.product);
+    const isPureQtyOnly = deltaQty !== null || qtyExplicit || isChangeQtyOnly;
 
     const mentionsProduct = hasProductIndicator || (!draft.product && !isPureCustomerOnly && !isPureSupplierOnly && !isPurePriceOnly && !isPureQtyOnly);
 
@@ -2338,10 +2408,11 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
     }
 
-    // 4. CẬP NHẬT HOẶC ĐỔI SẢN PHẨM KHÁC
+    // 4. CẬP NHẬT HOẶC ĐỔI / THÊM SẢN PHẨM KHÁC (HỖ TRỢ ĐA MẶT HÀNG & MULTI-ITEM)
     if (mentionsProduct) {
-        if ((norm.includes('san pham khac') || norm.includes('doi san pham') || norm.includes('sai san pham')) && !/deye|canadian|jinko|longi|apess|pin|bien tan|inverter|tu dien|solis|lumentree|kwh|kw|w\b/i.test(norm)) {
+        if ((norm.includes('san pham khac') || norm.includes('doi san pham') || norm.includes('sai san pham')) && !/deye|canadian|jinko|longi|apess|cergy|sunpeace|zeno|pin|bien tan|inverter|tu dien|solis|lumentree|kwh|kw|w\b/i.test(norm)) {
             draft.product = null;
+            draft.items = [];
             draft.status = 'NEED_PRODUCT';
             return {
                 text: `Dạ em đã hủy chọn sản phẩm trước đó. Cho em xin Tên sản phẩm hoặc thiết bị trong kho mà anh/chị muốn đổi sang nhé!`,
@@ -2352,62 +2423,107 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
 
         const excludeTokens = [...supTokens];
-        if (draft.qty > 1) excludeTokens.push(String(draft.qty));
-        const prodRes = await findMatchingProduct(cleanText, norm, context, excludeTokens);
-        if (prodRes.matched) {
-            draft.product = prodRes.product;
-            const newPrice = draft.type === 'SALE' ? (parseFloat(prodRes.product.retail_price) || 0) : (parseFloat(prodRes.product.import_price) || 2500000);
-            draft.unitPrice = newPrice;
-            draft.totalAmount = (draft.qty || 1) * newPrice;
+        const parseRes = await parseOrderItems(cleanText, context, excludeTokens, draft.type === 'PURCHASE');
 
-            // ĐỒNG BỘ CẢ DRAFT.ITEMS[0] ĐỂ CARD XEM TRƯỚC RENDER ĐÚNG SẢN PHẨM MỚI!
-            const unit = (prodRes.product.unit && !/^\d+$/.test(prodRes.product.unit)) ? prodRes.product.unit : 'Bộ';
-            const newItem = {
-                product: prodRes.product,
-                id: prodRes.product.id,
-                name: prodRes.product.product_name,
-                sku: prodRes.product.sku || '',
-                qty: draft.qty || 1,
-                unit: unit,
-                price: newPrice,
-                total: (draft.qty || 1) * newPrice
+        if (parseRes.outOfStockCapacity) {
+            return {
+                text: `⚠️ Kho hiện **hết sạch** dòng công suất ${parseRes.requestedSpec.val}${parseRes.requestedSpec.unit.toUpperCase()}!\n\n💡 Trong kho hiện có: **${parseRes.suggestedProduct.product_name}** (${parseRes.suggestedSpec.val}${parseRes.suggestedSpec.unit.toUpperCase()}) - Tồn kho: **${parseRes.suggestedProduct.stock_qty || 0}** ${parseRes.suggestedProduct.unit || 'bộ'}.\n\nAnh/Chị có muốn đổi sang dòng này không ạ?`,
+                card: null,
+                action_type: 'SPEC_OUT_OF_STOCK',
+                quick_replies: [`Lấy ${parseRes.suggestedProduct.product_name}`, 'Hủy đơn']
             };
-            if (draft.items && draft.items.length > 0) {
-                draft.items[0] = newItem;
+        }
+
+        if (parseRes.items && parseRes.items.length > 0) {
+            if (wantsChangeProduct || !draft.items || draft.items.length === 0) {
+                draft.items = parseRes.items;
+                updatedFields.push(`đổi sản phẩm thành **${parseRes.items.map(it => `${it.qty} ${it.unit} ${it.name}`).join(', ')}**`);
             } else {
-                draft.items = [newItem];
+                // Thêm sản phẩm vào danh sách hiện tại
+                for (const newItem of parseRes.items) {
+                    const existingIdx = draft.items.findIndex(it => it.id === newItem.id);
+                    if (existingIdx >= 0) {
+                        draft.items[existingIdx].qty += newItem.qty;
+                        draft.items[existingIdx].total = draft.items[existingIdx].qty * draft.items[existingIdx].price;
+                    } else {
+                        draft.items.push(newItem);
+                    }
+                }
+                updatedFields.push(`thêm **${parseRes.items.map(it => `${it.qty} ${it.unit} ${it.name}`).join(', ')}**`);
             }
 
-            // Cập nhật cảnh báo tương thích kỹ thuật cho sản phẩm mới
+            draft.product = draft.items[0].product;
+            draft.unitPrice = draft.items[0].price;
+            draft.qty = draft.items.reduce((s, it) => s + (it.qty || 1), 0);
+            draft.totalAmount = draft.items.reduce((s, it) => s + (it.total || 0), 0);
+
+            // Cập nhật cảnh báo tương thích kỹ thuật
             const comp = checkTechnicalCompatibility(draft.items);
             draft.compat_warning = comp.compatWarning || comp.techTip || comp.accessoryTip;
+        } else {
+            // Không bóc tách được theo phân đoạn, thử tìm 1 sản phẩm đơn lẻ
+            const prodRes = await findMatchingProduct(cleanText, norm, context, excludeTokens);
+            if (prodRes.matched) {
+                const newPrice = draft.type === 'SALE' ? (parseFloat(prodRes.product.retail_price) || 0) : (parseFloat(prodRes.product.import_price) || 2500000);
+                const unit = (prodRes.product.unit && !/^\d+$/.test(prodRes.product.unit)) ? prodRes.product.unit : 'Bộ';
+                const newItem = {
+                    product: prodRes.product,
+                    id: prodRes.product.id,
+                    name: prodRes.product.product_name,
+                    sku: prodRes.product.sku || '',
+                    qty: draft.qty || 1,
+                    unit: unit,
+                    price: newPrice,
+                    total: (draft.qty || 1) * newPrice
+                };
 
-            updatedFields.push(`sản phẩm thành **${prodRes.product.product_name}**`);
-        } else if (prodRes.ambiguous) {
-            const cands = prodRes.candidates || [];
-            return {
-                text: `Dạ bên mình có các dòng: **${cands[0].product_name}** (\`${cands[0].sku}\`) và **${cands[1].product_name}** (\`${cands[1].sku}\`). Anh/Chị muốn chọn dòng nào ạ?`,
-                card: null,
-                action_type: 'ORDER_NEED_DISAMBIGUATION',
-                quick_replies: [...cands.map(c => c.product_name), 'Hủy đơn']
-            };
-        } else if (prodRes.notFoundInCatalog) {
-            const topSugg = (prodRes.suggestions || []).filter(p => p.score >= 10).slice(0, 3);
-            let suggText = '';
-            let qr = [];
-            if (topSugg.length > 0) {
-                suggText = `\n\n💡 **Gợi ý thiết bị trong kho:**\n` + topSugg.map((p, idx) => `${idx + 1}. **${p.product_name}** (\`${p.product_code || p.sku}\`)`).join('\n');
-                qr = topSugg.map(p => p.product_name);
-            } else {
-                qr = ['Tấm pin Canadian 600W Bi-facial', 'Deye hybrid 12kw 3pha BH 5 năm', 'Pin lưu trữ Apess 15.3kwh'];
+                if (wantsChangeProduct || !draft.items || draft.items.length === 0) {
+                    draft.items = [newItem];
+                    updatedFields.push(`đổi sản phẩm thành **${prodRes.product.product_name}**`);
+                } else {
+                    const existingIdx = draft.items.findIndex(it => it.id === newItem.id);
+                    if (existingIdx >= 0) {
+                        draft.items[existingIdx].qty += newItem.qty;
+                        draft.items[existingIdx].total = draft.items[existingIdx].qty * draft.items[existingIdx].price;
+                    } else {
+                        draft.items.push(newItem);
+                    }
+                    updatedFields.push(`thêm **${newItem.qty} ${newItem.unit} ${newItem.name}**`);
+                }
+
+                draft.product = draft.items[0].product;
+                draft.unitPrice = draft.items[0].price;
+                draft.qty = draft.items.reduce((s, it) => s + (it.qty || 1), 0);
+                draft.totalAmount = draft.items.reduce((s, it) => s + (it.total || 0), 0);
+
+                const comp = checkTechnicalCompatibility(draft.items);
+                draft.compat_warning = comp.compatWarning || comp.techTip || comp.accessoryTip;
+            } else if (prodRes.ambiguous) {
+                const cands = prodRes.candidates || [];
+                return {
+                    text: `Dạ bên mình có các dòng: **${cands[0].product_name}** (\`${cands[0].sku}\`) và **${cands[1].product_name}** (\`${cands[1].sku}\`). Anh/Chị muốn chọn dòng nào ạ?`,
+                    card: null,
+                    action_type: 'ORDER_NEED_DISAMBIGUATION',
+                    quick_replies: [...cands.map(c => c.product_name), 'Hủy đơn']
+                };
+            } else if (prodRes.notFoundInCatalog) {
+                const topSugg = (prodRes.suggestions || []).filter(p => p.score >= 10).slice(0, 3);
+                let suggText = '';
+                let qr = [];
+                if (topSugg.length > 0) {
+                    suggText = `\n\n💡 **Gợi ý thiết bị trong kho:**\n` + topSugg.map((p, idx) => `${idx + 1}. **${p.product_name}** (\`${p.product_code || p.sku}\`)`).join('\n');
+                    qr = topSugg.map(p => p.product_name);
+                } else {
+                    qr = ['Tấm pin Canadian 600W Bi-facial', 'Deye hybrid 12kw 3pha BH 5 năm', 'Pin lưu trữ Apess 15.3kwh'];
+                }
+                qr.push('Hủy đơn');
+                return {
+                    text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong kho hàng!${suggText}\n👉 Anh/Chị chọn thiết bị có sẵn trong danh mục nhé!`,
+                    card: null,
+                    action_type: 'PRODUCT_NOT_FOUND',
+                    quick_replies: qr
+                };
             }
-            qr.push('Hủy đơn');
-            return {
-                text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong kho hàng!${suggText}\n👉 Anh/Chị chọn thiết bị có sẵn trong danh mục nhé!`,
-                card: null,
-                action_type: 'PRODUCT_NOT_FOUND',
-                quick_replies: qr
-            };
         }
     }
 
