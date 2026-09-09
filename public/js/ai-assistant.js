@@ -139,28 +139,36 @@
         }
     }
 
-    // Phát âm thanh phản hồi (Text-to-Speech Tiếng Việt)
+    // Phát âm thanh phản hồi (Text-to-Speech Tiếng Việt Tốc Độ x2, Ngắn Gọn)
     function speakText(text) {
         if (!state.voiceEnabled || !state.synth) return;
 
         stopSpeaking();
 
-        // Làm sạch Markdown trước khi đọc
-        const cleanText = text
+        // Làm sạch Markdown và lược bỏ câu dư thừa trước khi đọc
+        let cleanText = text
             .replace(/\*\*/g, '')
             .replace(/\*/g, '')
             .replace(/#{1,6}\s?/g, '')
             .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
             .replace(/`[^`]+`/g, '')
             .replace(/[-•]\s/g, ', ')
-            .replace(/💡|⚠️|📦|📑|🛒|📊|🔍|📄|💰|🏆|⭐|🏥|👥/g, '')
+            .replace(/👉|💬|⚠️|📦|📑|🛒|📊|🔍|📄|💰|🏆|⭐|🏥|👥|🎉/g, '')
             .trim();
 
         if (!cleanText) return;
 
+        // Nếu nội dung dài, chỉ đọc câu tóm tắt trọng tâm
+        if (cleanText.includes('Xác nhận') || cleanText.includes('Bản Nháp')) {
+            const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length > 2) {
+                cleanText = lines.slice(0, 4).join('. ');
+            }
+        }
+
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'vi-VN';
-        utterance.rate = 1.05;
+        utterance.rate = 1.85; // Tốc độ đọc x2 theo yêu cầu
         utterance.pitch = 1.0;
 
         // Chọn giọng đọc tiếng Việt nếu có
@@ -300,7 +308,7 @@
                             <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 space-y-1.5">
                                 <div class="flex justify-between items-center">
                                     <span class="text-slate-400 font-medium">${card.partner_label || (isSale ? 'Khách hàng' : 'Nhà cung cấp')}:</span>
-                                    <strong class="text-white text-right">${card.partner_name || 'Chưa rõ'}</strong>
+                                    <strong class="text-white text-right">${card.partner_name || 'Chưa rõ'} ${card.partner_code ? '<span class="text-amber-400 font-mono text-[10px]">[' + card.partner_code + ']</span>' : ''}</strong>
                                 </div>
                                 ${card.partner_phone ? `
                                     <div class="flex justify-between items-center text-[11px]">
@@ -331,22 +339,22 @@
                                 </div>
                             ` : ''}
 
-                            <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 font-medium text-center">
-                                💬 <em>Anh/Chị kiểm tra lại thông tin đã đúng chưa? Cần chỉnh sửa bổ sung gì không?</em>
+                            <div class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 font-medium text-center">
+                                💬 <em>Đúng thông tin chưa anh/chị? Cần sửa gì hay Tạo đơn ngay?</em>
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="mt-3.5 space-y-2">
+                        <div class="mt-3 space-y-2">
                             <button onclick="window.SungoAI.ask('Xác nhận tạo đơn')" class="w-full ${btnConfirmBg} font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-amber-500/20 active:scale-95">
-                                <i class="fas fa-check-circle text-sm"></i> Xác Nhận Tạo Đơn Ngay
+                                <i class="fas fa-check-circle text-sm"></i> Xác Nhận Tạo Đơn
                             </button>
                             <div class="flex gap-2">
                                 <button onclick="window.SungoAI.ask('Đổi số lượng')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-xl text-[11px] flex items-center justify-center gap-1 transition cursor-pointer active:scale-95">
                                     <i class="fas fa-edit text-[10px]"></i> Đổi Số Lượng
                                 </button>
                                 <button onclick="window.SungoAI.ask('Hủy bỏ đơn này')" class="flex-1 bg-red-950/50 hover:bg-red-900/60 text-red-300 border border-red-500/30 font-bold py-2 rounded-xl text-[11px] flex items-center justify-center gap-1 transition cursor-pointer active:scale-95">
-                                    <i class="fas fa-times-circle text-[10px]"></i> Hủy Bỏ
+                                    <i class="fas fa-times-circle text-[10px]"></i> Hủy Đơn
                                 </button>
                             </div>
                         </div>
