@@ -79,6 +79,11 @@ const RBAC_PERMISSIONS = {
     // Khối Nhân sự
     'HR': [
         'CHECK_HR'
+    ],
+
+    // Khối Khách vãng lai / Chưa đăng nhập (Chỉ tra cứu công cộng)
+    'GUEST': [
+        'GENERAL_CHAT', 'CHECK_WARRANTY', 'SEND_PRODUCT_DOCS'
     ]
 };
 
@@ -152,11 +157,15 @@ async function updateContextState(conversationId, newState) {
  */
 function checkPermission(userRole, intent) {
     if (!userRole) return false;
-    // Các thao tác đối thoại xác nhận, cập nhật, hủy bản nháp hoặc cấu hình AI được cho phép toàn quyền trong phiên
+    const role = String(userRole).toUpperCase().trim();
+    if (role === 'GUEST') {
+        const guestAllowed = ['GENERAL_CHAT', 'CHECK_WARRANTY', 'SEND_PRODUCT_DOCS'];
+        return guestAllowed.includes(intent);
+    }
+    // Các thao tác đối thoại xác nhận, cập nhật, hủy bản nháp hoặc cấu hình AI được cho phép toàn quyền trong phiên của nhân viên đã đăng nhập
     if (['CONFIRM_DRAFT_ORDER', 'UPDATE_DRAFT_ORDER', 'CANCEL_DRAFT_ORDER', 'RESUME_DRAFT_ORDER', 'SWITCH_TO_GOOGLE_AI', 'SWITCH_TO_CHATGPT', 'SET_OPENAI_KEY'].includes(intent)) {
         return true;
     }
-    const role = String(userRole).toUpperCase().trim();
     const perms = RBAC_PERMISSIONS[role] || [];
     if (perms.includes('*')) return true;
     return perms.includes(intent);
@@ -2894,7 +2903,13 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
 
     const isAllowed = checkPermission(userRole, intent);
     if (!isAllowed) {
-        const denyText = `⚠️ Dạ em rất tiếc, tài khoản vai trò **[${userRole}]** không có thẩm quyền truy cập hoặc thực hiện thao tác **[${intent}]** này.\n\nAnh/Chị vui lòng liên hệ Quản Trị Viên (Admin) hoặc Kế Toán Trưởng để được cấp quyền mở rộng.`;
+        let denyText = '';
+        const roleUpper = String(userRole || 'GUEST').toUpperCase().trim();
+        if (roleUpper === 'GUEST') {
+            denyText = `🔒 **Yêu cầu đăng nhập SUNGO ERP**\n\nBạn hiện đang truy cập với tư cách **Khách (Chưa đăng nhập)** nên không có quyền truy cập dữ liệu kinh doanh, doanh thu, công nợ, kho bãi hoặc thao tác tạo đơn hàng.\n\n👉 Vui lòng **đăng nhập tài khoản nhân viên hoặc quản trị viên** trên hệ thống để thực hiện các chức năng này.`;
+        } else {
+            denyText = `⚠️ Dạ em rất tiếc, tài khoản vai trò **[${userRole}]** không có thẩm quyền truy cập hoặc thực hiện thao tác **[${intent}]** này.\n\nAnh/Chị vui lòng liên hệ Quản Trị Viên (Admin) hoặc Kế Toán Trưởng để được cấp quyền mở rộng.`;
+        }
         
         await saveMessage(conv.id, 'assistant', denyText, intent, 'PERMISSION_DENIED', { role: userRole, intent });
         return {
@@ -2903,10 +2918,10 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
                 type: 'PERMISSION_DENIED_CARD',
                 role: userRole,
                 intent: intent,
-                message: 'Thao tác vượt quá thẩm quyền của phân hệ người dùng.'
+                message: roleUpper === 'GUEST' ? 'Vui lòng đăng nhập tài khoản để sử dụng tính năng nội bộ ERP.' : 'Thao tác vượt quá thẩm quyền của phân hệ người dùng.'
             },
             action_type: 'PERMISSION_DENIED',
-            quick_replies: ['Xem hướng dẫn sử dụng', 'Làm mới hội thoại']
+            quick_replies: roleUpper === 'GUEST' ? ['Đăng nhập hệ thống', 'Tra cứu bảo hành', 'Xem tài liệu sản phẩm'] : ['Xem hướng dẫn sử dụng', 'Làm mới hội thoại']
         };
     }
 
@@ -2991,6 +3006,13 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
                         card: draft.card || null,
                         action_type: 'DRAFT_RESUMED_PROMPT',
                         quick_replies: ['Tạo đơn ngay', 'Sửa số lượng', 'Đổi khách hàng', 'Hủy đơn']
+                    };
+                } else if (String(userRole || '').toUpperCase() === 'GUEST') {
+                    actionResult = {
+                        text: `Chào Quý khách! Em là **Trợ Lý AI SUNGO**.\n\n🔒 Bạn hiện đang truy cập với tư cách **Khách (Chưa đăng nhập)**.\n- Để tạo đơn hàng, tra cứu doanh thu, công nợ, kho bãi và nhân sự: Vui lòng **đăng nhập tài khoản**.\n- Bạn có thể tra cứu **Bảo hành thiết bị** (theo số Serial) hoặc xem **Tài liệu kỹ thuật / Datasheet** sản phẩm.\n\nQuý khách cần em hỗ trợ thông tin gì ạ?`,
+                        card: null,
+                        action_type: 'GENERAL_REPLY',
+                        quick_replies: ['Đăng nhập hệ thống', 'Tra cứu bảo hành', 'Xem tài liệu sản phẩm']
                     };
                 } else {
                     actionResult = {

@@ -15,14 +15,14 @@ router.post('/chat', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Tin nhắn không được để trống!' });
         }
 
-        const user = req.user || { id: null, role: 'ADMIN', full_name: 'Quản Trị Viên' };
+        const user = req.user || { id: null, role: 'GUEST', full_name: 'Khách (Chưa đăng nhập)' };
         const finalSessionId = sessionId || ('sess_' + (user.id || 'guest') + '_' + Date.now());
 
         const result = await aiService.processChatMessage(
             user.id, 
             finalSessionId, 
             message.trim(), 
-            user.role || 'ADMIN', 
+            user.role || 'GUEST', 
             user
         );
 
@@ -225,6 +225,10 @@ router.get('/rules', async (req, res) => {
  */
 router.post('/rules', async (req, res) => {
     try {
+        if (!req.user || !['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC'].includes(String(req.user.role).toUpperCase())) {
+            return res.status(403).json({ success: false, error: 'Chỉ Quản trị viên mới được cấu hình quy tắc nghiệp vụ!' });
+        }
+
         const { rule_code, rule_name, rule_condition, rule_action, is_active } = req.body;
         if (!rule_code || !rule_name) {
             return res.status(400).json({ success: false, error: 'Thiếu mã hoặc tên quy tắc!' });

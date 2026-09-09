@@ -21,7 +21,7 @@
         recognition: null,
         synth: window.speechSynthesis || null,
         currentUtterance: null,
-        userRole: 'ADMIN'
+        userRole: 'GUEST'
     };
 
     // Lưu sessionId
@@ -30,9 +30,18 @@
     // Lấy thông tin người dùng đang đăng nhập
     function getCurrentUser() {
         try {
-            return JSON.parse(localStorage.getItem('sungo_user') || '{}');
+            const token = localStorage.getItem('sungo_token');
+            const rawUser = localStorage.getItem('sungo_user');
+            if (!token || !rawUser) {
+                return { id: null, role: 'GUEST', name: 'Khách', isGuest: true };
+            }
+            const u = JSON.parse(rawUser);
+            if (!u || !u.id) {
+                return { id: null, role: 'GUEST', name: 'Khách', isGuest: true };
+            }
+            return { ...u, isGuest: false };
         } catch (e) {
-            return {};
+            return { id: null, role: 'GUEST', name: 'Khách', isGuest: true };
         }
     }
 
@@ -598,6 +607,25 @@
         const typingId = 'typing-' + Date.now();
         appendTypingIndicator(typingId);
 
+        // Hỗ trợ người dùng bấm nút "Đăng nhập hệ thống"
+        const currentUser = getCurrentUser();
+        const norm = text.toLowerCase().trim();
+        if (currentUser.isGuest && (norm === 'dang nhap he thong' || norm === 'đăng nhập hệ thống' || norm === 'dang nhap' || norm === 'đăng nhập')) {
+            removeTypingIndicator(typingId);
+            const userInput = document.getElementById('username') || document.querySelector('input[name="username"]') || document.querySelector('input[type="text"]');
+            if (userInput && (window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || document.getElementById('btn-login'))) {
+                userInput.focus();
+                userInput.classList.add('ring-2', 'ring-amber-500');
+                setTimeout(() => userInput.classList.remove('ring-2', 'ring-amber-500'), 2500);
+                appendMessage('assistant', '👉 Vui lòng nhập Tên đăng nhập và Mật khẩu ở khung bên cạnh để đăng nhập vào hệ thống SUNGO ERP.');
+                return;
+            } else {
+                appendMessage('assistant', '🔄 Đang chuyển hướng bạn đến trang đăng nhập SUNGO ERP...');
+                setTimeout(() => { window.location.href = '/index.html'; }, 800);
+                return;
+            }
+        }
+
         try {
             let token = localStorage.getItem('sungo_token');
             if (!token) {
@@ -778,10 +806,12 @@
         if (!container) return;
 
         const user = getCurrentUser();
-        const role = String(user.role || 'ADMIN').toUpperCase();
+        const role = String(user.role || 'GUEST').toUpperCase();
 
         let defaultChips = [];
-        if (role.includes('SALE')) {
+        if (user.isGuest || role === 'GUEST') {
+            defaultChips = ['Đăng nhập hệ thống', 'Tra cứu bảo hành', 'Xem tài liệu sản phẩm'];
+        } else if (role.includes('SALE')) {
             defaultChips = ['Tạo đơn 10 tấm pin Canadian', 'Kiểm tra tồn kho tấm pin', 'Báo cáo doanh thu của tôi', 'Gửi datasheet pin Canadian'];
         } else if (role.includes('KHO') || role.includes('INVENTORY') || role.includes('THU_MUA')) {
             defaultChips = ['Kiểm tra hàng tồn kho', 'Cảnh báo hàng sắp hết', 'Lên đơn đặt mua hàng', 'Phân tích sản phẩm tồn'];
@@ -804,6 +834,46 @@
     // Tạo giao diện Trợ Lý AI vào DOM
     function injectAssistantUI() {
         if (document.getElementById('sungo-ai-container')) return;
+
+        const user = getCurrentUser();
+        state.userRole = user.role || 'GUEST';
+
+        const welcomeHtml = (user.isGuest || user.role === 'GUEST') ? `
+            <div class="flex gap-2.5 justify-start">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-800 text-amber-400 font-black text-xs flex items-center justify-center shrink-0 shadow-md border border-slate-700">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="max-w-[85%] rounded-2xl rounded-tl-xs p-3.5 text-xs bg-slate-800/90 text-slate-200 border border-slate-700/80 shadow-md leading-relaxed">
+                    Chào Quý khách! Em là <strong>Trợ Lý AI SUNGO</strong>.<br><br>
+                    <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] mb-2 font-medium flex items-center gap-1.5">
+                        <i class="fas fa-lock text-amber-400"></i>
+                        <span><strong>Trạng thái:</strong> Khách (Chưa đăng nhập)</span>
+                    </div>
+                    <ul class="space-y-1 text-slate-300">
+                        <li>🔑 Để <strong>Tạo đơn hàng, xem Doanh thu, Báo cáo tài chính, Kho & Nhân sự</strong>: Vui lòng đăng nhập tài khoản.</li>
+                        <li>🔍 Bạn có thể tra cứu thông tin <strong>Bảo hành thiết bị</strong> hoặc <strong>Tài liệu kỹ thuật / Datasheet</strong> công khai.</li>
+                    </ul>
+                    <div class="mt-2.5 text-[11px] text-amber-400 font-semibold">Bấm vào gợi ý bên dưới hoặc gõ yêu cầu để bắt đầu!</div>
+                </div>
+            </div>
+        ` : `
+            <div class="flex gap-2.5 justify-start">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 shadow-md">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="max-w-[85%] rounded-2xl rounded-tl-xs p-3.5 text-xs bg-slate-800/90 text-slate-200 border border-slate-700/80 shadow-md leading-relaxed">
+                    Chào ${safeEscapeHtml(user.name || 'Anh/Chị')}! Em là <strong>Trợ Lý Google Gemini AI (SUNGO Enterprise AI)</strong>. Em có thể giúp:
+                    <ul class="mt-2 space-y-1 text-slate-300">
+                        <li>📦 <strong>Tạo đơn hàng & sản phẩm</strong> nhanh chóng</li>
+                        <li>📑 <strong>Lập báo giá Solar & soạn hợp đồng</strong> online</li>
+                        <li>📊 <strong>Báo cáo doanh thu & sức khỏe tài chính CFO</strong></li>
+                        <li>🔍 <strong>Kiểm tra tồn kho, serial bảo hành, công nợ 131</strong></li>
+                        <li>📄 <strong>Gửi Datasheet & phân tích khách hàng VIP</strong></li>
+                    </ul>
+                    <div class="mt-2.5 text-[11px] text-amber-400 font-semibold">Bấm vào nút Micro bên dưới hoặc gõ yêu cầu để bắt đầu!</div>
+                </div>
+            </div>
+        `;
 
         const container = document.createElement('div');
         container.id = 'sungo-ai-container';
@@ -867,23 +937,7 @@
 
                 <!-- KHUNG DANH SÁCH TIN NHẮN (CHAT BODY) -->
                 <div id="sungo-ai-chat-body" class="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-950/60">
-                    <!-- Tin nhắn chào mừng ban đầu -->
-                    <div class="flex gap-2.5 justify-start">
-                        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 shadow-md">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="max-w-[85%] rounded-2xl rounded-tl-xs p-3.5 text-xs bg-slate-800/90 text-slate-200 border border-slate-700/80 shadow-md leading-relaxed">
-                            Chào Sếp! Em là <strong>Trợ Lý AI SUNGO ERP</strong>. Em có thể giúp Sếp xử lý nhanh các tác vụ bằng giọng nói hoặc văn bản:
-                            <ul class="mt-2 space-y-1 text-slate-300">
-                                <li>📦 <strong>Tạo đơn hàng & sản phẩm</strong> nhanh chóng</li>
-                                <li>📑 <strong>Lập báo giá Solar & soạn hợp đồng</strong> online</li>
-                                <li>📊 <strong>Báo cáo doanh thu & sức khỏe tài chính CFO</strong></li>
-                                <li>🔍 <strong>Kiểm tra tồn kho, serial bảo hành, công nợ 131</strong></li>
-                                <li>📄 <strong>Gửi Datasheet & phân tích khách hàng VIP</strong></li>
-                            </ul>
-                            <div class="mt-2.5 text-[11px] text-amber-400 font-semibold">Bấm vào nút Micro bên dưới hoặc gõ yêu cầu để bắt đầu!</div>
-                        </div>
-                    </div>
+                    ${welcomeHtml}
                 </div>
 
                 <!-- THANH GỢI Ý CÂU HỎI THÔNG MINH (SMART CHIPS) -->
@@ -941,10 +995,15 @@
         });
 
         // Cập nhật thông tin role người dùng
-        const user = getCurrentUser();
         const badgeEl = document.getElementById('sungo-ai-user-badge');
         if (badgeEl) {
-            badgeEl.innerText = `${user.name || 'Quản Trị Viên'} (${user.role || 'ADMIN'})`;
+            if (user.isGuest || user.role === 'GUEST') {
+                badgeEl.innerText = 'Khách (Chưa đăng nhập)';
+                badgeEl.className = 'text-[10px] text-slate-400 font-semibold';
+            } else {
+                badgeEl.innerText = `${user.name || 'Nhân Viên'} (${user.role || 'USER'})`;
+                badgeEl.className = 'text-[10px] text-amber-400 font-semibold';
+            }
         }
 
         renderQuickReplies();
@@ -1028,14 +1087,16 @@
             } catch (e) {}
 
             const body = document.getElementById('sungo-ai-chat-body');
+            const currentUser = getCurrentUser();
             if (body) {
+                const isG = currentUser.isGuest || currentUser.role === 'GUEST';
                 body.innerHTML = `
                     <div class="flex gap-2.5 justify-start animate-fade-in">
-                        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 shadow-md">
+                        <div class="w-8 h-8 rounded-xl ${isG ? 'bg-gradient-to-tr from-slate-700 to-slate-800 text-amber-400 border border-slate-700' : 'bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950'} font-black text-xs flex items-center justify-center shrink-0 shadow-md">
                             <i class="fas fa-robot"></i>
                         </div>
                         <div class="max-w-[85%] rounded-2xl rounded-tl-xs p-3.5 text-xs bg-slate-800/90 text-slate-200 border border-slate-700/80 shadow-md">
-                            Đã làm mới phiên đối thoại! Ngữ cảnh trước đây đã được giải phóng. Anh/Chị muốn thực hiện tác vụ nào tiếp theo?
+                            ${isG ? 'Đã làm mới phiên đối thoại! Bạn hiện đang ở chế độ <strong>Khách (Chưa đăng nhập)</strong>. Quý khách muốn tra cứu bảo hành hay xem tài liệu sản phẩm nào ạ?' : 'Đã làm mới phiên đối thoại! Ngữ cảnh trước đây đã được giải phóng. Anh/Chị muốn thực hiện tác vụ nào tiếp theo?'}
                         </div>
                     </div>
                 `;

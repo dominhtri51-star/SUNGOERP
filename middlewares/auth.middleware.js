@@ -32,6 +32,8 @@ function authMiddleware(req, res, next) {
         token = authHeader.slice(7).trim();
     } else if (req.query && req.query.token) {
         token = req.query.token;
+    } else if (req.cookies && req.cookies.token) {
+        token = req.cookies.token;
     }
 
     // Giải mã token nếu có (kể cả trên public route) để phục vụ phân quyền
