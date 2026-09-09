@@ -977,9 +977,11 @@ async function extractCustomer(text, norm, context) {
 
         // 3. Trích xuất tên khách hàng ứng viên & địa điểm (tỉnh/thành phố)
         let candidateQuery = '';
-        const explicitMatch = text.match(/(?:cho khách|khách hàng|khách|đối tác|cho anh|cho chị|cho bác|cho chú|cho ông|cho bà|bán cho|giao cho|lên đơn cho|tạo đơn cho)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+\d+|\s+tấm|\s+bộ|\s+biến\s*tần|\s+inverter|\s+pin|\s+sđt|\s+sdt|\s+số|\s+điện|\s+đt|\s+phone|\s+mua|\s+lấy|\s+đặt|\s+gồm|\s+với|$))/i);
+        const explicitMatch = text.match(/(?:đổi sang khách|đổi khách|thay khách|chuyển khách|chuyển sang khách|chọn khách|sang khách|cho khách|khách hàng|khách|đối tác|cho anh|cho chị|cho bác|cho chú|cho ông|cho bà|bán cho|giao cho|lên đơn cho|tạo đơn cho)\s+(?:là\s+|thành\s+|sang\s+|qua\s+)?([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+\d+|\s+tấm|\s+bộ|\s+biến\s*tần|\s+inverter|\s+pin|\s+sđt|\s+sdt|\s+số|\s+điện|\s+đt|\s+phone|\s+mua|\s+lấy|\s+đặt|\s+gồm|\s+với|$))/i);
         if (explicitMatch && explicitMatch[1].trim().length > 1) {
-            candidateQuery = explicitMatch[1].trim();
+            candidateQuery = explicitMatch[1].trim().replace(/^(?:là|thành|sang|qua)\s+/i, '');
+        } else if (/^(?:anh|chi|em|bac|chu|ong|ba)\s+[a-zà-ỹ\s]+/i.test(text.trim())) {
+            candidateQuery = text.trim();
         }
 
         // TƯỜNG LỬA CHẶN ĐẠI TỪ SẢN PHẨM TRỞ THÀNH TÊN KHÁCH HÀNG CRM
@@ -1003,8 +1005,9 @@ async function extractCustomer(text, norm, context) {
             }
         }
 
-        // Phát hiện danh xưng cá nhân ("anh", "chị", "bác", "chú", "ông", "bà")
-        const isPersonalTitle = /\b(?:anh|chi|em|bac|chu|ong|ba)\b/i.test(candidateQuery || cleanNorm);
+        // Chỉ coi là danh xưng cá nhân khi bắt đầu bằng anh/chị/bác/chú... (tránh nhầm tên đệm như "Võ Anh Phong", "Tuấn Anh")
+        const isPersonalTitle = /^(?:anh|chi|em|bac|chu|ong|ba)\s+/i.test(candidateQuery || cleanNorm) ||
+                                /\b(?:cho\s+anh|cho\s+chi|cho\s+bac|cho\s+chu|cho\s+ong|cho\s+ba)\b/i.test(text);
 
         const rawTokens = queryNorm.split(/[^a-z0-9]+/i).filter(Boolean);
         const qTokens = rawTokens.filter(t => !CUST_STOP_WORDS.has(t) && t.length >= 2);
@@ -1020,6 +1023,7 @@ async function extractCustomer(text, norm, context) {
         // 4. Lấy danh sách khách hàng để tự đoán thông minh
         const cRes = await pool.query('SELECT id, customer_code, full_name, name, nickname, phone, address, company_name, vat_company FROM customers');
         const qStr = qTokens.join(' ');
+        const candNorm = candidateQuery ? removeVietnameseTones(candidateQuery).toLowerCase().trim() : '';
 
         const scored = cRes.rows.map(c => {
             const cName = removeVietnameseTones(c.name || '');
@@ -1041,12 +1045,20 @@ async function extractCustomer(text, norm, context) {
 
             // Khớp chính xác cụm tên trong tên đầy đủ hoặc tên gọi
             let includesName = false;
-            if (qStr && (cName.includes(qStr) || cFull.includes(qStr))) {
+            if (candNorm) {
+                if (cFull === candNorm || cName === candNorm) {
+                    score += 350; // Khớp chính xác 100% cả họ và tên
+                    includesName = true;
+                } else if (cFull.includes(candNorm) || cName.includes(candNorm)) {
+                    score += 150;
+                    includesName = true;
+                }
+            } else if (qStr && (cName.includes(qStr) || cFull.includes(qStr))) {
                 score += 120;
                 includesName = true;
             }
 
-            // Nếu toàn bộ token tìm kiếm đều khớp trong tên khách hàng (ví dụ: "võ" và "toàn" trong "Võ Anh Toàn")
+            // Nếu toàn bộ token tìm kiếm đều khớp trong tên khách hàng (ví dụ: "võ", "anh", "phong" trong "Võ Anh Phong")
             if (qTokens.length >= 2 && matchedCount >= qTokens.length) {
                 score += 80;
             }
@@ -1061,8 +1073,9 @@ async function extractCustomer(text, norm, context) {
             }
 
             // PHÂN BIỆT KHÁCH CÁ NHÂN ("ANH NAM") VỚI CÔNG TY TỔ CHỨC ("CÔNG TY MIỀN NAM ENERGY")
-            const isCorporate = (c.company_name && c.company_name.length > 5) || /cong ty|tnhh|energy|nang luong|cp|corp/i.test(cName + ' ' + cFull);
-            if (isPersonalTitle && isCorporate) {
+            // Chỉ phạt khi người dùng gọi danh xưng cá nhân ("anh Nam") mà tên khách hàng là tên công ty/pháp nhân thuần túy
+            const isPureCorporateName = /^(?:cong ty|cty|doanh nghiep|co quan|tap doan|tnhh|cp)\b/i.test(cFull || cName);
+            if (isPersonalTitle && isPureCorporateName && !includesName) {
                 score -= 400; // Người dùng gọi "anh Nam", không được nhầm sang Công ty Miền Nam Energy!
             }
 
@@ -2242,6 +2255,10 @@ async function handleUpdateDraftOrder(text, context, user) {
     const isChangePartnerOnly = /^(?:doi khach|sua khach|chon lai khach|doi khach hang|sua khach hang|doi ncc|sua ncc|doi nha cung cap|sua nha cung cap)(?:\s+(?:nghe|nha|nhe|di|dum|giup|ho|nao|coi|a))?$/i.test(norm);
     if (isChangePartnerOnly) {
         if (draft.type === 'SALE') {
+            draft.partner_name = null;
+            draft.customer_id = null;
+            draft.customer_code = null;
+            draft.status = 'NEED_CUSTOMER';
             return {
                 text: `Dạ anh/chị muốn đổi sang Khách hàng nào trên hệ thống CRM (sale-crm) ạ?`,
                 card: null,
@@ -2249,6 +2266,10 @@ async function handleUpdateDraftOrder(text, context, user) {
                 quick_replies: ['Khách Võ Anh Phong', 'Khách Hoàng Gia', 'Khách Anh Nam Kiên Giang', 'Khách Binbon', 'Hủy đơn']
             };
         } else {
+            draft.partner_name = null;
+            draft.supplier_id = null;
+            draft.supplier_code = null;
+            draft.status = 'NEED_SUPPLIER';
             return {
                 text: `Dạ anh/chị muốn đổi sang Nhà Cung Cấp nào ạ?`,
                 card: null,
@@ -2263,7 +2284,8 @@ async function handleUpdateDraftOrder(text, context, user) {
     }
 
     // Ý ĐỊNH ĐỔI SẢN PHẨM / THIẾT BỊ HOẶC CÓ CHỈ DẪN SẢN PHẨM
-    const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai|sang bien tan|sang pin|sang tam/i.test(norm);
+    const wantsChangePartner = /doi sang khach|sua khach|doi khach|thay khach|chon khach|cho khach|sang khach|doi sang ncc|doi ncc|sua ncc|thay ncc|chon ncc|sang ncc/i.test(norm);
+    const wantsChangeProduct = !wantsChangePartner && /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang (?!khach|ncc|nha cung cap|doi tac)|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai|sang bien tan|sang pin|sang tam/i.test(norm);
     const hasProductIndicator = wantsChangeProduct || 
         /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|pin\s*\d+|tu dien|kep|bat\b|lumentree|solis|luxpower|growatt|huawei|sungrow|longi|goodwe|sofar|cergy|sunpeace|zeno|cadivi|leader|srne|mcb|mccb|\bcb\b|\bats\b|day dc|day ac|\bday\b|cap dc|cap ac|jack|mc4|chong set|rail/i.test(norm) ||
         /\d+(?:\.\d+)?\s*(?:kw|kwh|w|wp|v|ah)\b/i.test(norm);
@@ -2347,10 +2369,13 @@ async function handleUpdateDraftOrder(text, context, user) {
     // KHÓA CỨNG: TUYỆT ĐỐI KHÔNG BAO GIỜ NHẬN SANG KHÁCH HÀNG KHI ĐANG NÓI VỀ SẢN PHẨM HOẶC CÓ TỪ KHÓA THIẾT BỊ!
     let mentionsCustomer = false;
     if (!hasProductIndicator && !wantsChangeProduct) {
-        const explicitCustomer = /\b(?:khach|khach hang|doi tac|doi sang khach|cho khach|doi khach|sdt|kh\s*\d+)\b/i.test(norm) ||
-                                 /\b(?:cho\s+anh|cho\s+chi|cho\s+bac|cho\s+chu|cho\s+ong|cho\s+ba)\s+[a-zà-ỹ]+/i.test(norm);
-        const needCustomerFallback = (!qtyExplicit && !priceMatch && !mentionsProduct && !draft.partner_name);
-        mentionsCustomer = (explicitCustomer && !/so luong|sl|gia|don gia/i.test(norm)) || needCustomerFallback;
+        const explicitCustomer = /\b(?:khach|khach hang|doi tac|doi sang khach|cho khach|doi khach|sang khach|sdt|kh\s*\d+)\b/i.test(norm) ||
+                                 /\b(?:cho\s+anh|cho\s+chi|cho\s+bac|cho\s+chu|cho\s+ong|cho\s+ba)\s+[a-zà-ỹ]+/i.test(norm) ||
+                                 /^(?:anh|chi|em|bac|chu|ong|ba)\s+[a-zà-ỹ\s]+/i.test(cleanText) ||
+                                 wantsChangePartner;
+        const isExplicitPriceOrQty = /so luong|\bsl\b\s*[:=]?\s*\d+|\bdon gia\b|\bgia\s+\d+|\b(?:sua|thay|doi|giam|tang)\s+gia\b/i.test(norm);
+        const needCustomerFallback = (!qtyExplicit && !priceMatch && !mentionsProduct && (!draft.partner_name || draft.status === 'NEED_CUSTOMER'));
+        mentionsCustomer = (explicitCustomer && (!isExplicitPriceOrQty || wantsChangePartner)) || needCustomerFallback;
     }
 
     if (draft.type === 'SALE' && mentionsCustomer) {
