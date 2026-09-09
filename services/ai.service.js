@@ -152,8 +152,8 @@ async function updateContextState(conversationId, newState) {
  */
 function checkPermission(userRole, intent) {
     if (!userRole) return false;
-    // Các thao tác đối thoại xác nhận, cập nhật hoặc hủy bản nháp đơn hàng được cho phép trong phiên
-    if (['CONFIRM_DRAFT_ORDER', 'UPDATE_DRAFT_ORDER', 'CANCEL_DRAFT_ORDER'].includes(intent)) {
+    // Các thao tác đối thoại xác nhận, cập nhật, hủy bản nháp hoặc cấu hình AI được cho phép toàn quyền trong phiên
+    if (['CONFIRM_DRAFT_ORDER', 'UPDATE_DRAFT_ORDER', 'CANCEL_DRAFT_ORDER', 'SWITCH_TO_CHATGPT', 'SET_OPENAI_KEY'].includes(intent)) {
         return true;
     }
     const role = String(userRole).toUpperCase().trim();
@@ -167,6 +167,21 @@ function checkPermission(userRole, intent) {
  */
 function detectIntent(text, context) {
     const norm = removeVietnameseTones(text);
+
+    // 0. Lệnh kết nối / chuyển đổi sang OpenAI ChatGPT
+    if (
+        norm.includes('doi sang chat gpt') || norm.includes('chuyen sang chat gpt') ||
+        norm.includes('doi sang chatgpt') || norm.includes('chuyen qua chatgpt') ||
+        norm.includes('dung chat gpt') || norm.includes('dung chatgpt') ||
+        norm.includes('ket noi chatgpt') || norm.includes('chuyen sang openai') ||
+        norm.includes('doi sang openai') || norm.includes('dung openai')
+    ) {
+        return 'SWITCH_TO_CHATGPT';
+    }
+
+    if (/(sk-[A-Za-z0-9_\-]{15,})/i.test(text)) {
+        return 'SET_OPENAI_KEY';
+    }
 
     // =========================================================================
     // 0. XỬ LÝ KHI ĐANG CÓ BẢN NHÁP ĐƠN HÀNG TRONG NGỮ CẢNH (DRAFT ORDER STATE)
@@ -541,45 +556,93 @@ async function extractSupplier(text, norm, context) {
     try {
         const sRes = await pool.query('SELECT id, supplier_code, name, phone, address FROM suppliers');
         
+        const cleanText = text.trim();
+        const normCheck = norm || removeVietnameseTones(cleanText);
+        const compacted = normCheck.replace(/[^a-z0-9]/g, '');
+
+        // 1. Dò tìm trực tiếp theo từ khóa / tên viết tắt / viết liền của 5 NCC
+        for (const s of sRes.rows) {
+            const sNorm = removeVietnameseTones(s.name);
+            const sCode = (s.supplier_code || '').toLowerCase();
+
+            if (sCode && (normCheck.includes(sCode) || compacted.includes(sCode))) {
+                return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+            }
+
+            // 1. Công ty Solar E: "solar e", "solare", "solar-e"
+            if (sNorm.includes('solar e')) {
+                if (normCheck.includes('solar e') || compacted.includes('solare') || compacted.includes('solarenergy')) {
+                    return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+                }
+            }
+            // 2. Công ty Cergy: "cergy", "sergy", "cerny"
+            if (sNorm.includes('cergy')) {
+                if (normCheck.includes('cergy') || compacted.includes('cergy') || compacted.includes('sergy') || compacted.includes('cerny')) {
+                    return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+                }
+            }
+            // 3. Công ty Tín Trung: "tin trung", "tintrung"
+            if (sNorm.includes('tin trung')) {
+                if (normCheck.includes('tin trung') || compacted.includes('tintrung')) {
+                    return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+                }
+            }
+            // 4. H Hùng Việt Hào: "hung viet hao", "hungviethao", "viet hao", "viethao"
+            if (sNorm.includes('hung viet hao')) {
+                if (normCheck.includes('hung viet hao') || compacted.includes('hungviethao') || normCheck.includes('viet hao') || compacted.includes('viethao')) {
+                    return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+                }
+            }
+            // 5. Công ty HeroPower: "heropower", "hero power"
+            if (sNorm.includes('heropower')) {
+                if (normCheck.includes('heropower') || normCheck.includes('hero power') || compacted.includes('heropower')) {
+                    return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+                }
+            }
+        }
+
+        // 2. Trích xuất tên NCC mà người dùng nhập nếu không khớp 5 NCC trên
         let candidateSup = '';
-        const supMatch = text.match(/(?:nhà cung cấp|ncc|từ ncc|từ)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+sản phẩm|\s+vật tư|\s+số lượng|\s+gồm|\s+đặt|\s+mua|\s+nhập|$))/i);
+        const supMatch = cleanText.match(/(?:nhà cung cấp|ncc|từ ncc|từ|bên|cty|công ty)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s\-]+?)(?:(?:\s+sản phẩm|\s+vật tư|\s+số lượng|\s+gồm|\s+đặt|\s+mua|\s+nhập|$))/i);
         if (supMatch && supMatch[1].trim().length > 1) {
             candidateSup = supMatch[1].trim();
         }
 
-        const normCheck = norm;
-
-        for (const s of sRes.rows) {
-            const sNorm = removeVietnameseTones(s.name);
-            const sCode = (s.supplier_code || '').toLowerCase();
-            
-            if (sCode && normCheck.includes(sCode)) {
-                return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
-            }
-
-            if (sNorm.includes('solar e') && normCheck.includes('solar e')) {
-                return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
-            }
-            if (sNorm.includes('cergy') && normCheck.includes('cergy')) {
-                return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
-            }
-            if (sNorm.includes('tin trung') && normCheck.includes('tin trung')) {
-                return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
-            }
-            if (sNorm.includes('hung viet hao') && (normCheck.includes('hung viet hao') || normCheck.includes('viet hao'))) {
-                return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
-            }
-            if (sNorm.includes('heropower') && (normCheck.includes('heropower') || normCheck.includes('hero power'))) {
-                return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
-            }
-        }
-
         if (candidateSup) {
-            return { found: false, notFoundInList: true, querySupplier: candidateSup };
+            // Lược bỏ các từ nối tiếng Việt như "là", "thành", "sang", "thay", "cho"
+            candidateSup = candidateSup.replace(/^(?:là|thành|sang|thay|bằng|cho|từ|qua|vào|của)\s+/i, '').trim();
+            const candNorm = removeVietnameseTones(candidateSup);
+            const candCompacted = candNorm.replace(/[^a-z0-9]/g, '');
+
+            // Thử kiểm tra lại tên đã làm sạch
+            if (candNorm.includes('solar e') || candCompacted.includes('solare')) {
+                const s = sRes.rows.find(r => removeVietnameseTones(r.name).includes('solar e'));
+                if (s) return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+            }
+            if (candNorm.includes('cergy') || candCompacted.includes('cergy') || candCompacted.includes('sergy')) {
+                const s = sRes.rows.find(r => removeVietnameseTones(r.name).includes('cergy'));
+                if (s) return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+            }
+            if (candNorm.includes('tin trung') || candCompacted.includes('tintrung')) {
+                const s = sRes.rows.find(r => removeVietnameseTones(r.name).includes('tin trung'));
+                if (s) return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+            }
+            if (candNorm.includes('hung viet hao') || candCompacted.includes('hungviethao') || candCompacted.includes('viethao')) {
+                const s = sRes.rows.find(r => removeVietnameseTones(r.name).includes('hung viet hao'));
+                if (s) return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+            }
+            if (candNorm.includes('heropower') || candCompacted.includes('heropower')) {
+                const s = sRes.rows.find(r => removeVietnameseTones(r.name).includes('heropower'));
+                if (s) return { found: true, supplierId: s.id, supplierName: s.name, supplierCode: s.supplier_code };
+            }
+
+            if (candidateSup.length > 1) {
+                return { found: false, notFoundInList: true, querySupplier: candidateSup };
+            }
         }
 
-        if (norm.includes('ncc') || norm.includes('nha cung cap')) {
-            const words = norm.replace(/nha cung cap|ncc|tu|mua|dat|hang/g, '').trim();
+        if (normCheck.includes('ncc') || normCheck.includes('nha cung cap')) {
+            const words = normCheck.replace(/nha cung cap|ncc|tu|mua|dat|hang|sua lai|sua|doi|sang|thanh|la/g, '').trim();
             if (words.length > 2) {
                 return { found: false, notFoundInList: true, querySupplier: words };
             }
@@ -897,7 +960,8 @@ async function handleUpdateDraftOrder(text, context, user) {
     }
 
     // 3. Cập nhật Đối tác (Khách CRM hoặc NCC)
-    if (draft.type === 'SALE') {
+    const mentionsCustomer = /khach|khach hang|doi tac|anh |chi |bac |chu |ong |ba |sdt|kh\s*\d+/i.test(norm) || !draft.partner_name;
+    if (draft.type === 'SALE' && mentionsCustomer) {
         const custRes = await extractCustomer(cleanText, norm, context);
         if (custRes.notFoundInCRM) {
             return {
@@ -914,14 +978,17 @@ async function handleUpdateDraftOrder(text, context, user) {
             if (custRes.phone) draft.partner_phone = custRes.phone;
             updatedFields.push(`khách hàng là **${custRes.customerName}** (\`${custRes.customerCode}\`)`);
         }
-    } else {
+    }
+
+    const mentionsSupplier = /ncc|nha cung cap|cty|cong ty|solar|cergy|tin trung|hung viet hao|heropower|tu nha cung cap/i.test(norm) || !draft.partner_name;
+    if (draft.type === 'PURCHASE' && mentionsSupplier) {
         const supRes = await extractSupplier(cleanText, norm, context);
         if (supRes.notFoundInList) {
             return {
                 text: `⚠️ Nhà cung cấp "${supRes.querySupplier}" không có trong danh mục NCC của hệ thống!\n\n📋 Danh sách NCC: Solar E, Cergy, Tín Trung, Hùng Việt Hào, HeroPower.`,
                 card: null,
                 action_type: 'SUPPLIER_NOT_FOUND',
-                quick_replies: ['Công ty Solar E', 'Công ty Cergy', 'Công ty Tín Trung', 'Hùng Việt Hào', 'Hủy đơn']
+                quick_replies: ['Công ty Solar E', 'Công ty Cergy', 'Công ty Tín Trung', 'H Hùng Việt Hào', 'Công ty HeroPower']
             };
         }
         if (supRes.found) {
@@ -932,17 +999,31 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
     }
 
-    // 4. Cập nhật sản phẩm nếu bản nháp đang thiếu
-    if (!draft.product) {
+    // 4. CẬP NHẬT HOẶC ĐỔI SẢN PHẨM KHÁC
+    const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai/i.test(norm);
+    const mentionsProduct = wantsChangeProduct || !draft.product || /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|tu dien|kep|bat/i.test(norm);
+
+    if (mentionsProduct) {
+        if ((norm.includes('san pham khac') || norm.includes('doi san pham') || norm.includes('sai san pham')) && !/deye|canadian|jinko|longi|apess|pin|bien tan|inverter|tu dien|solis|lumentree/i.test(norm)) {
+            draft.product = null;
+            draft.status = 'NEED_PRODUCT';
+            return {
+                text: `Dạ em đã hủy chọn sản phẩm trước đó. Cho em xin Tên sản phẩm hoặc thiết bị trong kho mà anh/chị muốn đổi sang nhé!`,
+                card: null,
+                action_type: 'ORDER_NEED_INFO',
+                quick_replies: ['Tấm pin Canadian 600W', 'Deye hybrid 12kw 3 pha', 'Hủy đơn']
+            };
+        }
+
         const prodRes = await findMatchingProduct(cleanText, norm, context);
         if (prodRes.matched) {
             draft.product = prodRes.product;
             draft.unitPrice = draft.type === 'SALE' ? (parseFloat(prodRes.product.retail_price) || 0) : (parseFloat(prodRes.product.import_price) || 2500000);
             draft.totalAmount = draft.qty * draft.unitPrice;
-            updatedFields.push(`sản phẩm là **${prodRes.product.product_name}**`);
+            updatedFields.push(`sản phẩm thành **${prodRes.product.product_name}**`);
         } else if (prodRes.notFoundInCatalog) {
             return {
-                text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong kho hàng!`,
+                text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong kho hàng!\n👉 Anh/Chị chọn thiết bị có sẵn trong danh mục nhé!`,
                 card: null,
                 action_type: 'PRODUCT_NOT_FOUND',
                 quick_replies: ['Tấm pin Canadian 600W', 'Deye hybrid 12kw', 'Hủy đơn']
@@ -1885,6 +1966,80 @@ async function handleAnalyzeProduct(text, context, user) {
     };
 }
 
+// =========================================================================
+// MODULE TÍCH HỢP OPENAI CHATGPT (GPT-4o / GPT-4o-mini)
+// =========================================================================
+
+async function getOpenAIKey() {
+    if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-')) {
+        return process.env.OPENAI_API_KEY;
+    }
+    try {
+        const r = await pool.query("SELECT setting_value FROM system_settings WHERE setting_key = 'openai_api_key' LIMIT 1");
+        if (r.rows.length > 0 && r.rows[0].setting_value && r.rows[0].setting_value.startsWith('sk-')) {
+            process.env.OPENAI_API_KEY = r.rows[0].setting_value;
+            return r.rows[0].setting_value;
+        }
+    } catch (e) {
+        console.warn('getOpenAIKey error:', e.message);
+    }
+    return null;
+}
+
+async function saveOpenAIKey(key) {
+    try {
+        process.env.OPENAI_API_KEY = key;
+        await pool.query(`
+            INSERT INTO system_settings (setting_key, setting_value)
+            VALUES ('openai_api_key', $1)
+            ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value
+        `, [key]);
+        return true;
+    } catch (e) {
+        console.warn('saveOpenAIKey error:', e.message);
+        return false;
+    }
+}
+
+async function handleSwitchToChatGPT(text, context, user) {
+    const activeKey = await getOpenAIKey();
+    if (activeKey) {
+        return {
+            text: `🤖 **HỆ THỐNG ĐÃ KÍCH HOẠT OPENAI CHATGPT (GPT-4o)!**\n\nTrợ lý AI SUNGO đang chạy trực tiếp trên động cơ trí tuệ nhân tạo của OpenAI. Anh/Chị có thể ra lệnh bằng ngôn ngữ tự nhiên thoải mái nhé!`,
+            card: null,
+            action_type: 'OPENAI_ACTIVE',
+            quick_replies: ['Tạo đơn bán 10 tấm pin Canadian', 'Lập phiếu mua từ Solar E', 'Kiểm tra hàng tồn kho']
+        };
+    } else {
+        return {
+            text: `🤖 **KẾT NỐI OPENAI CHATGPT (GPT-4o / GPT-4o-mini)**\n\nEm đã tích hợp sẵn module OpenAI ChatGPT trực tiếp vào hệ thống SUNGO ERP!\n\n👉 Để kích hoạt ngay, Anh/Chị chỉ cần gửi mã API Key vào đây (Ví dụ gõ: \`API key là sk-...\`).\n\n*(Đồng thời, em đã nâng cấp bộ não suy luận: Đã sửa nhận diện "solare" -> **Công ty Solar E** và hỗ trợ đổi sản phẩm linh hoạt 100%!)*`,
+            card: null,
+            action_type: 'OPENAI_KEY_REQUIRED',
+            quick_replies: ['API key là sk-...', 'Lập phiếu mua từ Solar E', 'Hủy đơn']
+        };
+    }
+}
+
+async function handleSetOpenAIKey(text, context, user) {
+    const keyMatch = text.match(/(sk-[A-Za-z0-9_\-]{15,})/i);
+    if (keyMatch) {
+        const newKey = keyMatch[1];
+        await saveOpenAIKey(newKey);
+        return {
+            text: `🎉 **ĐÃ KÍCH HOẠT THÀNH CÔNG OPENAI CHATGPT!**\n\nHệ thống đã lưu API Key và kết nối trực tiếp với mô hình trí tuệ nhân tạo GPT-4o của OpenAI.\nTừ bây giờ, Trợ lý AI SUNGO sẽ sử dụng động cơ ChatGPT để thấu hiểu ngôn ngữ tự nhiên, suy luận ngữ cảnh và lên đơn hàng thông minh nhất!`,
+            card: null,
+            action_type: 'OPENAI_KEY_SAVED',
+            quick_replies: ['Tạo đơn bán 10 tấm pin Canadian', 'Lập phiếu mua từ Solar E', 'Kiểm tra tồn kho']
+        };
+    }
+    return {
+        text: `⚠️ Định dạng API Key không hợp lệ. API Key của OpenAI thường bắt đầu bằng \`sk-...\`. Anh/Chị kiểm tra lại nhé!`,
+        card: null,
+        action_type: 'INVALID_API_KEY',
+        quick_replies: ['API key là sk-...']
+    };
+}
+
 /**
  * =========================================================================
  * BỘ ĐIỀU PHỐI TRUNG TÂM (MAIN AI DISPATCHER)
@@ -1920,6 +2075,12 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
 
     try {
         switch (intent) {
+            case 'SWITCH_TO_CHATGPT':
+                actionResult = await handleSwitchToChatGPT(messageText, context, userObj);
+                break;
+            case 'SET_OPENAI_KEY':
+                actionResult = await handleSetOpenAIKey(messageText, context, userObj);
+                break;
             case 'CONFIRM_DRAFT_ORDER':
                 actionResult = await handleConfirmDraftOrder(messageText, context, userObj);
                 break;
