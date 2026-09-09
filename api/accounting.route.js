@@ -490,11 +490,159 @@ router.get('/debt-statement', async (req, res) => {
                 paid_amount: paid,
                 remaining_debt: rem,
                 status: ord.status,
+                notes: ord.notes || '',
                 items: items
             });
         }
 
-        const remainingBalance = totalGrossAmount - totalPaidAmount;
+        // 4. LẤY CÁC GIAO DỊCH THU / NHẬN / ĐƯA TIỀN TỪ debt_transactions
+        let txSql = `
+            SELECT dt.id, dt.code, dt.transaction_type, dt.amount, dt.payment_method, dt.source_fund,
+                   dt.order_id, dt.order_code, dt.notes, dt.created_by, dt.created_at
+            FROM debt_transactions dt
+            WHERE (
+                ($1::int > 0 AND (dt.customer_id = $1 OR dt.customer_name IN (SELECT name FROM customers WHERE id = $1) OR dt.customer_name IN (SELECT full_name FROM customers WHERE id = $1)))
+                OR ($2::text != '' AND (dt.customer_name = $2 OR dt.customer_name ILIKE $2))
+            )
+        `;
+        const txParams = [cId, cName];
+        if (from_date) {
+            txParams.push(from_date);
+            txSql += ` AND dt.created_at >= $${txParams.length}`;
+        }
+        if (to_date) {
+            txParams.push(to_date + ' 23:59:59');
+            txSql += ` AND dt.created_at <= $${txParams.length}`;
+        }
+        txSql += " ORDER BY dt.created_at ASC";
+        const txRes = await pool.query(txSql, txParams);
+
+        // 5. LẤY THÊM CÁC PHIẾU THU/CHI TỪ cash_transactions CHƯA CÓ TRONG debt_transactions
+        let cashSql = `
+            SELECT ct.id, ct.code, ct.type, ct.amount, ct.payment_method, ct.source_fund,
+                   ct.order_id, ct.order_code, ct.notes, ct.created_at
+            FROM cash_transactions ct
+            WHERE (
+                ($1::int > 0 AND (ct.customer_id = $1 OR ct.target_name IN (SELECT name FROM customers WHERE id = $1) OR ct.target_name IN (SELECT full_name FROM customers WHERE id = $1)))
+                OR ($2::text != '' AND (ct.target_name = $2 OR ct.target_name ILIKE $2))
+            )
+            AND ct.category != 'Thu tiền bán lẻ ngay'
+            AND ct.code NOT IN (SELECT code FROM debt_transactions WHERE code IS NOT NULL)
+        `;
+        const cashParams = [cId, cName];
+        if (from_date) {
+            cashParams.push(from_date);
+            cashSql += ` AND ct.created_at >= $${cashParams.length}`;
+        }
+        if (to_date) {
+            cashParams.push(to_date + ' 23:59:59');
+            cashSql += ` AND ct.created_at <= $${cashParams.length}`;
+        }
+        cashSql += " ORDER BY ct.created_at ASC";
+        const cashRes = await pool.query(cashSql, cashParams);
+
+        // 6. XÂY DỰNG SỔ CÁI ĐỐI CHIẾU CÔNG NỢ THỐNG NHẤT (UNIFIED CHRONOLOGICAL LEDGER)
+        const ledger = [];
+        const txOrderIds = new Set();
+        txRes.rows.forEach(t => { if (t.order_id) txOrderIds.add(t.order_id); });
+        cashRes.rows.forEach(c => { if (c.order_id) txOrderIds.add(c.order_id); });
+
+        // A. Thêm các Đơn Hàng vào sổ cái
+        for (const ord of statementOrders) {
+            ledger.push({
+                entry_type: 'ORDER',
+                id: ord.order_id,
+                code: ord.order_code,
+                date: ord.order_date,
+                type_label: 'Đơn hàng bán',
+                notes: ord.notes || '',
+                items: ord.items,
+                debit: ord.total_amount, // Phát sinh Tăng Nợ
+                credit: 0,
+                amount: ord.total_amount
+            });
+
+            // Nếu đơn có trả tiền ngay lúc tạo đơn mà chưa nằm trong debt_transactions
+            if (ord.paid_amount > 0 && !txOrderIds.has(ord.order_id)) {
+                ledger.push({
+                    entry_type: 'RECEIVE',
+                    id: 'init_' + ord.order_id,
+                    code: 'TT-' + ord.order_code,
+                    date: new Date(new Date(ord.order_date).getTime() + 1000).toISOString(),
+                    type_label: 'Tôi đã nhận tiền',
+                    notes: `Thanh toán khi lập đơn ${ord.order_code}`,
+                    items: [],
+                    payment_method: 'Tiền Mặt / Chuyển Khoản',
+                    source_fund: 'TK_CONG_TY',
+                    created_by: 'Kinh Doanh',
+                    debit: 0,
+                    credit: ord.paid_amount, // Phát sinh Giảm Nợ
+                    amount: ord.paid_amount
+                });
+            }
+        }
+
+        // B. Thêm các giao dịch "Tôi đã nhận" (RECEIVE) và "Tôi đã đưa" (PAY) từ debt_transactions
+        for (const t of txRes.rows) {
+            const isReceive = (t.transaction_type === 'RECEIVE');
+            const amt = parseFloat(t.amount || 0);
+            ledger.push({
+                entry_type: isReceive ? 'RECEIVE' : 'PAY',
+                id: t.id,
+                code: t.code,
+                date: t.created_at,
+                type_label: isReceive ? 'Tôi đã nhận tiền' : 'Tôi đã đưa tiền',
+                notes: t.notes || (isReceive ? 'Khách thanh toán / chuyển khoản cọc' : 'Chi hoàn trả khách'),
+                payment_method: t.payment_method || (isReceive ? 'Chuyển Khoản' : 'Tiền Mặt'),
+                source_fund: t.source_fund,
+                created_by: t.created_by,
+                items: [],
+                debit: isReceive ? 0 : amt,  // PAY: Tăng nợ / cty chi tiền ra
+                credit: isReceive ? amt : 0, // RECEIVE: Giảm nợ / khách trả tiền vào
+                amount: amt
+            });
+        }
+
+        // C. Thêm các phiếu từ cash_transactions nếu có
+        for (const c of cashRes.rows) {
+            const isReceive = (c.type === 'THU');
+            const amt = parseFloat(c.amount || 0);
+            ledger.push({
+                entry_type: isReceive ? 'RECEIVE' : 'PAY',
+                id: 'cash_' + c.id,
+                code: c.code,
+                date: c.created_at,
+                type_label: isReceive ? 'Tôi đã nhận tiền' : 'Tôi đã đưa tiền',
+                notes: c.notes || (isReceive ? 'Thu tiền nợ / cọc khách hàng' : 'Chi trả tiền khách'),
+                payment_method: c.payment_method || (isReceive ? 'Chuyển Khoản' : 'Tiền Mặt'),
+                source_fund: c.source_fund,
+                created_by: 'Kế Toán',
+                items: [],
+                debit: isReceive ? 0 : amt,
+                credit: isReceive ? amt : 0,
+                amount: amt
+            });
+        }
+
+        // D. Sắp xếp toàn bộ giao dịch theo thứ tự thời gian tăng dần
+        ledger.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // E. Tính toán lũy kế dòng tiền & dư nợ
+        let running = 0;
+        let totalDebit = 0;
+        let totalCredit = 0;
+
+        ledger.forEach((e, idx) => {
+            e.stt = idx + 1;
+            totalDebit += e.debit;
+            totalCredit += e.credit;
+            running += (e.debit - e.credit);
+            e.running_balance = Math.round(running);
+        });
+
+        const allDates = ledger.map(e => e.date).filter(Boolean);
+        const earliestDate = allDates.length > 0 ? allDates[0] : new Date();
+        const latestDate = allDates.length > 0 ? allDates[allDates.length - 1] : new Date();
 
         res.json({
             success: true,
@@ -507,19 +655,25 @@ router.get('/debt-statement', async (req, res) => {
             },
             customer: custInfo,
             date_range: {
-                from_date: from_date || (statementOrders[0]?.order_date || new Date()),
-                to_date: to_date || (statementOrders[statementOrders.length - 1]?.order_date || new Date())
+                from_date: from_date || earliestDate,
+                to_date: to_date || latestDate
             },
             summary: {
                 total_orders_count: statementOrders.length,
-                total_gross_amount: totalGrossAmount,
-                total_returned_amount: 0,
-                total_paid_amount: totalPaidAmount,
-                remaining_balance: remainingBalance
+                total_orders_amount: totalGrossAmount,
+                total_debit: totalDebit,
+                total_credit: totalCredit,
+                total_paid_amount: totalCredit,
+                total_gross_amount: totalDebit,
+                remaining_balance: running,
+                debt_type: running > 0 ? 'RECEIVABLE' : (running < 0 ? 'PAYABLE' : 'ZERO'),
+                debt_label: running > 0 ? 'TÔI PHẢI THU' : (running < 0 ? 'TÔI PHẢI TRẢ' : 'HẾT NỢ')
             },
-            orders: statementOrders
+            orders: statementOrders,
+            ledger: ledger
         });
     } catch (e) {
+        console.error("Lỗi GET /api/accounting/debt-statement:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -550,6 +704,18 @@ router.post('/collect-debt', async (req, res) => {
             (code, type, target_name, amount, payment_method, category, tax_status, source_fund, notes, customer_id)
             VALUES ($1, 'THU', $2, $3, $4, 'Thu tiền hàng', 'KHONG_AP_DUNG', $5, $6, $7)
         `, [code, custName, collectAmt, method, fund, notes || `Thu nợ khách hàng ${custName}`, (customer_id && parseInt(customer_id) > 0) ? customer_id : null]);
+
+        // 1b. Ghi nhận đồng bộ vào debt_transactions để hiển thị ngay trong Sổ Nợ
+        const cIdInt = (customer_id && parseInt(customer_id) > 0) ? parseInt(customer_id) : null;
+        await client.query(`
+            INSERT INTO debt_transactions 
+            (code, customer_id, customer_name, transaction_type, amount, payment_method, source_fund, notes, created_by, created_at)
+            VALUES ($1, $2, $3, 'RECEIVE', $4, $5, $6, $7, $8, NOW())
+        `, [
+            code, cIdInt, custName, collectAmt, method, fund, 
+            notes || `Thu nợ khách hàng ${custName}`,
+            req.user?.full_name || req.user?.username || 'Kế Toán'
+        ]);
 
         // 2. Phân bổ tiền thu trừ nợ vào Đơn Hàng (orders)
         let remainingToApply = collectAmt;
