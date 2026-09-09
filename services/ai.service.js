@@ -373,7 +373,7 @@ const CUST_STOP_WORDS = new Set([
     'mua', 'ban', 'cho', 'tao', 'don', 'ngay', 'lap', 'phieu', 'va', 'la', 'voi', 
     'o', 'tai', 'tp', 'tinh', 'quan', 'huyen', 'so', 'luong', 'lay', 'tam', 'pin', 
     'bien', 'tan', 'inverter', 'bo', 'cai', 'chiec', 'thanh', 'sang', 'thay', 'sua',
-    'nghe', 'nha', 'nhe', 'nhi', 'a', 'ha', 'ne', 'roi', 'di', 'dum', 'giup', 'ho',
+    'nghe', 'nha', 'nhen', 'nhe', 'nhi', 'a', 'ha', 'ne', 'roi', 'di', 'dum', 'giup', 'ho',
     'nao', 'coi', 'nhung', 'ma', 'lai', 'thong', 'bao', 'chac', 'lac', 'oc', 'cho',
     'dit', 'me', 'dm', 'dcm', 'vcl', 'clgt'
 ]);
@@ -386,7 +386,7 @@ const PRODUCT_STOP_WORDS = new Set([
     'anh', 'chi', 'em', 'bac', 'chu', 'ong', 'ba', 'co', 'thim',
     'khach', 'khach hang', 'doi', 'tac', 'ncc', 'nha', 'cung', 'cap', 'dia', 'chi', 'sdt',
     'lap', 'phieu', 'yeu', 'cau', 'gui', 'ngay', 'lien', 'he', 'giup', 'minh', 'lay', 'dat',
-    'nghe', 'nha', 'nhe', 'nhi', 'a', 'ha', 'ne', 'roi', 'di', 'dum', 'giup', 'ho',
+    'nghe', 'nha', 'nhen', 'nhe', 'nhi', 'a', 'ha', 'ne', 'roi', 'di', 'dum', 'giup', 'ho',
     'dit', 'me', 'dm', 'dcm', 'vcl', 'oc', 'cho', 'chac', 'lac'
 ]);
 
@@ -1259,11 +1259,22 @@ async function tool_fetch_technical_datasheet(query, category = null) {
         }
     }
 
+    const isPanelReq = /tam pin|panel|pv\b/i.test(norm);
+    const isInverterReq = /bien tan|inverter|hybrid/i.test(norm);
+    const isBatteryReq = /pin luu tru|pack pin|lithium|battery/i.test(norm);
+
     if (!matched) {
         const brands = ['canadian', 'deye', 'growatt', 'jinko', 'gigabox', 'sungrow', 'longi', 'luxpower', 'apess', 'solis', 'xpower', 'voltique'];
         for (const b of brands) {
             if (norm.includes(b)) {
-                matched = pRes.rows.find(p => removeVietnameseTones(p.product_name + ' ' + p.sku).includes(b));
+                matched = pRes.rows.find(p => {
+                    const pNorm = removeVietnameseTones(p.product_name + ' ' + p.sku);
+                    if (!pNorm.includes(b)) return false;
+                    if (isPanelReq && (/bien tan|inverter|cell pin|32140/i.test(pNorm))) return false;
+                    if (isInverterReq && (/tam pin|mat kinh|cell pin|32140/i.test(pNorm))) return false;
+                    if (isBatteryReq && (/cell pin|32140|bien tan|inverter/i.test(pNorm))) return false;
+                    return true;
+                });
                 if (matched) break;
             }
         }
