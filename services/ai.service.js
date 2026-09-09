@@ -908,10 +908,9 @@ async function extractCustomer(text, norm, context) {
         // TƯỜNG LỬA CHẶN ĐẠI TỪ SẢN PHẨM TRỞ THÀNH TÊN KHÁCH HÀNG CRM
         if (candidateQuery) {
             const candNorm = removeVietnameseTones(candidateQuery).trim();
-            const isProductPronoun = /^(?:san pham|thiet bi|con|thang|cai|may|mat hang|hang|combo|bo|tam|cuc)?\s*(?:nay|do|kia|no|day|ay)$/i.test(candNorm);
-            const candTokens = candNorm.split(/[^a-z0-9]+/i).filter(Boolean);
-            const allStopWords = candTokens.length > 0 && candTokens.every(t => CUST_STOP_WORDS.has(t) || PRODUCT_STOP_WORDS.has(t));
-            if (isProductPronoun || allStopWords) {
+            const isProductPronoun = /^(?:san pham|thiet bi|con|thang|cai|may|mat hang|hang|combo|bo|tam|cuc)?\s*(?:nay|do|kia|no|day|ay)$/i.test(candNorm) ||
+                                     /^(?:san pham|thiet bi|mat hang|hang hoa|combo)$/i.test(candNorm);
+            if (isProductPronoun) {
                 candidateQuery = '';
             }
         }
