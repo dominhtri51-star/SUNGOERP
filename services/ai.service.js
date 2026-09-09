@@ -204,30 +204,72 @@ function detectIntent(text, context) {
     }
 
     // =========================================================================
+    // 0. XỬ LÝ HỦY BỎ BẢN NHÁP HOẶC HỦY ĐƠN VỪA TẠO (CANCEL COMMAND)
+    // =========================================================================
+    const isCancelCommand = norm.includes('huy') || norm.includes('khong tao nua') || norm.includes('bo qua') || 
+                            norm.includes('xoa nhap') || norm.includes('dung lai') || norm.includes('thoi') || norm.includes('xoa don');
+    if (isCancelCommand && context && (context.draft_order || context.active_so_draft || context.last_purchase || context.last_order)) {
+        return 'CANCEL_DRAFT_ORDER';
+    }
+
+    // =========================================================================
     // 0. XỬ LÝ KHI ĐANG CÓ BẢN NHÁP ĐƠN HÀNG TRONG NGỮ CẢNH (DRAFT ORDER STATE)
     // =========================================================================
-    if (context && context.draft_order) {
-        // Hủy bỏ bản nháp đơn hàng
-        if (norm.includes('huy') || norm.includes('khong tao nua') || norm.includes('bo qua') || norm.includes('xoa nhap') || norm.includes('dung lai') || norm.includes('thoi')) {
-            return 'CANCEL_DRAFT_ORDER';
+    if (context && (context.draft_order || context.active_so_draft)) {
+        // A. BẮT ĐẦU ĐƠN MỚI TOANH (BẺ GÃY & THANH LÝ TOÀN BỘ BẢN NHÁP CŨ)
+        const isStartNewOrder = 
+            norm.includes('tao don hang moi') || norm.includes('tao don moi') || 
+            norm.includes('len don moi') || norm.includes('don hang moi') || norm.includes('don moi') ||
+            norm.includes('tao lai don') || norm.includes('lam don moi');
+        if (isStartNewOrder) {
+            context.draft_order = null;
+            context.active_so_draft = null;
+            context.current_flow = 'IDLE';
+            return 'CREATE_ORDER';
         }
 
-        // Tiếp tục / phục hồi bản nháp đơn hàng (hoặc câu chào ngắt quãng)
-        if (
-            norm.includes('tiep tuc don') || norm.includes('tiep tuc ban nhap') || norm.includes('quay lai don') || 
-            norm.includes('xem lai don nhap') || norm.includes('tiep tuc') ||
-            /^(?:alo|chao|hi|hello|helo|oi|bot oi|em oi|ad oi)(?:\s+(?:em|bot|ad|nhe))?$/i.test(norm)
-        ) {
-            return 'RESUME_DRAFT_ORDER';
-        }
+        // B. XÁC NHẬN TẠO ĐƠN CHÍNH THỨC - CHỈ KÍCH HOẠT VỚI TỪ KHẲNG ĐỊNH TƯỜNG MINH!
+        // TUYỆT ĐỐI KHÔNG DÙNG "tao don", "len don", "don hang" để tránh nuốt nhầm câu lệnh tạo đơn mới!
+        const isAffirmativeConfirm = 
+            norm.includes('xac nhan') || norm.includes('dong y') || norm.includes('chot don') || norm.includes('chot phieu') ||
+            norm.includes('tao don ngay') || norm.includes('tao phieu ngay') || norm.includes('tao luon di') || norm.includes('tao di') || 
+            norm.includes('luu don') || norm.includes('luu phieu') || norm.includes('dung roi tao di') || norm.includes('chuan roi tao di') || 
+            norm.includes('tien hanh tao') || norm.includes('bat dau lam') || norm.includes('lam di') ||
+            /^(?:ok|oke|okie|dong y|xac nhan|chot|luu|tao ngay)(?:\s+(?:luon|di|nhe|nha|em|nhen|nhé))?$/i.test(norm) ||
+            /^(?:dung roi|chuan roi|chinh xac|hop ly)(?:\s+(?:tao di|luu di|luon di))?$/i.test(norm);
 
-        // Xác nhận tạo đơn chính thức
-        if (
-            norm.includes('tao don') || norm.includes('len don') || norm.includes('xac nhan') || norm.includes('dong y') ||
-            norm.includes('ok') || norm.includes('luu don') || norm.includes('dung roi') || norm.includes('chuan roi') ||
-            norm.includes('tien hanh') || norm.includes('bat dau lam') || norm.includes('lam di') || norm.includes('tao di')
-        ) {
+        if (isAffirmativeConfirm) {
             return 'CONFIRM_DRAFT_ORDER';
+        }
+
+        // C. TƯỜNG LỬA CHUYỂN SANG ĐƠN BÁN (SO) - TRIỆT TIÊU DRAFT PO NẾU CÓ
+        const isExplicitSales = 
+            norm.includes('tao don ban') || norm.includes('don ban') || norm.includes('don hang ban') || 
+            norm.includes('ban hang') || norm.includes('ban cho') || norm.includes('khach mua') || 
+            norm.includes('len don ban') || norm.includes('lap don ban') || 
+            norm.includes('don ban hang khong phai mua hang') || norm.includes('ban chu khong phai mua') ||
+            norm.includes('tao don cho khach') || norm.includes('len don cho khach');
+        if (isExplicitSales) {
+            context.draft_order = null;
+            context.active_so_draft = null;
+            context.current_flow = 'IDLE';
+            return 'CREATE_ORDER';
+        }
+
+        // D. TƯỜNG LỬA CHUYỂN SANG PHIẾU MUA (PO) - TRIỆT TIÊU DRAFT SO NẾU CÓ
+        const isExplicitPurchase = 
+            norm.includes('phieu mua hang') || norm.includes('phieu mua') || norm.includes('don mua hang') ||
+            norm.includes('don mua') || norm.includes('don dat mua') || norm.includes('dat hang mua') ||
+            norm.includes('dat mua hang') || norm.includes('mua hang') || norm.includes('nhap hang') ||
+            norm.includes('nhap kho') || norm.includes('tao po') || norm.includes('len po') || norm.includes('don po') ||
+            norm.includes('dat ncc') || norm.includes('nha cung cap') || norm.includes('ncc') ||
+            norm.includes('mua ben') || norm.includes('mua tu') || norm.includes('dat ben') ||
+            (norm.includes('mua') && (norm.includes('solar e') || norm.includes('cergy') || norm.includes('tin trung') || norm.includes('hung viet hao') || norm.includes('heropower')));
+        if (isExplicitPurchase) {
+            context.draft_order = null;
+            context.active_so_draft = null;
+            context.current_flow = 'IDLE';
+            return 'CREATE_PURCHASE';
         }
 
         // KIỂM TRA NGẮT QUÃNG (CONTEXT SWITCH & INTERRUPTION):
@@ -247,33 +289,41 @@ function detectIntent(text, context) {
     }
 
     // =========================================================================
-    // 4. LÊN ĐƠN ĐẶT MUA HÀNG NHANH / PHIẾU MUA HÀNG (PO - PURCHASE ORDER)
+    // 1. TẠO ĐƠN HÀNG BÁN NHANH (SO - SALES ORDER)
+    // Ưu tiên cao hơn để bắt các câu phủ định: "đơn bán hàng không phải mua hàng", "tạo đơn bán"
     // =========================================================================
     if (
-        norm.includes('phieu mua hang') || norm.includes('phieu mua') || norm.includes('don mua hang') ||
-        norm.includes('don mua') || norm.includes('don dat mua') || norm.includes('dat hang mua') ||
-        norm.includes('dat mua hang') || norm.includes('mua hang') || norm.includes('nhap hang') ||
-        norm.includes('nhap kho') || norm.includes('tao po') || norm.includes('len po') || norm.includes('don po') ||
-        norm.includes('dat ncc') || norm.includes('nha cung cap') || norm.includes('ncc') ||
-        norm.includes('mua ben') || norm.includes('mua tu') || norm.includes('dat ben') ||
-        (norm.includes('mua') && (norm.includes('solar e') || norm.includes('cergy') || norm.includes('tin trung') || norm.includes('hung viet hao') || norm.includes('heropower'))) ||
-        (norm.includes('dat mua') && !norm.includes('khach'))
+        norm.includes('don ban hang khong phai mua hang') || norm.includes('ban chu khong phai mua') || 
+        norm.includes('khong phai mua hang') || norm.includes('don hang ban') || norm.includes('don ban hang') || 
+        norm.includes('ban cho') || norm.includes('ban hang') || norm.includes('khach mua') || 
+        norm.includes('len don ban') || norm.includes('tao don ban') || norm.includes('lap don ban') || 
+        norm.includes('tao don hang') || norm.includes('tao don') || norm.includes('len don') || norm.includes('lap don') ||
+        (norm.includes('ban') && !norm.includes('nha cung cap') && !norm.includes('phieu mua') && !norm.includes('don mua') && !norm.includes('nhap hang') && !norm.includes('po'))
     ) {
-        return 'CREATE_PURCHASE';
+        if (!norm.includes('nha cung cap') && !norm.includes('phieu mua') && !norm.includes('don mua') && !norm.includes('nhap hang') && !norm.includes('po')) {
+            return 'CREATE_ORDER';
+        }
+        if (norm.includes('khong phai mua') || norm.includes('ban chu khong')) {
+            return 'CREATE_ORDER';
+        }
     }
 
     // =========================================================================
-    // 1. TẠO ĐƠN HÀNG BÁN NHANH (SO - SALES ORDER)
+    // 4. LÊN ĐƠN ĐẶT MUA HÀNG NHANH / PHIẾU MUA HÀNG (PO - PURCHASE ORDER)
     // =========================================================================
     if (
-        (norm.includes('don hang ban') || norm.includes('don ban hang') || norm.includes('ban cho') || 
-         norm.includes('ban hang') || norm.includes('khach mua') || norm.includes('len don ban') || 
-         norm.includes('tao don ban') || norm.includes('lap don ban') || norm.includes('tao don hang') || 
-         norm.includes('tao don') || norm.includes('len don') || norm.includes('lap don') ||
-         norm.includes('ban')) &&
-        !norm.includes('nha cung cap') && !norm.includes('phieu mua') && !norm.includes('don mua') && !norm.includes('nhap hang') && !norm.includes('po')
+        !norm.includes('khong phai mua') && !norm.includes('don ban') && !norm.includes('ban chu khong') && (
+            norm.includes('phieu mua hang') || norm.includes('phieu mua') || norm.includes('don mua hang') ||
+            norm.includes('don mua') || norm.includes('don dat mua') || norm.includes('dat hang mua') ||
+            norm.includes('dat mua hang') || norm.includes('mua hang') || norm.includes('nhap hang') ||
+            norm.includes('nhap kho') || norm.includes('tao po') || norm.includes('len po') || norm.includes('don po') ||
+            norm.includes('dat ncc') || norm.includes('nha cung cap') || norm.includes('ncc') ||
+            norm.includes('mua ben') || norm.includes('mua tu') || norm.includes('dat ben') ||
+            (norm.includes('mua') && (norm.includes('solar e') || norm.includes('cergy') || norm.includes('tin trung') || norm.includes('hung viet hao') || norm.includes('heropower'))) ||
+            (norm.includes('dat mua') && !norm.includes('khach'))
+        )
     ) {
-        return 'CREATE_ORDER';
+        return 'CREATE_PURCHASE';
     }
 
     // 5. Báo cáo doanh thu
@@ -1965,8 +2015,10 @@ async function handleConfirmDraftOrder(text, context, user) {
         context.active_customer = { id: draft.customer_id, name: draft.partner_name, phone: draft.partner_phone, customer_code: draft.customer_code };
         context.last_customer = context.active_customer;
         context.active_product = items[0].product;
-        context.last_order = { id: orderId, code: orderCode, total: draft.totalAmount, customer: draft.partner_name };
+        context.last_order = { id: orderId, code: orderCode, total: draft.totalAmount, customer: draft.partner_name, time: Date.now() };
         context.draft_order = null;
+        context.active_so_draft = null;
+        context.current_flow = 'IDLE';
 
         const cardItems = items.map(it => ({
             name: it.name || it.product.product_name,
@@ -2018,9 +2070,11 @@ async function handleConfirmDraftOrder(text, context, user) {
             RETURNING *
         `, [poCode, draft.supplier_id, draft.partner_name, draft.notes || `Lập qua Trợ lý Google AI bởi ${user.full_name || 'Người dùng'}`, JSON.stringify(poItems), draft.totalAmount]);
 
-        context.last_purchase = { id: insRes.rows[0].id, code: poCode, total: draft.totalAmount, supplier: draft.partner_name };
+        context.last_purchase = { id: insRes.rows[0].id, code: poCode, total: draft.totalAmount, supplier: draft.partner_name, time: Date.now() };
         context.active_product = items[0].product;
         context.draft_order = null;
+        context.active_so_draft = null;
+        context.current_flow = 'IDLE';
 
         return {
             text: `🎉 **ĐÃ LẬP PHIẾU MUA [${poCode}]!**\nNCC: **${draft.partner_name}** (${draft.supplier_code ? '`' + draft.supplier_code + '`' : 'NCC'})\nTổng tiền: **${formatVND(draft.totalAmount)}** | Trạng thái: **Chờ Duyệt**.`,
@@ -2039,12 +2093,49 @@ async function handleConfirmDraftOrder(text, context, user) {
     }
 }
 
-// HỦY BỎ BẢN NHÁP (CANCEL DRAFT ORDER)
-function handleCancelDraftOrder(text, context, user) {
-    const hadDraft = !!context.draft_order;
+// HỦY BỎ BẢN NHÁP & HỦY ĐƠN VỪA TẠO (CANCEL DRAFT ORDER & ROLLBACK)
+async function handleCancelDraftOrder(text, context, user) {
+    const hadDraft = !!context.draft_order || !!context.active_so_draft;
     context.draft_order = null;
+    context.active_so_draft = null;
+    context.current_flow = 'IDLE';
+
+    let cancelDbMsg = '';
+
+    // 1. Nếu vừa tạo PO trong vòng 5 phút (Chờ Duyệt), hủy ngay trên CSDL
+    if (context.last_purchase && context.last_purchase.id && (!context.last_purchase.time || (Date.now() - context.last_purchase.time < 300000))) {
+        try {
+            const res = await pool.query(
+                "UPDATE purchases SET status = 'Đã Hủy' WHERE id = $1 AND status = 'Chờ Duyệt' RETURNING po_code",
+                [context.last_purchase.id]
+            );
+            if (res.rows.length > 0) {
+                cancelDbMsg = ` và đã chuyển trạng thái Phiếu Mua **[${res.rows[0].po_code}]** thành **Đã Hủy** trên hệ thống`;
+            }
+        } catch (err) {
+            console.error('Lỗi cập nhật trạng thái hủy PO trong CSDL:', err);
+        }
+        context.last_purchase = null;
+    }
+
+    // 2. Nếu vừa tạo SO trong vòng 5 phút (PENDING), hủy ngay trên CSDL
+    if (context.last_order && context.last_order.id && (!context.last_order.time || (Date.now() - context.last_order.time < 300000))) {
+        try {
+            const res = await pool.query(
+                "UPDATE orders SET status = 'CANCELLED' WHERE id = $1 AND status = 'PENDING' RETURNING order_code",
+                [context.last_order.id]
+            );
+            if (res.rows.length > 0) {
+                cancelDbMsg = ` và đã chuyển trạng thái Đơn Bán **[${res.rows[0].order_code}]** thành **Đã Hủy** trên hệ thống`;
+            }
+        } catch (err) {
+            console.error('Lỗi cập nhật trạng thái hủy SO trong CSDL:', err);
+        }
+        context.last_order = null;
+    }
+
     return {
-        text: hadDraft ? `Dạ đã hủy bản nháp đơn hàng.` : `Hiện không có bản nháp nào đang mở.`,
+        text: (hadDraft || cancelDbMsg) ? `Dạ đã hủy bản nháp đơn hàng${cancelDbMsg}.` : `Hiện không có bản nháp hoặc đơn hàng chờ nào đang mở.`,
         card: null,
         action_type: 'DRAFT_ORDER_CANCELLED',
         quick_replies: ['Tạo đơn hàng bán', 'Lập phiếu mua hàng', 'Kiểm tra tồn kho']
@@ -3426,10 +3517,10 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
     const conv = await getOrCreateConversation(userId, sessionId);
     const context = conv.context_state || {};
 
-    // Đồng bộ 2 chiều giữa active_so_draft và draft_order
-    if (context.active_so_draft && !context.draft_order) {
-        context.draft_order = context.active_so_draft;
-    } else if (context.draft_order && !context.active_so_draft) {
+    // Đồng bộ an toàn giữa active_so_draft và draft_order (Anti-zombie draft)
+    if (!context.draft_order) {
+        context.active_so_draft = null;
+    } else {
         context.active_so_draft = context.draft_order;
     }
 
@@ -3589,9 +3680,12 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
         actionResult.quick_replies = ['Tiếp tục đơn hàng', 'Tạo đơn ngay', 'Hủy đơn', ...(actionResult.quick_replies || [])];
     }
 
-    // Đồng bộ lại trạng thái phiên hai chiều
-    if (context.draft_order) context.active_so_draft = context.draft_order;
-    if (context.active_so_draft) context.draft_order = context.active_so_draft;
+    // Đồng bộ an toàn lại trạng thái phiên hai chiều (Anti-zombie draft)
+    if (!context.draft_order) {
+        context.active_so_draft = null;
+    } else {
+        context.active_so_draft = context.draft_order;
+    }
     await updateContextState(conv.id, context);
 
     const latencyMs = Date.now() - startTime;
