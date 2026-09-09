@@ -297,6 +297,15 @@ router.delete('/cash/:id', async (req, res) => {
 router.get('/receivables-aging', async (req, res) => {
     try {
         const query = `
+            WITH partner_dt AS (
+                SELECT 
+                    COALESCE(dt.customer_id, c.id) as cust_id,
+                    COALESCE(SUM(CASE WHEN dt.transaction_type = 'RECEIVE' THEN dt.amount ELSE 0 END), 0) as total_received,
+                    COALESCE(SUM(CASE WHEN dt.transaction_type = 'PAY' THEN dt.amount ELSE 0 END), 0) as total_paid_out
+                FROM debt_transactions dt
+                LEFT JOIN customers c ON (dt.customer_id = c.id OR dt.customer_name = c.name OR dt.customer_name = c.full_name)
+                GROUP BY COALESCE(dt.customer_id, c.id)
+            )
             SELECT 
                 MAX(COALESCE(c.id, o.customer_id, 0)) as customer_id,
                 COALESCE(NULLIF(c.name, ''), NULLIF(c.full_name, ''), o.customer_name, 'Khách Vãng Lai') as customer_name,
@@ -306,9 +315,9 @@ router.get('/receivables-aging', async (req, res) => {
                 MAX(COALESCE(c.debt_limit, 0)) as debt_limit,
                 MAX(COALESCE(c.tier, c.vip_level, 1)) as customer_tier,
                 COUNT(o.id) as unpaid_orders_count,
-                SUM(o.total_amount) as total_order_amount,
-                SUM(COALESCE(o.paid_amount, 0)) as total_paid,
-                SUM(o.total_amount - COALESCE(o.paid_amount, 0)) as remaining_debt,
+                SUM(o.total_amount) + MAX(COALESCE(pdt.total_paid_out, 0)) as total_order_amount,
+                SUM(COALESCE(o.paid_amount, 0)) + MAX(COALESCE(pdt.total_received, 0)) as total_paid,
+                (SUM(o.total_amount) + MAX(COALESCE(pdt.total_paid_out, 0))) - (SUM(COALESCE(o.paid_amount, 0)) + MAX(COALESCE(pdt.total_received, 0))) as remaining_debt,
                 MIN(o.created_at) as oldest_order_date,
                 MAX(o.created_at) as latest_order_date,
                 (ARRAY_AGG(o.order_code ORDER BY o.created_at DESC))[1] as latest_order_code,
@@ -327,9 +336,10 @@ router.get('/receivables-aging', async (req, res) => {
                 ) as orders_detail
             FROM orders o
             LEFT JOIN customers c ON (o.customer_id = c.id OR (o.customer_id IS NULL AND (c.name = o.customer_name OR c.full_name = o.customer_name)))
+            LEFT JOIN partner_dt pdt ON (c.id = pdt.cust_id)
             WHERE o.status NOT IN ('CANCELLED', 'RETURNED')
-              AND (o.total_amount - COALESCE(o.paid_amount, 0)) > 0
             GROUP BY COALESCE(NULLIF(c.name, ''), NULLIF(c.full_name, ''), o.customer_name, 'Khách Vãng Lai')
+            HAVING ((SUM(o.total_amount) + MAX(COALESCE(pdt.total_paid_out, 0))) - (SUM(COALESCE(o.paid_amount, 0)) + MAX(COALESCE(pdt.total_received, 0)))) > 0
             ORDER BY remaining_debt DESC
         `;
 

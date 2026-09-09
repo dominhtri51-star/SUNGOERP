@@ -519,30 +519,7 @@ router.post('/transaction', async (req, res) => {
             txDate
         ]);
 
-        // 4. Nếu là "Tôi đã nhận" (RECEIVE) và được bật auto_settle_orders: cấn trừ đơn hàng cũ
-        let settledOrders = [];
-        if (transaction_type === 'RECEIVE' && auto_settle_orders !== false) {
-            let remainToApply = amt;
-            const unpaidOrders = await client.query(`
-                SELECT id, order_code, total_amount, paid_amount 
-                FROM orders 
-                WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
-                  AND (total_amount - COALESCE(paid_amount, 0)) > 0
-                ORDER BY created_at ASC FOR UPDATE
-            `, [custId]);
-
-            for (const ord of unpaidOrders.rows) {
-                if (remainToApply <= 0) break;
-                const unpaid = Math.max(0, parseFloat(ord.total_amount) - parseFloat(ord.paid_amount || 0));
-                if (unpaid > 0) {
-                    const apply = Math.min(remainToApply, unpaid);
-                    const newPaid = parseFloat(ord.paid_amount || 0) + apply;
-                    await client.query("UPDATE orders SET paid_amount = $1 WHERE id = $2", [newPaid, ord.id]);
-                    settledOrders.push({ order_code: ord.order_code, applied: apply });
-                    remainToApply -= apply;
-                }
-            }
-        }
+        // 4. "Tôi đã nhận tiền" / "Tôi đã đưa tiền" là giao dịch sổ nợ độc lập, KHÔNG tự động ghi đè làm sai lệch paid_amount của đơn hàng gốc
 
         // 5. Cập nhật current_debt và payable_debt trong bảng customers
         const netBal = await calculatePartnerBalance(client, custId);
@@ -564,8 +541,7 @@ router.post('/transaction', async (req, res) => {
             success: true,
             code: txCode,
             message: `✅ Đã lưu giao dịch ${transaction_type === 'RECEIVE' ? 'nhận' : 'đưa'} ${new Intl.NumberFormat('vi-VN').format(amt)} đ thành công!`,
-            net_balance: netBal,
-            settled_orders: settledOrders
+            net_balance: netBal
         });
     } catch(err) {
         await client.query('ROLLBACK');
