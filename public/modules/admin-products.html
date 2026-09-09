@@ -506,12 +506,121 @@
 
             <!-- KHO TÀI LIỆU KỸ THUẬT -->
             <div class="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200 space-y-2.5">
-                <h4 class="font-black text-[11px] text-amber-900 uppercase flex items-center gap-1.5"><i class="fas fa-folder-open text-amber-600"></i> Kho Tài Liệu Kỹ Thuật (Sales & Hồ Sơ Thầu)</h4>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link CO / CQ</label><input type="text" id="p-doc-cocq" placeholder="Link CO/CQ..." class="w-full border border-slate-300 p-1.5 rounded-lg bg-white font-medium outline-none focus:border-amber-500"></div>
-                    <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link Datasheet</label><input type="text" id="p-doc-ds" placeholder="Link Datasheet..." class="w-full border border-slate-300 p-1.5 rounded-lg bg-white font-medium outline-none focus:border-amber-500"></div>
-                    <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link Catalog</label><input type="text" id="p-doc-cat" placeholder="Link Catalog..." class="w-full border border-slate-300 p-1.5 rounded-lg bg-white font-medium outline-none focus:border-amber-500"></div>
-                    <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link Manual</label><input type="text" id="p-doc-man" placeholder="Link Manual..." class="w-full border border-slate-300 p-1.5 rounded-lg bg-white font-medium outline-none focus:border-amber-500"></div>
+                <div class="flex items-center justify-between flex-wrap gap-1">
+                    <h4 class="font-black text-[11px] text-amber-900 uppercase flex items-center gap-1.5"><i class="fas fa-folder-open text-amber-600"></i> Kho Tài Liệu Kỹ Thuật (Sales & Hồ Sơ Thầu)</h4>
+                    <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <i class="fas fa-cloud-arrow-up"></i> Tải File Trực Tiếp Lên Hệ Thống
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <!-- 1. CO / CQ -->
+                    <div class="space-y-1 bg-white/90 p-2.5 rounded-xl border border-amber-200/80 shadow-2xs">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-[10px] font-bold text-slate-700">1. Chứng Chỉ CO / CQ</label>
+                            <span id="p-doc-cocq-status" class="hidden text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded-md">
+                                <i class="fas fa-cloud-check"></i> Đã lưu Cloud
+                            </span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <div class="relative flex-1">
+                                <input type="text" id="p-doc-cocq" oninput="window.modProducts.onDocInput('cocq', this.value)" placeholder="Dán link hoặc bấm Tải File..." class="w-full border border-slate-300 p-1.5 rounded-lg bg-white font-medium text-xs outline-none focus:border-amber-500 pr-6">
+                                <button type="button" id="p-doc-cocq-clear" onclick="window.modProducts.clearDoc('cocq')" class="hidden absolute right-1.5 top-2 text-slate-400 hover:text-red-500 text-xs transition" title="Xóa tài liệu">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            </div>
+                            <a id="p-doc-cocq-view" href="javascript:void(0)" target="_blank" class="hidden px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition items-center gap-1 shrink-0" title="Mở xem tài liệu">
+                                <i class="fas fa-eye text-blue-600"></i>
+                            </a>
+                            <label id="p-btn-upload-cocq-label" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold rounded-lg cursor-pointer text-xs transition flex items-center gap-1 shrink-0 select-none shadow-xs" title="Tải file trực tiếp từ máy lên hệ thống (PDF, DOCX, XLSX...)">
+                                <i id="p-btn-upload-cocq-icon" class="fas fa-file-arrow-up"></i>
+                                <span id="p-btn-upload-cocq-text">Tải File</span>
+                                <input type="file" id="p-upload-cocq" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,image/*" class="hidden" onchange="window.modProducts.uploadDocument('cocq', this)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 2. Datasheet -->
+                    <div class="space-y-1 bg-white/90 p-2.5 rounded-xl border border-amber-200/80 shadow-2xs">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-[10px] font-bold text-slate-700">2. Bản Thông Số Datasheet</label>
+                            <span id="p-doc-ds-status" class="hidden text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded-md">
+                                <i class="fas fa-cloud-check"></i> Đã lưu Cloud
+                            </span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <div class="relative flex-1">
+                                <input type="text" id="p-doc-ds" oninput="window.modProducts.onDocInput('ds', this.value)" placeholder="Dán link hoặc bấm Tải File..." class="w-full border border-slate-300 p-1.5 rounded-lg bg-white font-medium text-xs outline-none focus:border-amber-500 pr-6">
+                                <button type="button" id="p-doc-ds-clear" onclick="window.modProducts.clearDoc('ds')" class="hidden absolute right-1.5 top-2 text-slate-400 hover:text-red-500 text-xs transition" title="Xóa tài liệu">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            </div>
+                            <a id="p-doc-ds-view" href="javascript:void(0)" target="_blank" class="hidden px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition items-center gap-1 shrink-0" title="Mở xem tài liệu">
+                                <i class="fas fa-eye text-blue-600"></i>
+                            </a>
+                            <label id="p-btn-upload-ds-label" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-lg cursor-pointer text-xs transition flex items-center gap-1 shrink-0 select-none shadow-xs" title="Tải file trực tiếp từ máy lên hệ thống (PDF, DOCX, XLSX...)">
+                                <i id="p-btn-upload-ds-icon" class="fas fa-file-arrow-up"></i>
+                                <span id="p-btn-upload-ds-text">Tải File</span>
+                                <input type="file" id="p-upload-ds" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,image/*" class="hidden" onchange="window.modProducts.uploadDocument('ds', this)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 3. Catalog -->
+                    <div class="space-y-1 bg-white/90 p-2.5 rounded-xl border border-amber-200/80 shadow-2xs">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-[10px] font-bold text-slate-700">3. Tài Liệu Catalog</label>
+                            <span id="p-doc-cat-status" class="hidden text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded-md">
+                                <i class="fas fa-cloud-check"></i> Đã lưu Cloud
+                            </span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <div class="relative flex-1">
+                                <input type="text" id="p-doc-cat" oninput="window.modProducts.onDocInput('cat', this.value)" placeholder="Dán link hoặc bấm Tải File..." class="w-full border border-slate-300 p-1.5 rounded-lg bg-white font-medium text-xs outline-none focus:border-amber-500 pr-6">
+                                <button type="button" id="p-doc-cat-clear" onclick="window.modProducts.clearDoc('cat')" class="hidden absolute right-1.5 top-2 text-slate-400 hover:text-red-500 text-xs transition" title="Xóa tài liệu">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            </div>
+                            <a id="p-doc-cat-view" href="javascript:void(0)" target="_blank" class="hidden px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition items-center gap-1 shrink-0" title="Mở xem tài liệu">
+                                <i class="fas fa-eye text-blue-600"></i>
+                            </a>
+                            <label id="p-btn-upload-cat-label" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-bold rounded-lg cursor-pointer text-xs transition flex items-center gap-1 shrink-0 select-none shadow-xs" title="Tải file trực tiếp từ máy lên hệ thống (PDF, DOCX, XLSX...)">
+                                <i id="p-btn-upload-cat-icon" class="fas fa-file-arrow-up"></i>
+                                <span id="p-btn-upload-cat-text">Tải File</span>
+                                <input type="file" id="p-upload-cat" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,image/*" class="hidden" onchange="window.modProducts.uploadDocument('cat', this)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 4. Manual -->
+                    <div class="space-y-1 bg-white/90 p-2.5 rounded-xl border border-amber-200/80 shadow-2xs">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-[10px] font-bold text-slate-700">4. Hướng Dẫn Kỹ Thuật (Manual)</label>
+                            <span id="p-doc-man-status" class="hidden text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded-md">
+                                <i class="fas fa-cloud-check"></i> Đã lưu Cloud
+                            </span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <div class="relative flex-1">
+                                <input type="text" id="p-doc-man" oninput="window.modProducts.onDocInput('man', this.value)" placeholder="Dán link hoặc bấm Tải File..." class="w-full border border-slate-300 p-1.5 rounded-lg bg-white font-medium text-xs outline-none focus:border-amber-500 pr-6">
+                                <button type="button" id="p-doc-man-clear" onclick="window.modProducts.clearDoc('man')" class="hidden absolute right-1.5 top-2 text-slate-400 hover:text-red-500 text-xs transition" title="Xóa tài liệu">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            </div>
+                            <a id="p-doc-man-view" href="javascript:void(0)" target="_blank" class="hidden px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition items-center gap-1 shrink-0" title="Mở xem tài liệu">
+                                <i class="fas fa-eye text-blue-600"></i>
+                            </a>
+                            <label id="p-btn-upload-man-label" class="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-800 active:scale-95 text-white font-bold rounded-lg cursor-pointer text-xs transition flex items-center gap-1 shrink-0 select-none shadow-xs" title="Tải file trực tiếp từ máy lên hệ thống (PDF, DOCX, XLSX...)">
+                                <i id="p-btn-upload-man-icon" class="fas fa-file-arrow-up"></i>
+                                <span id="p-btn-upload-man-text">Tải File</span>
+                                <input type="file" id="p-upload-man" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,image/*" class="hidden" onchange="window.modProducts.uploadDocument('man', this)">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-[10px] text-amber-800 flex items-center gap-1.5 font-medium pt-1 border-t border-amber-200/60">
+                    <i class="fas fa-shield-halved text-emerald-600"></i>
+                    <span>Tải trực tiếp hồ sơ PDF, DOCX từ máy tính/điện thoại — Lưu vĩnh viễn trên máy chủ, tiện xuất hồ sơ thầu cho Sales & Khách hàng.</span>
                 </div>
             </div>
 
@@ -2074,6 +2183,105 @@
             }
         },
 
+        onDocInput: (type, rawVal) => {
+            const val = (rawVal || '').trim();
+            const inputEl = document.getElementById(`p-doc-${type}`);
+            if (inputEl && inputEl.value !== val) {
+                inputEl.value = val;
+            }
+            const clearBtn = document.getElementById(`p-doc-${type}-clear`);
+            const viewLink = document.getElementById(`p-doc-${type}-view`);
+            const statusBadge = document.getElementById(`p-doc-${type}-status`);
+
+            // Nút xóa nhanh
+            if (clearBtn) {
+                if (val) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            // Nút mở xem trước tài liệu
+            if (viewLink) {
+                if (val) {
+                    viewLink.href = val;
+                    viewLink.classList.remove('hidden');
+                    viewLink.classList.add('flex');
+                } else {
+                    viewLink.href = 'javascript:void(0)';
+                    viewLink.classList.add('hidden');
+                    viewLink.classList.remove('flex');
+                }
+            }
+
+            // Huy hiệu trạng thái đã lưu trữ trên Cloud Storage
+            if (statusBadge) {
+                if (val && (val.includes('storage.googleapis.com') || val.includes('/uploads/'))) {
+                    statusBadge.classList.remove('hidden');
+                } else {
+                    statusBadge.classList.add('hidden');
+                }
+            }
+        },
+
+        clearDoc: (type) => {
+            const inputEl = document.getElementById(`p-doc-${type}`);
+            if (inputEl) inputEl.value = '';
+            window.modProducts.onDocInput(type, '');
+        },
+
+        uploadDocument: async (type, input) => {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            
+            // Kiểm tra dung lượng tối đa 50MB
+            if (file.size > 50 * 1024 * 1024) {
+                alert('Dung lượng file vượt quá giới hạn cho phép (Tối đa 50MB)!');
+                input.value = '';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('subfolder', 'products_docs');
+
+            const btnLabel = document.getElementById(`p-btn-upload-${type}-label`);
+            const btnIcon = document.getElementById(`p-btn-upload-${type}-icon`);
+            const btnText = document.getElementById(`p-btn-upload-${type}-text`);
+
+            const originalText = btnText ? btnText.innerText : 'Tải File';
+            const originalIconClass = btnIcon ? btnIcon.className : 'fas fa-file-arrow-up';
+
+            if (btnLabel) btnLabel.classList.add('opacity-75', 'pointer-events-none');
+            if (btnIcon) btnIcon.className = 'fas fa-spinner fa-spin';
+            if (btnText) btnText.innerText = 'Đang tải...';
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success && data.url) {
+                    const inputEl = document.getElementById(`p-doc-${type}`);
+                    if (inputEl) inputEl.value = data.url;
+                    window.modProducts.onDocInput(type, data.url);
+                    if (window.showToast) {
+                        window.showToast('success', `Đã tải hồ sơ "${file.name}" lên hệ thống đám mây thành công!`);
+                    } else {
+                        alert('Đã tải hồ sơ lên hệ thống thành công!');
+                    }
+                } else {
+                    alert('Lỗi tải hồ sơ: ' + (data.error || 'Vui lòng thử lại'));
+                }
+            } catch (err) {
+                alert('Lỗi kết nối khi tải hồ sơ: ' + err.message);
+            } finally {
+                if (btnLabel) btnLabel.classList.remove('opacity-75', 'pointer-events-none');
+                if (btnIcon) btnIcon.className = originalIconClass;
+                if (btnText) btnText.innerText = originalText;
+                input.value = '';
+            }
+        },
+
         openModal: (id = null, viewOnly = false) => {
             window.modProducts.isEdit = !!id;
             window.modProducts.editId = id;
@@ -2107,6 +2315,17 @@
                     inp.removeAttribute('disabled');
                     inp.classList.remove('bg-slate-100', 'cursor-not-allowed');
                 }
+            });
+
+            // Ẩn các nút tải hồ sơ và nút xóa nhanh khi ở chế độ xem chỉ đọc
+            ['cocq', 'ds', 'cat', 'man'].forEach(type => {
+                const lbl = document.getElementById(`p-btn-upload-${type}-label`);
+                if (lbl) {
+                    if (isReadonly) lbl.classList.add('hidden');
+                    else lbl.classList.remove('hidden');
+                }
+                const clearBtn = document.getElementById(`p-doc-${type}-clear`);
+                if (clearBtn && isReadonly) clearBtn.classList.add('hidden');
             });
 
             // Khởi tạo giao diện nhập kho động
@@ -2149,6 +2368,10 @@
                 document.getElementById('p-price5').value = p.price_5 || 0;
                 document.getElementById('p-price6').value = p.price_6 || 0;
                 window.modProducts.onImageInput(p.image_url || '');
+                window.modProducts.onDocInput('cocq', p.doc_cocq || '');
+                window.modProducts.onDocInput('ds', p.doc_datasheet || '');
+                window.modProducts.onDocInput('cat', p.doc_catalog || '');
+                window.modProducts.onDocInput('man', p.doc_manual || '');
 
                 let totalActualStock = 0;
                 if (p.stocks && typeof p.stocks === 'object') {
@@ -2180,6 +2403,9 @@
                     document.getElementById('p-cat-select').value = window.modProducts.currentCatName;
                 }
                 window.modProducts.onImageInput('');
+                ['cocq', 'ds', 'cat', 'man'].forEach(type => {
+                    window.modProducts.onDocInput(type, '');
+                });
             }
 
             document.getElementById('product-modal').classList.replace('hidden', 'flex');
