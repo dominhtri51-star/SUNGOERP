@@ -941,7 +941,7 @@
         container.id = 'sungo-ai-container';
         container.innerHTML = `
             <!-- NÚT NỔI GỌI AI (FLOATING ACTION BUTTON) -->
-            <button id="sungo-ai-fab" onclick="window.SungoAI.toggle()" class="fixed right-4 md:right-72 z-[60] w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-amber-500 text-slate-950 font-black shadow-2xl shadow-amber-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer group ring-4 ring-amber-400/20" style="bottom: 4.25rem;" title="Trợ Lý AI SUNGO (Ctrl + J)">
+            <button id="sungo-ai-fab" onclick="window.SungoAI.toggle()" class="fixed right-4 md:right-72 z-[60] w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-amber-500 text-slate-950 font-black shadow-2xl shadow-amber-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer group ring-4 ring-amber-400/20" style="bottom: 5rem;" title="Trợ Lý AI SUNGO (Ctrl + J)">
                 <i class="fas fa-robot text-xl group-hover:rotate-12 transition-transform"></i>
                 <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-slate-900 animate-ping"></span>
                 <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900"></span>
