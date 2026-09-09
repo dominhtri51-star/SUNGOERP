@@ -19,7 +19,7 @@ const parseSafeNum = (val) => {
 // GET: LẤY DANH SÁCH ĐƠN HÀNG (Sạch biến rác, Kèm Customer Tier & Nhân viên bán hàng, Hỗ trợ lọc ngày & Siêu tốc)
 router.get('/', async (req, res) => {
     try {
-        const { date_from, date_to, limit, status } = req.query;
+        const { date_from, date_to, limit, status, search } = req.query;
         let query = `
             SELECT o.*, 
                    COALESCE(NULLIF(o.customer_name, ''), c.full_name, 'Khách Lẻ') as customer_name,
@@ -52,6 +52,18 @@ router.get('/', async (req, res) => {
         if (status && status !== 'ALL') {
             params.push(status);
             whereClauses.push(`o.status = $${params.length}`);
+        }
+
+        if (search && search.trim()) {
+            params.push(`%${search.trim()}%`);
+            whereClauses.push(`(
+                o.order_code ILIKE $${params.length} OR 
+                o.customer_name ILIKE $${params.length} OR 
+                o.customer_phone ILIKE $${params.length} OR 
+                c.full_name ILIKE $${params.length} OR 
+                c.phone ILIKE $${params.length} OR 
+                o.notes ILIKE $${params.length}
+            )`);
         }
 
         if (whereClauses.length > 0) {

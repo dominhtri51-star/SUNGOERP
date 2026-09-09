@@ -59,8 +59,8 @@
             <div class="flex flex-nowrap items-center gap-1.5 w-full lg:w-auto overflow-x-auto no-scrollbar py-0.5">
                 <!-- Nút lọc nhanh theo mốc thời gian -->
                 <div class="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-[10px] font-bold text-slate-600 shrink-0">
-                    <button type="button" onclick="window.modOrders.setDatePreset('ALL')" id="preset-date-ALL" class="px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">Tất Cả</button>
-                    <button type="button" onclick="window.modOrders.setDatePreset('TODAY')" id="preset-date-TODAY" class="px-2 py-1 rounded-lg bg-white text-slate-900 shadow-2xs transition font-black">Hôm Nay</button>
+                    <button type="button" onclick="window.modOrders.setDatePreset('ALL')" id="preset-date-ALL" class="px-2 py-1 rounded-lg bg-white text-slate-900 shadow-2xs transition font-black">Tất Cả</button>
+                    <button type="button" onclick="window.modOrders.setDatePreset('TODAY')" id="preset-date-TODAY" class="px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">Hôm Nay</button>
                     <button type="button" onclick="window.modOrders.setDatePreset('7DAYS')" id="preset-date-7DAYS" class="px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">7 Ngày</button>
                     <button type="button" onclick="window.modOrders.setDatePreset('MONTH')" id="preset-date-MONTH" class="px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">Tháng Này</button>
                 </div>
@@ -1440,30 +1440,24 @@ window.modOrders = {
         window.modOrders.currentSelectedStatus = 'ALL';
         window.modOrders.pageSize = 10;
         window.modOrders.displayedCount = 10;
-        window.modOrders.currentDatePreset = 'TODAY';
+        window.modOrders.currentDatePreset = 'ALL';
         
-        // Mặc định: Chọn ngày Hôm Nay
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const d = String(now.getDate()).padStart(2, '0');
-        const todayStr = `${y}-${m}-${d}`;
-
+        // Mặc định: Nạp tất cả đơn hàng (không giới hạn ngày để không ẩn đơn cũ)
         const df = document.getElementById('filter-date-from');
         const dt = document.getElementById('filter-date-to');
         const s = document.getElementById('filter-search');
         const clearDateBtn = document.getElementById('btn-clear-date');
 
-        if (df) df.value = todayStr;
-        if (dt) dt.value = todayStr;
+        if (df) df.value = '';
+        if (dt) dt.value = '';
         if (s) s.value = '';
-        if (clearDateBtn) clearDateBtn.classList.remove('hidden');
+        if (clearDateBtn) clearDateBtn.classList.add('hidden');
 
-        // Style nút preset TODAY active
+        // Style nút preset ALL active mặc định
         ['ALL', 'TODAY', '7DAYS', 'MONTH'].forEach(p => {
             const btn = document.getElementById('preset-date-' + p);
             if (btn) {
-                if (p === 'TODAY') {
+                if (p === 'ALL') {
                     btn.className = "px-2 py-1 rounded-lg bg-white text-slate-900 shadow-2xs transition font-black";
                 } else {
                     btn.className = "px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition";
@@ -1731,8 +1725,8 @@ window.modOrders = {
             });
         }
 
-        // 3. Lọc theo khoảng ngày (YYYY-MM-DD)
-        if (dateFrom || dateTo) {
+        // 3. Lọc theo khoảng ngày (YYYY-MM-DD) - Nếu người dùng đang tìm kiếm từ khóa cụ thể thì không bị giới hạn bởi ngày
+        if ((dateFrom || dateTo) && !term) {
             filtered = filtered.filter(o => {
                 if (!o.created_at) return true;
                 try {
@@ -1751,6 +1745,14 @@ window.modOrders = {
             });
         }
 
+        // Tự động tìm kiếm sâu trên toàn bộ máy chủ (4000+ đơn hàng) nếu không thấy trong danh sách nạp sẵn
+        if (term && term.length >= 2 && filtered.length === 0) {
+            clearTimeout(window.modOrders._searchServerDebounce);
+            window.modOrders._searchServerDebounce = setTimeout(() => {
+                window.modOrders.searchServer(term);
+            }, 350);
+        }
+
         window.modOrders.filteredOrders = filtered;
         window.modOrders.displayedCount = window.modOrders.pageSize; // Reset về 10 đơn khi áp dụng bộ lọc mới
         window.modOrders.renderCurrentSlice();
@@ -1766,6 +1768,24 @@ window.modOrders = {
         const count = Math.min(window.modOrders.displayedCount, total);
         const slice = (window.modOrders.filteredOrders || []).slice(0, count);
         window.modOrders.renderTable(slice, total, count);
+    },
+
+    searchServer: async (term) => {
+        try {
+            const res = await fetch('/api/orders?search=' + encodeURIComponent(term));
+            const data = await res.json();
+            if (data.success && data.data && data.data.length > 0) {
+                const existingIds = new Set((window.modOrders.allOrders || []).map(o => o.id));
+                const newOrders = data.data.filter(o => !existingIds.has(o.id));
+                if (newOrders.length > 0) {
+                    window.modOrders.allOrders = [...newOrders, ...(window.modOrders.allOrders || [])];
+                    window.modOrders.renderStatusButtons();
+                    window.modOrders.applyFilters();
+                }
+            }
+        } catch(e) {
+            console.error('Server search error:', e);
+        }
     },
 
     clearFilters: () => {
