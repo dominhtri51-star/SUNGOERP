@@ -331,16 +331,48 @@ const CUST_STOP_WORDS = new Set([
     'anh', 'chi', 'em', 'bac', 'chu', 'ong', 'ba', 'khach', 'hang', 'doi', 'tac', 
     'mua', 'ban', 'cho', 'tao', 'don', 'ngay', 'lap', 'phieu', 'va', 'la', 'voi', 
     'o', 'tai', 'tp', 'tinh', 'quan', 'huyen', 'so', 'luong', 'lay', 'tam', 'pin', 
-    'bien', 'tan', 'inverter', 'bo', 'cai', 'chiec'
+    'bien', 'tan', 'inverter', 'bo', 'cai', 'chiec', 'thanh', 'sang', 'thay', 'sua'
 ]);
 
 function extractQuantity(text) {
-    let qty = 1;
-    const qtyMatch = text.match(/(\d+)\s*(?:tấm|bộ|cái|chiếc|cuộn|thùng|hộp|inverter|pin|m|met)?/i);
-    if (qtyMatch) {
-        qty = parseInt(qtyMatch[1], 10);
+    // 1. Từ khóa rõ ràng: số lượng X, sl X, lấy X, bán X, mua X, đặt X
+    const explicitWithUnit = text.match(/(?:số lượng|sl|lấy|bán|mua|đặt)\s*[:=]?\s*(\d+)\s*(?:tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp)\b/i);
+    if (explicitWithUnit) return parseInt(explicitWithUnit[1], 10);
+
+    const explicit = text.match(/(?:số lượng|sl)\s*[:=]?\s*(\d+)/i);
+    if (explicit) return parseInt(explicit[1], 10);
+
+    // 2. Số kèm đơn vị đếm thực tế: 5 tấm, 5 bộ, 5 cái, 5 chiếc, 5 con, 5 cuộn, 5 thùng, 5 hộp
+    const unitMatch = text.match(/(\d+)\s*(?:tấm|bộ|cái|chiếc|con|cuộn|thùng|hộp)\b/i);
+    if (unitMatch) return parseInt(unitMatch[1], 10);
+
+    // 3. Động từ hành động theo sau là số lượng: bán 5..., mua 10..., đặt 20...
+    const verbNum = text.match(/(?:bán|mua|lấy|đặt|tạo đơn|lên đơn)\s+(\d+)\s+(?!w|kw|kwh|v|ah|hp|m3|pha|mm|cm|m\b|triệu|k\b)/i);
+    if (verbNum) return parseInt(verbNum[1], 10);
+
+    // 4. Quét từng token để tìm số lượng, bỏ qua số đi kèm thông số kỹ thuật (12kw, 600w, 24v...) hoặc đứng sau tên hãng
+    const tokens = text.split(/\s+/);
+    const DEVICE_BRANDS = new Set(['deye', 'canadian', 'cana', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'apess', 'solis', 'lumentree', 'pin', 'bien', 'tan', 'inverter', 'hybrid', 'mcb', 'ma', 'mã', 'loai', 'loại']);
+
+    for (let i = 0; i < tokens.length; i++) {
+        const t = tokens[i];
+        const numMatch = t.match(/^(\d+)$/);
+        if (numMatch) {
+            const num = parseInt(numMatch[1], 10);
+            if (num > 1000) continue; // SĐT, mã SKU
+
+            const nextTok = (tokens[i + 1] || '').toLowerCase();
+            if (/^(w|kw|kwh|v|ah|hp|m3|pha|3pha|1pha|mm|cm|m|nam|thang|ngay|trieu|ty|k)$/.test(nextTok)) continue;
+
+            const prevTok = (tokens[i - 1] || '').toLowerCase();
+            if (DEVICE_BRANDS.has(prevTok)) continue; // e.g. "deye 12", "cana 600"
+            if (prevTok === 'kh' || prevTok === 'ncc') continue;
+
+            return num;
+        }
     }
-    return qty > 0 ? qty : 1;
+
+    return 1;
 }
 
 const PRODUCT_STOP_WORDS = new Set([
@@ -353,94 +385,138 @@ const PRODUCT_STOP_WORDS = new Set([
     'lap', 'phieu', 'yeu', 'cau', 'gui', 'ngay', 'lien', 'he', 'giup', 'minh', 'lay', 'dat'
 ]);
 
-// 1. TÌM KIẾM SẢN PHẨM: BẮT BUỘC TRONG BẢNG PRODUCTS
+function getTrigrams(str) {
+    const s = '  ' + str + '  ';
+    const trigrams = new Set();
+    for (let i = 0; i < s.length - 2; i++) {
+        trigrams.add(s.slice(i, i + 3));
+    }
+    return trigrams;
+}
+
+function stringSimilarity(s1, s2) {
+    if (!s1 || !s2) return 0;
+    const n1 = removeVietnameseTones(s1).replace(/[^a-z0-9]/g, '');
+    const n2 = removeVietnameseTones(s2).replace(/[^a-z0-9]/g, '');
+    if (n1 === n2) return 1.0;
+    if (n1.length >= 4 && n2.length >= 4 && (n1.includes(n2) || n2.includes(n1))) return 0.85;
+
+    const t1 = getTrigrams(n1);
+    const t2 = getTrigrams(n2);
+    let intersection = 0;
+    for (const t of t1) {
+        if (t2.has(t)) intersection++;
+    }
+    const union = t1.size + t2.size - intersection;
+    return union === 0 ? 0 : intersection / union;
+}
+
+// 1. TÌM KIẾM & TỰ ĐOÁN SẢN PHẨM THÔNG MINH
 async function findMatchingProduct(text, norm, context, excludeTokens = []) {
     try {
         const pRes = await pool.query('SELECT id, sku, product_name, category, retail_price, import_price, stock_qty, unit FROM products');
         
-        // 1. Khớp trực tiếp SKU
+        // 1. Khớp trực tiếp SKU chính xác
         for (const p of pRes.rows) {
             const skuNorm = removeVietnameseTones(p.sku || '');
             if (skuNorm && skuNorm.length >= 2 && norm.includes(skuNorm)) {
-                return { matched: true, product: p };
+                return { matched: true, product: p, autoGuessed: false };
             }
         }
 
-        // 2. Token overlap & scoring với tập hợp từ khóa loại trừ
+        // 2. Tách và làm sạch các token tìm kiếm
         const rawTokens = norm.split(/[^a-z0-9]+/i).filter(Boolean);
         const ignore = new Set([...PRODUCT_STOP_WORDS, ...excludeTokens]);
-        const sTokens = rawTokens.filter(t => !ignore.has(t) && !/^\d+$/.test(t) && t.length >= 2);
+        const sTokens = rawTokens.filter(t => !ignore.has(t) && t.length >= 2);
 
         if (sTokens.length === 0) {
             if (context && context.active_product && (norm.includes('san pham nay') || norm.includes('thiet bi nay') || norm.includes('hang nay'))) {
-                return { matched: true, product: context.active_product };
+                return { matched: true, product: context.active_product, autoGuessed: false };
             }
             return { matched: false, missing: true };
         }
 
-        let best = null;
-        let maxScore = 0;
-
-        for (const p of pRes.rows) {
+        // 3. Tự đoán & Chấm điểm theo trọng số + độ tương đồng (Fuzzy Matching)
+        const scored = pRes.rows.map(p => {
             const pNameNorm = removeVietnameseTones(p.product_name || '');
             const pCatNorm = removeVietnameseTones(p.category || '');
-            
-            // Khớp trọn vẹn tên sản phẩm
-            if (pNameNorm && pNameNorm.length >= 5 && norm.includes(pNameNorm)) {
-                return { matched: true, product: p };
-            }
-
             const nameWords = new Set(pNameNorm.split(/[^a-z0-9]+/i).filter(Boolean));
             const catWords = new Set(pCatNorm.split(/[^a-z0-9]+/i).filter(Boolean));
 
             let score = 0;
             let matchedCount = 0;
 
+            // Khớp nguyên văn tên sản phẩm
+            if (pNameNorm.length >= 5 && norm.includes(pNameNorm)) {
+                score += 300;
+                matchedCount += 3;
+            }
+
             for (const tok of sTokens) {
+                let tokMatched = false;
+                // Khớp chính xác từ
                 if (nameWords.has(tok)) {
-                    matchedCount++;
-                    // Thông số kỹ thuật (W, kW, kWh, V, Ah...) hoặc thương hiệu solar nhận điểm cao
-                    if (/^\d+(w|kw|kwh|v|ah|hp|m3)$/.test(tok)) {
-                        score += 60;
-                    } else if (['canadian', 'deye', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'apess', 'solis', 'lumentree', 'anern', 'xpower', 'voltique', 'solpump'].includes(tok)) {
-                        score += 80;
-                    } else {
-                        score += 30;
+                    tokMatched = true;
+                    if (/^\d+(w|kw|kwh|v|ah|hp|m3)$/.test(tok)) score += 60;
+                    else if (['canadian', 'deye', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'apess', 'solis', 'lumentree', 'anern', 'xpower', 'voltique', 'solpump'].includes(tok)) score += 80;
+                    else score += 35;
+                } else {
+                    // Tự đoán tiền tố / viết tắt (ví dụ: "cana" -> "canadian", "600" -> "600w", "12" -> "12kw")
+                    for (const nw of nameWords) {
+                        if (nw.startsWith(tok) || (tok.length >= 3 && nw.includes(tok))) {
+                            tokMatched = true;
+                            if (/^\d+$/.test(tok) && /^\d+(w|kw|kwh|v|ah|hp)$/.test(nw)) score += 55;
+                            else score += 30;
+                            break;
+                        }
                     }
-                } else if (catWords.has(tok)) {
-                    matchedCount++;
+                }
+
+                if (!tokMatched && catWords.has(tok)) {
+                    tokMatched = true;
                     score += 15;
                 }
+
+                if (tokMatched) matchedCount++;
             }
 
-            // Bắt buộc phải khớp ít nhất 1 từ định danh trong tên/danh mục
-            if (matchedCount === 0) continue;
-            // Phạt điểm nếu tìm kiếm nhiều từ mà chỉ khớp 1 từ chung chung
-            if (sTokens.length >= 2 && matchedCount < 2) score -= 30;
+            if (matchedCount === 0) return { ...p, score: 0 };
+            if (sTokens.length >= 2 && matchedCount < 2) score -= 25;
 
-            if (score > maxScore) {
-                maxScore = score;
-                best = { ...p, score };
-            }
+            // Độ tương đồng chuỗi Trigram
+            const sim = stringSimilarity(sTokens.join(' '), pNameNorm);
+            score += sim * 40;
+
+            return { ...p, score };
+        }).filter(p => p.score > 0).sort((a, b) => b.score - a.score);
+
+        if (scored.length > 0 && scored[0].score >= 35) {
+            return {
+                matched: true,
+                product: scored[0],
+                autoGuessed: true,
+                suggestions: scored.slice(0, 3)
+            };
         }
 
-        if (best && maxScore >= 40) {
-            return { matched: true, product: best };
-        }
-
-        return { matched: false, notFoundInCatalog: true, queryProduct: sTokens.join(' ') };
+        return {
+            matched: false,
+            notFoundInCatalog: true,
+            queryProduct: sTokens.join(' '),
+            suggestions: scored.slice(0, 3)
+        };
     } catch (e) {
         console.warn('findMatchingProduct error:', e.message);
         return { matched: false, missing: true };
     }
 }
 
-// 2. TÌM KIẾM KHÁCH HÀNG CRM: BẮT BUỘC TRONG BẢNG CUSTOMERS (SALE-CRM)
+// 2. TÌM KIẾM & TỰ ĐOÁN KHÁCH HÀNG CRM THÔNG MINH
 async function extractCustomer(text, norm, context) {
     try {
+        // 1. Khớp SĐT
         const phoneMatch = text.match(/(0[3|5|7|8|9][0-9]{8})/);
         const phone = phoneMatch ? phoneMatch[1] : '';
-
         if (phone) {
             const pRes = await pool.query(
                 "SELECT id, customer_code, full_name, name, nickname, phone, company_name, vat_company FROM customers WHERE phone LIKE $1 LIMIT 1",
@@ -448,10 +524,11 @@ async function extractCustomer(text, norm, context) {
             );
             if (pRes.rows.length > 0) {
                 const c = pRes.rows[0];
-                return { found: true, customerId: c.id, customerName: c.name || c.full_name, customerCode: c.customer_code, phone: c.phone || phone, nickname: c.nickname, company: c.company_name || c.vat_company };
+                return { found: true, customerId: c.id, customerName: c.name || c.full_name, customerCode: c.customer_code, phone: c.phone || phone, nickname: c.nickname, company: c.company_name || c.vat_company, autoGuessed: false };
             }
         }
 
+        // 2. Khớp mã KH
         const codeMatch = norm.match(/kh\s*[-_]?\s*(\d+)/i);
         if (codeMatch) {
             const cRes = await pool.query(
@@ -460,10 +537,11 @@ async function extractCustomer(text, norm, context) {
             );
             if (cRes.rows.length > 0) {
                 const c = cRes.rows[0];
-                return { found: true, customerId: c.id, customerName: c.name || c.full_name, customerCode: c.customer_code, phone: c.phone || '', nickname: c.nickname, company: c.company_name || c.vat_company };
+                return { found: true, customerId: c.id, customerName: c.name || c.full_name, customerCode: c.customer_code, phone: c.phone || '', nickname: c.nickname, company: c.company_name || c.vat_company, autoGuessed: false };
             }
         }
 
+        // 3. Trích xuất tên khách hàng ứng viên
         let candidateQuery = '';
         const explicitMatch = text.match(/(?:cho khách|khách hàng|khách|đối tác|cho anh|cho chị|cho bác|cho chú)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+sđt|\s+sdt|\s+số|\s+điện|\s+đt|\s+phone|\s+mua|\s+lấy|\s+đặt|\s+gồm|\s+với|$))/i);
         if (explicitMatch && explicitMatch[1].trim().length > 1) {
@@ -476,75 +554,71 @@ async function extractCustomer(text, norm, context) {
         if (qTokens.length === 0) {
             if (context && context.active_customer && (norm.includes('khach nay') || norm.includes('anh nay') || norm.includes('chi ay'))) {
                 const ac = context.active_customer;
-                return { found: true, customerId: ac.id, customerName: ac.name || ac.full_name, customerCode: ac.customer_code, phone: ac.phone || '' };
+                return { found: true, customerId: ac.id, customerName: ac.name || ac.full_name, customerCode: ac.customer_code, phone: ac.phone || '', autoGuessed: false };
             }
             return { found: false, missing: true };
         }
 
-        const pattern = '%' + qTokens.join('%') + '%';
-        const res = await pool.query(`
-            SELECT id, customer_code, full_name, name, nickname, phone, company_name, vat_company
-            FROM customers
-            WHERE 
-              name ILIKE $1 OR full_name ILIKE $1 OR nickname ILIKE $1 OR 
-              company_name ILIKE $1 OR vat_company ILIKE $1
-            LIMIT 20
-        `, [pattern]);
+        // 4. Lấy danh sách khách hàng để tự đoán thông minh
+        const cRes = await pool.query('SELECT id, customer_code, full_name, name, nickname, phone, company_name, vat_company FROM customers');
+        const qStr = qTokens.join(' ');
 
-        if (res.rows.length > 0) {
-            const c = res.rows[0];
-            return { found: true, customerId: c.id, customerName: c.name || c.full_name, customerCode: c.customer_code, phone: c.phone || '', nickname: c.nickname, company: c.company_name || c.vat_company };
-        }
-
-        const orParts = [];
-        const params = [];
-        qTokens.forEach((tok, idx) => {
-            orParts.push(`(name ILIKE $${idx + 1} OR full_name ILIKE $${idx + 1} OR nickname ILIKE $${idx + 1} OR company_name ILIKE $${idx + 1} OR vat_company ILIKE $${idx + 1})`);
-            params.push('%' + tok + '%');
-        });
-
-        const candidates = await pool.query(`
-            SELECT id, customer_code, full_name, name, nickname, phone, company_name, vat_company
-            FROM customers
-            WHERE ${orParts.join(' OR ')}
-            LIMIT 50
-        `, params);
-
-        let best = null;
-        let maxScore = 0;
-
-        for (const c of candidates.rows) {
+        const scored = cRes.rows.map(c => {
             const cName = removeVietnameseTones(c.name || '');
             const cFull = removeVietnameseTones(c.full_name || '');
             const cNick = removeVietnameseTones(c.nickname || '');
             const cComp = removeVietnameseTones(c.company_name || c.vat_company || '');
-            const haystack = `${cName} ${cFull} ${cNick} ${cComp}`;
+            const haystack = [cName, cFull, cNick, cComp].join(' ');
 
             let score = 0;
-            if (cNick && norm.includes(cNick) && cNick.length >= 3) score += 60;
-            if (cFull && norm.includes(cFull) && cFull.length >= 4) score += 50;
-            else if (cName && norm.includes(cName) && cName.length >= 4) score += 50;
-            if (cComp && norm.includes(cComp) && cComp.length >= 6) score += 50;
+            let matchedCount = 0;
 
-            let matchCount = 0;
             for (const t of qTokens) {
-                if (haystack.includes(t)) matchCount++;
+                if (haystack.includes(t)) {
+                    matchedCount++;
+                    score += 35;
+                }
             }
-            score += matchCount * 25;
 
-            if (qTokens.length >= 2 && matchCount < 2) score -= 40;
+            // Tương đồng Trigram & dồn chuỗi
+            const simName = stringSimilarity(qStr, cName);
+            const simFull = stringSimilarity(qStr, cFull);
+            const simNick = stringSimilarity(qStr, cNick);
+            const simComp = stringSimilarity(qStr, cComp);
+            const maxSim = Math.max(simName, simFull, simNick, simComp);
 
-            if (score > maxScore) {
-                maxScore = score;
-                best = { ...c, score };
-            }
+            score += maxSim * 50;
+
+            // Nếu khớp trọn vẹn tên gợi nhớ hoặc tên đối tác
+            if (cNick && norm.includes(cNick) && cNick.length >= 3) score += 60;
+            if (cComp && norm.includes(cComp) && cComp.length >= 5) score += 50;
+
+            if (qTokens.length >= 2 && matchedCount < 2) score -= 30;
+
+            return { ...c, score, maxSim };
+        }).filter(c => c.score > 0).sort((a, b) => b.score - a.score);
+
+        if (scored.length > 0 && scored[0].score >= 35) {
+            const best = scored[0];
+            return {
+                found: true,
+                customerId: best.id,
+                customerName: best.name || best.full_name,
+                customerCode: best.customer_code,
+                phone: best.phone || '',
+                nickname: best.nickname,
+                company: best.company_name || best.vat_company,
+                autoGuessed: true,
+                suggestions: scored.slice(0, 3)
+            };
         }
 
-        if (best && maxScore >= 45) {
-            return { found: true, customerId: best.id, customerName: best.name || best.full_name, customerCode: best.customer_code, phone: best.phone || '', nickname: best.nickname, company: best.company_name || best.vat_company };
-        }
-
-        return { found: false, notFoundInCRM: true, queryCustomer: candidateQuery || qTokens.join(' ') };
+        return {
+            found: false,
+            notFoundInCRM: true,
+            queryCustomer: candidateQuery || qTokens.join(' '),
+            suggestions: scored.slice(0, 3)
+        };
     } catch (e) {
         console.warn('extractCustomer error:', e.message);
         return { found: false, missing: true };
@@ -711,11 +785,21 @@ async function handleCreateOrder(text, context, user) {
     // 1. Trích xuất khách hàng CRM (BẮT BUỘC TRONG CRM SALE-CRM) TRƯỚC
     const custRes = await extractCustomer(cleanText, norm, context);
     if (custRes.notFoundInCRM) {
+        const topSugg = (custRes.suggestions || []).filter(s => s.score >= 10).slice(0, 3);
+        let suggText = '';
+        let qr = [];
+        if (topSugg.length > 0) {
+            suggText = `\n\n💡 **Gợi ý khách hàng CRM tương tự:**\n` + topSugg.map((s, idx) => `${idx + 1}. **${s.name || s.full_name}** ${s.nickname ? `(${s.nickname})` : ''} (\`${s.customer_code}\`)`).join('\n');
+            qr = topSugg.map(s => `Khách ${s.name || s.full_name}`);
+        } else {
+            qr = ['Khách Võ Anh Phong', 'Khách Hoàng Gia', 'Khách Binbon'];
+        }
+        qr.push('Hủy đơn');
         return {
-            text: `⚠️ Không tìm thấy khách hàng "${custRes.queryCustomer}" trong hệ thống CRM (sale-crm).\n\nTheo quy định, hệ thống chỉ tạo đơn cho khách hàng đã có trong CRM. Anh/Chị kiểm tra lại tên, tên gợi nhớ, SĐT hoặc tạo mới khách trên CRM nhé!`,
+            text: `⚠️ Không tìm thấy khách hàng "${custRes.queryCustomer}" trong hệ thống CRM (sale-crm).${suggText}\n\nTheo quy định, hệ thống chỉ tạo đơn cho khách hàng đã có trên CRM. Anh/Chị chọn khách theo gợi ý hoặc kiểm tra lại tên/SĐT nhé!`,
             card: null,
             action_type: 'CUSTOMER_NOT_FOUND_CRM',
-            quick_replies: ['Khách Võ Anh Phong', 'Khách Bin Bụng Bự', 'Mở CRM tạo khách', 'Hủy đơn']
+            quick_replies: qr
         };
     }
 
@@ -730,7 +814,9 @@ async function handleCreateOrder(text, context, user) {
 
     // 2. Trích xuất số lượng & sản phẩm (Bắt buộc trong danh mục products)
     let qty = extractQuantity(cleanText);
-    const prodRes = await findMatchingProduct(cleanText, norm, context, custTokens);
+    const excludeList = [...custTokens];
+    if (qty > 1) excludeList.push(String(qty));
+    const prodRes = await findMatchingProduct(cleanText, norm, context, excludeList);
 
     if (!prodRes || prodRes.missing) {
         return {
@@ -741,11 +827,21 @@ async function handleCreateOrder(text, context, user) {
         };
     }
     if (prodRes.notFoundInCatalog) {
+        const topSugg = (prodRes.suggestions || []).filter(p => p.score >= 10).slice(0, 3);
+        let suggText = '';
+        let qr = [];
+        if (topSugg.length > 0) {
+            suggText = `\n\n💡 **Gợi ý thiết bị có sẵn trong kho:**\n` + topSugg.map((p, idx) => `${idx + 1}. **${p.product_name}** (\`${p.product_code || p.sku}\`) - Giá: ${formatVND(p.retail_price)}`).join('\n');
+            qr = topSugg.map(p => p.product_name);
+        } else {
+            qr = ['Tấm pin Canadian 600W Bi-facial', 'Deye hybrid 12kw 3pha BH 5 năm', 'Kẹp giữa'];
+        }
+        qr.push('Hủy đơn');
         return {
-            text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong danh mục kho hàng.\n👉 Anh/Chị chọn thiết bị có sẵn trong danh mục nhé!`,
+            text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong danh mục kho hàng.${suggText}\n👉 Anh/Chị chọn thiết bị gợi ý hoặc nhập tên cụ thể nhé!`,
             card: null,
             action_type: 'PRODUCT_NOT_FOUND',
-            quick_replies: ['Tấm pin Canadian 600W', 'Deye hybrid 12kw', 'Kẹp giữa', 'Hủy đơn']
+            quick_replies: qr
         };
     }
     const matchedProduct = prodRes.product;
@@ -959,16 +1055,30 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
     }
 
+    // Kiểm tra ý định đổi sản phẩm
+    const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai/i.test(norm);
+    const mentionsProduct = wantsChangeProduct || !draft.product || /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|tu dien|kep|bat/i.test(norm);
+
     // 3. Cập nhật Đối tác (Khách CRM hoặc NCC)
-    const mentionsCustomer = /khach|khach hang|doi tac|anh |chi |bac |chu |ong |ba |sdt|kh\s*\d+/i.test(norm) || !draft.partner_name;
+    const mentionsCustomer = /\b(?:khach|khach hang|doi tac|anh|chi|bac|chu|ong|ba|sdt|kh\s*\d+|doi sang khach|cho khach|doi khach)\b/i.test(norm) || (!qtyMatch && !priceMatch && !wantsChangeProduct && !draft.partner_name);
     if (draft.type === 'SALE' && mentionsCustomer) {
         const custRes = await extractCustomer(cleanText, norm, context);
         if (custRes.notFoundInCRM) {
+            const topSugg = (custRes.suggestions || []).filter(s => s.score >= 10).slice(0, 3);
+            let suggText = '';
+            let qr = [];
+            if (topSugg.length > 0) {
+                suggText = `\n\n💡 **Gợi ý khách hàng CRM tương tự:**\n` + topSugg.map((s, idx) => `${idx + 1}. **${s.name || s.full_name}** ${s.nickname ? `(${s.nickname})` : ''} (\`${s.customer_code}\`)`).join('\n');
+                qr = topSugg.map(s => `Khách ${s.name || s.full_name}`);
+            } else {
+                qr = ['Khách Võ Anh Phong', 'Khách Hoàng Gia', 'Khách Binbon'];
+            }
+            qr.push('Hủy đơn');
             return {
-                text: `⚠️ Không tìm thấy khách hàng "${custRes.queryCustomer}" trong CRM (sale-crm).\n\nBắt buộc phải chọn khách hàng đã có hồ sơ CRM!`,
+                text: `⚠️ Không tìm thấy khách hàng "${custRes.queryCustomer}" trong CRM (sale-crm).${suggText}\n\n👉 Bắt buộc chọn khách hàng đã có hồ sơ CRM! Anh/Chị chọn trong gợi ý hoặc kiểm tra lại nhé!`,
                 card: null,
                 action_type: 'CUSTOMER_NOT_FOUND_CRM',
-                quick_replies: ['Khách Võ Anh Phong', 'Khách Bin Bụng Bự', 'Mở CRM tạo khách']
+                quick_replies: qr
             };
         }
         if (custRes.found) {
@@ -1000,9 +1110,6 @@ async function handleUpdateDraftOrder(text, context, user) {
     }
 
     // 4. CẬP NHẬT HOẶC ĐỔI SẢN PHẨM KHÁC
-    const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai/i.test(norm);
-    const mentionsProduct = wantsChangeProduct || !draft.product || /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|tu dien|kep|bat/i.test(norm);
-
     if (mentionsProduct) {
         if ((norm.includes('san pham khac') || norm.includes('doi san pham') || norm.includes('sai san pham')) && !/deye|canadian|jinko|longi|apess|pin|bien tan|inverter|tu dien|solis|lumentree/i.test(norm)) {
             draft.product = null;
@@ -1022,11 +1129,21 @@ async function handleUpdateDraftOrder(text, context, user) {
             draft.totalAmount = draft.qty * draft.unitPrice;
             updatedFields.push(`sản phẩm thành **${prodRes.product.product_name}**`);
         } else if (prodRes.notFoundInCatalog) {
+            const topSugg = (prodRes.suggestions || []).filter(p => p.score >= 10).slice(0, 3);
+            let suggText = '';
+            let qr = [];
+            if (topSugg.length > 0) {
+                suggText = `\n\n💡 **Gợi ý thiết bị trong kho:**\n` + topSugg.map((p, idx) => `${idx + 1}. **${p.product_name}** (\`${p.product_code || p.sku}\`)`).join('\n');
+                qr = topSugg.map(p => p.product_name);
+            } else {
+                qr = ['Tấm pin Canadian 600W Bi-facial', 'Deye hybrid 12kw 3pha BH 5 năm', 'Kẹp giữa'];
+            }
+            qr.push('Hủy đơn');
             return {
-                text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong kho hàng!\n👉 Anh/Chị chọn thiết bị có sẵn trong danh mục nhé!`,
+                text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong kho hàng!${suggText}\n👉 Anh/Chị chọn thiết bị có sẵn trong danh mục nhé!`,
                 card: null,
                 action_type: 'PRODUCT_NOT_FOUND',
-                quick_replies: ['Tấm pin Canadian 600W', 'Deye hybrid 12kw', 'Hủy đơn']
+                quick_replies: qr
             };
         }
     }
@@ -1234,7 +1351,9 @@ async function handleCreatePurchase(text, context, user) {
 
     // 2. Trích xuất số lượng & sản phẩm (Bắt buộc trong danh mục products)
     let qty = extractQuantity(cleanText);
-    const prodRes = await findMatchingProduct(cleanText, norm, context, supTokens);
+    const excludeList = [...supTokens];
+    if (qty > 1) excludeList.push(String(qty));
+    const prodRes = await findMatchingProduct(cleanText, norm, context, excludeList);
 
     if (!prodRes || prodRes.missing) {
         return {
@@ -1245,11 +1364,21 @@ async function handleCreatePurchase(text, context, user) {
         };
     }
     if (prodRes.notFoundInCatalog) {
+        const topSugg = (prodRes.suggestions || []).filter(p => p.score >= 10).slice(0, 3);
+        let suggText = '';
+        let qr = [];
+        if (topSugg.length > 0) {
+            suggText = `\n\n💡 **Gợi ý thiết bị trong kho:**\n` + topSugg.map((p, idx) => `${idx + 1}. **${p.product_name}** (\`${p.product_code || p.sku}\`)`).join('\n');
+            qr = topSugg.map(p => p.product_name);
+        } else {
+            qr = ['Tấm pin Canadian 600W Bi-facial', 'Deye hybrid 12kw 3pha BH 5 năm', 'Kẹp giữa'];
+        }
+        qr.push('Hủy đơn');
         return {
-            text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong danh mục kho.\n👉 Anh/Chị chọn thiết bị có sẵn trong danh mục nhé!`,
+            text: `⚠️ Không tìm thấy sản phẩm "${prodRes.queryProduct}" trong danh mục kho.${suggText}\n👉 Anh/Chị chọn thiết bị có sẵn trong danh mục nhé!`,
             card: null,
             action_type: 'PRODUCT_NOT_FOUND',
-            quick_replies: ['Tấm pin Canadian 600W', 'Deye hybrid 12kw', 'Hủy đơn']
+            quick_replies: qr
         };
     }
     const matchedProduct = prodRes.product;
