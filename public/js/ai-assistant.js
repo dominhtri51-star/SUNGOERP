@@ -941,7 +941,7 @@
         container.id = 'sungo-ai-container';
         container.innerHTML = `
             <!-- NÚT NỔI GỌI AI (FLOATING ACTION BUTTON) -->
-            <button id="sungo-ai-fab" onclick="window.SungoAI.toggle()" class="fixed bottom-20 md:bottom-6 right-4 md:right-72 z-[60] w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-amber-500 text-slate-950 font-black shadow-2xl shadow-amber-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer group ring-4 ring-amber-400/20" title="Trợ Lý AI SUNGO (Ctrl + J)">
+            <button id="sungo-ai-fab" onclick="window.SungoAI.toggle()" class="fixed right-4 md:right-72 z-[60] w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-600 to-amber-500 text-slate-950 font-black shadow-2xl shadow-amber-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer group ring-4 ring-amber-400/20" style="bottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem));" title="Trợ Lý AI SUNGO (Ctrl + J)">
                 <i class="fas fa-robot text-xl group-hover:rotate-12 transition-transform"></i>
                 <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-slate-900 animate-ping"></span>
                 <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900"></span>
@@ -954,7 +954,7 @@
             <aside id="sungo-ai-panel" class="fixed inset-y-0 right-0 z-[80] w-full sm:w-[450px] md:w-[480px] bg-slate-950 text-white flex flex-col shadow-2xl border-l border-slate-800 transform translate-x-full transition-transform duration-300 ease-in-out">
                 
                 <!-- HEADER TRỢ LÝ AI -->
-                <div class="p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center justify-between shrink-0">
+                <div class="p-4 pt-safe sm:pt-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center justify-between shrink-0" style="padding-top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black shadow-md shadow-amber-500/20">
                             <i class="fas fa-robot text-base"></i>
@@ -1008,7 +1008,7 @@
                 </div>
 
                 <!-- VÙNG NHẬP LIỆU & NÚT MICRO GHI ÂM (INPUT TOOLBAR) -->
-                <div class="p-3 bg-slate-900 border-t border-slate-800 shrink-0">
+                <div class="p-3 pb-safe sm:pb-3 bg-slate-900 border-t border-slate-800 shrink-0" style="padding-bottom: max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem));">
                     <!-- SÓNG ÂM KHI ĐANG GHI ÂM -->
                     <div id="sungo-ai-wave-indicator" class="hidden mb-2 px-3 py-1.5 rounded-xl bg-red-950/60 border border-red-500/50 flex items-center justify-between text-xs text-red-300">
                         <div class="flex items-center gap-2 font-bold">

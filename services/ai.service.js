@@ -2435,9 +2435,12 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
 
         if (parseRes.items && parseRes.items.length > 0) {
-            if (wantsChangeProduct || !draft.items || draft.items.length === 0) {
+            if (wantsChangeProduct) {
                 draft.items = parseRes.items;
                 updatedFields.push(`đổi sản phẩm thành **${parseRes.items.map(it => `${it.qty} ${it.unit} ${it.name}`).join(', ')}**`);
+            } else if (!draft.items || draft.items.length === 0 || !draft.product) {
+                draft.items = parseRes.items;
+                updatedFields.push(`sản phẩm: **${parseRes.items.map(it => `${it.qty} ${it.unit} ${it.name}`).join(', ')}**`);
             } else {
                 // Thêm sản phẩm vào danh sách hiện tại
                 for (const newItem of parseRes.items) {
@@ -2477,9 +2480,12 @@ async function handleUpdateDraftOrder(text, context, user) {
                     total: (draft.qty || 1) * newPrice
                 };
 
-                if (wantsChangeProduct || !draft.items || draft.items.length === 0) {
+                if (wantsChangeProduct) {
                     draft.items = [newItem];
                     updatedFields.push(`đổi sản phẩm thành **${prodRes.product.product_name}**`);
+                } else if (!draft.items || draft.items.length === 0 || !draft.product) {
+                    draft.items = [newItem];
+                    updatedFields.push(`sản phẩm: **${newItem.qty} ${newItem.unit} ${newItem.name}**`);
                 } else {
                     const existingIdx = draft.items.findIndex(it => it.id === newItem.id);
                     if (existingIdx >= 0) {
