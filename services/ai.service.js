@@ -387,7 +387,8 @@ const PRODUCT_STOP_WORDS = new Set([
     'khach', 'khach hang', 'doi', 'tac', 'ncc', 'nha', 'cung', 'cap', 'dia', 'chi', 'sdt',
     'lap', 'phieu', 'yeu', 'cau', 'gui', 'ngay', 'lien', 'he', 'giup', 'minh', 'lay', 'dat',
     'nghe', 'nha', 'nhen', 'nhe', 'nhi', 'a', 'ha', 'ne', 'roi', 'di', 'dum', 'giup', 'ho',
-    'dit', 'me', 'dm', 'dcm', 'vcl', 'oc', 'cho', 'chac', 'lac'
+    'dit', 'me', 'dm', 'dcm', 'vcl', 'oc', 'cho', 'chac', 'lac',
+    'cap', 'nhat', 'san', 'pham', 'ten', 'chu', 'khong', 'phai', 'doi', 'thay', 'sao', 'lai', 'ma', 'nua'
 ]);
 
 const VN_PROVINCES = [
@@ -405,9 +406,10 @@ const VN_PROVINCES = [
  * =========================================================================
  * TRỤ CỘT I: NLU, LÀM SẠCH VÀ CHUẨN HÓA DỮ LIỆU ĐẦU VÀO (50 PILLARS)
  * 1. Lọc chửi thề & bực dọc (Profanity Stripping)
- * 2. Sửa lỗi chính tả Solar & gõ Telex (Typo Correction)
+ * 2. Âm vị học giọng nói (Voice STT Phonetic Matching & Typo Correction)
  * 3. Chuẩn hóa & quy đổi đơn vị đo lường (kW <-> W <-> kWp, Ah, kWh, kVA)
- * 4. Loại bỏ từ đệm địa phương (nghe, nhen, nhé, nè, á, dùm...)
+ * 4. Phục hồi dấu phẩy thập phân bị nuốt trong STT (66kw -> 6.6kW, 153kwh -> 15.3kWh)
+ * 5. Loại bỏ từ đệm địa phương (nghe, nhen, nhé, nè, á, dùm...)
  * =========================================================================
  */
 function normalizeSolarInput(text) {
@@ -417,30 +419,57 @@ function normalizeSolarInput(text) {
     // 1. Lọc từ cảm thán thô tục & chửi bậy (không dùng ASCII \b vì tiếng Việt có dấu)
     str = str.replace(/(?:địt mẹ|đụ má|đậu má|dcm|dm|vcl|clgt|óc chó|ngu như chó|mẹ kiếp|chó chết|bà mẹ|mả cha)/gi, ' ');
 
-    // 2. Sửa lỗi chính tả Solar & gõ Telex
-    const TYPO_MAP = [
+    // 2. BẢNG ÂM VỊ HỌC GIỌNG NÓI SOLAR (VOICE SPEECH-TO-TEXT PHONETICS) & LỖI CHÍNH TẢ TELEX
+    const SOLAR_STT_PHONETICS = [
+        // Lumentree phonetics
+        [/(?:lung\s+linh\s+chi|lưu\s+minh\s+chi|luu\s+minh\s+chi|lemon\s+tree|lemon\s+tri|lumen\s+tri|lumen\s+tree|lumentri|lumen\s+tre)/gi, 'Lumentree'],
+        // Deye phonetics
+        [/(?:đầy\s+e|đê\s+e|đây\s+e|đề\s+e|de\s+ye|đê\s+dê)/gi, 'Deye'],
+        // Solis phonetics
+        [/(?:sô\s+lít|so\s+lit|xô\s+lít|xo\s+lit|sô\s+li)/gi, 'Solis'],
+        // Luxpower phonetics
+        [/(?:lúc\s+pao\s+quơ|lúc\s+pao|lắc\s+pao|luc\s+pao|lắc\s+pao\s+uơ)/gi, 'Luxpower'],
+        // Growatt phonetics
+        [/(?:gờ\s+rô\s+oat|gơ\s+rô\s+wat|gô\s+gát|gro\s+oat|gờ\s+rô\s+wat)/gi, 'Growatt'],
+        // Huawei phonetics
+        [/(?:hua\s+way|hoa\s+vĩ|hu\s+oa\s+oay|hua\s+oay)/gi, 'Huawei'],
+        // Sungrow phonetics
+        [/(?:sun\s+gâu|sun\s+gờ\s+rô|săn\s+gâu)/gi, 'Sungrow'],
+        // Jinko phonetics
+        [/(?:jin\s+cô|gin\s+cô|din\s+cô|jinkosolar)/gi, 'Jinko'],
+        // Longi phonetics
+        [/(?:lon\s+gi|long\s+gi|longji)/gi, 'Longi'],
+        // Apess phonetics
+        [/(?:a\s+pét|a\s+bét|a\s+pếch|apec|a\s+péc)/gi, 'Apess'],
+        // Canadian phonetics
+        [/(?:ca\s+na\s+đi\s+an|ca\s+na\s+đa|canadain)/gi, 'Canadian'],
+        // Goodwe & Sofar
+        [/(?:gút\s+we|gút\s+guê)/gi, 'Goodwe'],
+        [/(?:sô\s+pha|so\s+fa)/gi, 'Sofar'],
+        // Telex & Solar abbreviations
         [/\bdattasheet\b/gi, 'datasheet'],
         [/\bdata\s*sheet\b/gi, 'datasheet'],
+        [/\bgrowat\b/gi, 'growatt'],
         [/\bapess\b/gi, 'apec'],
         [/\bsolare\b/gi, 'solar e'],
-        [/\bcanadain\b/gi, 'canadian'],
-        [/\bgrowat\b/gi, 'growatt'],
         [/\bhuwei\b/gi, 'huawei'],
         [/\bsungro\b/gi, 'sungrow'],
-        [/\blongji\b/gi, 'longi'],
-        [/\bjinkosolar\b/gi, 'jinko solar'],
         [/\bbt\b/gi, 'biến tần'],
         [/\bbientan\b/gi, 'biến tần'],
         [/\blithum\b/gi, 'lithium'],
         [/\blifepo\b/gi, 'lifepo4']
     ];
-    for (const [pattern, repl] of TYPO_MAP) {
+    for (const [pattern, repl] of SOLAR_STT_PHONETICS) {
         str = str.replace(pattern, repl);
     }
 
     // 3. Chuẩn hóa & Quy đổi đơn vị đo lường
+    // Đổi dấu phẩy số thập phân sang dấu chấm: 6,5 KW -> 6.5kW, 6,6 KW -> 6.6kW
+    str = str.replace(/\b(\d+)[,](\d+)\s*(kw|kilo\s*watt|kwp|kwh|w|wp|kva|v|ah)\b/gi, (m, p1, p2, p3) => `${p1}.${p2}${p3}`);
     // 15000w / 15.000w -> 15kW, 5000w -> 5kW
     str = str.replace(/\b(\d+)\s*000\s*(?:w|watt|oat)\b/gi, (match, p1) => `${p1}kW`);
+    // 15kw / 6.6kw -> 15kW / 6.6kW
+    str = str.replace(/\b(\d+(?:\.\d+)?)\s*(?:kw|kilo\s*watt)\b/gi, '$1kW');
     // 15kwp -> 15kW
     str = str.replace(/\b(\d+(?:[.,]\d+)?)\s*(?:kwp|kilo\s*watt\s*peak)\b/gi, '$1kW');
     // 600wp -> 600W
@@ -452,7 +481,17 @@ function normalizeSolarInput(text) {
     // ah -> Ah
     str = str.replace(/\b(\d+(?:[.,]\d+)?)\s*(?:ah)\b/gi, '$1Ah');
 
-    // 4. Loại bỏ từ đệm địa phương miền Nam
+    // 4. PHỤC HỒI DẤU PHẨY THẬP PHÂN BỊ NUỐT TRONG GIỌNG NÓI STT (VOICE SPEECH-TO-TEXT RECOVERY)
+    // Ví dụ: Người dùng nói "sáu phẩy sáu kw" -> STT ghi "66 kw" hoặc "66kw" -> Phục hồi thành 6.6kW!
+    str = str.replace(/\b66\s*(?:kw|kilo\s*watt)\b/gi, '6.6kW');
+    str = str.replace(/\b65\s*(?:kw|kilo\s*watt)\b/gi, '6.5kW');
+    str = str.replace(/\b62\s*(?:kw|kilo\s*watt)\b/gi, '6.2kW');
+    str = str.replace(/\b55\s*(?:kw|kilo\s*watt)\b/gi, '5.5kW');
+    str = str.replace(/\b153\s*(?:kwh)\b/gi, '15.3kWh');
+    str = str.replace(/\b512\s*(?:kwh)\b/gi, '5.12kWh');
+    str = str.replace(/\b143\s*(?:kwh)\b/gi, '14.3kWh');
+
+    // 5. Loại bỏ từ đệm địa phương miền Nam
     str = str.replace(/(?:^|\s)(?:nghe nhen|nghe nhé|nhen nhen|nhen|nhe|nhi|nè|á|dùm|giùm|giúp em|hộ em|coi nào|với nhé|nhé sếp|nè sếp)(?:\s|$|[.,!?])/gi, ' ');
 
     return str.replace(/\s+/g, ' ').trim();
@@ -664,8 +703,8 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
                 }
             }
 
-            // NẾU NGƯỜI DÙNG CÓ NÓI TÊN THƯƠNG HIỆU HÃNG (Deye, Canadian, Apess, Jinko, Solis, Longi...)
-            const BRANDS = ['deye', 'canadian', 'apess', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'solis', 'xpower', 'voltique', 'solpump', 'anern'];
+            // NẾU NGƯỜI DÙNG CÓ NÓI TÊN THƯƠNG HIỆU HÃNG (Deye, Canadian, Apess, Jinko, Solis, Longi, Lumentree, Luxpower...)
+            const BRANDS = ['deye', 'canadian', 'apess', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'solis', 'lumentree', 'luxpower', 'goodwe', 'sofar', 'xpower', 'voltique', 'solpump', 'anern'];
             const mentionedBrands = BRANDS.filter(b => cleanNorm.includes(b) || (b === 'canadian' && cleanNorm.includes('cana')) || (b === 'apess' && cleanNorm.includes('apec')));
             if (mentionedBrands.length > 0) {
                 const prodHasBrand = mentionedBrands.some(b => pNameNorm.includes(b) || (b === 'canadian' && pNameNorm.includes('cana')) || (b === 'apess' && pNameNorm.includes('apec')));
@@ -822,7 +861,7 @@ async function extractCustomer(text, norm, context) {
 
         // 3. Trích xuất tên khách hàng ứng viên & địa điểm (tỉnh/thành phố)
         let candidateQuery = '';
-        const explicitMatch = text.match(/(?:cho khách|khách hàng|khách|đối tác|cho anh|cho chị|cho bác|cho chú)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+sđt|\s+sdt|\s+số|\s+điện|\s+đt|\s+phone|\s+mua|\s+lấy|\s+đặt|\s+gồm|\s+với|$))/i);
+        const explicitMatch = text.match(/(?:cho khách|khách hàng|khách|đối tác|cho anh|cho chị|cho bác|cho chú)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+\d+|\s+tấm|\s+bộ|\s+biến\s*tần|\s+inverter|\s+pin|\s+sđt|\s+sdt|\s+số|\s+điện|\s+đt|\s+phone|\s+mua|\s+lấy|\s+đặt|\s+gồm|\s+với|$))/i);
         if (explicitMatch && explicitMatch[1].trim().length > 1) {
             candidateQuery = explicitMatch[1].trim();
         }
@@ -875,8 +914,15 @@ async function extractCustomer(text, norm, context) {
             }
 
             // Khớp chính xác cụm tên trong tên đầy đủ hoặc tên gọi
+            let includesName = false;
             if (qStr && (cName.includes(qStr) || cFull.includes(qStr))) {
                 score += 120;
+                includesName = true;
+            }
+
+            // Nếu toàn bộ token tìm kiếm đều khớp trong tên khách hàng (ví dụ: "võ" và "toàn" trong "Võ Anh Toàn")
+            if (qTokens.length >= 2 && matchedCount >= qTokens.length) {
+                score += 80;
             }
 
             // SO KHỚP ĐỊA DANH / TỈNH THÀNH (ví dụ: "Kiên Giang", "Tây Ninh", "Đồng Tháp")
@@ -904,24 +950,28 @@ async function extractCustomer(text, norm, context) {
 
             if (cNick && cleanNorm.includes(cNick) && cNick.length >= 3) score += 60;
 
-            if (qTokens.length >= 2 && matchedCount < 2) score -= 30;
+            if (qTokens.length >= 2 && matchedCount < 2) score -= 50;
 
-            return { ...c, score, maxSim };
+            return { ...c, score, maxSim, matchedCount, includesName };
         }).filter(c => c.score > 0).sort((a, b) => b.score - a.score);
 
-        if (scored.length > 0 && scored[0].score >= 35) {
+        if (scored.length > 0) {
             const best = scored[0];
-            return {
-                found: true,
-                customerId: best.id,
-                customerName: best.name || best.full_name,
-                customerCode: best.customer_code,
-                phone: best.phone || '',
-                nickname: best.nickname,
-                company: best.company_name || best.vat_company,
-                autoGuessed: true,
-                suggestions: scored.slice(0, 3)
-            };
+            const hasSufficientConfidence = (best.score >= 100 && (best.maxSim >= 0.45 || best.matchedCount >= 2 || best.includesName)) ||
+                                           (best.exactName || best.exactFullName || best.exactPhone);
+            if (hasSufficientConfidence) {
+                return {
+                    found: true,
+                    customerId: best.id,
+                    customerName: best.name || best.full_name,
+                    customerCode: best.customer_code,
+                    phone: best.phone || '',
+                    nickname: best.nickname,
+                    company: best.company_name || best.vat_company,
+                    autoGuessed: true,
+                    suggestions: scored.slice(0, 3)
+                };
+            }
         }
 
         return {
@@ -1484,6 +1534,78 @@ function buildDraftPreviewResponse(draft) {
     };
 }
 
+// KIỂM TRA TƯƠNG THÍCH KỸ THUẬT SOLAR: INVERTER <-> BATTERY <-> PV PANELS (PILLAR V)
+function checkTechnicalCompatibility(items) {
+    let compatWarning = null;
+    let techTip = null;
+    let accessoryTip = null;
+    if (!items || items.length === 0) return { compatWarning, techTip, accessoryTip };
+
+    const invItems = items.filter(it => /bien tan|inverter|hybrid/i.test(removeVietnameseTones(it.name || (it.product && it.product.product_name) || '')));
+    const batItems = items.filter(it => /pin|apess|lithium|kwh|lifepo4/i.test(removeVietnameseTones(it.name || (it.product && it.product.product_name) || '')));
+    const panelItems = items.filter(it => /tam pin|panel|canadian|jinko|longi/i.test(removeVietnameseTones(it.name || (it.product && it.product.product_name) || '')));
+
+    // 1. Tương thích Inverter <-> Pin lưu trữ (Điện áp LV vs HV, C-rate, Phụ kiện)
+    if (invItems.length > 0 && batItems.length > 0) {
+        const inv = invItems[0];
+        const bat = batItems[0];
+        const invName = (inv.name || (inv.product && inv.product.product_name) || '');
+        const batName = (bat.name || (bat.product && bat.product.product_name) || '');
+        const invNorm = removeVietnameseTones(invName).toLowerCase();
+        const batNorm = removeVietnameseTones(batName).toLowerCase();
+
+        // 1.1 Cấp điện áp Biến tần 24V vs Pin 48V
+        if (/24v/i.test(invNorm) && /48v|51\.2v|15\.3kwh|16kwh|14\.3kwh/i.test(batNorm)) {
+            compatWarning = `⚠️ Cảnh báo tương thích: Biến tần hệ 24V không đồng bộ trực tiếp với Pack pin hệ 48V/15kWh.`;
+        }
+        // 1.2 Biến tần 3 pha High-Voltage (HV) vs Pin điện áp thấp LV (48V/51.2V)
+        else if ((/hv\b|high\s*voltage|cao ap|3\s*pha|3phase/i.test(invNorm) && !/lv|low voltage/i.test(invNorm)) &&
+                 /48v|51\.2v|5[.,]12|15[.,]3|14[.,]3|treo tuong|wall mounted/i.test(batNorm)) {
+            compatWarning = `⚠️ CẢNH BÁO TƯƠNG THÍCH ĐIỆN ÁP: Biến tần High-Voltage (HV 3 pha) không kết nối trực tiếp với Pack pin điện áp thấp LV (48V/51.2V)! Cần sử dụng pin lưu trữ Cao Áp (HV Battery Tower 160V-600V).`;
+        }
+
+        // 1.3 Khuyến nghị tỷ lệ dung lượng xả C-rate
+        const invSpecs = extractSpecs(invNorm);
+        const invKW = (invSpecs.find(s => s.unit === 'kw') || {}).val || 12;
+        const batSpecs = extractSpecs(batNorm);
+        const batKWh = (batSpecs.find(s => s.unit === 'kwh') || {}).val || ((batSpecs.find(s => s.unit === 'kw') || {}).val || 5.12);
+        const totalBatKWh = batKWh * (bat.qty || 1);
+
+        if (invKW >= 8 && totalBatKWh < 10) {
+            techTip = `💡 Khuyến nghị dung lượng: Biến tần ${invKW}kW nên kết hợp pack pin tối thiểu 10kWh - 15kWh để đảm bảo công suất xả liên tục an toàn cho BMS khi mất điện lưới.`;
+        }
+
+        // 1.4 Gợi ý phụ kiện kết nối
+        accessoryTip = `💡 Phụ kiện đi kèm: Đơn có Biến tần & Pin lưu trữ — kiểm tra bổ sung Cáp nguồn DC (25-35mm²), Cầu chì DC/Aptomat DC 125A-200A và Jack MC4 nếu công trình chưa có sẵn.`;
+    }
+
+    // 2. Tương thích Tấm pin PV <-> Biến tần (Tỷ lệ DC/AC)
+    if (panelItems.length > 0 && invItems.length > 0) {
+        let totalPanelW = 0;
+        for (const pit of panelItems) {
+            const pSpec = extractSpecs(pit.name || (pit.product && pit.product.product_name) || '');
+            const pWatt = (pSpec.find(s => s.unit === 'w') || {}).val || (pSpec.find(s => s.unit === 'kw') ? pSpec.find(s => s.unit === 'kw').val * 1000 : 600);
+            totalPanelW += pWatt * (pit.qty || 1);
+        }
+        let totalInvKW = 0;
+        for (const iit of invItems) {
+            const iSpec = extractSpecs(iit.name || (iit.product && iit.product.product_name) || '');
+            const iKW = (iSpec.find(s => s.unit === 'kw') || {}).val || 6;
+            totalInvKW += iKW * (iit.qty || 1);
+        }
+        if (totalInvKW > 0 && totalPanelW > 0) {
+            const dcAcRatio = (totalPanelW / (totalInvKW * 1000)).toFixed(2);
+            if (dcAcRatio < 0.9) {
+                techTip = `💡 Lưu ý kỹ thuật: Tổng công suất pin (${(totalPanelW/1000).toFixed(1)}kWp) khá thấp so với biến tần (${totalInvKW}kW) - Tỷ lệ DC/AC: ${dcAcRatio} (Khuyến nghị chuẩn: 1.15 - 1.35).`;
+            } else if (dcAcRatio > 1.45) {
+                techTip = `💡 Lưu ý kỹ thuật: Tỷ lệ quá tải DC/AC là ${dcAcRatio} (${(totalPanelW/1000).toFixed(1)}kWp / ${totalInvKW}kW) - Cần kiểm tra dải MPPT của biến tần.`;
+            }
+        }
+    }
+
+    return { compatWarning, techTip, accessoryTip };
+}
+
 // 1. TẠO ĐƠN HÀNG BÁN NHANH (SO - SALES ORDER)
 async function handleCreateOrder(text, context, user) {
     const cleanText = text.trim();
@@ -1561,17 +1683,8 @@ async function handleCreateOrder(text, context, user) {
 
     const totalAmount = items.reduce((acc, it) => acc + it.total, 0);
 
-    // 1. Kiểm tra tương thích kỹ thuật (Inverter 24V vs Battery 48V/15kWh)
-    let compatWarning = null;
-    const hasInv = items.some(it => /bien tan|inverter|hybrid/i.test(it.name));
-    const hasBat = items.some(it => /pin luu tru|apess|lithium|kwh/i.test(it.name));
-    if (hasInv && hasBat) {
-        const inv = items.find(it => /bien tan|inverter|hybrid/i.test(it.name));
-        const bat = items.find(it => /pin luu tru|apess|lithium|kwh/i.test(it.name));
-        if (/24v/i.test(inv.name) && /48v|51\.2v|15\.3kwh|16kwh/i.test(bat.name)) {
-            compatWarning = `⚠️ Cảnh báo tương thích: Biến tần hệ 24V không đồng bộ trực tiếp với Pack pin hệ 48V/15kWh.`;
-        }
-    }
+    // 1. Kiểm tra tương thích kỹ thuật Solar (Inverter <-> Pin <-> Tấm PV, LV vs HV, C-rate, Phụ kiện)
+    const { compatWarning, techTip, accessoryTip } = checkTechnicalCompatibility(items);
 
     // 2. Cảnh báo vi phạm giá sàn (Floor Price Guardrail - Pillar V)
     let floorPriceWarning = null;
@@ -1626,34 +1739,7 @@ async function handleCreateOrder(text, context, user) {
         }
     }
 
-    // 5. Kiểm tra tương thích công suất DC/AC (Technical Sanity Check - Pillar V)
-    let techTip = null;
-    const panelItems = items.filter(it => /tam pin|panel|canadian|jinko|longi/i.test(it.name));
-    const invItems = items.filter(it => /bien tan|inverter|hybrid/i.test(it.name));
-    if (panelItems.length > 0 && invItems.length > 0) {
-        let totalPanelW = 0;
-        for (const pit of panelItems) {
-            const pSpec = extractSpecs(pit.name);
-            const pWatt = (pSpec.find(s => s.unit === 'w') || {}).val || (pSpec.find(s => s.unit === 'kw') ? pSpec.find(s => s.unit === 'kw').val * 1000 : 600);
-            totalPanelW += pWatt * pit.qty;
-        }
-        let totalInvKW = 0;
-        for (const iit of invItems) {
-            const iSpec = extractSpecs(iit.name);
-            const iKW = (iSpec.find(s => s.unit === 'kw') || {}).val || 10;
-            totalInvKW += iKW * iit.qty;
-        }
-        if (totalInvKW > 0 && totalPanelW > 0) {
-            const dcAcRatio = (totalPanelW / (totalInvKW * 1000)).toFixed(2);
-            if (dcAcRatio < 0.9) {
-                techTip = `💡 Lưu ý kỹ thuật: Tổng công suất pin (${(totalPanelW/1000).toFixed(1)}kWp) khá thấp so với biến tần (${totalInvKW}kW) - Tỷ lệ DC/AC: ${dcAcRatio} (Khuyến nghị chuẩn: 1.15 - 1.35).`;
-            } else if (dcAcRatio > 1.45) {
-                techTip = `💡 Lưu ý kỹ thuật: Tỷ lệ quá tải DC/AC là ${dcAcRatio} (${(totalPanelW/1000).toFixed(1)}kWp / ${totalInvKW}kW) - Cần kiểm tra dải MPPT của biến tần.`;
-            }
-        }
-    }
-
-    const allDraftWarnings = [compatWarning, floorPriceWarning, debtWarning, atpWarning, techTip].filter(Boolean);
+    const allDraftWarnings = [compatWarning, floorPriceWarning, debtWarning, atpWarning, techTip, accessoryTip].filter(Boolean);
 
     if (custRes.missing || !custRes.customerId) {
         let lastCustMsg = '';
@@ -1895,6 +1981,19 @@ async function handleUpdateDraftOrder(text, context, user) {
     const cleanText = text.trim();
     const norm = removeVietnameseTones(cleanText).replace(/\b(?:dit me|dcm|dm|vcl|clgt|oc cho|ngu|me kiep|chac lac)\b/g, '').trim();
 
+    // 0. BẢO VỆ PHẢN HỒI KHIẾU NẠI / CHỈ TRÍCH NHẦM LẪN (META-CORRECTION DEFENSE)
+    // Khi người dùng bực dọc phản ánh bot sửa nhầm khách hàng thay vì sản phẩm
+    const isMetaComplaint = /(?:cap\s+nhat|sua|doi)\s+san\s+pham\s+chu(?:\s+cap\s+nhat|\s+khong\s+phai|\s+chu|\s+khong|\s+sao|\s+lai)?\s+(?:ten\s+)?(?:khach|khach\s+hang)/i.test(norm) ||
+                           /(?:khong\s+phai|sao\s+lai|nham|lon)\s+(?:khach|khach\s+hang|ten)/i.test(norm);
+    if (isMetaComplaint) {
+        return {
+            text: `Dạ em xin lỗi anh/chị vì đã hiểu nhầm sang tên khách hàng! 🙏\n\nKhách hàng hiện tại vẫn giữ nguyên là **${draft.partner_name || 'Chưa chọn'}**.\n\nAnh/Chị muốn đổi sang thiết bị nào ạ? (Ví dụ: **Biến tần Lumentree 6.6kW**, **Deye 12kW**, **Pin Apess 15.3kWh**...)`,
+            card: draft.partner_name ? buildDraftPreviewResponse(draft).card : null,
+            action_type: 'ORDER_NEED_INFO',
+            quick_replies: ['Biến tần Hybrid Lumentree 6.6kw ULTRA', 'Biến tần Deye 12kw 3pha', 'Pin lưu trữ Apess 15.3kwh', 'Hủy đơn']
+        };
+    }
+
     // 0. XỬ LÝ KHI NGƯỜI DÙNG BẢO ĐỔI SỐ LƯỢNG MÀ CHƯA NÓI RÕ CON SỐ (VÍ DỤ: "đổi số lượng nghe")
     const isChangeQtyOnly = /^(?:sua so luong|doi so luong|chinh so luong|thay so luong|sua sl|doi sl)(?:\s+(?:nghe|nha|nhe|di|dum|giup|ho|nao|coi|a))?$/i.test(norm) ||
         (/doi so luong|sua so luong|chinh so luong|doi sl|sua sl/i.test(norm) && !/\d+/.test(norm));
@@ -1989,12 +2088,22 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
     }
 
-    // Kiểm tra ý định đổi sản phẩm
-    const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai/i.test(norm);
-    const mentionsProduct = !deltaMatch && !qtyMatch && !priceMatch && (wantsChangeProduct || (!draft.product && (!draft.items || draft.items.length === 0)) || /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|pin\s*\d+|tu dien|kep|bat\b/i.test(norm));
+    // Kiểm tra ý định đổi sản phẩm / thiết bị
+    const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai|sang bien tan|sang pin|sang tam/i.test(norm);
+    const hasProductIndicator = wantsChangeProduct || 
+        /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|pin\s*\d+|tu dien|kep|bat\b|lumentree|solis|luxpower|growatt|huawei|sungrow|longi|goodwe|sofar/i.test(norm) ||
+        /\d+(?:\.\d+)?\s*(?:kw|kwh|w|wp|v|ah)\b/i.test(norm);
+    const mentionsProduct = !deltaMatch && !qtyMatch && !priceMatch && (hasProductIndicator || (!draft.product && (!draft.items || draft.items.length === 0)));
 
-    // 3. Cập nhật Đối tác (Khách CRM hoặc NCC) - KHÔNG BAO GIỜ CHẠY KHI ĐANG NÓI VỀ SỐ LƯỢNG / ĐƠN GIÁ / SẢN PHẨM
-    const mentionsCustomer = (/\b(?:khach|khach hang|doi tac|\banh\b|\bchi\b|\bbac\b|\bchu\b|\bong\b|\bba\b|sdt|kh\s*\d+|doi sang khach|cho khach|doi khach)\b/i.test(norm) && !/so luong|sl|gia|don gia/i.test(norm)) || (!qtyMatch && !priceMatch && !mentionsProduct && !draft.partner_name);
+    // 3. Cập nhật Đối tác (Khách CRM hoặc NCC)
+    // KHÓA CỨNG: TUYỆT ĐỐI KHÔNG BAO GIỜ NHẬN SANG KHÁCH HÀNG KHI ĐANG NÓI VỀ SẢN PHẨM HOẶC CÓ TỪ KHÓA THIẾT BỊ!
+    let mentionsCustomer = false;
+    if (!hasProductIndicator && !wantsChangeProduct) {
+        const explicitCustomer = /\b(?:khach|khach hang|doi tac|doi sang khach|cho khach|doi khach|sdt|kh\s*\d+)\b/i.test(norm) ||
+                                 /\b(?:cho\s+anh|cho\s+chi|cho\s+bac|cho\s+chu|cho\s+ong|cho\s+ba)\s+[a-zà-ỹ]+/i.test(norm);
+        const needCustomerFallback = (!qtyMatch && !priceMatch && !mentionsProduct && !draft.partner_name);
+        mentionsCustomer = (explicitCustomer && !/so luong|sl|gia|don gia/i.test(norm)) || needCustomerFallback;
+    }
 
     if (draft.type === 'SALE' && mentionsCustomer) {
         const custRes = await extractCustomer(cleanText, norm, context);
@@ -2025,7 +2134,7 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
     }
 
-    const mentionsSupplier = /ncc|nha cung cap|cty|cong ty|solar|cergy|tin trung|hung viet hao|heropower|tu nha cung cap/i.test(norm) || (!qtyMatch && !priceMatch && !mentionsProduct && !draft.partner_name);
+    const mentionsSupplier = !hasProductIndicator && !wantsChangeProduct && (/ncc|nha cung cap|cty|cong ty|solar|cergy|tin trung|hung viet hao|heropower|tu nha cung cap/i.test(norm) || (!qtyMatch && !priceMatch && !mentionsProduct && !draft.partner_name));
     if (draft.type === 'PURCHASE' && mentionsSupplier) {
         const supRes = await extractSupplier(cleanText, norm, context);
         if (supRes.notFoundInList) {
@@ -2060,8 +2169,32 @@ async function handleUpdateDraftOrder(text, context, user) {
         const prodRes = await findMatchingProduct(cleanText, norm, context);
         if (prodRes.matched) {
             draft.product = prodRes.product;
-            draft.unitPrice = draft.type === 'SALE' ? (parseFloat(prodRes.product.retail_price) || 0) : (parseFloat(prodRes.product.import_price) || 2500000);
-            draft.totalAmount = draft.qty * draft.unitPrice;
+            const newPrice = draft.type === 'SALE' ? (parseFloat(prodRes.product.retail_price) || 0) : (parseFloat(prodRes.product.import_price) || 2500000);
+            draft.unitPrice = newPrice;
+            draft.totalAmount = (draft.qty || 1) * newPrice;
+
+            // ĐỒNG BỘ CẢ DRAFT.ITEMS[0] ĐỂ CARD XEM TRƯỚC RENDER ĐÚNG SẢN PHẨM MỚI!
+            const unit = (prodRes.product.unit && !/^\d+$/.test(prodRes.product.unit)) ? prodRes.product.unit : 'Bộ';
+            const newItem = {
+                product: prodRes.product,
+                id: prodRes.product.id,
+                name: prodRes.product.product_name,
+                sku: prodRes.product.sku || '',
+                qty: draft.qty || 1,
+                unit: unit,
+                price: newPrice,
+                total: (draft.qty || 1) * newPrice
+            };
+            if (draft.items && draft.items.length > 0) {
+                draft.items[0] = newItem;
+            } else {
+                draft.items = [newItem];
+            }
+
+            // Cập nhật cảnh báo tương thích kỹ thuật cho sản phẩm mới
+            const comp = checkTechnicalCompatibility(draft.items);
+            draft.compat_warning = comp.compatWarning || comp.techTip || comp.accessoryTip;
+
             updatedFields.push(`sản phẩm thành **${prodRes.product.product_name}**`);
         } else if (prodRes.notFoundInCatalog) {
             const topSugg = (prodRes.suggestions || []).filter(p => p.score >= 10).slice(0, 3);

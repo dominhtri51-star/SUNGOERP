@@ -45,6 +45,36 @@
         }
     }
 
+    // Tiền xử lý âm vị học giọng nói Solar trên Giao diện (Frontend Voice STT Normalizer)
+    function cleanSpeechTranscript(text) {
+        if (!text) return '';
+        let str = String(text);
+        // Nhận diện chuẩn xác thương hiệu biến tần & pin từ phiên âm giọng nói
+        str = str.replace(/(?:lung\s+linh\s+chi|lưu\s+minh\s+chi|luu\s+minh\s+chi|lemon\s+tree|lemon\s+tri|lumen\s+tri|lumen\s+tree|lumentri|lumen\s+tre)/gi, 'Lumentree');
+        str = str.replace(/(?:đầy\s+e|đê\s+e|đây\s+e|đề\s+e|de\s+ye|đê\s+dê)/gi, 'Deye');
+        str = str.replace(/(?:sô\s+lít|so\s+lit|xô\s+lít|xo\s+lit|sô\s+li)/gi, 'Solis');
+        str = str.replace(/(?:lúc\s+pao\s+quơ|lúc\s+pao|lắc\s+pao|luc\s+pao|lắc\s+pao\s+uơ)/gi, 'Luxpower');
+        str = str.replace(/(?:gờ\s+rô\s+oat|gơ\s+rô\s+wat|gô\s+gát|gro\s+oat|gờ\s+rô\s+wat)/gi, 'Growatt');
+        str = str.replace(/(?:hua\s+way|hoa\s+vĩ|hu\s+oa\s+oay|hua\s+oay)/gi, 'Huawei');
+        str = str.replace(/(?:sun\s+gâu|sun\s+gờ\s+rô|săn\s+gâu)/gi, 'Sungrow');
+        str = str.replace(/(?:jin\s+cô|gin\s+cô|din\s+cô|jinkosolar)/gi, 'Jinko');
+        str = str.replace(/(?:lon\s+gi|long\s+gi|longji)/gi, 'Longi');
+        str = str.replace(/(?:a\s+pét|a\s+bét|a\s+pếch|apec|a\s+péc)/gi, 'Apess');
+        str = str.replace(/(?:ca\s+na\s+đi\s+an|ca\s+na\s+đa|canadain)/gi, 'Canadian');
+        str = str.replace(/(?:gút\s+we|gút\s+guê)/gi, 'Goodwe');
+        str = str.replace(/(?:sô\s+pha|so\s+fa)/gi, 'Sofar');
+
+        // Phục hồi dấu phẩy thập phân khi mic nuốt dấu
+        str = str.replace(/\b66\s*(?:kw|kilo\s*watt)\b/gi, '6.6kW');
+        str = str.replace(/\b65\s*(?:kw|kilo\s*watt)\b/gi, '6.5kW');
+        str = str.replace(/\b62\s*(?:kw|kilo\s*watt)\b/gi, '6.2kW');
+        str = str.replace(/\b55\s*(?:kw|kilo\s*watt)\b/gi, '5.5kW');
+        str = str.replace(/\b153\s*(?:kwh)\b/gi, '15.3kWh');
+        str = str.replace(/\b512\s*(?:kwh)\b/gi, '5.12kWh');
+        str = str.replace(/\b143\s*(?:kwh)\b/gi, '14.3kWh');
+        return str;
+    }
+
     // Khởi tạo Web Speech Recognition (Ghi âm giọng nói Tiếng Việt)
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -77,7 +107,8 @@
                 }
                 const inputEl = document.getElementById('sungo-ai-input');
                 if (inputEl) {
-                    inputEl.value = finalTranscript || interimTranscript;
+                    const raw = finalTranscript || interimTranscript;
+                    inputEl.value = cleanSpeechTranscript(raw);
                 }
             };
 
@@ -95,7 +126,9 @@
                 updateMicUI();
                 const inputEl = document.getElementById('sungo-ai-input');
                 if (inputEl && inputEl.value.trim().length > 1) {
-                    sendMessage(inputEl.value.trim(), true);
+                    const cleanVal = cleanSpeechTranscript(inputEl.value.trim());
+                    inputEl.value = cleanVal;
+                    sendMessage(cleanVal, true);
                 }
             };
 
