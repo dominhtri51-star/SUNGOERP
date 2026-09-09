@@ -331,8 +331,73 @@ const CUST_STOP_WORDS = new Set([
     'anh', 'chi', 'em', 'bac', 'chu', 'ong', 'ba', 'khach', 'hang', 'doi', 'tac', 
     'mua', 'ban', 'cho', 'tao', 'don', 'ngay', 'lap', 'phieu', 'va', 'la', 'voi', 
     'o', 'tai', 'tp', 'tinh', 'quan', 'huyen', 'so', 'luong', 'lay', 'tam', 'pin', 
-    'bien', 'tan', 'inverter', 'bo', 'cai', 'chiec', 'thanh', 'sang', 'thay', 'sua'
+    'bien', 'tan', 'inverter', 'bo', 'cai', 'chiec', 'thanh', 'sang', 'thay', 'sua',
+    'nghe', 'nha', 'nhe', 'nhi', 'a', 'ha', 'ne', 'roi', 'di', 'dum', 'giup', 'ho',
+    'nao', 'coi', 'nhung', 'ma', 'lai', 'thong', 'bao', 'chac', 'lac', 'oc', 'cho',
+    'dit', 'me', 'dm', 'dcm', 'vcl', 'clgt'
 ]);
+
+const PRODUCT_STOP_WORDS = new Set([
+    'tam', 'bo', 'cai', 'chiec', 'cuon', 'thung', 'met', 'kg', 'kien',
+    'mua', 'ban', 'cho', 'tao', 'don', 'hang', 'thiet', 'bi', 'loai', 'day', 'kho', 'them',
+    'xuat', 'nhap', 'bao', 'hanh', 'bh', 'nam', 'thang', 'ngay', 'so', 'luong', 'gia', 'vnd', 'dong',
+    'k', 'cu', 'trieu', 'ty', 'toi', 'voi', 'va', 'sang', 've',
+    'anh', 'chi', 'em', 'bac', 'chu', 'ong', 'ba', 'co', 'thim',
+    'khach', 'khach hang', 'doi', 'tac', 'ncc', 'nha', 'cung', 'cap', 'dia', 'chi', 'sdt',
+    'lap', 'phieu', 'yeu', 'cau', 'gui', 'ngay', 'lien', 'he', 'giup', 'minh', 'lay', 'dat',
+    'nghe', 'nha', 'nhe', 'nhi', 'a', 'ha', 'ne', 'roi', 'di', 'dum', 'giup', 'ho',
+    'dit', 'me', 'dm', 'dcm', 'vcl', 'oc', 'cho', 'chac', 'lac'
+]);
+
+const VN_PROVINCES = [
+    'kien giang', 'tay ninh', 'dong thap', 'gia lai', 'dak lak', 'daklak', 'dak nong', 'daknong',
+    'lam dong', 'bac lieu', 'ca mau', 'can tho', 'tien giang', 'long an', 'dong nai', 'binh duong',
+    'binh phuoc', 'ba ria', 'vung tau', 'ho chi minh', 'hcm', 'sai gon', 'ha noi', 'da nang',
+    'quang nam', 'quang ngai', 'khanh hoa', 'phu yen', 'binh dinh', 'hue', 'thua thien', 'quang tri', 'quang binh',
+    'ha tinh', 'nghe an', 'thanh hoa', 'ninh binh', 'nam dinh', 'thai binh', 'hai phong', 'hai duong',
+    'hung yen', 'bac ninh', 'bac giang', 'vinh phuc', 'phu tho', 'thai nguyen', 'tuyen quang', 'yen bai',
+    'lao cai', 'son la', 'hoa binh', 'lang son', 'cao bang', 'ha giang', 'kon tum', 'an giang',
+    'soc trang', 'tra vinh', 'hau giang', 'vinh long', 'ninh thuan', 'binh thuan'
+];
+
+function extractSpecs(str, excludeNums = []) {
+    if (!str) return [];
+    const norm = str.toLowerCase().replace(/,/g, '.');
+    const specs = [];
+
+    // 1. Thông số có đơn vị rõ ràng: 15.3kwh, 15kw, 600w, 24v, 3pha...
+    const m = norm.matchAll(/(\d+(?:\.\d+)?)\s*(kwh|kw|w|wp|kva|v|ah|hp|m3|pha)\b/g);
+    for (const match of m) {
+        specs.push({ val: parseFloat(match[1]), unit: match[2] });
+    }
+
+    // 2. Số đứng liền kề tên thiết bị hoặc công suất tấm pin (600, 550, 615...)
+    const tokens = norm.split(/\s+/);
+    const DEVICE_BRANDS = new Set(['deye', 'canadian', 'cana', 'jinko', 'longi', 'growatt', 'huawei', 'sungrow', 'apess', 'solis', 'lumentree', 'pin', 'bien', 'tan', 'inverter', 'hybrid']);
+
+    for (let i = 0; i < tokens.length; i++) {
+        const t = tokens[i];
+        const numM = t.match(/^(\d+(?:\.\d+)?)$/);
+        if (numM) {
+            const val = parseFloat(numM[1]);
+            // Bỏ qua số lượng đặt hàng hoặc năm bảo hành (ví dụ: 10 nam, 5 nam, 12 thang)
+            if (excludeNums.includes(String(val)) || excludeNums.includes(val)) continue;
+
+            const nextTok = (tokens[i + 1] || '').toLowerCase();
+            if (/^(nam|thang|ngay|trieu|ty|k|bo|tam|cai|chiec)$/.test(nextTok)) continue;
+
+            const prevTok = (tokens[i - 1] || '').toLowerCase();
+            if (DEVICE_BRANDS.has(prevTok)) {
+                const inferredUnit = val >= 100 ? 'w' : 'kw';
+                specs.push({ val: val, unit: inferredUnit, inferred: true });
+            } else if (val >= 300 && val <= 1000) {
+                specs.push({ val: val, unit: 'w', inferred: true });
+            }
+        }
+    }
+
+    return specs;
+}
 
 function extractQuantity(text) {
     // 1. Từ khóa rõ ràng: số lượng X, sl X, lấy X, bán X, mua X, đặt X
@@ -375,16 +440,6 @@ function extractQuantity(text) {
     return 1;
 }
 
-const PRODUCT_STOP_WORDS = new Set([
-    'tam', 'bo', 'cai', 'chiec', 'cuon', 'thung', 'met', 'kg', 'kien',
-    'mua', 'ban', 'cho', 'tao', 'don', 'hang', 'thiet', 'bi', 'loai', 'day', 'kho', 'them',
-    'xuat', 'nhap', 'bao', 'hanh', 'bh', 'nam', 'thang', 'ngay', 'so', 'luong', 'gia', 'vnd', 'dong',
-    'k', 'cu', 'trieu', 'ty', 'toi', 'voi', 'va', 'sang', 've',
-    'anh', 'chi', 'em', 'bac', 'chu', 'ong', 'ba', 'co', 'thim',
-    'khach', 'khach hang', 'doi', 'tac', 'ncc', 'nha', 'cung', 'cap', 'dia', 'chi', 'sdt',
-    'lap', 'phieu', 'yeu', 'cau', 'gui', 'ngay', 'lien', 'he', 'giup', 'minh', 'lay', 'dat'
-]);
-
 function getTrigrams(str) {
     const s = '  ' + str + '  ';
     const trigrams = new Set();
@@ -411,32 +466,40 @@ function stringSimilarity(s1, s2) {
     return union === 0 ? 0 : intersection / union;
 }
 
-// 1. TÌM KIẾM & TỰ ĐOÁN SẢN PHẨM THÔNG MINH
+// 1. TÌM KIẾM & TỰ ĐOÁN SẢN PHẨM THÔNG MINH (STRICT SPECS & CATEGORY ALIGNMENT)
 async function findMatchingProduct(text, norm, context, excludeTokens = []) {
     try {
+        const cleanNorm = (norm || removeVietnameseTones(text)).replace(/\b(?:dit me|dcm|dm|vcl|clgt|oc cho|ngu|me kiep|chac lac)\b/g, '').trim();
         const pRes = await pool.query('SELECT id, sku, product_name, category, retail_price, import_price, stock_qty, unit FROM products');
         
         // 1. Khớp trực tiếp SKU chính xác
         for (const p of pRes.rows) {
             const skuNorm = removeVietnameseTones(p.sku || '');
-            if (skuNorm && skuNorm.length >= 2 && norm.includes(skuNorm)) {
+            if (skuNorm && skuNorm.length >= 2 && cleanNorm.includes(skuNorm)) {
                 return { matched: true, product: p, autoGuessed: false };
             }
         }
 
+        // Trích xuất thông số kỹ thuật được yêu cầu (kW, kWh, W, V, Ah, Phase)
+        const reqSpecs = extractSpecs(text, excludeTokens);
+
         // 2. Tách và làm sạch các token tìm kiếm
-        const rawTokens = norm.split(/[^a-z0-9]+/i).filter(Boolean);
+        const rawTokens = cleanNorm.split(/[^a-z0-9]+/i).filter(Boolean);
         const ignore = new Set([...PRODUCT_STOP_WORDS, ...excludeTokens]);
         const sTokens = rawTokens.filter(t => !ignore.has(t) && t.length >= 2);
 
-        if (sTokens.length === 0) {
-            if (context && context.active_product && (norm.includes('san pham nay') || norm.includes('thiet bi nay') || norm.includes('hang nay'))) {
+        if (sTokens.length === 0 && reqSpecs.length === 0) {
+            if (context && context.active_product && (cleanNorm.includes('san pham nay') || cleanNorm.includes('thiet bi nay') || cleanNorm.includes('hang nay'))) {
                 return { matched: true, product: context.active_product, autoGuessed: false };
             }
             return { matched: false, missing: true };
         }
 
-        // 3. Tự đoán & Chấm điểm theo trọng số + độ tương đồng (Fuzzy Matching)
+        const isBatteryQuery = /pin|luu tru|lithium|lifepo4|kwh/i.test(cleanNorm);
+        const isInverterQuery = /bien tan|inverter|hybrid|hoa luoi|doc lap|pumping/i.test(cleanNorm);
+        const isPanelQuery = /tam pin|panel|canadian|jinko|longi|rapd/i.test(cleanNorm);
+
+        // 3. Tự đoán & Chấm điểm theo trọng số + độ tương đồng (Fuzzy Matching & Strict Specs)
         const scored = pRes.rows.map(p => {
             const pNameNorm = removeVietnameseTones(p.product_name || '');
             const pCatNorm = removeVietnameseTones(p.category || '');
@@ -446,8 +509,55 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
             let score = 0;
             let matchedCount = 0;
 
+            // Kiểm tra phân loại thiết bị
+            const isProdBattery = /pin luu tru|lithium|lifepo4|kwh|pin xe dien/i.test(pNameNorm) || /pin luu tru/i.test(pCatNorm);
+            const isProdInverter = /bien tan|inverter|hybrid/i.test(pNameNorm) || /bien tan|inverter/i.test(pCatNorm);
+            const isProdPanel = /tam pin/i.test(pNameNorm) || /tam pin/i.test(pCatNorm);
+
+            if (isBatteryQuery) {
+                if (isProdBattery) score += 120;
+                else if (isProdInverter || isProdPanel) score -= 1000; // Phạt nặng nếu hỏi pin lưu trữ mà ra biến tần hay tấm pin
+            }
+            if (isInverterQuery) {
+                if (isProdInverter) score += 120;
+                else if (isProdBattery) score -= 1000;
+            }
+            if (isPanelQuery) {
+                if (isProdPanel) score += 120;
+                else if (isProdBattery) score -= 1000;
+            }
+
+            // SO KHỚP CHẶT CHẼ THÔNG SỐ KỸ THUẬT (RATING / SPECS)
+            if (reqSpecs.length > 0) {
+                const pSpecs = extractSpecs(p.product_name);
+                for (const req of reqSpecs) {
+                    let hasNearSpec = false;
+                    let hasConflictSpec = false;
+
+                    for (const ps of pSpecs) {
+                        if (req.unit === 'v' && ps.unit === 'v') {
+                            if (req.val === ps.val) { hasNearSpec = true; score += 400; }
+                            else { hasConflictSpec = true; }
+                        } else if (req.unit !== 'v' && ps.unit !== 'v' && ps.unit !== 'ah') {
+                            const ratio = ps.val / req.val;
+                            // Gần bằng: ví dụ 15kw gần với 15.3kwh hoặc 16kwh
+                            if (ratio >= 0.85 && ratio <= 1.15) {
+                                hasNearSpec = true;
+                                score += 500;
+                            } else if (Math.abs(ps.val - req.val) > 2) {
+                                hasConflictSpec = true;
+                            }
+                        }
+                    }
+
+                    if (!hasNearSpec && hasConflictSpec) {
+                        score -= 1500; // Phạt cực nặng nếu lệch hoàn toàn thông số (ví dụ 15kW vs 5.12kW)
+                    }
+                }
+            }
+
             // Khớp nguyên văn tên sản phẩm
-            if (pNameNorm.length >= 5 && norm.includes(pNameNorm)) {
+            if (pNameNorm.length >= 5 && cleanNorm.includes(pNameNorm)) {
                 score += 300;
                 matchedCount += 3;
             }
@@ -480,7 +590,7 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
                 if (tokMatched) matchedCount++;
             }
 
-            if (matchedCount === 0) return { ...p, score: 0 };
+            if (matchedCount === 0 && score <= 0) return { ...p, score: 0 };
             if (sTokens.length >= 2 && matchedCount < 2) score -= 25;
 
             // Độ tương đồng chuỗi Trigram
@@ -502,7 +612,7 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
         return {
             matched: false,
             notFoundInCatalog: true,
-            queryProduct: sTokens.join(' '),
+            queryProduct: sTokens.join(' ') || text,
             suggestions: scored.slice(0, 3)
         };
     } catch (e) {
@@ -511,15 +621,17 @@ async function findMatchingProduct(text, norm, context, excludeTokens = []) {
     }
 }
 
-// 2. TÌM KIẾM & TỰ ĐOÁN KHÁCH HÀNG CRM THÔNG MINH
+// 2. TÌM KIẾM & TỰ ĐOÁN KHÁCH HÀNG CRM THÔNG MINH (MULTI-ATTRIBUTE & LOCATION-AWARE)
 async function extractCustomer(text, norm, context) {
     try {
+        const cleanNorm = (norm || removeVietnameseTones(text)).replace(/\b(?:dit me|dcm|dm|vcl|clgt|oc cho|ngu|me kiep|chac lac)\b/g, '').trim();
+
         // 1. Khớp SĐT
         const phoneMatch = text.match(/(0[3|5|7|8|9][0-9]{8})/);
         const phone = phoneMatch ? phoneMatch[1] : '';
         if (phone) {
             const pRes = await pool.query(
-                "SELECT id, customer_code, full_name, name, nickname, phone, company_name, vat_company FROM customers WHERE phone LIKE $1 LIMIT 1",
+                "SELECT id, customer_code, full_name, name, nickname, phone, address, company_name, vat_company FROM customers WHERE phone LIKE $1 LIMIT 1",
                 ['%' + phone + '%']
             );
             if (pRes.rows.length > 0) {
@@ -529,10 +641,10 @@ async function extractCustomer(text, norm, context) {
         }
 
         // 2. Khớp mã KH
-        const codeMatch = norm.match(/kh\s*[-_]?\s*(\d+)/i);
+        const codeMatch = cleanNorm.match(/kh\s*[-_]?\s*(\d+)/i);
         if (codeMatch) {
             const cRes = await pool.query(
-                "SELECT id, customer_code, full_name, name, nickname, phone, company_name, vat_company FROM customers WHERE LOWER(customer_code) LIKE $1 LIMIT 1",
+                "SELECT id, customer_code, full_name, name, nickname, phone, address, company_name, vat_company FROM customers WHERE LOWER(customer_code) LIKE $1 LIMIT 1",
                 ['%kh%' + codeMatch[1] + '%']
             );
             if (cRes.rows.length > 0) {
@@ -541,18 +653,32 @@ async function extractCustomer(text, norm, context) {
             }
         }
 
-        // 3. Trích xuất tên khách hàng ứng viên
+        // 3. Trích xuất tên khách hàng ứng viên & địa điểm (tỉnh/thành phố)
         let candidateQuery = '';
         const explicitMatch = text.match(/(?:cho khách|khách hàng|khách|đối tác|cho anh|cho chị|cho bác|cho chú)\s+([A-ZÀ-Ỹa-zà-ỹ0-9\s]+?)(?:(?:\s+sđt|\s+sdt|\s+số|\s+điện|\s+đt|\s+phone|\s+mua|\s+lấy|\s+đặt|\s+gồm|\s+với|$))/i);
         if (explicitMatch && explicitMatch[1].trim().length > 1) {
             candidateQuery = explicitMatch[1].trim();
         }
 
-        const rawTokens = removeVietnameseTones(candidateQuery || norm).split(/[^a-z0-9]+/i).filter(Boolean);
+        const queryNorm = removeVietnameseTones(candidateQuery || cleanNorm);
+
+        // Phát hiện địa danh / tỉnh thành (ví dụ: "kiên giang", "tây ninh", "đồng tháp", "gia lai")
+        let detectedLoc = '';
+        for (const p of VN_PROVINCES) {
+            if (queryNorm.includes(p)) {
+                detectedLoc = p;
+                break;
+            }
+        }
+
+        // Phát hiện danh xưng cá nhân ("anh", "chị", "bác", "chú", "ông", "bà")
+        const isPersonalTitle = /\b(?:anh|chi|em|bac|chu|ong|ba)\b/i.test(candidateQuery || cleanNorm);
+
+        const rawTokens = queryNorm.split(/[^a-z0-9]+/i).filter(Boolean);
         const qTokens = rawTokens.filter(t => !CUST_STOP_WORDS.has(t) && t.length >= 2);
 
-        if (qTokens.length === 0) {
-            if (context && context.active_customer && (norm.includes('khach nay') || norm.includes('anh nay') || norm.includes('chi ay'))) {
+        if (qTokens.length === 0 && !detectedLoc) {
+            if (context && context.active_customer && (cleanNorm.includes('khach nay') || cleanNorm.includes('anh nay') || cleanNorm.includes('chi ay'))) {
                 const ac = context.active_customer;
                 return { found: true, customerId: ac.id, customerName: ac.name || ac.full_name, customerCode: ac.customer_code, phone: ac.phone || '', autoGuessed: false };
             }
@@ -560,7 +686,7 @@ async function extractCustomer(text, norm, context) {
         }
 
         // 4. Lấy danh sách khách hàng để tự đoán thông minh
-        const cRes = await pool.query('SELECT id, customer_code, full_name, name, nickname, phone, company_name, vat_company FROM customers');
+        const cRes = await pool.query('SELECT id, customer_code, full_name, name, nickname, phone, address, company_name, vat_company FROM customers');
         const qStr = qTokens.join(' ');
 
         const scored = cRes.rows.map(c => {
@@ -568,7 +694,8 @@ async function extractCustomer(text, norm, context) {
             const cFull = removeVietnameseTones(c.full_name || '');
             const cNick = removeVietnameseTones(c.nickname || '');
             const cComp = removeVietnameseTones(c.company_name || c.vat_company || '');
-            const haystack = [cName, cFull, cNick, cComp].join(' ');
+            const cAddr = removeVietnameseTones(c.address || '');
+            const haystack = [cName, cFull, cNick, cComp, cAddr].join(' ');
 
             let score = 0;
             let matchedCount = 0;
@@ -580,18 +707,35 @@ async function extractCustomer(text, norm, context) {
                 }
             }
 
+            // Khớp chính xác cụm tên trong tên đầy đủ hoặc tên gọi
+            if (qStr && (cName.includes(qStr) || cFull.includes(qStr))) {
+                score += 120;
+            }
+
+            // SO KHỚP ĐỊA DANH / TỈNH THÀNH (ví dụ: "Kiên Giang", "Tây Ninh", "Đồng Tháp")
+            if (detectedLoc) {
+                if (cAddr.includes(detectedLoc) || cName.includes(detectedLoc) || cFull.includes(detectedLoc)) {
+                    score += 500; // BOOST CỰC MẠNH KHI ĐÚNG TỈNH THÀNH
+                } else {
+                    score -= 150; // Phạt khi lệch tỉnh thành
+                }
+            }
+
+            // PHÂN BIỆT KHÁCH CÁ NHÂN ("ANH NAM") VỚI CÔNG TY TỔ CHỨC ("CÔNG TY MIỀN NAM ENERGY")
+            const isCorporate = (c.company_name && c.company_name.length > 5) || /cong ty|tnhh|energy|nang luong|cp|corp/i.test(cName + ' ' + cFull);
+            if (isPersonalTitle && isCorporate) {
+                score -= 400; // Người dùng gọi "anh Nam", không được nhầm sang Công ty Miền Nam Energy!
+            }
+
             // Tương đồng Trigram & dồn chuỗi
             const simName = stringSimilarity(qStr, cName);
             const simFull = stringSimilarity(qStr, cFull);
             const simNick = stringSimilarity(qStr, cNick);
-            const simComp = stringSimilarity(qStr, cComp);
-            const maxSim = Math.max(simName, simFull, simNick, simComp);
+            const maxSim = Math.max(simName, simFull, simNick);
 
             score += maxSim * 50;
 
-            // Nếu khớp trọn vẹn tên gợi nhớ hoặc tên đối tác
-            if (cNick && norm.includes(cNick) && cNick.length >= 3) score += 60;
-            if (cComp && norm.includes(cComp) && cComp.length >= 5) score += 50;
+            if (cNick && cleanNorm.includes(cNick) && cNick.length >= 3) score += 60;
 
             if (qTokens.length >= 2 && matchedCount < 2) score -= 30;
 
@@ -616,7 +760,7 @@ async function extractCustomer(text, norm, context) {
         return {
             found: false,
             notFoundInCRM: true,
-            queryCustomer: candidateQuery || qTokens.join(' '),
+            queryCustomer: candidateQuery || qTokens.join(' ') || text,
             suggestions: scored.slice(0, 3)
         };
     } catch (e) {
@@ -1025,7 +1169,40 @@ async function handleUpdateDraftOrder(text, context, user) {
         return handleCreateOrder(text, context, user);
     }
     const cleanText = text.trim();
-    const norm = removeVietnameseTones(cleanText);
+    const norm = removeVietnameseTones(cleanText).replace(/\b(?:dit me|dcm|dm|vcl|clgt|oc cho|ngu|me kiep|chac lac)\b/g, '').trim();
+
+    // 0. XỬ LÝ KHI NGƯỜI DÙNG BẢO ĐỔI SỐ LƯỢNG MÀ CHƯA NÓI RÕ CON SỐ (VÍ DỤ: "đổi số lượng nghe")
+    const isChangeQtyOnly = /^(?:sua so luong|doi so luong|chinh so luong|thay so luong|sua sl|doi sl)(?:\s+(?:nghe|nha|nhe|di|dum|giup|ho|nao|coi|a))?$/i.test(norm) ||
+        (/doi so luong|sua so luong|chinh so luong|doi sl|sua sl/i.test(norm) && !/\d+/.test(norm));
+    if (isChangeQtyOnly) {
+        return {
+            text: `Dạ anh/chị muốn đổi số lượng của đơn hàng thành bao nhiêu ${draft.product ? (draft.product.unit || 'Bộ') : 'Bộ'} ạ?`,
+            card: null,
+            action_type: 'ORDER_NEED_QTY',
+            quick_replies: ['1 bộ', '2 bộ', '5 bộ', '10 bộ', '20 bộ', 'Hủy đơn']
+        };
+    }
+
+    // 0. XỬ LÝ KHI NGƯỜI DÙNG BẢO ĐỔI KHÁCH HÀNG / NCC MÀ CHƯA NÓI TÊN CỤ THỂ
+    const isChangePartnerOnly = /^(?:doi khach|sua khach|chon lai khach|doi khach hang|sua khach hang|doi ncc|sua ncc|doi nha cung cap|sua nha cung cap)(?:\s+(?:nghe|nha|nhe|di|dum|giup|ho|nao|coi|a))?$/i.test(norm);
+    if (isChangePartnerOnly) {
+        if (draft.type === 'SALE') {
+            return {
+                text: `Dạ anh/chị muốn đổi sang Khách hàng nào trên hệ thống CRM (sale-crm) ạ?`,
+                card: null,
+                action_type: 'ORDER_NEED_CUSTOMER',
+                quick_replies: ['Khách Võ Anh Phong', 'Khách Hoàng Gia', 'Khách Anh Nam Kiên Giang', 'Khách Binbon', 'Hủy đơn']
+            };
+        } else {
+            return {
+                text: `Dạ anh/chị muốn đổi sang Nhà Cung Cấp nào ạ?`,
+                card: null,
+                action_type: 'PURCHASE_NEED_SUPPLIER',
+                quick_replies: ['Công ty Solar E', 'Công ty Cergy', 'Công ty Tín Trung', 'H Hùng Việt Hào', 'Công ty HeroPower', 'Hủy đơn']
+            };
+        }
+    }
+
     let updatedFields = [];
 
     // 1. Cập nhật số lượng
@@ -1057,10 +1234,11 @@ async function handleUpdateDraftOrder(text, context, user) {
 
     // Kiểm tra ý định đổi sản phẩm
     const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai/i.test(norm);
-    const mentionsProduct = wantsChangeProduct || !draft.product || /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|tu dien|kep|bat/i.test(norm);
+    const mentionsProduct = wantsChangeProduct || !draft.product || /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|pin\s*\d+|tu dien|kep|bat|kwh|kw|w\b/i.test(norm);
 
-    // 3. Cập nhật Đối tác (Khách CRM hoặc NCC)
-    const mentionsCustomer = /\b(?:khach|khach hang|doi tac|anh|chi|bac|chu|ong|ba|sdt|kh\s*\d+|doi sang khach|cho khach|doi khach)\b/i.test(norm) || (!qtyMatch && !priceMatch && !wantsChangeProduct && !draft.partner_name);
+    // 3. Cập nhật Đối tác (Khách CRM hoặc NCC) - KHÔNG BAO GIỜ CHẠY KHI ĐANG NÓI VỀ SỐ LƯỢNG / ĐƠN GIÁ / SẢN PHẨM
+    const mentionsCustomer = (/\b(?:khach|khach hang|doi tac|\banh\b|\bchi\b|\bbac\b|\bchu\b|\bong\b|\bba\b|sdt|kh\s*\d+|doi sang khach|cho khach|doi khach)\b/i.test(norm) && !/so luong|sl|gia|don gia/i.test(norm)) || (!qtyMatch && !priceMatch && !mentionsProduct && !draft.partner_name);
+
     if (draft.type === 'SALE' && mentionsCustomer) {
         const custRes = await extractCustomer(cleanText, norm, context);
         if (custRes.notFoundInCRM) {
@@ -1090,7 +1268,7 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
     }
 
-    const mentionsSupplier = /ncc|nha cung cap|cty|cong ty|solar|cergy|tin trung|hung viet hao|heropower|tu nha cung cap/i.test(norm) || !draft.partner_name;
+    const mentionsSupplier = /ncc|nha cung cap|cty|cong ty|solar|cergy|tin trung|hung viet hao|heropower|tu nha cung cap/i.test(norm) || (!qtyMatch && !priceMatch && !mentionsProduct && !draft.partner_name);
     if (draft.type === 'PURCHASE' && mentionsSupplier) {
         const supRes = await extractSupplier(cleanText, norm, context);
         if (supRes.notFoundInList) {
@@ -1111,14 +1289,14 @@ async function handleUpdateDraftOrder(text, context, user) {
 
     // 4. CẬP NHẬT HOẶC ĐỔI SẢN PHẨM KHÁC
     if (mentionsProduct) {
-        if ((norm.includes('san pham khac') || norm.includes('doi san pham') || norm.includes('sai san pham')) && !/deye|canadian|jinko|longi|apess|pin|bien tan|inverter|tu dien|solis|lumentree/i.test(norm)) {
+        if ((norm.includes('san pham khac') || norm.includes('doi san pham') || norm.includes('sai san pham')) && !/deye|canadian|jinko|longi|apess|pin|bien tan|inverter|tu dien|solis|lumentree|kwh|kw|w\b/i.test(norm)) {
             draft.product = null;
             draft.status = 'NEED_PRODUCT';
             return {
                 text: `Dạ em đã hủy chọn sản phẩm trước đó. Cho em xin Tên sản phẩm hoặc thiết bị trong kho mà anh/chị muốn đổi sang nhé!`,
                 card: null,
                 action_type: 'ORDER_NEED_INFO',
-                quick_replies: ['Tấm pin Canadian 600W', 'Deye hybrid 12kw 3 pha', 'Hủy đơn']
+                quick_replies: ['Tấm pin Canadian 600W', 'Deye hybrid 12kw 3 pha', 'Pin lưu trữ Apess 15.3kwh', 'Hủy đơn']
             };
         }
 
@@ -1136,7 +1314,7 @@ async function handleUpdateDraftOrder(text, context, user) {
                 suggText = `\n\n💡 **Gợi ý thiết bị trong kho:**\n` + topSugg.map((p, idx) => `${idx + 1}. **${p.product_name}** (\`${p.product_code || p.sku}\`)`).join('\n');
                 qr = topSugg.map(p => p.product_name);
             } else {
-                qr = ['Tấm pin Canadian 600W Bi-facial', 'Deye hybrid 12kw 3pha BH 5 năm', 'Kẹp giữa'];
+                qr = ['Tấm pin Canadian 600W Bi-facial', 'Deye hybrid 12kw 3pha BH 5 năm', 'Pin lưu trữ Apess 15.3kwh'];
             }
             qr.push('Hủy đơn');
             return {
