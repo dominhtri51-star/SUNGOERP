@@ -57,6 +57,13 @@ window.escapeHtml = function(str) {
 
 const ALL_SYSTEM_GROUPS = [
     { 
+        group: 'Trí Tuệ Nhân Tạo & Điều Hành', 
+        roles: ['*'], 
+        items: [ 
+            { id: 'ai-assistant', icon: 'fa-robot text-amber-400', title: 'Trợ Lý AI Thông Minh', desc: 'Đối thoại 2 chiều, tạo đơn, báo cáo CFO & tra cứu ERP' } 
+        ] 
+    },
+    { 
         group: 'Truyền Thông & Workplace Nội Bộ', 
         roles: ['*'], 
         items: [ 
@@ -546,7 +553,7 @@ function getModulePermission(moduleId, user = null) {
     if (!user) return 'NONE';
     const role = String(user.role || 'GUEST').toUpperCase().trim();
     if (['SUPER_ADMIN', 'ADMIN', 'GIAM_DOC', 'GIÁM ĐỐC', 'QUẢN TRỊ VIÊN'].includes(role)) return 'EDIT';
-    if (moduleId === 'workplace') return 'EDIT';
+    if (moduleId === 'workplace' || moduleId === 'ai-assistant') return 'EDIT';
 
     const parentModuleId = SUB_MODULE_MAP[moduleId] || null;
 
@@ -896,7 +903,7 @@ async function initApp() {
     userGroups.forEach(group => {
         menuHtml += `<div class="px-5 py-2 mt-3 border-t border-slate-800/80 pt-3 first:border-0 first:mt-0 first:pt-1"><p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">${group.group}</p></div>`;
         group.items.forEach(m => {
-            if (!firstMenu) firstMenu = m;
+            if (!firstMenu && m.id !== 'ai-assistant') firstMenu = m;
             if (hashModule && m.id === hashModule) targetMenu = m;
             menuHtml += `<a href="javascript:void(0)" id="menu-btn-${m.id}" onclick="loadModule('${m.id}', '${m.title}'); return false;" class="menu-item flex items-center px-5 py-2.5 text-xs md:text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-amber-400 cursor-pointer transition rounded-xl mx-2 my-0.5"><i class="fas ${m.icon} w-5 text-center"></i><span class="ml-3 truncate">${m.title}</span></a>`;
         });
@@ -919,6 +926,11 @@ async function initApp() {
 const moduleCache = {};
 
 async function loadModule(moduleId, title) {
+    if (moduleId === 'ai-assistant') {
+        if (typeof window.closeMobileSidebar === 'function') window.closeMobileSidebar();
+        if (window.SungoAI) window.SungoAI.toggle(true);
+        return;
+    }
     window.__currentModuleId = moduleId;
     if (!window.location.hash || !window.location.hash.replace('#', '').startsWith(moduleId)) {
         window.location.hash = moduleId;

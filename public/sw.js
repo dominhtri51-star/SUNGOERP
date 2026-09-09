@@ -1,10 +1,11 @@
 // SUNGO ERP - Service Worker for PWA
-const CACHE_NAME = 'sungo-erp-v1';
+const CACHE_NAME = 'sungo-erp-v2-ai-20260909';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/dashboard.html',
   '/baohanh.html',
+  '/js/ai-assistant.js',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
