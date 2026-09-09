@@ -290,7 +290,44 @@
                 const tagBg = isSale ? 'bg-amber-500/20 text-amber-300' : 'bg-indigo-500/20 text-indigo-300';
                 const tagText = isSale ? 'BÁN HÀNG (SO)' : 'MUA HÀNG (PO)';
                 const btnConfirmBg = isSale ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 hover:brightness-110' : 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:brightness-110';
-                const item = (card.items && card.items[0]) || {};
+                const items = (card.items && card.items.length > 0) ? card.items : [{}];
+                const warnings = card.warnings || [];
+
+                const itemsHtml = items.map((item, idx) => `
+                    <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 space-y-1.5">
+                        <div class="text-slate-300 font-bold flex items-center justify-between">
+                            <span class="truncate max-w-[210px] text-white">${items.length > 1 ? (idx + 1) + '. ' : ''}${item.name || 'Thiết bị'}</span>
+                            <span class="text-[11px] text-amber-400 font-mono">${item.sku ? '[' + item.sku + ']' : ''}</span>
+                        </div>
+                        <div class="flex justify-between text-[11px] text-slate-400">
+                            <span>Số lượng: <strong class="text-emerald-400">${item.qty || 1} ${item.unit || 'Bộ'}</strong></span>
+                            <span>Đơn giá: <strong class="text-slate-200">${item.price || '0đ'}</strong></span>
+                        </div>
+                        ${items.length > 1 ? `
+                            <div class="flex justify-between text-[11px] font-semibold text-slate-300 pt-0.5 border-t border-slate-800/60">
+                                <span>Thành tiền:</span>
+                                <span class="text-amber-400 font-mono">${item.total || '0đ'}</span>
+                            </div>
+                        ` : ''}
+                        ${item.stock_warning ? `
+                            <div class="text-[10px] text-amber-300 bg-amber-500/10 p-1 rounded border border-amber-500/30 flex items-center gap-1">
+                                <i class="fas fa-exclamation-triangle text-amber-400"></i> ${item.stock_warning}
+                            </div>
+                        ` : ''}
+                        ${item.price_warning ? `
+                            <div class="text-[10px] text-rose-300 bg-rose-500/10 p-1 rounded border border-rose-500/30 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle text-rose-400"></i> ${item.price_warning}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+
+                const warningsHtml = warnings.map(w => `
+                    <div class="text-[11px] text-amber-300 bg-amber-500/15 p-2 rounded-xl border border-amber-500/40 flex items-start gap-1.5">
+                        <i class="fas fa-exclamation-triangle text-amber-400 mt-0.5 shrink-0"></i>
+                        <span>${w}</span>
+                    </div>
+                `).join('');
 
                 return `
                     <div class="mt-3 bg-slate-900/95 border-2 ${borderColor} rounded-2xl p-4 shadow-2xl relative overflow-hidden">
@@ -318,20 +355,16 @@
                                 ` : ''}
                             </div>
 
-                            <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 space-y-1.5">
-                                <div class="text-slate-300 font-bold flex items-center justify-between">
-                                    <span class="truncate max-w-[190px] text-white">${item.name || 'Thiết bị'}</span>
-                                    <span class="text-[11px] text-amber-400 font-mono">${item.sku ? '[' + item.sku + ']' : ''}</span>
-                                </div>
-                                <div class="flex justify-between text-[11px] text-slate-400">
-                                    <span>Số lượng: <strong class="text-emerald-400">${item.qty || 1} ${item.unit || 'Bộ'}</strong></span>
-                                    <span>Đơn giá: <strong class="text-slate-200">${item.price || '0đ'}</strong></span>
-                                </div>
-                                <div class="flex justify-between pt-1 border-t border-slate-800 font-bold ${isSale ? 'text-amber-400' : 'text-indigo-400'}">
-                                    <span>Tạm tính:</span>
-                                    <span class="text-sm font-mono">${card.total_amount || '0đ'}</span>
-                                </div>
+                            <div class="space-y-1.5">
+                                ${itemsHtml}
                             </div>
+
+                            <div class="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center font-bold ${isSale ? 'text-amber-400' : 'text-indigo-400'}">
+                                <span>Tổng cộng:</span>
+                                <span class="text-base font-black font-mono">${card.total_amount || '0đ'}</span>
+                            </div>
+
+                            ${warningsHtml}
 
                             ${card.notes ? `
                                 <div class="text-[11px] text-slate-400 italic bg-slate-950/40 px-2.5 py-1.5 rounded-lg border border-slate-800/50">
@@ -737,10 +770,10 @@
                         </div>
                         <div>
                             <div class="flex items-center gap-2">
-                                <h3 class="font-black text-sm text-white tracking-tight">Trợ Lý SUNGO AI</h3>
-                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <h3 class="font-black text-sm text-white tracking-tight">Trợ Lý Google Gemini AI</h3>
+                                <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-blue-500/20 text-blue-400 border border-blue-500/30">Google AI</span>
                             </div>
-                            <p class="text-[10px] text-amber-400 font-semibold" id="sungo-ai-user-badge">Đang kết nối...</p>
+                            <p class="text-[10px] text-amber-400 font-semibold" id="sungo-ai-user-badge">Đang kết nối Gemini Engine...</p>
                         </div>
                     </div>
 

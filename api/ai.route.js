@@ -131,7 +131,8 @@ router.get('/config', async (req, res) => {
                 has_gemini_key: !!(process.env.GEMINI_API_KEY || map.ai_gemini_key),
                 voice_enabled: map.ai_voice_enabled !== 'false',
                 tts_speed: parseFloat(map.ai_tts_speed) || 1.0,
-                assistant_name: 'Trợ Lý SUNGO AI'
+                assistant_name: 'Trợ Lý SUNGO Google AI',
+                provider: 'Google Gemini'
             }
         });
     } catch (err) {
