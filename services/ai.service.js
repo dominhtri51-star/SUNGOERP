@@ -212,8 +212,12 @@ function detectIntent(text, context) {
             return 'CANCEL_DRAFT_ORDER';
         }
 
-        // Tiếp tục / phục hồi bản nháp đơn hàng
-        if (norm.includes('tiep tuc don') || norm.includes('tiep tuc ban nhap') || norm.includes('quay lai don') || norm.includes('xem lai don nhap') || norm.includes('tiep tuc')) {
+        // Tiếp tục / phục hồi bản nháp đơn hàng (hoặc câu chào ngắt quãng)
+        if (
+            norm.includes('tiep tuc don') || norm.includes('tiep tuc ban nhap') || norm.includes('quay lai don') || 
+            norm.includes('xem lai don nhap') || norm.includes('tiep tuc') ||
+            /^(?:alo|chao|hi|hello|helo|oi|bot oi|em oi|ad oi)(?:\s+(?:em|bot|ad|nhe))?$/i.test(norm)
+        ) {
             return 'RESUME_DRAFT_ORDER';
         }
 
@@ -396,6 +400,63 @@ const VN_PROVINCES = [
     'lao cai', 'son la', 'hoa binh', 'lang son', 'cao bang', 'ha giang', 'kon tum', 'an giang',
     'soc trang', 'tra vinh', 'hau giang', 'vinh long', 'ninh thuan', 'binh thuan'
 ];
+
+/**
+ * =========================================================================
+ * TRỤ CỘT I: NLU, LÀM SẠCH VÀ CHUẨN HÓA DỮ LIỆU ĐẦU VÀO (50 PILLARS)
+ * 1. Lọc chửi thề & bực dọc (Profanity Stripping)
+ * 2. Sửa lỗi chính tả Solar & gõ Telex (Typo Correction)
+ * 3. Chuẩn hóa & quy đổi đơn vị đo lường (kW <-> W <-> kWp, Ah, kWh, kVA)
+ * 4. Loại bỏ từ đệm địa phương (nghe, nhen, nhé, nè, á, dùm...)
+ * =========================================================================
+ */
+function normalizeSolarInput(text) {
+    if (!text) return '';
+    let str = String(text);
+
+    // 1. Lọc từ cảm thán thô tục & chửi bậy (không dùng ASCII \b vì tiếng Việt có dấu)
+    str = str.replace(/(?:địt mẹ|đụ má|đậu má|dcm|dm|vcl|clgt|óc chó|ngu như chó|mẹ kiếp|chó chết|bà mẹ|mả cha)/gi, ' ');
+
+    // 2. Sửa lỗi chính tả Solar & gõ Telex
+    const TYPO_MAP = [
+        [/\bdattasheet\b/gi, 'datasheet'],
+        [/\bdata\s*sheet\b/gi, 'datasheet'],
+        [/\bapess\b/gi, 'apec'],
+        [/\bsolare\b/gi, 'solar e'],
+        [/\bcanadain\b/gi, 'canadian'],
+        [/\bgrowat\b/gi, 'growatt'],
+        [/\bhuwei\b/gi, 'huawei'],
+        [/\bsungro\b/gi, 'sungrow'],
+        [/\blongji\b/gi, 'longi'],
+        [/\bjinkosolar\b/gi, 'jinko solar'],
+        [/\bbt\b/gi, 'biến tần'],
+        [/\bbientan\b/gi, 'biến tần'],
+        [/\blithum\b/gi, 'lithium'],
+        [/\blifepo\b/gi, 'lifepo4']
+    ];
+    for (const [pattern, repl] of TYPO_MAP) {
+        str = str.replace(pattern, repl);
+    }
+
+    // 3. Chuẩn hóa & Quy đổi đơn vị đo lường
+    // 15000w / 15.000w -> 15kW, 5000w -> 5kW
+    str = str.replace(/\b(\d+)\s*000\s*(?:w|watt|oat)\b/gi, (match, p1) => `${p1}kW`);
+    // 15kwp -> 15kW
+    str = str.replace(/\b(\d+(?:[.,]\d+)?)\s*(?:kwp|kilo\s*watt\s*peak)\b/gi, '$1kW');
+    // 600wp -> 600W
+    str = str.replace(/\b(\d+(?:[.,]\d+)?)\s*(?:wp|watt\s*peak)\b/gi, '$1W');
+    // kva -> kVA
+    str = str.replace(/\b(\d+(?:[.,]\d+)?)\s*(?:kva)\b/gi, '$1kVA');
+    // kwh -> kWh
+    str = str.replace(/\b(\d+(?:[.,]\d+)?)\s*(?:kwh)\b/gi, '$1kWh');
+    // ah -> Ah
+    str = str.replace(/\b(\d+(?:[.,]\d+)?)\s*(?:ah)\b/gi, '$1Ah');
+
+    // 4. Loại bỏ từ đệm địa phương miền Nam
+    str = str.replace(/(?:^|\s)(?:nghe nhen|nghe nhé|nhen nhen|nhen|nhe|nhi|nè|á|dùm|giùm|giúp em|hộ em|coi nào|với nhé|nhé sếp|nè sếp)(?:\s|$|[.,!?])/gi, ' ');
+
+    return str.replace(/\s+/g, ' ').trim();
+}
 
 function extractSpecs(str, excludeNums = []) {
     if (!str) return [];
@@ -1383,12 +1444,12 @@ function buildDraftPreviewResponse(draft) {
     const notesText = draft.notes ? `\n• Ghi chú: ${draft.notes}\n` : '';
 
     const cardItems = items.map(it => ({
-        name: it.name || it.product.product_name,
-        sku: it.sku || it.product.sku,
-        qty: it.qty,
+        name: it.name || (it.product && it.product.product_name) || 'Thiết bị',
+        sku: it.sku || (it.product && it.product.sku) || '',
+        qty: it.qty || 1,
         unit: it.unit || (it.product && it.product.unit) || 'Bộ',
-        price: formatVND(it.price),
-        total: formatVND(it.total),
+        price: formatVND(it.price || (it.product && it.product.retail_price) || 0),
+        total: formatVND(it.total || ((it.qty || 1) * (it.price || 0))),
         stock_warning: it.stock_warning,
         price_warning: it.price_warning
     }));
@@ -1489,7 +1550,7 @@ async function handleCreateOrder(text, context, user) {
 
     const totalAmount = items.reduce((acc, it) => acc + it.total, 0);
 
-    // Kiểm tra tương thích kỹ thuật (Inverter 24V vs Battery 48V/15kWh)
+    // 1. Kiểm tra tương thích kỹ thuật (Inverter 24V vs Battery 48V/15kWh)
     let compatWarning = null;
     const hasInv = items.some(it => /bien tan|inverter|hybrid/i.test(it.name));
     const hasBat = items.some(it => /pin luu tru|apess|lithium|kwh/i.test(it.name));
@@ -1500,6 +1561,88 @@ async function handleCreateOrder(text, context, user) {
             compatWarning = `⚠️ Cảnh báo tương thích: Biến tần hệ 24V không đồng bộ trực tiếp với Pack pin hệ 48V/15kWh.`;
         }
     }
+
+    // 2. Cảnh báo vi phạm giá sàn (Floor Price Guardrail - Pillar V)
+    let floorPriceWarning = null;
+    for (const it of items) {
+        const p = it.product;
+        if (p && p.import_price && it.price < Number(p.import_price)) {
+            floorPriceWarning = `⚠️ CẢNH BÁO GIÁ SÀN: "${it.name}" giá bán ${formatVND(it.price)} thấp hơn giá vốn (${formatVND(p.import_price)})!`;
+            it.price_warning = `Giá bán < Giá vốn (${formatVND(p.import_price)})`;
+            break;
+        }
+    }
+
+    // 3. Kiểm tra hạn mức công nợ khách hàng (Debt Ceiling Check - Pillar V)
+    let debtWarning = null;
+    if (custRes.customerId) {
+        try {
+            const cDebtRes = await pool.query('SELECT current_debt, debt_limit FROM customers WHERE id = $1', [custRes.customerId]);
+            if (cDebtRes.rows.length > 0) {
+                const curDebt = Number(cDebtRes.rows[0].current_debt) || 0;
+                const dLimit = Number(cDebtRes.rows[0].debt_limit) || 0;
+                if (curDebt > 0 && dLimit > 0 && (curDebt + totalAmount > dLimit)) {
+                    debtWarning = `⚠️ CẢNH BÁO CÔNG NỢ 131: Khách đang nợ ${formatVND(curDebt)}. Đơn mới (${formatVND(totalAmount)}) vượt hạn mức nợ (${formatVND(dLimit)})!`;
+                } else if (curDebt > 0) {
+                    debtWarning = `📌 Lưu ý công nợ 131: Khách hàng hiện đang có dư nợ ${formatVND(curDebt)}.`;
+                }
+            }
+        } catch (e) {}
+    }
+
+    // 4. Kiểm tra tồn kho khả dụng (Available-to-Promise ATP - Pillar IV)
+    let atpWarning = null;
+    for (const it of items) {
+        if (it.product && it.product.id) {
+            try {
+                const reservedRes = await pool.query(
+                    `SELECT COALESCE(SUM(oi.quantity), 0) as reserved
+                     FROM order_items oi
+                     JOIN orders o ON oi.order_id = o.id
+                     WHERE oi.product_id = $1 AND o.status IN ('PENDING', 'PROCESSING', 'CHO_XAC_NHAN')`,
+                    [it.product.id]
+                );
+                const reserved = Number(reservedRes.rows[0].reserved) || 0;
+                const stock = Number(it.product.stock_qty) || 0;
+                const atp = Math.max(0, stock - reserved);
+                it.atp = atp;
+                it.reserved = reserved;
+                if (it.qty > atp) {
+                    atpWarning = `⚠️ TỒN KHO KHẢ DỤNG (ATP): "${it.name}" đặt ${it.qty}, khả dụng: ${atp} (tồn thực tế: ${stock}, đã giữ chỗ: ${reserved}).`;
+                    it.stock_warning = `Khả dụng: ${atp}/${stock} (đã giữ ${reserved})`;
+                }
+            } catch (e) {}
+        }
+    }
+
+    // 5. Kiểm tra tương thích công suất DC/AC (Technical Sanity Check - Pillar V)
+    let techTip = null;
+    const panelItems = items.filter(it => /tam pin|panel|canadian|jinko|longi/i.test(it.name));
+    const invItems = items.filter(it => /bien tan|inverter|hybrid/i.test(it.name));
+    if (panelItems.length > 0 && invItems.length > 0) {
+        let totalPanelW = 0;
+        for (const pit of panelItems) {
+            const pSpec = extractSpecs(pit.name);
+            const pWatt = (pSpec.find(s => s.unit === 'w') || {}).val || (pSpec.find(s => s.unit === 'kw') ? pSpec.find(s => s.unit === 'kw').val * 1000 : 600);
+            totalPanelW += pWatt * pit.qty;
+        }
+        let totalInvKW = 0;
+        for (const iit of invItems) {
+            const iSpec = extractSpecs(iit.name);
+            const iKW = (iSpec.find(s => s.unit === 'kw') || {}).val || 10;
+            totalInvKW += iKW * iit.qty;
+        }
+        if (totalInvKW > 0 && totalPanelW > 0) {
+            const dcAcRatio = (totalPanelW / (totalInvKW * 1000)).toFixed(2);
+            if (dcAcRatio < 0.9) {
+                techTip = `💡 Lưu ý kỹ thuật: Tổng công suất pin (${(totalPanelW/1000).toFixed(1)}kWp) khá thấp so với biến tần (${totalInvKW}kW) - Tỷ lệ DC/AC: ${dcAcRatio} (Khuyến nghị chuẩn: 1.15 - 1.35).`;
+            } else if (dcAcRatio > 1.45) {
+                techTip = `💡 Lưu ý kỹ thuật: Tỷ lệ quá tải DC/AC là ${dcAcRatio} (${(totalPanelW/1000).toFixed(1)}kWp / ${totalInvKW}kW) - Cần kiểm tra dải MPPT của biến tần.`;
+            }
+        }
+    }
+
+    const allDraftWarnings = [compatWarning, floorPriceWarning, debtWarning, atpWarning, techTip].filter(Boolean);
 
     if (custRes.missing || !custRes.customerId) {
         let lastCustMsg = '';
@@ -1523,6 +1666,7 @@ async function handleCreateOrder(text, context, user) {
             unitPrice: items[0].price,
             totalAmount: totalAmount,
             notes: deliveryInfo.notes || '',
+            warnings: allDraftWarnings,
             compat_warning: compatWarning
         };
         return {
@@ -1547,7 +1691,12 @@ async function handleCreateOrder(text, context, user) {
         unitPrice: items[0].price,
         totalAmount: totalAmount,
         notes: deliveryInfo.notes || '',
-        compat_warning: compatWarning
+        warnings: allDraftWarnings,
+        compat_warning: compatWarning,
+        floor_price_warning: floorPriceWarning,
+        debt_warning: debtWarning,
+        atp_warning: atpWarning,
+        tech_tip: techTip
     };
 
     return buildDraftPreviewResponse(context.draft_order);
@@ -1586,7 +1735,18 @@ async function handleConfirmDraftOrder(text, context, user) {
         };
     }
 
-    // GHI VÀO CSDL KHI ĐƯỢC XÁC NHẬN
+    // KHÓA THAO TÁC TRÙNG LẶP (IDEMPOTENCY KEY - TRỤ CỘT III - 17)
+    const idempotencyKey = `idemp_${draft.type}_${draft.customer_id || draft.partner_name}_${items.map(i => ((i.product && i.product.id) || i.id || '') + ':' + (i.qty || 1)).sort().join('_')}`;
+    if (context.last_confirmed_idempotency_key === idempotencyKey && context.last_confirmed_order && (Date.now() - (context.last_confirmed_time || 0)) < 45000) {
+        return {
+            text: `⚡ Đơn hàng đã được tạo thành công trước đó (bảo vệ chống bấm đúp tạo 2 đơn). Mã đơn: **[${context.last_confirmed_order.code}]**.`,
+            card: context.last_confirmed_order.card,
+            action_type: 'ORDER_ALREADY_CONFIRMED',
+            quick_replies: ['Xem chi tiết đơn', 'In báo giá / Hợp đồng', 'Tạo đơn mới']
+        };
+    }
+
+    // GHI VÀO CSDL KHI ĐƯỢC XÁC NHẬN (SINGLE SOURCE OF TRUTH - TRỤ CỘT III - 13)
     if (draft.type === 'SALE') {
         const orderCode = 'DH-' + Date.now().toString().slice(-6) + Math.floor(1000 + Math.random() * 9000);
         let empId = null;
@@ -1597,13 +1757,21 @@ async function handleConfirmDraftOrder(text, context, user) {
             } catch (e) {}
         }
 
+        let costOfGoods = 0;
+        for (const it of items) {
+            const p = it.product || draft.product;
+            const imp = Number(p && p.import_price) || 0;
+            costOfGoods += imp * (it.qty || draft.qty || 1);
+        }
+        const grossProfit = Math.max(0, draft.totalAmount - costOfGoods);
+
         const insertOrderRes = await pool.query(`
             INSERT INTO orders (
                 order_code, customer_id, customer_name, customer_phone, total_amount, paid_amount, 
-                status, payment_method, employee_id, notes
-            ) VALUES ($1, $2, $3, $4, $5, 0, 'PENDING', 'TIEN_MAT', $6, $7)
+                status, payment_method, employee_id, notes, cost_of_goods, gross_profit
+            ) VALUES ($1, $2, $3, $4, $5, 0, 'PENDING', 'TIEN_MAT', $6, $7, $8, $9)
             RETURNING *
-        `, [orderCode, draft.customer_id, draft.partner_name, draft.partner_phone || '', draft.totalAmount, empId, draft.notes || `Tạo qua Trợ lý Google AI bởi ${user.full_name || 'Người dùng'}`]);
+        `, [orderCode, draft.customer_id, draft.partner_name, draft.partner_phone || '', draft.totalAmount, empId, draft.notes || `Tạo qua Trợ lý Google AI bởi ${user.full_name || 'Người dùng'}`, costOfGoods, grossProfit]);
 
         const orderId = insertOrderRes.rows[0].id;
 
@@ -1632,18 +1800,24 @@ async function handleConfirmDraftOrder(text, context, user) {
             total: formatVND(it.total)
         }));
 
+        const orderCard = {
+            type: 'ORDER_CARD',
+            title: `Đơn Bán: ${orderCode}`,
+            status: 'Chờ Xử Lý (PENDING)',
+            customer: draft.partner_name,
+            phone: draft.partner_phone || 'Chưa cập nhật',
+            items: cardItems,
+            total_amount: formatVND(draft.totalAmount),
+            link: 'modules/order-history.html'
+        };
+
+        context.last_confirmed_idempotency_key = idempotencyKey;
+        context.last_confirmed_time = Date.now();
+        context.last_confirmed_order = { code: orderCode, card: orderCard };
+
         return {
             text: `🎉 **ĐÃ TẠO ĐƠN BÁN [${orderCode}]!**\nKhách: **${draft.partner_name}** (${draft.customer_code ? '`' + draft.customer_code + '` - CRM' : 'CRM'})\nTổng tiền: **${formatVND(draft.totalAmount)}** | Trạng thái: **Chờ Xử Lý**.`,
-            card: {
-                type: 'ORDER_CARD',
-                title: `Đơn Bán: ${orderCode}`,
-                status: 'Chờ Xử Lý (PENDING)',
-                customer: draft.partner_name,
-                phone: draft.partner_phone || 'Chưa cập nhật',
-                items: cardItems,
-                total_amount: formatVND(draft.totalAmount),
-                link: 'modules/order-history.html'
-            },
+            card: orderCard,
             action_type: 'ORDER_CREATED',
             quick_replies: ['Xem chi tiết đơn', 'In báo giá / Hợp đồng', 'Gửi Zalo cho khách', 'Tạo đơn mới']
         };
@@ -1742,15 +1916,48 @@ async function handleUpdateDraftOrder(text, context, user) {
         }
     }
 
+    if (!draft.product && draft.items && draft.items.length > 0) {
+        draft.product = draft.items[0].product || draft.items[0];
+    }
+
     let updatedFields = [];
 
-    // 1. Cập nhật số lượng
+    // 1. Cập nhật số lượng (hỗ trợ cả tuyệt đối: "5 bộ" và tương đối: "+1", "-1", "tăng 2", "giảm 1")
+    let deltaQty = null;
+    const deltaMatch = cleanText.match(/^([+-]\s*\d+)$/) || cleanText.match(/(?:tăng|thêm)\s*(\d+)/i) || cleanText.match(/(?:giảm|bớt)\s*(\d+)/i);
+    if (deltaMatch) {
+        if (cleanText.startsWith('-') || /giảm|bớt/i.test(cleanText)) {
+            const val = parseInt(deltaMatch[1].replace(/[^0-9]/g, ''), 10);
+            deltaQty = -val;
+        } else {
+            const val = parseInt(deltaMatch[1].replace(/[^0-9]/g, ''), 10);
+            deltaQty = val;
+        }
+    }
+
     const qtyMatch = cleanText.match(/(?:đổi thành|thành|sửa thành|số lượng|lấy|mua|bán)\s*(\d+)/i) || cleanText.match(/^(\d+)\s*(?:tấm|bộ|chiếc|cái|inverter|pin)?$/i);
-    if (qtyMatch) {
+    
+    if (deltaQty !== null) {
+        const currentQty = draft.qty || (draft.items && draft.items[0] && draft.items[0].qty) || 1;
+        const newQty = Math.max(1, currentQty + deltaQty);
+        draft.qty = newQty;
+        if (draft.items && draft.items.length > 0) {
+            draft.items[0].qty = newQty;
+            draft.items[0].total = newQty * (draft.items[0].price || draft.unitPrice || 0);
+            draft.totalAmount = draft.items.reduce((acc, it) => acc + (it.total || 0), 0);
+        } else if (draft.unitPrice) {
+            draft.totalAmount = newQty * draft.unitPrice;
+        }
+        updatedFields.push(`số lượng ${deltaQty > 0 ? 'tăng' : 'giảm'} thành **${newQty}**`);
+    } else if (qtyMatch) {
         const newQty = parseInt(qtyMatch[1], 10);
         if (newQty > 0) {
             draft.qty = newQty;
-            if (draft.unitPrice) {
+            if (draft.items && draft.items.length > 0) {
+                draft.items[0].qty = newQty;
+                draft.items[0].total = newQty * (draft.items[0].price || draft.unitPrice || 0);
+                draft.totalAmount = draft.items.reduce((acc, it) => acc + (it.total || 0), 0);
+            } else if (draft.unitPrice) {
                 draft.totalAmount = draft.qty * draft.unitPrice;
             }
             updatedFields.push(`số lượng thành **${newQty}**`);
@@ -1773,7 +1980,7 @@ async function handleUpdateDraftOrder(text, context, user) {
 
     // Kiểm tra ý định đổi sản phẩm
     const wantsChangeProduct = /doi san pham|sua san pham|thay san pham|chon lai san pham|lay san pham|doi sang|thay bang|thay vi|khong lay|sai san pham|san pham khac|doi lai/i.test(norm);
-    const mentionsProduct = wantsChangeProduct || !draft.product || /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|pin\s*\d+|tu dien|kep|bat|kwh|kw|w\b/i.test(norm);
+    const mentionsProduct = !deltaMatch && !qtyMatch && !priceMatch && (wantsChangeProduct || (!draft.product && (!draft.items || draft.items.length === 0)) || /tam pin|bien tan|inverter|hybrid|deye|canadian|jinko|apess|pin luu|pin\s*\d+|tu dien|kep|bat\b/i.test(norm));
 
     // 3. Cập nhật Đối tác (Khách CRM hoặc NCC) - KHÔNG BAO GIỜ CHẠY KHI ĐANG NÓI VỀ SỐ LƯỢNG / ĐƠN GIÁ / SẢN PHẨM
     const mentionsCustomer = (/\b(?:khach|khach hang|doi tac|\banh\b|\bchi\b|\bbac\b|\bchu\b|\bong\b|\bba\b|sdt|kh\s*\d+|doi sang khach|cho khach|doi khach)\b/i.test(norm) && !/so luong|sl|gia|don gia/i.test(norm)) || (!qtyMatch && !priceMatch && !mentionsProduct && !draft.partner_name);
@@ -2829,7 +3036,8 @@ async function handleResumeDraftOrder(text, context, user) {
         };
     }
     const res = buildDraftPreviewResponse(draft);
-    res.text = `Dạ em gửi lại thông tin bản nháp đơn hàng đang tiếp tục xử lý:\n\n` + res.text;
+    res.action_type = 'DRAFT_RESUMED_PROMPT';
+    res.text = `Dạ em vẫn đang giữ bản nháp đơn hàng cho **${draft.partner_name || 'đối tác'}**:\n\n` + res.text;
     return res;
 }
 
@@ -2892,14 +3100,14 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
     await saveMessage(conv.id, 'user', messageText);
 
     // =========================================================================
-    // NHỊP 1: HIỂU & LÀM SẠCH (NLU & NOISE STRIPPING)
-    // Loại bỏ chửi thề và trợ từ cảm thán miền Nam (nghe, nhen, nhé, nè...)
+    // NHỊP 1: HIỂU & LÀM SẠCH (NLU & NOISE STRIPPING - TRỤ CỘT I)
+    // Loại bỏ chửi thề, trợ từ địa phương, chuẩn hóa đơn vị đo lường và sửa lỗi gõ Telex Solar
     // =========================================================================
-    const cleanPrompt = messageText
-        .replace(/\b(?:địt mẹ|đụ má|đậu má|dcm|dm|vcl|clgt|óc chó|ngu như chó|mẹ kiếp)\b/gi, '')
-        .trim();
+    const nluStartTime = Date.now();
+    const cleanPrompt = normalizeSolarInput(messageText);
+    const nluMs = Math.max(1, Date.now() - nluStartTime);
 
-    const intent = detectIntent(messageText, context);
+    const intent = detectIntent(cleanPrompt, context);
 
     const isAllowed = checkPermission(userRole, intent);
     if (!isAllowed) {
@@ -2933,67 +3141,67 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
     try {
         switch (intent) {
             case 'SWITCH_TO_GOOGLE_AI':
-                actionResult = await handleSwitchToGoogleAI(messageText, context, userObj);
+                actionResult = await handleSwitchToGoogleAI(cleanPrompt, context, userObj);
                 break;
             case 'RESUME_DRAFT_ORDER':
-                actionResult = await handleResumeDraftOrder(messageText, context, userObj);
+                actionResult = await handleResumeDraftOrder(cleanPrompt, context, userObj);
                 break;
             case 'SWITCH_TO_CHATGPT':
-                actionResult = await handleSwitchToChatGPT(messageText, context, userObj);
+                actionResult = await handleSwitchToChatGPT(cleanPrompt, context, userObj);
                 break;
             case 'SET_OPENAI_KEY':
-                actionResult = await handleSetOpenAIKey(messageText, context, userObj);
+                actionResult = await handleSetOpenAIKey(cleanPrompt, context, userObj);
                 break;
             case 'CONFIRM_DRAFT_ORDER':
-                actionResult = await handleConfirmDraftOrder(messageText, context, userObj);
+                actionResult = await handleConfirmDraftOrder(cleanPrompt, context, userObj);
                 break;
             case 'CANCEL_DRAFT_ORDER':
-                actionResult = await handleCancelDraftOrder(messageText, context, userObj);
+                actionResult = await handleCancelDraftOrder(cleanPrompt, context, userObj);
                 break;
             case 'UPDATE_DRAFT_ORDER':
-                actionResult = await handleUpdateDraftOrder(messageText, context, userObj);
+                actionResult = await handleUpdateDraftOrder(cleanPrompt, context, userObj);
                 break;
             case 'CREATE_ORDER':
-                actionResult = await handleCreateOrder(messageText, context, userObj);
+                actionResult = await handleCreateOrder(cleanPrompt, context, userObj);
                 break;
             case 'CREATE_PRODUCT':
-                actionResult = await handleCreateProduct(messageText, context, userObj);
+                actionResult = await handleCreateProduct(cleanPrompt, context, userObj);
                 break;
             case 'CREATE_QUOTATION':
-                actionResult = await handleCreateQuotation(messageText, context, userObj);
+                actionResult = await handleCreateQuotation(cleanPrompt, context, userObj);
                 break;
             case 'CREATE_PURCHASE':
-                actionResult = await handleCreatePurchase(messageText, context, userObj);
+                actionResult = await handleCreatePurchase(cleanPrompt, context, userObj);
                 break;
             case 'REPORT_REVENUE':
-                actionResult = await handleReportRevenue(messageText, context, userObj);
+                actionResult = await handleReportRevenue(cleanPrompt, context, userObj);
                 break;
             case 'REPORT_BUSINESS_HEALTH':
-                actionResult = await handleReportBusinessHealth(messageText, context, userObj);
+                actionResult = await handleReportBusinessHealth(cleanPrompt, context, userObj);
                 break;
             case 'CHECK_INVENTORY':
-                actionResult = await handleCheckInventory(messageText, context, userObj);
+                actionResult = await handleCheckInventory(cleanPrompt, context, userObj);
                 break;
             case 'SEND_PRODUCT_DOCS':
-                actionResult = await handleSendProductDocs(messageText, context, userObj);
+                actionResult = await handleSendProductDocs(cleanPrompt, context, userObj);
                 break;
             case 'CREATE_CONTRACT':
-                actionResult = await handleCreateContract(messageText, context, userObj);
+                actionResult = await handleCreateContract(cleanPrompt, context, userObj);
                 break;
             case 'CHECK_WARRANTY':
-                actionResult = await handleCheckWarranty(messageText, context, userObj);
+                actionResult = await handleCheckWarranty(cleanPrompt, context, userObj);
                 break;
             case 'CHECK_HR':
-                actionResult = await handleCheckHR(messageText, context, userObj);
+                actionResult = await handleCheckHR(cleanPrompt, context, userObj);
                 break;
             case 'CHECK_DEBT':
-                actionResult = await handleCheckDebt(messageText, context, userObj);
+                actionResult = await handleCheckDebt(cleanPrompt, context, userObj);
                 break;
             case 'ANALYZE_CUSTOMER':
-                actionResult = await handleAnalyzeCustomer(messageText, context, userObj);
+                actionResult = await handleAnalyzeCustomer(cleanPrompt, context, userObj);
                 break;
             case 'ANALYZE_PRODUCT':
-                actionResult = await handleAnalyzeProduct(messageText, context, userObj);
+                actionResult = await handleAnalyzeProduct(cleanPrompt, context, userObj);
                 break;
             default:
                 // ANTI-RESET GUARDRAIL: Nếu đang có active_so_draft/draft_order thì TUYỆT ĐỐI KHÔNG rơi vào menu chào!
@@ -3051,10 +3259,16 @@ async function processChatMessage(userId, sessionId, messageText, userRole = 'AD
     await updateContextState(conv.id, context);
 
     const latencyMs = Date.now() - startTime;
+    const executionMs = Math.max(1, latencyMs - nluMs);
     const thoughtTrace = {
         thought: `Đã hiểu câu lệnh và phân tích intent [${intent}]. Trạng thái phiên: [${context.current_flow || 'IDLE'}]. Hoàn thành 3 nhịp suy luận. Độ trễ: ${latencyMs}ms.`,
         action: intent,
-        latency_ms: latencyMs
+        latency_ms: latencyMs,
+        latency_breakdown: {
+            nlu_ms: nluMs,
+            execution_ms: executionMs,
+            total_ms: latencyMs
+        }
     };
 
     await saveMessage(
@@ -3083,6 +3297,7 @@ module.exports = {
     updateContextState,
     checkPermission,
     detectIntent,
+    normalizeSolarInput,
     // 4 Standardized Tools for Antigravity Agentic Workflow
     tool_match_customer,
     tool_search_inventory_item,

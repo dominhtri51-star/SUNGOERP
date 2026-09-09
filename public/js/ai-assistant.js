@@ -300,7 +300,15 @@
                 const tagText = isSale ? 'BÁN HÀNG (SO)' : 'MUA HÀNG (PO)';
                 const btnConfirmBg = isSale ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 hover:brightness-110' : 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:brightness-110';
                 const items = (card.items && card.items.length > 0) ? card.items : [{}];
-                const warnings = card.warnings || [];
+                const rawWarnings = [
+                    ...(card.warnings || []),
+                    card.floor_price_warning,
+                    card.debt_warning,
+                    card.atp_warning,
+                    card.tech_tip,
+                    card.compat_warning
+                ].filter(Boolean);
+                const warnings = Array.from(new Set(rawWarnings));
 
                 const itemsHtml = items.map((item, idx) => `
                     <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 space-y-1.5">
@@ -331,12 +339,18 @@
                     </div>
                 `).join('');
 
-                const warningsHtml = warnings.map(w => `
-                    <div class="text-[11px] text-amber-300 bg-amber-500/15 p-2 rounded-xl border border-amber-500/40 flex items-start gap-1.5">
-                        <i class="fas fa-exclamation-triangle text-amber-400 mt-0.5 shrink-0"></i>
-                        <span>${w}</span>
-                    </div>
-                `).join('');
+                const warningsHtml = warnings.map(w => {
+                    const isDanger = /CÔNG NỢ|GIÁ SÀN|thiếu hàng|hết hàng/i.test(w);
+                    const isTip = /DC\/AC|TƯ VẤN/i.test(w);
+                    const borderCls = isDanger ? 'border-rose-500/40 bg-rose-500/15 text-rose-300' : isTip ? 'border-blue-500/40 bg-blue-500/15 text-blue-300' : 'border-amber-500/40 bg-amber-500/15 text-amber-300';
+                    const iconCls = isDanger ? 'fa-exclamation-circle text-rose-400' : isTip ? 'fa-lightbulb text-blue-400' : 'fa-exclamation-triangle text-amber-400';
+                    return `
+                        <div class="text-[11px] p-2 rounded-xl border flex items-start gap-1.5 ${borderCls}">
+                            <i class="fas ${iconCls} mt-0.5 shrink-0"></i>
+                            <span>${w}</span>
+                        </div>
+                    `;
+                }).join('');
 
                 return `
                     <div class="mt-3 bg-slate-900/95 border-2 ${borderColor} rounded-2xl p-4 shadow-2xl relative overflow-hidden">
@@ -388,12 +402,23 @@
 
                         <!-- Action Buttons -->
                         <div class="mt-3 space-y-2">
+                            <!-- Quick Delta Buttons [-1] [+1] [+5] -->
+                            <div class="flex items-center justify-between gap-1 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-slate-400 pl-1 font-medium">Chỉnh nhanh:</span>
+                                <div class="flex gap-1.5">
+                                    <button onclick="window.SungoAI.ask('-1')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold transition active:scale-95 cursor-pointer">-1</button>
+                                    <button onclick="window.SungoAI.ask('+1')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold transition active:scale-95 cursor-pointer">+1</button>
+                                    <button onclick="window.SungoAI.ask('+5')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold transition active:scale-95 cursor-pointer">+5</button>
+                                </div>
+                                <button onclick="window.SungoAI.ask('Đổi số lượng')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 text-[10px] font-bold transition active:scale-95 cursor-pointer">Sửa số khác</button>
+                            </div>
+
                             <button onclick="window.SungoAI.ask('Xác nhận tạo đơn')" class="w-full ${btnConfirmBg} font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-amber-500/20 active:scale-95">
                                 <i class="fas fa-check-circle text-sm"></i> Xác Nhận Tạo Đơn
                             </button>
                             <div class="flex gap-2">
-                                <button onclick="window.SungoAI.ask('Đổi số lượng')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-xl text-[11px] flex items-center justify-center gap-1 transition cursor-pointer active:scale-95">
-                                    <i class="fas fa-edit text-[10px]"></i> Đổi Số Lượng
+                                <button onclick="window.loadModule && window.loadModule('${isSale ? 'sales' : 'purchases'}')" class="flex-1 bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 font-medium py-2 rounded-xl text-[11px] flex items-center justify-center gap-1 transition cursor-pointer active:scale-95" title="Mở form tạo đơn trên màn hình">
+                                    <i class="fas fa-edit text-[10px]"></i> Mở Form Nhập Tay
                                 </button>
                                 <button onclick="window.SungoAI.ask('Hủy bỏ đơn này')" class="flex-1 bg-red-950/50 hover:bg-red-900/60 text-red-300 border border-red-500/30 font-bold py-2 rounded-xl text-[11px] flex items-center justify-center gap-1 transition cursor-pointer active:scale-95">
                                     <i class="fas fa-times-circle text-[10px]"></i> Hủy Đơn
@@ -652,7 +677,7 @@
             removeTypingIndicator(typingId);
 
             if (data.success) {
-                appendMessage('assistant', data.reply, data.card);
+                appendMessage('assistant', data.reply, data.card, data.thought);
                 renderQuickReplies(data.quick_replies);
 
                 // Nếu bật giọng đọc hoặc gửi bằng giọng nói -> Tự động phát phản hồi
@@ -678,7 +703,7 @@
             .replace(/'/g, '&#039;');
     }
 
-    function appendMessage(sender, content, card = null) {
+    function appendMessage(sender, content, card = null, thought = null) {
         const chatBody = document.getElementById('sungo-ai-chat-body');
         if (!chatBody) return;
 
@@ -697,9 +722,13 @@
                 : 'bg-slate-800/90 text-slate-200 border border-slate-700/80 rounded-tl-xs backdrop-blur-md'
         }`;
 
+        const latencyInfo = thought && thought.latency_breakdown
+            ? `<span class="text-[9px] font-mono text-slate-400 font-normal">(${thought.latency_breakdown.total_ms}ms · NLU: ${thought.latency_breakdown.nlu_ms}ms)</span>`
+            : (thought && thought.latency_ms ? `<span class="text-[9px] font-mono text-slate-400 font-normal">(${thought.latency_ms}ms)</span>` : '');
+
         const feedbackBar = !isUser ? `
             <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-700/60 text-[10px] text-slate-400">
-                <span class="text-slate-400 flex items-center gap-1"><i class="fas fa-brain text-amber-400"></i> Copilot ReAct Engine</span>
+                <span class="text-slate-400 flex items-center gap-1"><i class="fas fa-brain text-amber-400"></i> Copilot ReAct Engine ${latencyInfo}</span>
                 <div class="flex items-center gap-2.5 ai-feedback-actions">
                     <button class="ai-rate-btn hover:text-emerald-400 transition" data-rating="UP" title="Phản hồi chính xác"><i class="far fa-thumbs-up"></i></button>
                     <button class="ai-rate-btn hover:text-rose-400 transition" data-rating="DOWN" title="Phản hồi sai / cần sửa"><i class="far fa-thumbs-down"></i></button>
