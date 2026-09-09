@@ -15,6 +15,8 @@ window.modNotifications = {
     pollingTimer: null,
     isPanelOpen: false,
     audioCtx: null,
+    audioEl: null,
+    isAudioUnlocked: false,
 
     // 1. Khởi tạo hệ thống thông báo
     init: async function() {
@@ -26,6 +28,14 @@ window.modNotifications = {
             this.isMuted = localStorage.getItem('sungo_notif_muted') === 'true';
         } catch(e) {
             this.isMuted = false;
+        }
+
+        // Tạo đối tượng HTML5 Audio cho âm chuông thông báo chất lượng cao
+        try {
+            this.audioEl = new Audio('/audio/chime.wav');
+            this.audioEl.preload = 'auto';
+        } catch(e) {
+            console.warn('[Notifications] Không thể tạo HTML5 Audio element:', e);
         }
 
         // Cập nhật trạng thái nút loa trên UI nếu có
@@ -40,21 +50,50 @@ window.modNotifications = {
         // Thiết lập Fallback Polling (15 giây) để đảm bảo không bỏ sót bất kỳ thông báo nào
         this.startPolling();
 
-        // Đăng ký tương tác người dùng lần đầu để mở khóa Web Audio trên trình duyệt
-        const unlockAudio = () => {
-            if (!this.audioCtx) {
-                try {
-                    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtxClass) this.audioCtx = new AudioCtxClass();
-                } catch(e) {}
-            } else if (this.audioCtx.state === 'suspended') {
-                this.audioCtx.resume();
-            }
-            window.removeEventListener('click', unlockAudio);
-            window.removeEventListener('touchstart', unlockAudio);
+        // Mở khóa âm thanh (Bypass Browser Autoplay Policy) trên mọi tương tác của người dùng
+        const unlockAudio = async () => {
+            // 1. Mở khóa Web Audio Context
+            try {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtxClass) {
+                    if (!this.audioCtx) this.audioCtx = new AudioCtxClass();
+                    if (this.audioCtx.state === 'suspended') {
+                        await this.audioCtx.resume();
+                    }
+                    if (this.audioCtx.state === 'running') {
+                        this.isAudioUnlocked = true;
+                    }
+                }
+            } catch(e) {}
+
+            // 2. Mở khóa HTML5 Audio (phát nhẹ mức âm lượng siêu nhỏ để trình duyệt cấp phép vĩnh viễn cho phiên)
+            try {
+                if (this.audioEl && !this.isAudioUnlocked) {
+                    this.audioEl.volume = 0.001;
+                    const p = this.audioEl.play();
+                    if (p && typeof p.then === 'function') {
+                        p.then(() => {
+                            this.audioEl.pause();
+                            this.audioEl.currentTime = 0;
+                            this.audioEl.volume = 1.0;
+                            this.isAudioUnlocked = true;
+                        }).catch(() => {});
+                    }
+                }
+            } catch(e) {}
         };
-        window.addEventListener('click', unlockAudio, { passive: true });
-        window.addEventListener('touchstart', unlockAudio, { passive: true });
+
+        // Lắng nghe trên mọi sự kiện chạm, nhấp, gõ phím của người dùng
+        ['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
+            window.addEventListener(evt, unlockAudio, { passive: true });
+        });
+
+        // Tự động khôi phục Audio Context khi người dùng quay lại tab
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && this.audioCtx && this.audioCtx.state === 'suspended') {
+                try { this.audioCtx.resume(); } catch(e) {}
+            }
+        });
 
         console.log('🔔 [Notifications] Hệ thống thông báo toàn ứng dụng đã sẵn sàng!');
     },
@@ -172,53 +211,101 @@ window.modNotifications = {
         } catch(e) {}
     },
 
-    // 7. Phát âm thanh chuông thông báo trang nhã (Web Audio API)
-    playChime: function() {
-        if (this.isMuted) return;
+    // 7. Phát âm thanh chuông thông báo (Dual-Engine: HTML5 Audio + Web Audio Bell Synth + Vibration)
+    playChime: async function() {
+        if (this.isMuted) return false;
 
+        // A. Rung thiết bị di động (Mobile Haptic Feedback)
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            try { navigator.vibrate([160, 80, 160]); } catch(e) {}
+        }
+
+        let audioPlayed = false;
+
+        // B. Động cơ 1: Phát qua thẻ HTML5 Audio (/audio/chime.wav)
+        if (this.audioEl) {
+            try {
+                this.audioEl.currentTime = 0;
+                this.audioEl.volume = 1.0;
+                const p = this.audioEl.play();
+                if (p && typeof p.then === 'function') {
+                    await p;
+                    audioPlayed = true;
+                } else {
+                    audioPlayed = true;
+                }
+            } catch(e) {
+                // Trình duyệt chặn do chưa có tương tác hoặc lỗi codec
+                audioPlayed = false;
+            }
+        }
+
+        // C. Động cơ 2: Tổng hợp chuông ngân pha lê qua Web Audio API (Chime Synth)
+        // Luôn kích hoạt bổ trợ để tạo âm thanh chuông 3 nốt ngân vang rõ ràng
         try {
             const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtxClass) return;
-
-            if (!this.audioCtx) {
-                this.audioCtx = new AudioCtxClass();
+            if (AudioCtxClass) {
+                if (!this.audioCtx) this.audioCtx = new AudioCtxClass();
+                if (this.audioCtx.state === 'suspended') {
+                    await this.audioCtx.resume();
+                }
+                if (this.audioCtx.state === 'running') {
+                    this.synthesizeBellChime(this.audioCtx);
+                    audioPlayed = true;
+                }
             }
-            if (this.audioCtx.state === 'suspended') {
-                this.audioCtx.resume();
-            }
-
-            const ctx = this.audioCtx;
-            const now = ctx.currentTime;
-
-            // Nốt 1: D5 (587.33 Hz) - Trong trẻo
-            const osc1 = ctx.createOscillator();
-            const gain1 = ctx.createGain();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(587.33, now);
-            gain1.gain.setValueAtTime(0.12, now);
-            gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-            osc1.connect(gain1);
-            gain1.connect(ctx.destination);
-            osc1.start(now);
-            osc1.stop(now + 0.35);
-
-            // Nốt 2: A5 (880 Hz) - Âm bổng ấm áp, ngân vang
-            const osc2 = ctx.createOscillator();
-            const gain2 = ctx.createGain();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(880, now + 0.12);
-            gain2.gain.setValueAtTime(0.18, now + 0.12);
-            gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
-            osc2.connect(gain2);
-            gain2.connect(ctx.destination);
-            osc2.start(now + 0.12);
-            osc2.stop(now + 0.65);
         } catch(e) {
             console.warn('[Notifications] Không thể phát chuông Web Audio:', e.message);
         }
+
+        return audioPlayed;
     },
 
-    // 8. Bật / Tắt âm thanh thông báo
+    // Tổng hợp âm chuông 3 nốt ngân vang (F#5 -> B5 -> E6) âm lượng chuẩn, rõ ràng
+    synthesizeBellChime: function(ctx) {
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        const playTone = (freq, startTime, duration, peakGain) => {
+            try {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, startTime);
+
+                gain.gain.setValueAtTime(0.001, startTime);
+                gain.gain.exponentialRampToValueAtTime(peakGain, startTime + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            } catch(err) {}
+        };
+
+        // 3 nốt ngân vang tăng dần: F#5 (740 Hz) -> B5 (988 Hz) -> E6 (1318 Hz)
+        playTone(739.99, now, 0.45, 0.45);
+        playTone(987.77, now + 0.12, 0.55, 0.60);
+        playTone(1318.51, now + 0.24, 0.70, 0.70);
+    },
+
+    // 8. Bấm thử chuông thông báo (người dùng bấm để nghe thử và mở khóa âm thanh ngay lập tức)
+    testSound: async function() {
+        if (this.isMuted) {
+            this.toggleMute();
+        }
+        const played = await this.playChime();
+        if (window.showToast) {
+            window.showToast('success', '🔔 Đang phát thử chuông thông báo! Nếu không nghe thấy, sếp vui lòng kiểm tra âm lượng loa máy tính/điện thoại.');
+        } else {
+            alert('🔔 Đang phát thử chuông thông báo!');
+        }
+    },
+
+    // 9. Bật / Tắt âm thanh thông báo
     toggleMute: function() {
         this.isMuted = !this.isMuted;
         try {
@@ -234,14 +321,14 @@ window.modNotifications = {
         const btn = document.getElementById('btn-toggle-notif-sound');
         if (btn) {
             if (this.isMuted) {
-                btn.innerHTML = '<i class="fas fa-volume-mute text-red-400"></i> <span class="hidden sm:inline">Âm thanh: Tắt</span>';
+                btn.innerHTML = '<i class="fas fa-volume-mute text-red-400"></i> <span class="hidden sm:inline">Âm: Tắt</span>';
                 btn.title = 'Đang tắt chuông thông báo (Bấm để Bật)';
-                btn.classList.add('bg-red-500/10', 'text-red-400');
+                btn.classList.add('bg-red-500/10', 'text-red-400', 'border', 'border-red-500/30');
                 btn.classList.remove('bg-slate-800', 'text-slate-300');
             } else {
-                btn.innerHTML = '<i class="fas fa-volume-up text-emerald-400"></i> <span class="hidden sm:inline">Âm thanh: Bật</span>';
+                btn.innerHTML = '<i class="fas fa-volume-up text-emerald-400"></i> <span class="hidden sm:inline">Âm: Bật</span>';
                 btn.title = 'Đang bật chuông thông báo (Bấm để Tắt)';
-                btn.classList.remove('bg-red-500/10', 'text-red-400');
+                btn.classList.remove('bg-red-500/10', 'text-red-400', 'border', 'border-red-500/30');
                 btn.classList.add('bg-slate-800', 'text-slate-300');
             }
         }
@@ -294,6 +381,7 @@ window.modNotifications = {
                 body: notif.body || '',
                 icon: '/icons/icon-192.png',
                 badge: '/icons/icon-192.png',
+                silent: false,
                 tag: 'sungo-notif-' + notif.id
             });
 
