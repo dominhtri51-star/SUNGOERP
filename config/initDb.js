@@ -986,6 +986,38 @@ async function autoInitDatabase() {
             console.error("⚠️ Lỗi khởi tạo bảng notifications:", notifErr.message);
         }
 
+        // 47. Hệ Thống Trợ Lý AI (SUNGO AI Assistant - Conversations & Messages)
+        try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS ai_conversations (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    session_id VARCHAR(100) UNIQUE NOT NULL,
+                    title VARCHAR(255) DEFAULT 'Hội thoại mới',
+                    context_state JSONB DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                CREATE TABLE IF NOT EXISTS ai_messages (
+                    id SERIAL PRIMARY KEY,
+                    conversation_id INTEGER REFERENCES ai_conversations(id) ON DELETE CASCADE,
+                    sender VARCHAR(20) NOT NULL,
+                    content TEXT NOT NULL,
+                    intent VARCHAR(50),
+                    action_type VARCHAR(50),
+                    action_data JSONB DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_ai_conversations_user ON ai_conversations(user_id);
+                CREATE INDEX IF NOT EXISTS idx_ai_messages_conv ON ai_messages(conversation_id);
+            `);
+            console.log("✅ Khởi tạo bảng ai_conversations và ai_messages thành công!");
+        } catch(aiErr) {
+            console.error("⚠️ Lỗi khởi tạo bảng AI Assistant:", aiErr.message);
+        }
+
         console.log("✅ Khởi tạo và đồng bộ toàn bộ CSDL Cổng Bảo Hành Điện Tử & ERP thành công!");
     } catch (err) {
         console.error("⚠️ Cảnh báo khởi tạo CSDL:", err.message);
