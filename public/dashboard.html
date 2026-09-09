@@ -153,6 +153,11 @@
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span class="font-bold text-slate-600">Online</span>
                 </div>
+                <!-- NÚT CHUÔNG THÔNG BÁO DESKTOP -->
+                <button id="btn-notif-desktop" onclick="window.modNotifications && window.modNotifications.togglePanel()" class="relative p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition text-xs font-bold cursor-pointer" title="Thông báo hệ thống">
+                    <i class="fas fa-bell text-sm text-slate-600"></i>
+                    <span id="notif-badge-desktop" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse shadow-xs">0</span>
+                </button>
                 <button onclick="window.location.reload()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition text-xs font-bold cursor-pointer" title="Làm mới dữ liệu">
                     <i class="fas fa-sync-alt"></i>
                 </button>
@@ -169,6 +174,12 @@
         <main class="flex-1 overflow-y-auto p-2 sm:p-3 md:p-6 pb-28 sm:pb-20 md:pb-6 bg-slate-50 relative pt-safe" id="main-content">
             <!-- Dynamic Module Content Loads Here -->
         </main>
+
+        <!-- NÚT CHUÔNG THÔNG BÁO NỔI TRÊN MOBILE (GÓC TRÊN BÊN PHẢI) -->
+        <button id="btn-notif-mobile" onclick="window.modNotifications && window.modNotifications.togglePanel()" class="fixed top-3 right-3 z-35 md:hidden w-8 h-8 rounded-xl bg-slate-900/90 backdrop-blur-md text-amber-400 border border-slate-700/80 flex items-center justify-center shadow-lg active:scale-95 transition cursor-pointer" title="Thông báo hệ thống">
+            <i class="fas fa-bell text-xs"></i>
+            <span id="notif-badge-mobile" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center animate-pulse">0</span>
+        </button>
 
         <!-- THANH ĐIỀU HƯỚNG DUY NHẤT DƯỚI ĐÁY MÀN HÌNH (MOBILE BOTTOM TOOLBAR) -->
         <nav id="mobile-bottom-nav" class="fixed bottom-0 inset-x-0 z-40 bg-slate-900 border-t border-slate-800 flex justify-around items-center py-1.5 px-1 md:hidden shadow-2xl">
@@ -193,6 +204,10 @@
             </div>
 
             <div class="space-y-2 text-xs">
+                <button onclick="toggleMobileProfileSheet(false); window.modNotifications && window.modNotifications.togglePanel(true);" class="w-full bg-slate-800 hover:bg-slate-700 py-3 px-4 rounded-xl font-bold text-left flex items-center justify-between text-slate-200">
+                    <span class="flex items-center gap-2.5"><i class="fas fa-bell text-amber-400"></i> Xem Thông Báo Hệ Thống</span>
+                    <i class="fas fa-chevron-right text-slate-500 text-[10px]"></i>
+                </button>
                 <button onclick="toggleMobileSidebar(); toggleMobileProfileSheet(false);" class="w-full bg-slate-800 hover:bg-slate-700 py-3 px-4 rounded-xl font-bold text-left flex items-center justify-between text-slate-200">
                     <span class="flex items-center gap-2.5"><i class="fas fa-th-list text-amber-400"></i> Xem Toàn Bộ Menu Chức Năng</span>
                     <i class="fas fa-chevron-right text-slate-500 text-[10px]"></i>
@@ -259,6 +274,70 @@
         </div>
     </aside>
 
+    <!-- LỚP PHỦ MỜ KHAY THÔNG BÁO -->
+    <div id="notif-backdrop" onclick="window.modNotifications && window.modNotifications.togglePanel(false)" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] hidden transition-opacity duration-300 opacity-0"></div>
+
+    <!-- KHAY THÔNG BÁO TRƯỢT (NOTIFICATION DRAWER - DESKTOP & MOBILE) -->
+    <aside id="notif-drawer" class="fixed inset-y-0 right-0 z-[70] w-full sm:w-96 bg-slate-900 text-white flex flex-col shadow-2xl transition-all duration-300 ease-in-out transform translate-x-full border-l border-slate-800">
+        <!-- HEADER KHAY THÔNG BÁO -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shadow-xs">
+                    <i class="fas fa-bell text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-white tracking-tight">Thông Báo Hệ Thống</h3>
+                    <p class="text-[10px] text-slate-400">Tin nhắn, Đơn hàng & Báo giá</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button id="btn-toggle-notif-sound" onclick="window.modNotifications && window.modNotifications.toggleMute()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer" title="Bật/Tắt âm thanh chuông">
+                    <i class="fas fa-volume-up text-emerald-400"></i>
+                </button>
+                <button onclick="window.modNotifications && window.modNotifications.togglePanel(false)" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer" title="Đóng">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- THANH CÔNG CỤ: QUYỀN TRÌNH DUYỆT & ĐỌC TẤT CẢ -->
+        <div class="p-3 bg-slate-950/60 border-b border-slate-800/80 flex items-center justify-between gap-2 text-xs">
+            <button id="btn-notif-push-perm" onclick="window.modNotifications && window.modNotifications.requestBrowserPermission()" class="hidden px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-[11px] border border-amber-500/30 flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fas fa-satellite-dish"></i> Bật Đẩy Trình Duyệt
+            </button>
+            <div class="flex-1"></div>
+            <button onclick="window.modNotifications && window.modNotifications.markAllAsRead()" class="text-slate-400 hover:text-amber-400 font-semibold text-[11px] flex items-center gap-1 transition cursor-pointer">
+                <i class="fas fa-check-double"></i> Đọc tất cả
+            </button>
+        </div>
+
+        <!-- BỘ LỌC THEO PHÂN LOẠI CHIP -->
+        <div class="px-3 py-2.5 border-b border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            <button id="notif-filter-all" onclick="window.modNotifications && window.modNotifications.setFilter('ALL')" class="px-3 py-1.5 rounded-xl bg-amber-500 text-slate-900 font-bold text-xs shadow-xs transition shrink-0 cursor-pointer">Tất cả</button>
+            <button id="notif-filter-message" onclick="window.modNotifications && window.modNotifications.setFilter('MESSAGE')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition shrink-0 cursor-pointer">💬 Tin nhắn</button>
+            <button id="notif-filter-order" onclick="window.modNotifications && window.modNotifications.setFilter('ORDER')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition shrink-0 cursor-pointer">📦 Đơn hàng</button>
+            <button id="notif-filter-quotation" onclick="window.modNotifications && window.modNotifications.setFilter('QUOTATION')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition shrink-0 cursor-pointer">📑 Báo giá</button>
+        </div>
+
+        <!-- VÙNG DANH SÁCH THÔNG BÁO CUỘN -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-2.5" id="notif-items-list">
+            <!-- Render danh sách thông báo -->
+        </div>
+
+        <!-- TRẠNG THÁI TRỐNG -->
+        <div id="notif-empty-state" class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-500">
+            <div class="w-14 h-14 rounded-2xl bg-slate-800/80 flex items-center justify-center text-slate-600 mb-3 text-2xl">
+                <i class="fas fa-bell-slash"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-400">Không có thông báo nào</p>
+            <p class="text-[11px] text-slate-500 mt-1 max-w-[200px]">Mọi tin nhắn mới, đơn hàng mới và báo giá mới sẽ hiển thị tại đây.</p>
+        </div>
+    </aside>
+
+    <!-- TOAST NOTIFICATION CONTAINER (NỔI GÓC TRÊN CÙNG ĐỂ HIỂN THỊ THÔNG BÁO TỨC THÌ) -->
+    <div id="notif-toast-container" class="fixed top-3 sm:top-5 right-3 sm:right-6 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-[92vw] sm:max-w-md w-full"></div>
+
+    <script src="/js/notifications.js?v=20260909_v1"></script>
     <script src="/js/app.js?v=20260828_v1"></script>
 </body>
 </html>

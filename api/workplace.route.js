@@ -512,6 +512,42 @@ router.post('/messages', async (req, res) => {
         ]);
 
         const newMsg = insertRes.rows[0];
+
+        // Phát thông báo thời gian thực toàn hệ thống
+        try {
+            const notificationService = require('../services/notification.service');
+            let notifTitle = `💬 Tin nhắn từ ${senderName}`;
+            let notifLink = direct_user_id ? `#workplace?direct_user_id=${currentUserId}` : `#workplace?channel_id=${channel_id}`;
+            let notifBody = cleanContent.length > 80 ? (cleanContent.substring(0, 80) + '...') : cleanContent;
+            if (!notifBody && safeAttachments.length > 0) {
+                notifBody = `[Đã gửi ${safeAttachments.length} tệp đính kèm / hình ảnh]`;
+            }
+
+            if (channel_id) {
+                const chanRes = await pool.query("SELECT name FROM workplace_channels WHERE id = $1", [channel_id]);
+                const chanName = chanRes.rows[0] ? chanRes.rows[0].name : 'Kênh chung';
+                notifTitle = `💬 [${chanName}] ${senderName}`;
+            }
+
+            notificationService.createNotification({
+                type: 'MESSAGE',
+                title: notifTitle,
+                body: notifBody,
+                link: notifLink,
+                sender_id: currentUserId,
+                sender_name: senderName,
+                recipient_id: direct_user_id ? parseInt(direct_user_id, 10) : null,
+                target_roles: [],
+                data: {
+                    message_id: newMsg.id,
+                    channel_id: channel_id ? parseInt(channel_id, 10) : null,
+                    direct_user_id: direct_user_id ? parseInt(direct_user_id, 10) : null
+                }
+            }).catch(e => console.error('Notification error on message:', e.message));
+        } catch (notifErr) {
+            console.warn('⚠️ Lỗi gửi thông báo tin nhắn:', notifErr.message);
+        }
+
         res.json({ success: true, data: newMsg, message: 'Gửi tin nhắn thành công!' });
     } catch (err) {
         console.error('Lỗi POST /api/workplace/messages:', err.message);

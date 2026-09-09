@@ -391,6 +391,31 @@ router.post('/', async (req, res) => {
         }
 
         await client.query('COMMIT');
+
+        // Phát thông báo thời gian thực khi có Đơn Hàng Mới
+        try {
+            const notificationService = require('../services/notification.service');
+            const senderName = req.user ? (req.user.full_name || req.user.username) : 'Nhân viên kinh doanh';
+            const fmtAmount = new Intl.NumberFormat('vi-VN').format(finalTotal || 0);
+            notificationService.createNotification({
+                type: 'ORDER',
+                title: `📦 Đơn hàng mới: ${order_code}`,
+                body: `Khách: ${customer_name || 'Khách lẻ'} • Tổng: ${fmtAmount} đ • Tạo bởi: ${senderName}`,
+                link: `#order-history?order_id=${orderId}`,
+                sender_id: req.user ? req.user.id : null,
+                sender_name: senderName,
+                target_roles: ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'SALE', 'SALES', 'TRUONG_PHONG_KD', 'SALE_LEAD', 'SALE_ADMIN', 'NHAN_VIEN_KHO', 'WAREHOUSE', 'KE_TOAN'],
+                data: {
+                    order_id: orderId,
+                    order_code: order_code,
+                    customer_name: customer_name || 'Khách lẻ',
+                    total_amount: finalTotal
+                }
+            }).catch(e => console.error('Notification error on order:', e.message));
+        } catch (notifErr) {
+            console.warn('⚠️ Lỗi gửi thông báo đơn hàng:', notifErr.message);
+        }
+
         res.json({ success: true, orderId, order_code });
     } catch (err) { 
         await client.query('ROLLBACK'); 

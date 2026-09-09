@@ -1525,6 +1525,17 @@ window.modOrders = {
                 });
                 window.modOrders.renderStatusButtons();
                 window.modOrders.applyFilters();
+
+                // Nếu mở từ thông báo kèm theo order_id
+                if (window.location.hash && window.location.hash.includes('order_id=')) {
+                    try {
+                        const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
+                        const targetOrderId = hashParams.get('order_id');
+                        if (targetOrderId) {
+                            setTimeout(() => window.modOrders.openDetail(targetOrderId), 150);
+                        }
+                    } catch(e) {}
+                }
             } else {
                 if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Lỗi Database: ' + data.error + '</td></tr>';
             }

@@ -188,6 +188,36 @@ router.post('/', async (req, res) => {
         writeDB(data);
         
         console.log(`✅ Đã lưu thành công báo giá: ${newQuotation.quotation_code} [${newQuotation.status}]`);
+
+        // Phát thông báo thời gian thực khi có Báo Giá Mới
+        try {
+            const notificationService = require('../services/notification.service');
+            const senderName = req.user ? (req.user.full_name || req.user.username) : (newQuotation.sale_name || 'Nhân viên kinh doanh');
+            const fmtAmount = new Intl.NumberFormat('vi-VN').format(newQuotation.total_amount || 0);
+            const notifTitle = `📑 Báo giá mới: ${newQuotation.quotation_code}`;
+            const notifBody = `${newQuotation.customer_name || 'Khách hàng'} • ${newQuotation.project_name || newQuotation.system_type || 'Dự án'} • ${fmtAmount} đ`;
+            const notifLink = newQuotation.is_below_floor ? '#admin-approve' : '#boq-list';
+
+            notificationService.createNotification({
+                type: 'QUOTATION',
+                title: notifTitle,
+                body: notifBody,
+                link: notifLink,
+                sender_id: req.user ? req.user.id : null,
+                sender_name: senderName,
+                target_roles: ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'SALE', 'SALES', 'TRUONG_PHONG_KD', 'SALE_LEAD', 'SALE_ADMIN'],
+                data: {
+                    quotation_id: newQuotation.quotation_id,
+                    quotation_code: newQuotation.quotation_code,
+                    total_amount: newQuotation.total_amount,
+                    is_below_floor: newQuotation.is_below_floor,
+                    status: newQuotation.status
+                }
+            }).catch(e => console.error('Notification error on quote:', e.message));
+        } catch (notifErr) {
+            console.warn('⚠️ Lỗi gửi thông báo báo giá:', notifErr.message);
+        }
+
         res.status(201).json({ success: true, quotation: enrichQuotation(newQuotation) });
         
     } catch (e) {

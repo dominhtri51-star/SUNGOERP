@@ -952,6 +952,40 @@ async function autoInitDatabase() {
             `);
         } catch(yearEndErr) {}
 
+        // 46. Hệ Thống Thông Báo Toàn Ứng Dụng (Real-time App Notifications)
+        try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS app_notifications (
+                    id SERIAL PRIMARY KEY,
+                    type VARCHAR(50) NOT NULL,
+                    title VARCHAR(255) NOT NULL,
+                    body TEXT NOT NULL,
+                    link VARCHAR(255),
+                    sender_id INTEGER,
+                    sender_name VARCHAR(100),
+                    recipient_id INTEGER,
+                    target_roles JSONB DEFAULT '[]'::jsonb,
+                    data JSONB DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                CREATE TABLE IF NOT EXISTS app_notification_reads (
+                    user_id INTEGER NOT NULL,
+                    notification_id INTEGER NOT NULL REFERENCES app_notifications(id) ON DELETE CASCADE,
+                    read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (user_id, notification_id)
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_app_notifications_created_at ON app_notifications(created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_app_notifications_recipient ON app_notifications(recipient_id);
+                CREATE INDEX IF NOT EXISTS idx_app_notifications_type ON app_notifications(type);
+                CREATE INDEX IF NOT EXISTS idx_app_notification_reads_user ON app_notification_reads(user_id);
+            `);
+            console.log("✅ Khởi tạo bảng app_notifications và app_notification_reads thành công!");
+        } catch(notifErr) {
+            console.error("⚠️ Lỗi khởi tạo bảng notifications:", notifErr.message);
+        }
+
         console.log("✅ Khởi tạo và đồng bộ toàn bộ CSDL Cổng Bảo Hành Điện Tử & ERP thành công!");
     } catch (err) {
         console.error("⚠️ Cảnh báo khởi tạo CSDL:", err.message);

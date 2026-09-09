@@ -440,17 +440,45 @@ window.modWorkplace = {
 
         await this.loadChannels();
 
-        // Mặc định mở kênh Thông Báo Toàn Công Ty (#thong-bao)
-        const defaultChan = this.channels.find(c => c.slug === 'thong-bao') || this.channels[0];
-        if (defaultChan) {
-            if (window.innerWidth >= 768) {
-                this.selectChannel(defaultChan.id);
-            } else {
-                // Trên di động, nạp sẵn dữ liệu nhưng giữ chế độ xem danh sách (LIST)
-                this.activeType = 'CHANNEL';
-                this.activeId = defaultChan.id;
-                this.activeChannel = defaultChan;
-                this.setMobileTab('LIST');
+        // Kiểm tra xem có tham số điều hướng từ thông báo không (#workplace?channel_id=... hoặc ?direct_user_id=...)
+        let targetChanId = null;
+        let targetDirectId = null;
+        if (window.location.hash && window.location.hash.includes('?')) {
+            try {
+                const searchPart = window.location.hash.split('?')[1];
+                const params = new URLSearchParams(searchPart);
+                targetChanId = params.get('channel_id');
+                targetDirectId = params.get('direct_user_id');
+            } catch(e) {}
+        }
+
+        if (targetDirectId) {
+            const numDirectId = parseInt(targetDirectId, 10);
+            const directUser = this.directUsers.find(u => u.id === numDirectId);
+            if (directUser) {
+                this.selectDirectUser(directUser.id, directUser.full_name || directUser.username);
+                if (window.innerWidth < 768) this.setMobileTab('CHAT');
+            }
+        } else if (targetChanId) {
+            const numChanId = parseInt(targetChanId, 10);
+            const targetChan = this.channels.find(c => c.id === numChanId);
+            if (targetChan) {
+                this.selectChannel(targetChan.id);
+                if (window.innerWidth < 768) this.setMobileTab('CHAT');
+            }
+        } else {
+            // Mặc định mở kênh Thông Báo Toàn Công Ty (#thong-bao)
+            const defaultChan = this.channels.find(c => c.slug === 'thong-bao') || this.channels[0];
+            if (defaultChan) {
+                if (window.innerWidth >= 768) {
+                    this.selectChannel(defaultChan.id);
+                } else {
+                    // Trên di động, nạp sẵn dữ liệu nhưng giữ chế độ xem danh sách (LIST)
+                    this.activeType = 'CHANNEL';
+                    this.activeId = defaultChan.id;
+                    this.activeChannel = defaultChan;
+                    this.setMobileTab('LIST');
+                }
             }
         }
 
