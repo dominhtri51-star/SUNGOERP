@@ -142,8 +142,29 @@
         <div class="flex-1 overflow-y-auto p-3 sm:p-6 pb-28" style="-webkit-overflow-scrolling: touch;">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto">
                 
-                <!-- CỘT TRÁI: DANH SÁCH VẬT TƯ -->
+                <!-- CỘT TRÁI: GHI CHÚ SALE & DANH SÁCH VẬT TƯ -->
                 <div class="lg:col-span-2 space-y-4">
+                    <!-- THẺ GHI CHÚ TỪ BỘ PHẬN SALE & YÊU CẦU ĐÓNG HÀNG TỪ KHÁCH -->
+                    <div id="wms-sale-notes-card" class="bg-gradient-to-r from-amber-50/90 to-orange-50/70 rounded-2xl shadow-2xs border-2 border-amber-300 p-4 sm:p-5 space-y-2.5">
+                        <div class="flex items-center justify-between pb-2 border-b border-amber-200/80 flex-wrap gap-2">
+                            <h3 class="font-black text-amber-950 text-xs sm:text-sm uppercase flex items-center gap-2">
+                                <i class="fas fa-clipboard-list text-amber-600 text-base"></i> 
+                                <span>Ghi Chú Đơn Hàng & Yêu Cầu Đóng Gói Từ Sale</span>
+                            </h3>
+                            <span id="wms-sale-person-badge" class="text-[10px] bg-amber-200/80 text-amber-900 border border-amber-300/90 font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-2xs">
+                                <i class="fas fa-user-tag text-amber-700"></i> <span id="wms-sale-person-name">Sale: ---</span>
+                            </span>
+                        </div>
+
+                        <div id="wms-sale-notes-box" class="bg-amber-100/70 border-2 border-amber-400/80 rounded-xl p-3.5 shadow-2xs text-xs sm:text-sm text-amber-950 font-bold leading-relaxed whitespace-pre-line">
+                            <!-- Nạp tự động qua openDetail -->
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-[10px] text-amber-800 font-bold pt-0.5">
+                            <span><i class="fas fa-info-circle mr-1 text-amber-600"></i> Nhân sự kho vui lòng đọc kỹ ghi chú trên để đóng đúng quy cách, quà tặng kèm hoặc dặn dò giao hàng của khách.</span>
+                        </div>
+                    </div>
+
                     <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-4 sm:p-5">
                         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
                             <h3 class="font-black text-slate-800 text-xs sm:text-sm uppercase flex items-center gap-2">
@@ -736,6 +757,16 @@ window.modWmsOut = {
         } catch(e) {}
     },
 
+    escapeHtml: (str) => {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
     updateStatusCounts: () => {
         const all = window.modWmsOut.allOrders;
         const cntProc = all.filter(o => o.status === 'PROCESSING').length;
@@ -840,9 +871,20 @@ window.modWmsOut = {
                     </span>` : ''}
                 ` : '<span class="text-[11px] text-slate-400 italic">Tự động / Chưa gán</span>';
 
+                const hasSaleNote = o.notes && o.notes.trim() && o.notes.trim() !== 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
+                const saleNoteTable = hasSaleNote ? `
+                    <div class="mt-1.5 p-2 bg-amber-50/95 border border-amber-300 rounded-xl text-[11px] text-amber-950 font-bold leading-tight flex items-start gap-1.5 shadow-2xs" title="${window.modWmsOut.escapeHtml(o.notes.trim())}">
+                        <i class="fas fa-clipboard-list text-amber-600 mt-0.5 shrink-0"></i>
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[9px] uppercase font-black text-amber-800 block">Ghi chú Sale (${o.salesperson_name || 'NVKD'}):</span>
+                            <span class="text-[11px] font-bold text-amber-950 break-words line-clamp-2">${window.modWmsOut.escapeHtml(o.notes.trim())}</span>
+                        </div>
+                    </div>
+                ` : '';
+
                 return '<tr class="hover:bg-orange-50/60 cursor-pointer transition border-b border-slate-50" onclick="window.modWmsOut.openDetail(' + o.id + ')">' +
                     '<td class="p-4 py-3 font-mono font-black text-orange-600 text-xs">' + o.order_code + '</td>' +
-                    '<td class="p-4 py-3"><p class="font-bold text-slate-900 text-xs">' + (o.customer_name || 'Khách Lẻ') + '</p><p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-phone-alt mr-1"></i>' + (o.phone || '---') + '</p></td>' +
+                    '<td class="p-4 py-3"><p class="font-bold text-slate-900 text-xs">' + (o.customer_name || 'Khách Lẻ') + '</p><p class="text-[10px] text-slate-500 mt-0.5"><i class="fas fa-phone-alt mr-1"></i>' + (o.phone || '---') + '</p>' + saleNoteTable + '</td>' +
                     '<td class="p-4 py-3 bg-slate-50/40 min-w-[200px] max-w-[300px] whitespace-normal border-l border-r border-slate-100">' + itemsHtml + '</td>' +
                     '<td class="p-4 py-3 text-xs text-slate-700 font-medium whitespace-normal max-w-[200px]">' + 
                         (o.delivery_company ? '<strong class="text-emerald-700"><i class="fas fa-truck mr-1"></i>' + o.delivery_company + '</strong>' : '<span class="text-slate-400 italic">Chưa có chành xe</span>') + 
@@ -892,6 +934,20 @@ window.modWmsOut = {
                     </div>
                 `;
 
+                const hasSaleNote = o.notes && o.notes.trim() && o.notes.trim() !== 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
+                const saleNoteMobile = hasSaleNote ? `
+                    <div class="bg-amber-50/95 border-2 border-amber-300 rounded-2xl p-2.5 sm:p-3 text-xs text-amber-950 font-bold space-y-1 shadow-2xs">
+                        <div class="flex items-center justify-between gap-1 text-[10px] text-amber-800 font-black uppercase">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fas fa-clipboard-list text-amber-600 text-xs"></i>
+                                <span>Ghi chú từ Sale (${o.salesperson_name || 'NVKD'}):</span>
+                            </span>
+                            <span class="bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded text-[9px] font-black border border-amber-300">Đóng theo yêu cầu</span>
+                        </div>
+                        <p class="text-xs text-amber-950 leading-relaxed font-bold break-words whitespace-pre-line pl-3 border-l-2 border-amber-400">${window.modWmsOut.escapeHtml(o.notes.trim())}</p>
+                    </div>
+                ` : '';
+
                 return `
                 <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs space-y-2.5 cursor-pointer active:bg-slate-50 transition" onclick="window.modWmsOut.openDetail(${o.id})">
                     <!-- HÀNG 1: MÃ ĐƠN HÀNG, SỐ ĐIỆN THOẠI & TRẠNG THÁI -->
@@ -910,6 +966,8 @@ window.modWmsOut = {
                             <span class="flex-1">${o.customer_name || 'Khách Lẻ'}</span>
                         </h4>
                     </div>
+
+                    ${saleNoteMobile}
 
                     <!-- HÀNG 3: DANH SÁCH THIẾT BỊ -->
                     <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1.5">
@@ -988,7 +1046,31 @@ window.modWmsOut = {
                 document.getElementById('wms-recipient-name').value = o.recipient_name || o.customer_name || '';
                 document.getElementById('wms-recipient-phone').value = o.recipient_phone || o.customer_phone || o.phone || '';
                 document.getElementById('wms-address').value = o.license_plate || o.customer_address || o.address || '';
-                document.getElementById('wms-shipping-note').value = o.shipping_note || o.notes || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
+                document.getElementById('wms-shipping-note').value = o.shipping_note || 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
+
+                // Nạp thông tin Ghi chú từ Sale & Yêu cầu của khách hàng
+                const noteBox = document.getElementById('wms-sale-notes-box');
+                const salePersonName = document.getElementById('wms-sale-person-name');
+                if (salePersonName) {
+                    salePersonName.innerText = 'Sale: ' + (o.salesperson_name || 'Kinh doanh');
+                }
+                const hasSaleNote = o.notes && o.notes.trim() && o.notes.trim() !== 'Hàng điện tử - Dễ vỡ xin nhẹ tay';
+                if (noteBox) {
+                    if (hasSaleNote) {
+                        noteBox.innerHTML = `
+                            <div class="flex items-start gap-2.5">
+                                <span class="text-amber-600 text-base sm:text-lg leading-none mt-0.5"><i class="fas fa-exclamation-triangle"></i></span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-amber-950 font-black text-xs sm:text-sm leading-relaxed whitespace-pre-line">${window.modWmsOut.escapeHtml(o.notes.trim())}</p>
+                                </div>
+                            </div>
+                        `;
+                        noteBox.className = "bg-amber-100/80 border-2 border-amber-400/80 rounded-xl p-3.5 shadow-2xs text-xs sm:text-sm text-amber-950 font-bold leading-relaxed";
+                    } else {
+                        noteBox.innerHTML = '<span class="text-slate-400 font-medium italic"><i class="fas fa-check-circle mr-1 text-emerald-500"></i> Không có ghi chú đóng hàng đặc biệt nào từ Sale.</span>';
+                        noteBox.className = "bg-white/90 border border-slate-200 rounded-xl p-3 text-xs text-slate-500 font-medium leading-relaxed";
+                    }
+                }
 
                 // Nạp nhân viên xử lý xuất kho
                 const whDispSelect = document.getElementById('wms-dispatched-by');
@@ -1400,7 +1482,6 @@ window.modWmsOut = {
             recipient_phone: document.getElementById('wms-recipient-phone')?.value || '',
             license_plate: document.getElementById('wms-address')?.value || '',
             shipping_note: document.getElementById('wms-shipping-note')?.value || '',
-            notes: document.getElementById('wms-shipping-note').value,
             status: targetStatus,
             shipping_fee: window.modWmsOut.parseMoney(document.getElementById('wms-shipping-fee')?.value),
             station_fee: window.modWmsOut.parseMoney(document.getElementById('wms-station-fee')?.value),
@@ -1662,20 +1743,22 @@ window.modWmsOut = {
         const senderName = sys.shipping_sender_name || sys.store_name || 'SUNGO SOLAR';
         const senderPhone = sys.shipping_sender_phone || sys.store_phone || '---';
         const senderAddr = sys.shipping_sender_address || sys.store_address || '---';
+        const saleNoteNotice = (o.notes && o.notes.trim() && o.notes.trim() !== 'Hàng điện tử - Dễ vỡ xin nhẹ tay') ? `<div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:8px;padding:10px;font-size:13px;color:#92400e;margin-bottom:12px;line-height:1.5;"><b>📌 Lưu ý đóng hàng từ Sale:</b> ${o.notes.trim()}</div>` : '';
         const carrierNote = sys.shipping_carrier_note ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px;font-size:13px;color:#92400e;margin-bottom:12px;"><b>Lưu ý bác tài:</b> ${sys.shipping_carrier_note}</div>` : '';
         const footerText = sys.shipping_footer_text || 'Ký nhận chành xe: ........................';
 
         const printHTML = `
             <div style="font-family:Arial,sans-serif;padding:20px;border:2px dashed #000;border-radius:12px;background:#fff;max-width:550px;margin:0 auto;">
-                <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:15px;">
-                    <h1 style="font-size:24px;font-weight:900;margin:0;text-transform:uppercase;">${title}</h1>
-                    <p style="font-size:14px;color:#dc2626;font-weight:bold;margin:5px 0 0 0;">${warning}</p>
+                <div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:12px;">
+                    <h2 style="font-size:22px;font-weight:900;margin:0;letter-spacing:0.5px;text-transform:uppercase;">${title}</h2>
+                    <p style="font-size:13px;color:#b91c1c;font-weight:bold;margin:4px 0 0 0;">${warning}</p>
                 </div>
 
-                <div style="border:2px solid #000;padding:12px;margin-bottom:15px;border-radius:8px;font-size:16px;text-align:center;background:#f8fafc;">
-                    <strong style="font-size:18px;">🚚 CHÀNH XE: ${deliveryName}</strong>
-                    ${carrierAddress ? `<br><span style="font-size:14px;color:#0f172a;">📍 <b>Đ/C Chành:</b> ${carrierAddress}</span>` : ''}
-                    ${deliveryPhone ? `<br><span>SĐT XE: <b>${deliveryPhone}</b></span>` : ''}
+                <div style="border:1.5px solid #000;padding:12px;margin-bottom:12px;border-radius:8px;font-size:14px;line-height:1.5;background:#f8fafc;">
+                    <strong style="text-transform:uppercase;color:#0369a1;font-size:12px;">Đơn vị vận chuyển / Chành xe:</strong><br>
+                    <span style="font-size:18px;font-weight:900;color:#0284c7;">${deliveryName}</span><br>
+                    ${carrierAddress ? `<span style="font-size:14px;color:#b45309;font-weight:bold;">Bãi xe / Điểm gửi: ${carrierAddress}</span><br>` : ''}
+                    <span>SĐT Nhà Xe / Tài Xế: <b>${deliveryPhone}</b></span>
                 </div>
 
                 <div style="border:1.5px solid #000;padding:12px;margin-bottom:12px;border-radius:8px;font-size:14px;line-height:1.5;">
@@ -1685,13 +1768,14 @@ window.modWmsOut = {
                     <span>Địa chỉ: ${senderAddr}</span>
                 </div>
 
-                <div style="border:1.5px solid #000;padding:12px;margin-bottom:15px;border-radius:8px;font-size:14px;line-height:1.5;background:#eff6ff;">
+                <div style="border:1.5px solid #000;padding:12px;margin-bottom:12px;border-radius:8px;font-size:14px;line-height:1.5;background:#eff6ff;">
                     <strong style="text-transform:uppercase;color:#1e40af;font-size:12px;">Người Nhận:</strong><br>
                     <span style="font-size:18px;font-weight:900;color:#1e3a8a;">${finalRecipient}</span><br>
                     <span style="font-size:16px;font-weight:bold;">SĐT: ${finalPhone || '---'}</span><br>
                     <span>Địa chỉ: ${finalAddress || '---'}</span>
                 </div>
 
+                ${saleNoteNotice}
                 ${carrierNote}
 
                 <div style="display:flex;justify-content:space-between;font-size:12px;border-top:1px solid #cbd5e1;padding-top:10px;">
@@ -1755,7 +1839,7 @@ window.modWmsOut = {
                     <strong>Người nhận:</strong> ${document.getElementById('wms-recipient-name')?.value || o.recipient_name || o.customer_name || 'Khách Lẻ'} &nbsp;|&nbsp; <strong>SĐT:</strong> ${document.getElementById('wms-recipient-phone')?.value || o.recipient_phone || o.customer_phone || o.phone || '---'}<br>
                     <strong>Địa chỉ nhận:</strong> ${document.getElementById('wms-address')?.value || o.license_plate || o.customer_address || o.address || '---'}<br>
                     <strong>Đơn vị vận chuyển:</strong> ${document.getElementById('wms-delivery')?.value || o.delivery_company || 'Tự vận chuyển'} &nbsp;|&nbsp; <strong>SĐT xe:</strong> ${document.getElementById('wms-driver')?.value || o.driver_name || '---'}<br>
-                    <strong>Ghi chú:</strong> ${document.getElementById('wms-shipping-note')?.value || o.shipping_note || o.notes || 'Không có'}
+                    <strong>Ghi chú dán thùng:</strong> ${document.getElementById('wms-shipping-note')?.value || o.shipping_note || 'Hàng điện tử - Dễ vỡ xin nhẹ tay'}${o.notes && o.notes.trim() && o.notes.trim() !== 'Hàng điện tử - Dễ vỡ xin nhẹ tay' ? `<br><strong>Yêu cầu đóng hàng (Sale):</strong> <span style="color:#b45309;font-weight:bold;">${o.notes.trim()}</span>` : ''}
                 </div>
 
                 <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;">

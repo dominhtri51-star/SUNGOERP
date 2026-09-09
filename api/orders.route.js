@@ -544,7 +544,7 @@ router.put('/:id', async (req, res) => {
         const netProfit = (finalFeePayer === 'CUSTOMER') ? (Math.max(0, newSubtotal - discAmount - ptsDiscount) - newCogs) : (grossProfit - totalOrderCosts);
 
         // KỊCH BẢN HỦY ĐƠN: CỘNG LẠI TỒN KHO THỰC TẾ
-        let finalNotes = notes || '';
+        let finalNotes = notes !== undefined ? notes : (oldOrder.notes || '');
         if (oldStatus !== 'CANCELLED' && finalStatus === 'CANCELLED') {
             if (items && items.length > 0) {
                 for(let i of items) {
@@ -1221,7 +1221,7 @@ router.put('/:id/wms-out', async (req, res) => {
 
         // Xử lý Người xuất kho & Mức hoa hồng xuất kho
         let finalDispatchedBy = dispatched_by ? parseInt(dispatched_by, 10) : null;
-        const curOrd = await client.query("SELECT dispatched_by, gross_profit, total_amount, cost_of_goods, delivery_proofs FROM orders WHERE id = $1", [id]);
+        const curOrd = await client.query("SELECT dispatched_by, gross_profit, total_amount, cost_of_goods, delivery_proofs, notes FROM orders WHERE id = $1", [id]);
         const ordData = curOrd.rows[0] || {};
 
         if (!finalDispatchedBy) {
@@ -1289,13 +1289,16 @@ router.put('/:id/wms-out', async (req, res) => {
             proofsJson = JSON.stringify(proofUrls);
         }
 
+        // Bảo vệ toàn vẹn ghi chú đơn hàng của Sale: không để template dán thùng đè lên ghi chú Sale
+        const finalNotes = (notes !== undefined && notes !== null && notes !== 'Hàng điện tử - Dễ vỡ xin nhẹ tay' && String(notes).trim() !== '') ? notes : (ordData.notes || '');
+
         // Update thông tin giao vận, tình trạng và chi phí giao vận do kho cập nhật
         await client.query(`
             UPDATE orders 
             SET delivery_company = COALESCE($1, delivery_company),
                 driver_name = COALESCE($2, driver_name),
                 license_plate = COALESCE($3, license_plate),
-                notes = COALESCE($4, notes),
+                notes = $4,
                 status = COALESCE($5, status),
                 delivery_proofs = COALESCE($6, delivery_proofs),
                 carrier_address = COALESCE($7, carrier_address),
@@ -1316,7 +1319,7 @@ router.put('/:id/wms-out', async (req, res) => {
                 fee_payer = COALESCE($21, fee_payer)
             WHERE id = $22
         `, [
-            delivery_company, driver_name, license_plate, notes, status, proofsJson,
+            delivery_company, driver_name, license_plate, finalNotes, status, proofsJson,
             carrier_address, recipient_name, recipient_phone, vehicle_plate, shipping_note,
             shipFee, stnFee, packFee, handFee, othFee, othFeeNote, fundSource,
             finalDispatchedBy, rateWhCommission, feePayerVal,
