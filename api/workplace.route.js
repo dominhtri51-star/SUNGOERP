@@ -467,7 +467,7 @@ router.post('/messages', async (req, res) => {
 
         const cleanContent = (content || '').trim();
         const safeAttachments = Array.isArray(attachments) ? attachments : [];
-        const cleanMsgType = ['TEXT', 'AUDIO', 'FILE', 'IMAGE'].includes(message_type) ? message_type : 'TEXT';
+        const cleanMsgType = ['TEXT', 'AUDIO', 'FILE', 'IMAGE', 'ORDER_CARD', 'PRINT_SLIP'].includes(message_type) ? message_type : 'TEXT';
 
         let finalReplyToId = reply_to_id ? parseInt(reply_to_id, 10) : null;
         let finalReplyToSender = reply_to_sender || null;

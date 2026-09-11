@@ -191,6 +191,16 @@
                         <i class="fas fa-paperclip"></i>
                     </button>
 
+                    <!-- Nút gửi nhanh đơn hàng & phiếu in (báo giá, xuất kho, tem vận chuyển) -->
+                    <button type="button" onclick="window.modWorkplace.openPickOrderModal()" id="wp-btn-quick-order" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 flex items-center justify-center text-sm transition shrink-0 cursor-pointer shadow-2xs group" title="Gửi nhanh đơn hàng & phiếu in (Báo giá, Xuất kho, Tem dán)">
+                        <i class="fas fa-file-invoice-dollar group-hover:scale-110 transition"></i>
+                    </button>
+
+                    <!-- Nút mở trọn bộ icon cảm xúc (Full Emoji Picker) -->
+                    <button type="button" onclick="window.modWorkplace.toggleEmojiPicker(event)" id="wp-btn-emoji-picker" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-amber-600 flex items-center justify-center text-base transition shrink-0 cursor-pointer" title="Bộ icon cảm xúc (Emoji)">
+                        😀
+                    </button>
+
                     <!-- Nút ghi âm tin nhắn thoại -->
                     <button type="button" id="wp-btn-voice-record" onclick="window.modWorkplace.toggleVoiceRecord()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-red-500 flex items-center justify-center text-sm transition shrink-0 cursor-pointer" title="Ghi âm tin nhắn thoại">
                         <i class="fas fa-microphone"></i>
@@ -505,6 +515,7 @@
             <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('😡')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Tức giận">😡</button>
             <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('🔥')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Tuyệt vời">🔥</button>
             <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('👏')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Vỗ tay">👏</button>
+            <button type="button" onclick="window.modWorkplace.openEmojiPickerForReactionFromSheet()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-amber-600 flex items-center justify-center text-xs font-black shadow-2xs hover:scale-110 active:scale-95 transition cursor-pointer shrink-0" title="Thêm biểu cảm khác">➕</button>
         </div>
 
         <!-- Trích đoạn tóm tắt tin nhắn đang thao tác -->
@@ -538,6 +549,153 @@
 <div id="wp-popover-message-actions" class="fixed z-50 hidden bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 w-48 text-xs select-none transition animate-in fade-in zoom-in-95 duration-150">
     <div id="wp-popover-list" class="flex flex-col">
         <!-- Dropdown items inserted dynamically -->
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL / POPOVER: BỘ SƯU TẬP ICON CẢM XÚC (EMOJI PICKER)  -->
+<!-- ======================================================== -->
+<div id="wp-modal-emoji-picker" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop mờ -->
+    <div onclick="window.modWorkplace.closeEmojiPicker()" class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"></div>
+    
+    <!-- Khung bảng Emoji: Mobile trượt từ dưới lên / Desktop modal giữa màn hình -->
+    <div class="absolute bottom-0 inset-x-0 sm:bottom-auto sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-200 z-10 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[80vh] sm:max-h-[520px]">
+        
+        <!-- Header & Search -->
+        <div class="p-3 sm:p-4 bg-slate-50 border-b border-slate-200/80 shrink-0">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">😀</span>
+                    <h3 class="font-black text-xs sm:text-sm text-slate-800" id="wp-emoji-picker-title">Biểu Tượng Cảm Xúc</h3>
+                </div>
+                <button type="button" onclick="window.modWorkplace.closeEmojiPicker()" class="text-slate-400 hover:text-slate-700 w-7 h-7 rounded-full bg-slate-200/60 flex items-center justify-center text-xs transition cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Ô tìm kiếm emoji -->
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="wp-emoji-search" oninput="window.modWorkplace.filterEmojis(event.target.value)" placeholder="Tìm kiếm icon (cười, like, tim, kho, tiền...)" class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-hidden focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+            </div>
+        </div>
+
+        <!-- Thanh Tabs Danh Mục Emoji -->
+        <div class="flex items-center px-2 py-1.5 bg-slate-100/70 border-b border-slate-200 overflow-x-auto no-scrollbar gap-1 text-xs shrink-0 select-none">
+            <button type="button" onclick="window.modWorkplace.switchEmojiTab('smileys')" id="wp-tab-smileys" class="wp-emoji-tab px-2.5 py-1 rounded-lg font-bold text-slate-700 bg-white shadow-2xs transition shrink-0 cursor-pointer">😄 Cảm xúc</button>
+            <button type="button" onclick="window.modWorkplace.switchEmojiTab('gestures')" id="wp-tab-gestures" class="wp-emoji-tab px-2.5 py-1 rounded-lg font-bold text-slate-500 hover:text-slate-700 hover:bg-white/60 transition shrink-0 cursor-pointer">👍 Cử chỉ</button>
+            <button type="button" onclick="window.modWorkplace.switchEmojiTab('hearts')" id="wp-tab-hearts" class="wp-emoji-tab px-2.5 py-1 rounded-lg font-bold text-slate-500 hover:text-slate-700 hover:bg-white/60 transition shrink-0 cursor-pointer">❤️ Trái tim</button>
+            <button type="button" onclick="window.modWorkplace.switchEmojiTab('work')" id="wp-tab-work" class="wp-emoji-tab px-2.5 py-1 rounded-lg font-bold text-slate-500 hover:text-slate-700 hover:bg-white/60 transition shrink-0 cursor-pointer">📦 Kho & ERP</button>
+            <button type="button" onclick="window.modWorkplace.switchEmojiTab('life')" id="wp-tab-life" class="wp-emoji-tab px-2.5 py-1 rounded-lg font-bold text-slate-500 hover:text-slate-700 hover:bg-white/60 transition shrink-0 cursor-pointer">🎉 Đời sống</button>
+        </div>
+
+        <!-- Lưới Emoji hiển thị -->
+        <div id="wp-emoji-grid" class="p-3 overflow-y-auto flex-1 grid grid-cols-7 sm:grid-cols-8 gap-1.5 text-2xl text-center select-none">
+            <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Footer chỉ dẫn -->
+        <div class="px-3 py-2 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between shrink-0">
+            <span id="wp-emoji-hint">💡 Bấm vào icon để chèn vào nội dung tin nhắn</span>
+            <span class="text-[10px] font-bold text-slate-400">SUNGO EMOJI</span>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: GỬI NHANH ĐƠN HÀNG & PHIẾU IN VÀO WORKPLACE CHAT   -->
+<!-- ======================================================== -->
+<div id="wp-modal-pick-order" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop mờ -->
+    <div onclick="window.modWorkplace.closePickOrderModal()" class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+    
+    <!-- Khung Modal -->
+    <div class="absolute bottom-0 inset-x-0 sm:bottom-auto sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-2xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-200 z-10 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[88vh] sm:max-h-[620px]">
+        
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between text-white shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-white text-base shrink-0">
+                    <i class="fas fa-boxes-packing"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-sm sm:text-base">Gửi Nhanh Đơn Hàng & Phiếu In</h3>
+                    <p class="text-[11px] text-amber-100 font-medium">Chia sẻ thẻ đơn hàng hoặc gửi trực tiếp phiếu báo giá, phiếu xuất kho, tem vận chuyển</p>
+                </div>
+            </div>
+            <button type="button" onclick="window.modWorkplace.closePickOrderModal()" class="text-white/80 hover:text-white text-lg cursor-pointer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Bộ lọc & Ô tìm kiếm -->
+        <div class="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 space-y-2.5 shrink-0">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="wp-pick-order-search" oninput="window.modWorkplace.searchOrdersDebounced(event.target.value)" placeholder="Tìm theo mã đơn (DH-...), tên khách, SĐT..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-hidden focus:border-amber-500 focus:ring-2 focus:ring-amber-100">
+            </div>
+            
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
+                <span class="text-slate-400 text-[11px] font-bold mr-1 shrink-0"><i class="fas fa-filter mr-0.5"></i> Lọc:</span>
+                <button type="button" onclick="window.modWorkplace.filterPickerStatus('ALL')" class="wp-order-filter-chip px-2.5 py-1 rounded-lg font-bold text-amber-800 bg-amber-100 border border-amber-300 shrink-0 cursor-pointer" data-status="ALL">Tất cả</button>
+                <button type="button" onclick="window.modWorkplace.filterPickerStatus('PENDING')" class="wp-order-filter-chip px-2.5 py-1 rounded-lg font-bold text-slate-600 bg-white border border-slate-200 shrink-0 cursor-pointer" data-status="PENDING">Chờ duyệt</button>
+                <button type="button" onclick="window.modWorkplace.filterPickerStatus('APPROVED')" class="wp-order-filter-chip px-2.5 py-1 rounded-lg font-bold text-slate-600 bg-white border border-slate-200 shrink-0 cursor-pointer" data-status="APPROVED">Chờ xuất kho</button>
+                <button type="button" onclick="window.modWorkplace.filterPickerStatus('DISPATCHED')" class="wp-order-filter-chip px-2.5 py-1 rounded-lg font-bold text-slate-600 bg-white border border-slate-200 shrink-0 cursor-pointer" data-status="DISPATCHED">Đã xuất kho</button>
+            </div>
+        </div>
+
+        <!-- Danh sách đơn hàng -->
+        <div id="wp-picker-order-list" class="p-3 sm:p-4 overflow-y-auto flex-1 space-y-2.5">
+            <!-- Dynamic order cards inserted here -->
+        </div>
+
+        <!-- Footer -->
+        <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 shrink-0">
+            <span>💡 Bấm nút gửi để đẩy thẻ tương tác hoặc phiếu in vào kênh chat</span>
+            <button type="button" onclick="window.modWorkplace.closePickOrderModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 font-bold text-slate-700 transition cursor-pointer">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: XEM TRƯỚC & IN PHIẾU ĐƠN HÀNG TRỰC TIẾP WORKPLACE -->
+<!-- ======================================================== -->
+<div id="wp-modal-order-print" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop mờ -->
+    <div onclick="window.modWorkplace.closeOrderPrintModal()" class="absolute inset-0 bg-slate-900/70 backdrop-blur-xs transition-opacity"></div>
+
+    <!-- Khung Modal -->
+    <div class="absolute inset-2 sm:inset-6 md:inset-10 bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-200 z-10 flex flex-col">
+        
+        <!-- Top Toolbar -->
+        <div class="bg-slate-900 text-white px-4 sm:px-6 py-3 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2.5 min-w-0 pr-2">
+                <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white text-sm shrink-0">
+                    <i class="fas fa-print"></i>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="font-black text-xs sm:text-sm truncate" id="wp-print-modal-title">Xem Trước Phiếu In</h3>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 truncate" id="wp-print-modal-subtitle">Định dạng A4 / A5 chuẩn SUNGO ERP</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="window.modWorkplace.executeOrderPrint()" class="px-3 sm:px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-print"></i> <span class="hidden sm:inline">In Ngay / Xuất PDF</span>
+                </button>
+                <button type="button" onclick="window.modWorkplace.closeOrderPrintModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white/80 hover:text-white flex items-center justify-center text-sm transition cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Iframe preview container -->
+        <div class="flex-1 bg-slate-200/80 p-2 sm:p-4 overflow-hidden flex items-center justify-center">
+            <iframe id="wp-order-print-iframe" class="w-full h-full max-w-4xl bg-white shadow-lg rounded-xl border border-slate-300" src="about:blank"></iframe>
+        </div>
     </div>
 </div>
 
@@ -1312,6 +1470,98 @@ window.modWorkplace = {
                 `;
             }
 
+            // Kiểm tra tin nhắn chia sẻ Đơn Hàng hoặc Phiếu In
+            let orderCardHtml = '';
+            let printSlipHtml = '';
+            const isOrderCard = msg.message_type === 'ORDER_CARD' || attachments.some(a => a && a.type === 'order_card');
+            const isPrintSlip = msg.message_type === 'PRINT_SLIP' || attachments.some(a => a && a.type === 'print_slip');
+
+            if (isOrderCard) {
+                const oData = attachments.find(a => a && a.type === 'order_card') || {};
+                const oId = oData.order_id || 0;
+                const oCode = oData.order_code || 'ĐƠN HÀNG';
+                const cName = oData.customer_name || 'Khách Hàng';
+                const cPhone = oData.customer_phone || '';
+                const totalAmt = parseFloat(oData.total_amount) || 0;
+                const status = oData.status || 'PENDING';
+                const statusLabel = oData.status_label || (status === 'APPROVED' ? 'Đã Duyệt - Chờ Xuất' : (status === 'DISPATCHED' ? 'Đã Xuất Kho' : (status === 'COMPLETED' ? 'Đã Hoàn Tất' : 'Mới Tạo')));
+                
+                let statusBadgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                if (status === 'APPROVED') statusBadgeClass = 'bg-blue-100 text-blue-800 border-blue-300';
+                else if (status === 'DISPATCHED' || status === 'COMPLETED') statusBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                else if (status === 'CANCELLED') statusBadgeClass = 'bg-red-100 text-red-800 border-red-300';
+
+                orderCardHtml = `
+                    <div class="my-1 w-full max-w-xs sm:max-w-sm rounded-2xl bg-white text-slate-800 border border-slate-200 shadow-md overflow-hidden text-left select-none">
+                        <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white px-3 py-2 sm:px-3.5 sm:py-2.5 flex items-center justify-between">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="w-6 h-6 rounded-lg bg-amber-500 flex items-center justify-center text-white text-xs shrink-0 shadow-2xs">
+                                    <i class="fas fa-file-invoice-dollar"></i>
+                                </div>
+                                <span class="font-black text-xs sm:text-sm tracking-wide text-amber-400 font-mono truncate">${oCode}</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black border uppercase tracking-wider shrink-0 ${statusBadgeClass}">
+                                ${statusLabel}
+                            </span>
+                        </div>
+                        <div class="p-2.5 sm:p-3 bg-white space-y-1">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="font-bold text-slate-800 text-xs sm:text-sm leading-snug line-clamp-1">${cName}</div>
+                                <div class="font-mono text-emerald-600 font-black text-xs sm:text-sm whitespace-nowrap shrink-0">${new Intl.NumberFormat('vi-VN').format(totalAmt)} đ</div>
+                            </div>
+                            <div class="flex items-center gap-2 text-[11px] text-slate-500">
+                                ${cPhone ? `<span><i class="fas fa-phone-alt text-slate-400 text-[10px] mr-1"></i>${cPhone}</span>` : ''}
+                                <span><i class="fas fa-clock text-slate-400 text-[10px] mr-1"></i>${timeStr}</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 border-t border-slate-100 p-1.5 sm:p-2 grid grid-cols-2 gap-1.5 text-xs">
+                            <button type="button" onclick="window.modWorkplace.viewPrintSlip(${oId}, 'QUOTATION')" class="px-2 py-1.5 rounded-xl bg-white hover:bg-amber-50 border border-slate-200 hover:border-amber-300 text-slate-700 hover:text-amber-800 font-bold text-[10px] sm:text-[11px] flex items-center justify-center gap-1 shadow-2xs transition active:scale-95 cursor-pointer">
+                                <i class="fas fa-file-invoice text-amber-500"></i> Phiếu Báo Giá
+                            </button>
+                            <button type="button" onclick="window.modWorkplace.viewPrintSlip(${oId}, 'DELIVERY_NOTE')" class="px-2 py-1.5 rounded-xl bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-800 font-bold text-[10px] sm:text-[11px] flex items-center justify-center gap-1 shadow-2xs transition active:scale-95 cursor-pointer">
+                                <i class="fas fa-truck-loading text-indigo-500"></i> Phiếu Xuất Kho
+                            </button>
+                            <button type="button" onclick="window.modWorkplace.viewPrintSlip(${oId}, 'SHIPPING_LABEL')" class="px-2 py-1.5 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-800 font-bold text-[10px] sm:text-[11px] flex items-center justify-center gap-1 shadow-2xs transition active:scale-95 cursor-pointer">
+                                <i class="fas fa-tag text-emerald-500"></i> Tem Thùng
+                            </button>
+                            <button type="button" onclick="window.modWorkplace.openOrderDetail('${oCode}')" class="px-2 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[10px] sm:text-[11px] flex items-center justify-center gap-1 shadow-2xs transition active:scale-95 cursor-pointer">
+                                <i class="fas fa-external-link-alt text-slate-500"></i> Chi Tiết
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (isPrintSlip) {
+                const sData = attachments.find(a => a && a.type === 'print_slip') || {};
+                const oId = sData.order_id || 0;
+                const oCode = sData.order_code || '';
+                const cName = sData.customer_name || 'Khách Hàng';
+                const slipType = sData.slip_type || 'QUOTATION';
+                const slipTitle = sData.slip_title || 'Phiếu In';
+                let iconClass = 'fa-file-invoice text-amber-500';
+                if (slipType === 'DELIVERY_NOTE') iconClass = 'fa-truck-loading text-indigo-500';
+                else if (slipType === 'SHIPPING_LABEL') iconClass = 'fa-tag text-emerald-500';
+
+                printSlipHtml = `
+                    <div class="my-1 w-full max-w-xs sm:max-w-sm rounded-2xl bg-white text-slate-800 border border-slate-200 shadow-md overflow-hidden text-left select-none">
+                        <div class="p-3 bg-white flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-lg shrink-0">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-wider">${slipTitle}</div>
+                                <div class="font-black text-xs sm:text-sm text-slate-800 font-mono truncate">${oCode}</div>
+                                <div class="text-[11px] text-slate-600 truncate">${cName}</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 border-t border-slate-100 p-2">
+                            <button type="button" onclick="window.modWorkplace.viewPrintSlip(${oId}, '${slipType}')" class="w-full py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer">
+                                <i class="fas fa-print text-amber-400"></i> Xem & In Phiếu Ngay
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
             if (isMe) {
                 // Tin nhắn của CHÍNH MÌNH (Bên Phải)
                 if (msg.is_recalled) {
@@ -1327,21 +1577,23 @@ window.modWorkplace = {
                 } else {
                     html += `
                         <div id="wp-msg-${msg.id}" class="flex flex-col items-end group relative">
-                            <div class="flex items-end gap-1.5 max-w-[88%] sm:max-w-[75%] relative">
+                            <div class="flex items-end gap-1.5 max-w-[92%] sm:max-w-[75%] relative">
                                 <!-- Thanh tác vụ hover Desktop (Ẩn hoàn toàn trên di động) -->
                                 <div class="hidden md:flex opacity-0 group-hover:opacity-100 items-center gap-0.5 bg-white/95 border border-slate-200/90 shadow-sm rounded-full px-1.5 py-0.5 transition-all duration-150 text-slate-500 mb-1 backdrop-blur-xs">
                                     <button type="button" onclick="window.modWorkplace.setReplyTarget(${msg.id})" class="hover:text-amber-600 p-1 transition cursor-pointer text-xs" title="Trả lời tin nhắn"><i class="fas fa-reply"></i></button>
                                     <button type="button" onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1 transition cursor-pointer text-xs" title="Thích">👍</button>
                                     <button type="button" onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1 transition cursor-pointer text-xs" title="Thả tim">❤️</button>
+                                    <button type="button" onclick="window.modWorkplace.openEmojiPickerForReaction(${msg.id}, event)" class="hover:text-amber-500 p-1 transition cursor-pointer text-xs" title="Thêm biểu cảm khác">➕</button>
                                     <button type="button" onclick="window.modWorkplace.openMessageActions(${msg.id}, this)" class="hover:text-amber-600 p-1 transition cursor-pointer text-xs font-black" title="Xem thêm tác vụ"><i class="fas fa-ellipsis-h"></i></button>
                                 </div>
                                 
                                 <!-- Bong bóng tin nhắn (Hỗ trợ dí cảm ứng trên di động & double click copy) -->
-                                <div data-wp-msg-bubble="${msg.id}" ondblclick="window.modWorkplace.copyMessage(${msg.id})" class="wp-msg-bubble select-none bg-amber-500 text-white rounded-2xl rounded-tr-xs p-2.5 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words cursor-pointer active:brightness-95 transition">
-                                    ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-200 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Đã Ghim</div>` : ''}
+                                <div data-wp-msg-bubble="${msg.id}" ondblclick="window.modWorkplace.copyMessage(${msg.id})" class="wp-msg-bubble select-none ${isOrderCard || isPrintSlip ? 'bg-amber-50/70 border border-amber-300 text-slate-800 rounded-2xl rounded-tr-xs p-1 sm:p-1.5 shadow-xs' : 'bg-amber-500 text-white rounded-2xl rounded-tr-xs p-2.5 sm:p-3.5 shadow-xs'} text-xs sm:text-sm leading-relaxed break-words cursor-pointer active:brightness-95 transition">
+                                    ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase ${isOrderCard || isPrintSlip ? 'text-amber-700' : 'text-amber-200'} mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Đã Ghim</div>` : ''}
                                     ${replyQuoteHtml}
                                     ${voicePlayerHtml}
-                                    ${!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại')) ? `<div class="select-text cursor-text">${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-amber-200 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
+                                    ${orderCardHtml || printSlipHtml}
+                                    ${!orderCardHtml && !printSlipHtml && (!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại'))) ? `<div class="select-text cursor-text">${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-amber-200 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
                                     ${attachmentHtml}
                                 </div>
                             </div>
@@ -1380,7 +1632,7 @@ window.modWorkplace = {
                 } else {
                     html += `
                         <div id="wp-msg-${msg.id}" class="flex flex-col items-start group relative">
-                            <div class="flex items-start gap-2 max-w-[88%] sm:max-w-[75%] relative">
+                            <div class="flex items-start gap-2 max-w-[92%] sm:max-w-[75%] relative">
                                 <!-- Avatar -->
                                 <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 shadow-2xs mt-0.5 select-none">
                                     ${initials}
@@ -1396,11 +1648,12 @@ window.modWorkplace = {
 
                                     <div class="flex items-end gap-1.5">
                                         <!-- Bong bóng tin nhắn (Hỗ trợ dí cảm ứng trên di động) -->
-                                        <div data-wp-msg-bubble="${msg.id}" ondblclick="window.modWorkplace.copyMessage(${msg.id})" class="wp-msg-bubble select-none bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-2.5 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words cursor-pointer active:brightness-95 transition">
+                                        <div data-wp-msg-bubble="${msg.id}" ondblclick="window.modWorkplace.copyMessage(${msg.id})" class="wp-msg-bubble select-none ${isOrderCard || isPrintSlip ? 'bg-slate-100 border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-1 sm:p-1.5 shadow-2xs' : 'bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-2.5 sm:p-3.5 shadow-2xs'} text-xs sm:text-sm leading-relaxed break-words cursor-pointer active:brightness-95 transition">
                                             ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-600 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Thông Báo Ghim</div>` : ''}
                                             ${replyQuoteHtml}
                                             ${voicePlayerHtml}
-                                            ${!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại')) ? `<div class="select-text cursor-text">${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-slate-400 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
+                                            ${orderCardHtml || printSlipHtml}
+                                            ${!orderCardHtml && !printSlipHtml && (!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại'))) ? `<div class="select-text cursor-text">${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-slate-400 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
                                             ${attachmentHtml}
                                         </div>
 
@@ -1409,6 +1662,7 @@ window.modWorkplace = {
                                             <button type="button" onclick="window.modWorkplace.setReplyTarget(${msg.id})" class="hover:text-amber-600 p-1 transition cursor-pointer text-xs" title="Trả lời tin nhắn"><i class="fas fa-reply"></i></button>
                                             <button type="button" onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1 transition cursor-pointer text-xs" title="Thích">👍</button>
                                             <button type="button" onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1 transition cursor-pointer text-xs" title="Thả tim">❤️</button>
+                                            <button type="button" onclick="window.modWorkplace.openEmojiPickerForReaction(${msg.id}, event)" class="hover:text-amber-500 p-1 transition cursor-pointer text-xs" title="Thêm biểu cảm khác">➕</button>
                                             <button type="button" onclick="window.modWorkplace.openMessageActions(${msg.id}, this)" class="hover:text-amber-600 p-1 transition cursor-pointer text-xs font-black" title="Xem thêm tác vụ"><i class="fas fa-ellipsis-h"></i></button>
                                         </div>
                                     </div>
@@ -3073,6 +3327,650 @@ window.modWorkplace = {
             clearInterval(this.pollingTimer);
             this.pollingTimer = null;
         }
+    },
+
+    // ========================================================
+    // BỘ SƯU TẬP BIỂU CẢM EMOJI TOÀN DIỆN (FULL EMOJI PICKER)
+    // ========================================================
+    currentEmojiTab: 'smileys',
+    targetReactionMsgId: null,
+    emojiData: {
+        smileys: [
+            '😀','😃','😄','😁','😆','🥹','😅','😂','🤣','🥲',
+            '☺️','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘',
+            '😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐',
+            '🤓','😎','🥸','🤩','🥳','😏','😒','😞','😔','😟',
+            '😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭',
+            '😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨',
+            '😰','😥','😓','🤗','🤔','🫡','🤭','🤫','🤥','😶',
+            '😶‍🌫️','😐','😑','😬','🙄','😯','😦','😧','🥱','😴',
+            '🤤','😷','🤒','🤕','🤢','🤮','🤧','🥴','😵','😵‍💫'
+        ],
+        gestures: [
+            '👍','👎','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘',
+            '🤙','👈','👉','👆','🖕','👇','☝️','🫵','👋','🤚',
+            '🖐️','✋','🖖','👏','🤝','🙌','🫶','👐','🤲','🙏',
+            '✍️','🤳','💪','🦾','🧑‍💻','👨‍💼','👩‍💼','👷','🧑‍🔧','🕵️',
+            '🧑‍🤝‍🧑','🙋','🙆','🙅'
+        ],
+        hearts: [
+            '❤️','🧡','💛','💚','💙','💜','🤎','🖤','🤍','💔',
+            '❤️‍🔥','❤️‍🩹','💖','💗','💓','💞','💕','💘','💌','💯',
+            '💢','💥','💫','💦','💨','💬','💭','🗯️','💤','✨',
+            '🌟','⭐','⚡','🔔','🔕','📢','📣','🎯','🚀'
+        ],
+        work: [
+            '📦','🚚','🚛','🛒','💰','💵','🏷️','📋','📊','📈',
+            '📉','📝','💼','⚙️','☀️','🔌','🔋','🔧','🛠️','🏭',
+            '🏢','📞','📱','✉️','🚨','✅','❌','⚠️','🔍','📌',
+            '💡','📅','⏰','🔒','🔑','🧾','💳','🏗️'
+        ],
+        life: [
+            '🌸','🌺','🌻','🌹','🍀','☕','🍵','🍻','🥂','🍾',
+            '🍱','🍰','🎉','🎊','🎈','🏆','🥇','🥈','🥉','🎁',
+            '🎂','🏖️','🚗','✈️'
+        ]
+    },
+
+    toggleEmojiPicker: function(e) {
+        if (e) e.stopPropagation();
+        const modal = document.getElementById('wp-modal-emoji-picker');
+        if (!modal) return;
+        if (!modal.classList.contains('hidden')) {
+            this.closeEmojiPicker();
+        } else {
+            this.targetReactionMsgId = null;
+            document.getElementById('wp-emoji-picker-title').innerText = 'Biểu Tượng Cảm Xúc';
+            document.getElementById('wp-emoji-hint').innerText = '💡 Bấm vào icon để chèn vào nội dung tin nhắn';
+            modal.classList.remove('hidden');
+            this.switchEmojiTab(this.currentEmojiTab || 'smileys');
+        }
+    },
+
+    openEmojiPickerForReaction: function(msgId, e) {
+        if (e) e.stopPropagation();
+        this.closeMessageActions();
+        this.targetReactionMsgId = msgId;
+        const modal = document.getElementById('wp-modal-emoji-picker');
+        if (!modal) return;
+        document.getElementById('wp-emoji-picker-title').innerText = 'Thả Cảm Xúc Vào Tin Nhắn';
+        document.getElementById('wp-emoji-hint').innerText = '💡 Bấm vào icon để thả biểu cảm vào tin nhắn này';
+        modal.classList.remove('hidden');
+        this.switchEmojiTab(this.currentEmojiTab || 'smileys');
+    },
+
+    openEmojiPickerForReactionFromSheet: function() {
+        if (this.selectedActionMsgId) {
+            this.openEmojiPickerForReaction(this.selectedActionMsgId);
+        }
+    },
+
+    closeEmojiPicker: function() {
+        const modal = document.getElementById('wp-modal-emoji-picker');
+        if (modal) modal.classList.add('hidden');
+        this.targetReactionMsgId = null;
+        const searchInput = document.getElementById('wp-emoji-search');
+        if (searchInput) searchInput.value = '';
+    },
+
+    switchEmojiTab: function(tabKey) {
+        this.currentEmojiTab = tabKey;
+        document.querySelectorAll('.wp-emoji-tab').forEach(btn => {
+            btn.classList.remove('bg-white', 'text-slate-700', 'shadow-2xs');
+            btn.classList.add('text-slate-500');
+        });
+        const activeBtn = document.getElementById(`wp-tab-${tabKey}`);
+        if (activeBtn) {
+            activeBtn.classList.remove('text-slate-500');
+            activeBtn.classList.add('bg-white', 'text-slate-700', 'shadow-2xs');
+        }
+        const searchInput = document.getElementById('wp-emoji-search');
+        if (searchInput) searchInput.value = '';
+        this.renderEmojiGrid();
+    },
+
+    renderEmojiGrid: function(customEmojis = null) {
+        const grid = document.getElementById('wp-emoji-grid');
+        if (!grid) return;
+        const emojis = customEmojis || (this.emojiData[this.currentEmojiTab] || []);
+        grid.innerHTML = emojis.map(em => `
+            <button type="button" onclick="window.modWorkplace.selectEmoji('${em}')" class="p-2 hover:scale-125 active:scale-95 transform transition rounded-xl hover:bg-slate-100 flex items-center justify-center cursor-pointer select-none">
+                ${em}
+            </button>
+        `).join('');
+    },
+
+    filterEmojis: function(query) {
+        const q = (query || '').trim().toLowerCase();
+        if (!q) {
+            this.renderEmojiGrid();
+            return;
+        }
+        const all = Object.values(this.emojiData).flat();
+        const matches = all.filter(em => em.includes(q));
+        this.renderEmojiGrid(matches.length > 0 ? matches : all);
+    },
+
+    selectEmoji: function(emoji) {
+        if (this.targetReactionMsgId) {
+            const msgId = this.targetReactionMsgId;
+            this.closeEmojiPicker();
+            this.toggleReaction(msgId, emoji);
+        } else {
+            const input = document.getElementById('wp-message-input');
+            if (input) {
+                const start = input.selectionStart || input.value.length;
+                const end = input.selectionEnd || input.value.length;
+                input.value = input.value.substring(0, start) + emoji + input.value.substring(end);
+                input.selectionStart = input.selectionEnd = start + emoji.length;
+                input.focus();
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+    },
+
+    // ========================================================
+    // CHỌN ĐƠN HÀNG & GỬI PHIẾU IN VÀO WORKPLACE CHAT
+    // ========================================================
+    pickerOrders: [],
+    pickerStatusFilter: 'ALL',
+    pickerSearchDebounceTimer: null,
+    currentPrintDocHTML: '',
+    currentPrintDocTitle: '',
+
+    openPickOrderModal: function() {
+        const modal = document.getElementById('wp-modal-pick-order');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        const searchInput = document.getElementById('wp-pick-order-search');
+        if (searchInput) {
+            searchInput.value = '';
+            setTimeout(() => searchInput.focus(), 150);
+        }
+        this.pickerStatusFilter = 'ALL';
+        this.updatePickerFilterChips();
+        this.loadOrdersForPicker();
+    },
+
+    closePickOrderModal: function() {
+        const modal = document.getElementById('wp-modal-pick-order');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    filterPickerStatus: function(status) {
+        this.pickerStatusFilter = status;
+        this.updatePickerFilterChips();
+        const searchVal = document.getElementById('wp-pick-order-search')?.value || '';
+        this.loadOrdersForPicker(searchVal, status);
+    },
+
+    updatePickerFilterChips: function() {
+        document.querySelectorAll('.wp-order-filter-chip').forEach(btn => {
+            const s = btn.getAttribute('data-status');
+            if (s === this.pickerStatusFilter) {
+                btn.classList.add('bg-amber-100', 'text-amber-800', 'border-amber-300');
+                btn.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
+            } else {
+                btn.classList.remove('bg-amber-100', 'text-amber-800', 'border-amber-300');
+                btn.classList.add('bg-white', 'text-slate-600', 'border-slate-200');
+            }
+        });
+    },
+
+    searchOrdersDebounced: function(val) {
+        clearTimeout(this.pickerSearchDebounceTimer);
+        this.pickerSearchDebounceTimer = setTimeout(() => {
+            this.loadOrdersForPicker(val, this.pickerStatusFilter);
+        }, 300);
+    },
+
+    loadOrdersForPicker: async function(search = '', status = 'ALL') {
+        const listEl = document.getElementById('wp-picker-order-list');
+        if (!listEl) return;
+        listEl.innerHTML = `
+            <div class="py-12 text-center text-slate-400">
+                <i class="fas fa-circle-notch fa-spin text-2xl text-amber-500 mb-2"></i>
+                <p class="text-xs">Đang nạp danh sách đơn hàng...</p>
+            </div>
+        `;
+
+        try {
+            let url = `/api/orders?limit=25&t=${Date.now()}`;
+            if (search && search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
+            if (status && status !== 'ALL') url += `&status=${encodeURIComponent(status)}`;
+
+            const res = await fetch(url);
+            const json = await res.json();
+            const orders = Array.isArray(json) ? json : (json.data || json.orders || []);
+            this.pickerOrders = orders;
+            this.renderOrderPickerList(orders);
+        } catch(e) {
+            console.error('Lỗi nạp đơn hàng:', e);
+            listEl.innerHTML = `
+                <div class="py-8 text-center text-red-500 text-xs font-bold">
+                    <i class="fas fa-exclamation-triangle mr-1"></i> Không thể nạp danh sách đơn hàng. Vui lòng thử lại.
+                </div>
+            `;
+        }
+    },
+
+    renderOrderPickerList: function(orders) {
+        const listEl = document.getElementById('wp-picker-order-list');
+        if (!listEl) return;
+
+        if (!orders || orders.length === 0) {
+            listEl.innerHTML = `
+                <div class="py-12 text-center text-slate-400">
+                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-2 text-xl">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600">Không tìm thấy đơn hàng nào</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Thử tìm kiếm với từ khóa khác hoặc chọn trạng thái Tất cả</p>
+                </div>
+            `;
+            return;
+        }
+
+        listEl.innerHTML = orders.map(o => {
+            const oCode = o.order_code || `DH-${o.id}`;
+            const cName = o.customer_name || 'Khách Lẻ';
+            const cPhone = o.customer_phone || o.phone || '';
+            const totalAmt = parseFloat(o.total_amount) || 0;
+            const status = o.status || 'PENDING';
+            const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : '';
+            const saleName = o.salesperson_name || '';
+
+            let statusLabel = 'Chờ duyệt';
+            let statusBadgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+            if (status === 'APPROVED') {
+                statusLabel = 'Chờ xuất kho';
+                statusBadgeClass = 'bg-blue-100 text-blue-800 border-blue-300';
+            } else if (status === 'DISPATCHED' || status === 'COMPLETED') {
+                statusLabel = 'Đã xuất kho';
+                statusBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+            } else if (status === 'CANCELLED') {
+                statusLabel = 'Đã hủy';
+                statusBadgeClass = 'bg-red-100 text-red-800 border-red-300';
+            }
+
+            const safeCode = (oCode || '').replace(/'/g, "\\'");
+            const safeName = (cName || '').replace(/'/g, "\\'");
+            const safePhone = (cPhone || '').replace(/'/g, "\\'");
+            const safeSale = (saleName || '').replace(/'/g, "\\'");
+
+            return `
+                <div class="p-3 bg-white border border-slate-200 hover:border-amber-400 rounded-2xl shadow-xs transition hover:shadow-md">
+                    <div class="flex items-start justify-between gap-2 mb-1.5">
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-black text-xs sm:text-sm text-slate-900 font-mono tracking-wide">${oCode}</span>
+                                <span class="px-2 py-0.2 rounded-full text-[10px] font-black border uppercase tracking-wider ${statusBadgeClass}">${statusLabel}</span>
+                            </div>
+                            <div class="font-bold text-xs sm:text-sm text-slate-800 mt-0.5">${cName}</div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="font-mono text-emerald-600 font-black text-xs sm:text-sm">${new Intl.NumberFormat('vi-VN').format(totalAmt)} đ</div>
+                            <div class="text-[10px] text-slate-400">${dateStr}</div>
+                        </div>
+                    </div>
+
+                    <div class="text-[11px] text-slate-500 mb-2.5 flex items-center gap-3">
+                        ${cPhone ? `<span><i class="fas fa-phone-alt text-slate-400 mr-1"></i>${cPhone}</span>` : ''}
+                        ${saleName ? `<span><i class="fas fa-user-tie text-slate-400 mr-1"></i>Sale: ${saleName}</span>` : ''}
+                    </div>
+
+                    <!-- Hàng tác vụ gửi nhanh -->
+                    <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
+                        <button type="button" onclick="window.modWorkplace.sendOrderCard(${o.id}, '${safeCode}', '${safeName}', '${safePhone}', ${totalAmt}, '${status}', '${statusLabel}', '${safeSale}')" class="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer">
+                            <i class="fas fa-boxes-packing"></i> Gửi Thẻ Đơn Hàng
+                        </button>
+                        <button type="button" onclick="window.modWorkplace.sendSpecificSlip(${o.id}, '${safeCode}', '${safeName}', '${safePhone}', ${totalAmt}, 'QUOTATION', 'Phiếu Báo Giá')" class="px-2 py-1.5 rounded-xl bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 font-bold text-[11px] border border-slate-200 transition active:scale-95 cursor-pointer">
+                            <i class="fas fa-file-invoice text-amber-500"></i> Báo Giá
+                        </button>
+                        <button type="button" onclick="window.modWorkplace.sendSpecificSlip(${o.id}, '${safeCode}', '${safeName}', '${safePhone}', ${totalAmt}, 'DELIVERY_NOTE', 'Phiếu Xuất Kho')" class="px-2 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-800 text-slate-700 font-bold text-[11px] border border-slate-200 transition active:scale-95 cursor-pointer">
+                            <i class="fas fa-truck-loading text-indigo-500"></i> Xuất Kho
+                        </button>
+                        <button type="button" onclick="window.modWorkplace.sendSpecificSlip(${o.id}, '${safeCode}', '${safeName}', '${safePhone}', ${totalAmt}, 'SHIPPING_LABEL', 'Tem Dán Thùng')" class="px-2 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 font-bold text-[11px] border border-slate-200 transition active:scale-95 cursor-pointer">
+                            <i class="fas fa-tag text-emerald-500"></i> Tem Thùng
+                        </button>
+                        <button type="button" onclick="window.modWorkplace.viewPrintSlip(${o.id}, 'QUOTATION')" class="px-2 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 font-bold text-[11px] border border-slate-200 ml-auto transition cursor-pointer" title="Xem trước phiếu">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    sendOrderCard: async function(orderId, orderCode, customerName, customerPhone, totalAmount, status, statusLabel, salespersonName) {
+        this.closePickOrderModal();
+        const payload = {
+            channel_id: this.activeType === 'CHANNEL' ? this.activeId : null,
+            direct_user_id: this.activeType === 'DIRECT' ? this.activeId : null,
+            content: `📦 Đã gửi thông tin đơn hàng ${orderCode} - ${customerName}`,
+            message_type: 'ORDER_CARD',
+            attachments: [{
+                type: 'order_card',
+                order_id: orderId,
+                order_code: orderCode,
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                total_amount: totalAmount,
+                status: status,
+                status_label: statusLabel,
+                salesperson_name: salespersonName
+            }]
+        };
+
+        try {
+            const res = await fetch('/api/workplace/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.showToast) window.showToast(`Đã chia sẻ đơn hàng ${orderCode}`, 'success');
+                this.playSendSound();
+                await this.loadMessages(true);
+            } else {
+                alert('❌ ' + (data.error || 'Không thể gửi đơn hàng'));
+            }
+        } catch(e) {
+            console.error('Lỗi gửi thẻ đơn hàng:', e);
+            alert('❌ Lỗi kết nối máy chủ!');
+        }
+    },
+
+    sendSpecificSlip: async function(orderId, orderCode, customerName, customerPhone, totalAmount, slipType, slipTitle) {
+        this.closePickOrderModal();
+        const payload = {
+            channel_id: this.activeType === 'CHANNEL' ? this.activeId : null,
+            direct_user_id: this.activeType === 'DIRECT' ? this.activeId : null,
+            content: `📄 Đã gửi ${slipTitle} cho đơn hàng ${orderCode} - ${customerName}`,
+            message_type: 'PRINT_SLIP',
+            attachments: [{
+                type: 'print_slip',
+                slip_type: slipType,
+                slip_title: slipTitle,
+                order_id: orderId,
+                order_code: orderCode,
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                total_amount: totalAmount
+            }]
+        };
+
+        try {
+            const res = await fetch('/api/workplace/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.showToast) window.showToast(`Đã gửi ${slipTitle} (${orderCode})`, 'success');
+                this.playSendSound();
+                await this.loadMessages(true);
+            } else {
+                alert('❌ ' + (data.error || 'Không thể gửi phiếu in'));
+            }
+        } catch(e) {
+            console.error('Lỗi gửi phiếu in:', e);
+            alert('❌ Lỗi kết nối máy chủ!');
+        }
+    },
+
+    openOrderDetail: function(orderCode) {
+        window.location.hash = 'order-history?search=' + encodeURIComponent(orderCode);
+    },
+
+    // ========================================================
+    // XEM TRƯỚC VÀ IN PHIẾU ĐƠN HÀNG TRỰC TIẾP TỪ WORKPLACE
+    // ========================================================
+    viewPrintSlip: async function(orderId, slipType) {
+        const modal = document.getElementById('wp-modal-order-print');
+        const iframe = document.getElementById('wp-order-print-iframe');
+        const titleEl = document.getElementById('wp-print-modal-title');
+        const subTitleEl = document.getElementById('wp-print-modal-subtitle');
+        if (!modal || !iframe) return;
+
+        modal.classList.remove('hidden');
+        if (titleEl) titleEl.innerText = 'Đang tạo bản in tài liệu...';
+        if (subTitleEl) subTitleEl.innerText = 'Vui lòng chờ trong giây lát...';
+
+        try {
+            // Lấy thông tin chi tiết đơn hàng & cài đặt công ty song song
+            const [orderRes, setRes] = await Promise.all([
+                fetch(`/api/orders/${orderId}`).then(r => r.json()),
+                fetch(`/api/settings?t=${Date.now()}`).then(r => r.json()).catch(() => ({ data: {} }))
+            ]);
+
+            if (!orderRes.success || !orderRes.data) {
+                alert('❌ Không tìm thấy thông tin đơn hàng này!');
+                this.closeOrderPrintModal();
+                return;
+            }
+
+            const order = orderRes.data;
+            const items = order.items || [];
+            const settings = setRes.data || {};
+
+            let printHTML = '';
+            let slipName = 'Phiếu Báo Giá';
+
+            if (slipType === 'DELIVERY_NOTE') {
+                slipName = 'Phiếu Xuất Kho & Biên Bản Bàn Giao';
+                printHTML = this.generateDeliveryNoteHTML(order, items, settings);
+            } else if (slipType === 'SHIPPING_LABEL') {
+                slipName = 'Tem Dán Thùng Hàng Chành Xe';
+                printHTML = this.generateShippingLabelHTML(order, settings);
+            } else {
+                slipName = 'Phiếu Báo Giá & Đơn Hàng';
+                printHTML = this.generateQuotationHTML(order, items, settings);
+            }
+
+            const docTitle = `${order.order_code} - ${order.customer_name || 'Khách Hàng'}`;
+            this.currentPrintDocHTML = printHTML;
+            this.currentPrintDocTitle = `${slipName}: ${docTitle}`;
+
+            if (titleEl) titleEl.innerText = `${slipName} • ${order.order_code}`;
+            if (subTitleEl) subTitleEl.innerText = `Khách hàng: ${order.customer_name || 'Khách Lẻ'} - ${new Intl.NumberFormat('vi-VN').format(order.total_amount || 0)} đ`;
+
+            const pDoc = iframe.contentWindow.document;
+            pDoc.open();
+            pDoc.write(printHTML);
+            pDoc.close();
+            pDoc.title = docTitle;
+        } catch(e) {
+            console.error('Lỗi tạo phiếu in:', e);
+            alert('❌ Lỗi nạp phiếu in: ' + e.message);
+            this.closeOrderPrintModal();
+        }
+    },
+
+    closeOrderPrintModal: function() {
+        const modal = document.getElementById('wp-modal-order-print');
+        if (modal) modal.classList.add('hidden');
+        const iframe = document.getElementById('wp-order-print-iframe');
+        if (iframe) iframe.src = 'about:blank';
+    },
+
+    executeOrderPrint: function() {
+        const iframe = document.getElementById('wp-order-print-iframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    },
+
+    generateQuotationHTML: function(o, items, sys) {
+        const fmt = num => new Intl.NumberFormat('vi-VN').format(num || 0);
+        const storeName = sys.quote_store_name || sys.store_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+        const storeTax = sys.quote_store_tax || sys.store_tax || '0315614349';
+        const storePhone = sys.quote_store_phone || sys.store_phone || '0937.039.889';
+        const storeAddress = sys.quote_store_address || sys.store_address || 'TP. Hồ Chí Minh';
+        const storeBank = sys.quote_store_bank || sys.store_bank_account || 'ACB - 123456789 (SUNGO)';
+        const quoteTitle = sys.quote_title || 'BÁO GIÁ & ĐƠN ĐẶT HÀNG';
+        const d = new Date(o.created_at || Date.now());
+        const dateStr = `Ngày ${d.getDate().toString().padStart(2,'0')} tháng ${(d.getMonth()+1).toString().padStart(2,'0')} năm ${d.getFullYear()}`;
+
+        let itemsHtml = items.map((i, idx) => `
+            <tr>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:center;">${idx + 1}</td>
+                <td style="padding:7px; border:1px solid #cbd5e1;"><strong>${i.product_name}</strong><br><small style="color:#64748b;">SKU: ${i.sku || 'N/A'}</small></td>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:center;">${i.unit || 'Bộ'}</td>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:center; font-weight:bold;">${i.quantity}</td>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:right;">${fmt(i.price)} đ</td>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:right; font-weight:bold;">${fmt(i.total || (i.quantity * i.price))} đ</td>
+            </tr>
+        `).join('');
+
+        return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${o.order_code} - ${o.customer_name}</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 24px; color: #0f172a; max-width: 800px; margin: 0 auto; line-height: 1.4; }
+            table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+            th { background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 800; font-size: 12px; }
+            h1 { font-size: 20px; font-weight: 900; margin: 0 0 4px 0; color: #1e293b; text-transform: uppercase; text-align: center; }
+            .header-box { border-bottom: 2px solid #f59e0b; padding-bottom: 12px; margin-bottom: 16px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+            .total-box { margin-top: 12px; float: right; width: 300px; font-size: 13px; }
+            .sign-grid { clear: both; display: grid; grid-template-columns: 1fr 1fr; text-align: center; margin-top: 40px; font-size: 12px; }
+            @media print { body { padding: 0; } }
+        </style>
+        </head><body>
+            <div class="header-box">
+                <div style="font-size:16px; font-weight:900; color:#d97706;">${storeName}</div>
+                <div style="font-size:11px; color:#64748b;">MST: ${storeTax} • Hotline: ${storePhone} • Đ/C: ${storeAddress}</div>
+            </div>
+            <h1>${quoteTitle}</h1>
+            <div style="text-align:center; font-size:12px; color:#64748b; margin-bottom:12px;">Mã đơn: <strong style="color:#0f172a; font-family:monospace;">${o.order_code}</strong> • ${dateStr}</div>
+            <div class="info-grid">
+                <div>
+                    <div><strong>Khách hàng:</strong> ${o.customer_name || 'Khách Lẻ'}</div>
+                    <div><strong>Điện thoại:</strong> ${o.customer_phone || o.phone || '---'}</div>
+                    <div><strong>Địa chỉ:</strong> ${o.customer_address || o.address || '---'}</div>
+                </div>
+                <div>
+                    <div><strong>Nhân viên phụ trách:</strong> ${o.salesperson_name || 'Bộ phận Bán Hàng'}</div>
+                    <div><strong>Tài khoản thanh toán:</strong> ${storeBank}</div>
+                    <div><strong>Ghi chú đơn:</strong> ${o.notes || '---'}</div>
+                </div>
+            </div>
+            <table>
+                <thead><tr><th width="6%">STT</th><th width="44%" style="text-align:left;">Sản Phẩm / Thiết Bị</th><th width="10%">ĐVT</th><th width="10%">SL</th><th width="15%">Đơn Giá</th><th width="15%">Thành Tiền</th></tr></thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            <div class="total-box">
+                <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Tổng tiền hàng:</span><strong>${fmt(o.total_amount)} đ</strong></div>
+                ${o.shipping_fee > 0 ? `<div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Phí vận chuyển:</span><span>+${fmt(o.shipping_fee)} đ</span></div>` : ''}
+                <div style="display:flex; justify-content:space-between; padding:6px 0; border-top:2px solid #0f172a; font-size:14px; font-weight:900; color:#059669;"><span>TỔNG THANH TOÁN:</span><span>${fmt(o.total_amount)} đ</span></div>
+            </div>
+            <div class="sign-grid">
+                <div><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br><small style="color:#64748b;">(Ký và ghi rõ họ tên)</small><br><br><br><br></div>
+                <div><strong>ĐẠI DIỆN CÔNG TY SUNGO</strong><br><small style="color:#64748b;">(Ký và ghi rõ họ tên)</small><br><br><br><br><strong>${o.salesperson_name || 'Đại diện bán hàng'}</strong></div>
+            </div>
+        </body></html>`;
+    },
+
+    generateDeliveryNoteHTML: function(o, items, sys) {
+        const fmt = num => new Intl.NumberFormat('vi-VN').format(num || 0);
+        const storeName = sys.delivery_store_name || sys.store_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+        const storePhone = sys.delivery_store_phone || sys.store_phone || '0937.039.889';
+        const storeAddress = sys.delivery_store_address || sys.store_address || '';
+        const title = sys.delivery_title || 'PHIẾU XUẤT KHO KIÊM BIÊN BẢN GIAO HÀNG';
+        const d = new Date(o.created_at || Date.now());
+        const dateStr = `Ngày ${d.getDate().toString().padStart(2,'0')} tháng ${(d.getMonth()+1).toString().padStart(2,'0')} năm ${d.getFullYear()}`;
+
+        let itemsHtml = items.map((i, idx) => `
+            <tr>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:center;">${idx + 1}</td>
+                <td style="padding:7px; border:1px solid #cbd5e1;"><strong>${i.product_name}</strong><br><small style="color:#64748b;">SKU: ${i.sku || 'N/A'}</small></td>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:center; font-family:monospace; font-size:11px;">${i.serial_number || '---'}</td>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:center; font-weight:bold; font-size:14px;">${i.quantity}</td>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:center;">${i.unit || 'Bộ'}</td>
+                <td style="padding:7px; border:1px solid #cbd5e1; text-align:center; font-size:11px; color:#64748b;">Mới 100%</td>
+            </tr>
+        `).join('');
+
+        return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${o.order_code} - ${o.customer_name}</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 24px; color: #0f172a; max-width: 800px; margin: 0 auto; }
+            table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+            th { background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 800; font-size: 12px; }
+            h1 { font-size: 20px; font-weight: 900; margin: 0 0 4px 0; color: #1e293b; text-transform: uppercase; text-align: center; }
+            .info-box { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; line-height: 1.6; margin-bottom: 12px; }
+            .sign-grid { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; margin-top: 30px; font-size: 11px; gap: 8px; }
+            @media print { body { padding: 0; } }
+        </style>
+        </head><body>
+            <div style="font-size:15px; font-weight:900; color:#4338ca;">${storeName}</div>
+            <div style="font-size:11px; color:#64748b; margin-bottom:12px;">Hotline: ${storePhone} • Đ/C: ${storeAddress}</div>
+            <h1>${title}</h1>
+            <div style="text-align:center; font-size:12px; color:#64748b; margin-bottom:14px;">Mã Đơn: <strong style="color:#0f172a; font-family:monospace;">${o.order_code}</strong> • ${dateStr}</div>
+            <div class="info-box">
+                <div><strong>Người nhận:</strong> ${o.customer_name || 'Khách Lẻ'} • <strong>SĐT:</strong> ${o.customer_phone || o.phone || '---'}</div>
+                <div><strong>Địa chỉ giao:</strong> ${o.customer_address || o.address || '---'}</div>
+                <div><strong>Đơn vị vận chuyển:</strong> ${o.delivery_company || 'Chành xe / Tự vận chuyển'} • <strong>Tài xế:</strong> ${o.driver_name || '---'}</div>
+                <div><strong>Ghi chú:</strong> ${o.notes || 'Giao đủ hàng và chứng từ bàn giao'}</div>
+            </div>
+            <table>
+                <thead><tr><th width="6%">STT</th><th width="42%" style="text-align:left;">Tên Thiết Bị / Hàng Hóa</th><th width="22%">Mã Serial / IMEI</th><th width="10%">Số Lượng</th><th width="10%">ĐVT</th><th width="10%">Tình Trạng</th></tr></thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            <div class="sign-grid">
+                <div><strong>NGƯỜI LẬP PHIẾU</strong><br><small>(Ký, họ tên)</small><br><br><br><br></div>
+                <div><strong>THỦ KHO XUẤT</strong><br><small>(Ký, họ tên)</small><br><br><br><br></div>
+                <div><strong>NGƯỜI GIAO HÀNG</strong><br><small>(Ký, họ tên)</small><br><br><br><br></div>
+                <div><strong>NGƯỜI NHẬN HÀNG</strong><br><small>(Ký, họ tên)</small><br><br><br><br></div>
+            </div>
+        </body></html>`;
+    },
+
+    generateShippingLabelHTML: function(o, sys) {
+        const storeName = sys.shipping_sender_name || sys.store_name || 'CÔNG TY ĐIỆN MẶT TRỜI SUNGO';
+        const storePhone = sys.shipping_sender_phone || sys.store_phone || '0937.039.889';
+        const storeAddress = sys.shipping_sender_address || sys.store_address || '';
+        const title = sys.shipping_title || 'PHIẾU GỬI HÀNG CHÀNH XE';
+        const warning = sys.shipping_warning_text || '⚠️ HÀNG ĐIỆN TỬ - DỄ VỠ XIN NHẸ TAY • KHÔNG ĐÈ NẶNG';
+        const deliveryName = o.delivery_company || 'CHÀNH XE VẬN CHUYỂN';
+        const carrierAddress = o.carrier_address || '';
+        const recipientName = o.recipient_name || o.customer_name || 'Khách Hàng';
+        const recipientPhone = o.recipient_phone || o.customer_phone || o.phone || '';
+        const recipientAddress = o.customer_address || o.address || '';
+
+        return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${o.order_code} - ${recipientName}</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 16px; color: #000; max-width: 480px; margin: 0 auto; border: 2px dashed #000; border-radius: 8px; }
+            h1 { text-align: center; font-size: 22px; margin: 4px 0 6px 0; text-transform: uppercase; font-weight: 900; }
+            .warning { text-align: center; font-weight: 900; font-size: 13px; margin-bottom: 12px; color: #dc2626; border: 1px solid #dc2626; padding: 4px; border-radius: 6px; }
+            .box { border: 2px solid #000; padding: 10px; margin-bottom: 10px; border-radius: 6px; font-size: 14px; line-height: 1.5; }
+            .highlight { font-size: 17px; font-weight: 900; text-transform: uppercase; }
+            @media print { body { border: 2px solid #000; } }
+        </style>
+        </head><body>
+            <h1>${title}</h1>
+            <div class="warning">${warning}</div>
+            <div class="box" style="text-align:center; font-size: 18px; font-weight: 900; background:#f8fafc;">
+                🚚 ${deliveryName}
+                ${carrierAddress ? `<div style="font-size:12px; font-weight:normal; margin-top:4px;">📍 Đ/C: ${carrierAddress}</div>` : ''}
+            </div>
+            <div class="box">
+                <div style="font-size: 11px; color:#475569;">NGƯỜI GỬI:</div>
+                <div class="highlight">${storeName}</div>
+                <div>SĐT: <strong>${storePhone}</strong></div>
+                ${storeAddress ? `<div style="font-size:12px;">Đ/C: ${storeAddress}</div>` : ''}
+            </div>
+            <div class="box" style="background:#fffbeb;">
+                <div style="font-size: 11px; color:#475569;">NGƯỜI NHẬN:</div>
+                <div class="highlight" style="color:#b45309;">${recipientName}</div>
+                <div style="font-size:16px;">SĐT: <strong>${recipientPhone}</strong></div>
+                <div>Đ/C: ${recipientAddress || 'Theo thỏa thuận chành xe'}</div>
+            </div>
+            <div style="text-align:center; font-size:12px; font-family:monospace; margin-top:8px;">
+                Mã đơn: <strong>${o.order_code}</strong> • Ký nhận chành xe: ....................
+            </div>
+        </body></html>`;
     },
 
     refresh: async function() {
