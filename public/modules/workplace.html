@@ -147,6 +147,13 @@
                 </div>
             </div>
 
+            <!-- Nút nổi cuộn xuống tin nhắn mới nhất khi đang vuốt xem lịch sử chat -->
+            <button id="wp-btn-scroll-bottom" type="button" onclick="window.modWorkplace.scrollToBottom(true)" class="hidden absolute bottom-20 right-4 sm:right-6 bg-slate-900/90 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-full shadow-2xl border border-slate-700/80 backdrop-blur-md flex items-center gap-2 transition-all duration-200 transform hover:scale-105 active:scale-95 z-30 cursor-pointer">
+                <i class="fas fa-arrow-down text-amber-400 text-xs animate-bounce"></i>
+                <span id="wp-btn-scroll-bottom-text">Xuống tin mới nhất</span>
+                <span id="wp-badge-unread-count" class="hidden bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-xs">0</span>
+            </button>
+
             <!-- Vùng xem trước file / ảnh đang chuẩn bị gửi -->
             <div id="wp-attachments-preview" class="hidden bg-slate-100 border-t border-slate-200 px-3 sm:px-4 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
                 <!-- Preview items inserted dynamic -->
@@ -352,6 +359,61 @@ window.modWorkplace = {
     isSending: false,  // Khóa chống gửi kép / duplicate message
     _onResize: null,
 
+    // Trạng thái cuộn mượt mà & chống giật
+    isAtBottom: true,
+    lastMessageSignature: null,
+    hasMoreOlderMessages: true,
+    isLoadingOlder: false,
+    newMessagesSinceScrolledUp: 0,
+    _scrollListenerAttached: false,
+
+    // Khởi tạo bộ theo dõi cuộn & tự động tải tin nhắn cũ
+    initScrollTracker: function() {
+        const stream = document.getElementById('wp-message-stream');
+        if (!stream || this._scrollListenerAttached) return;
+        this._scrollListenerAttached = true;
+
+        stream.addEventListener('scroll', () => {
+            const distanceFromBottom = stream.scrollHeight - stream.scrollTop - stream.clientHeight;
+            // Cho phép dung sai 120px để tính là đang ở sát đáy
+            this.isAtBottom = distanceFromBottom <= 120;
+
+            if (this.isAtBottom) {
+                this.newMessagesSinceScrolledUp = 0;
+                this.updateScrollBottomButton(false);
+            }
+
+            // Tự động tải thêm tin nhắn cũ hơn khi người dùng vuốt lên sát đỉnh
+            if (stream.scrollTop <= 40 && this.hasMoreOlderMessages && !this.isLoadingOlder && this.messages.length >= 25) {
+                this.loadOlderMessages();
+            }
+        }, { passive: true });
+    },
+
+    // Hiển thị / ẩn nút nổi cuộn xuống tin nhắn mới nhất
+    updateScrollBottomButton: function(show) {
+        const btn = document.getElementById('wp-btn-scroll-bottom');
+        if (!btn) return;
+
+        if (show && !this.isAtBottom) {
+            btn.classList.remove('hidden');
+            const countBadge = document.getElementById('wp-badge-unread-count');
+            const btnText = document.getElementById('wp-btn-scroll-bottom-text');
+            if (this.newMessagesSinceScrolledUp > 0) {
+                if (countBadge) {
+                    countBadge.innerText = this.newMessagesSinceScrolledUp > 99 ? '99+' : this.newMessagesSinceScrolledUp;
+                    countBadge.classList.remove('hidden');
+                }
+                if (btnText) btnText.innerText = 'Tin nhắn mới';
+            } else {
+                if (countBadge) countBadge.classList.add('hidden');
+                if (btnText) btnText.innerText = 'Xuống tin mới nhất';
+            }
+        } else {
+            btn.classList.add('hidden');
+        }
+    },
+
     // Chuyển đổi màn hình xem trên thiết bị di động
     setMobileTab: function(tab) {
         this.mobileTab = tab;
@@ -406,16 +468,27 @@ window.modWorkplace = {
     scrollToBottom: function(smooth = false) {
         const stream = document.getElementById('wp-message-stream');
         if (stream) {
-            setTimeout(() => {
+            this.isAtBottom = true;
+            this.newMessagesSinceScrolledUp = 0;
+            this.updateScrollBottomButton(false);
+
+            const doScroll = () => {
                 try {
-                    stream.scrollTo({
-                        top: stream.scrollHeight,
-                        behavior: smooth ? 'smooth' : 'auto'
-                    });
+                    if (smooth && typeof stream.scrollTo === 'function') {
+                        stream.scrollTo({
+                            top: stream.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        stream.scrollTop = stream.scrollHeight;
+                    }
                 } catch(e) {
                     stream.scrollTop = stream.scrollHeight;
                 }
-            }, 60);
+            };
+
+            doScroll();
+            setTimeout(doScroll, 80);
         }
     },
 
@@ -445,6 +518,7 @@ window.modWorkplace = {
         }
 
         await this.loadChannels();
+        this.initScrollTracker();
 
         // Kiểm tra xem có tham số điều hướng từ thông báo không (#workplace?channel_id=... hoặc ?direct_user_id=...)
         let targetChanId = null;
@@ -660,6 +734,13 @@ window.modWorkplace = {
             if (lockNoticeEl) lockNoticeEl.classList.add('hidden');
         }
 
+        this.isAtBottom = true;
+        this.lastMessageSignature = null;
+        this.hasMoreOlderMessages = true;
+        this.isLoadingOlder = false;
+        this.newMessagesSinceScrolledUp = 0;
+        this.updateScrollBottomButton(false);
+
         this.renderSidebar();
         
         // Tự động chuyển sang màn hình chat trên thiết bị di động
@@ -667,7 +748,7 @@ window.modWorkplace = {
             this.setMobileTab('CHAT');
         }
 
-        await this.loadMessages();
+        await this.loadMessages(true);
     },
 
     // 5. Chọn nhắn tin riêng 1-1
@@ -702,6 +783,13 @@ window.modWorkplace = {
         // Bỏ ghim banner trong chat 1-1
         document.getElementById('wp-pinned-banner').classList.add('hidden');
 
+        this.isAtBottom = true;
+        this.lastMessageSignature = null;
+        this.hasMoreOlderMessages = true;
+        this.isLoadingOlder = false;
+        this.newMessagesSinceScrolledUp = 0;
+        this.updateScrollBottomButton(false);
+
         this.renderSidebar();
 
         // Tự động chuyển sang màn hình chat trên thiết bị di động
@@ -709,11 +797,11 @@ window.modWorkplace = {
             this.setMobileTab('CHAT');
         }
 
-        await this.loadMessages();
+        await this.loadMessages(true);
     },
 
-    // 6. Tải danh sách tin nhắn
-    loadMessages: async function() {
+    // 6. Tải danh sách tin nhắn (hỗ trợ kiểm tra delta & chống giật khi vuốt xem lịch sử)
+    loadMessages: async function(forceScroll = false) {
         if (!this.activeId) return;
 
         try {
@@ -728,9 +816,47 @@ window.modWorkplace = {
             const json = await res.json();
 
             if (json.success && json.data) {
-                this.messages = json.data.messages || [];
-                this.renderMessages();
-                this.scrollToBottom();
+                const newMsgs = json.data.messages || [];
+                const stream = document.getElementById('wp-message-stream');
+                
+                // Khởi tạo theo dõi cuộn nếu chưa gắn
+                this.initScrollTracker();
+
+                // Tạo signature để phát hiện tin nhắn có thay đổi thực sự hay không
+                const currentSig = newMsgs.map(m => `${m.id}_${m.updated_at || ''}_${m.reactions ? JSON.stringify(m.reactions) : ''}_${m.is_pinned}`).join('|');
+
+                // Nếu là polling định kỳ VÀ dữ liệu hoàn toàn không đổi -> TUYỆT ĐỐI KHÔNG CHẠM VÀO DOM!
+                // Giúp trải nghiệm cuộn/vuốt xem lịch sử chat mượt mà 60fps không bị gián đoạn hay giật lag
+                if (!forceScroll && currentSig === this.lastMessageSignature) {
+                    return;
+                }
+
+                const wasAtBottom = this.isAtBottom;
+
+                // Nếu có tin nhắn mới xuất hiện trong lúc người dùng đang vuốt lên đọc tin cũ
+                if (!forceScroll && !wasAtBottom && this.messages.length > 0 && newMsgs.length > 0) {
+                    const lastKnownId = this.messages[this.messages.length - 1].id;
+                    const newerCount = newMsgs.filter(m => m.id > lastKnownId).length;
+                    if (newerCount > 0) {
+                        this.newMessagesSinceScrolledUp += newerCount;
+                        this.updateScrollBottomButton(true);
+                    }
+                }
+
+                this.messages = newMsgs;
+                this.lastMessageSignature = currentSig;
+
+                if (forceScroll || wasAtBottom) {
+                    this.renderMessages(true);
+                    this.scrollToBottom(forceScroll ? false : true);
+                    this.updateScrollBottomButton(false);
+                } else {
+                    // Người dùng đang xem lịch sử: giữ nguyên tuyệt đối vị trí cuộn scrollTop hiện tại
+                    const prevScrollTop = stream ? stream.scrollTop : 0;
+                    this.renderMessages(false);
+                    if (stream) stream.scrollTop = prevScrollTop;
+                    this.updateScrollBottomButton(true);
+                }
 
                 // Render Pinned Banner nếu có
                 const bannerEl = document.getElementById('wp-pinned-banner');
@@ -753,8 +879,65 @@ window.modWorkplace = {
         }
     },
 
-    // 7. Render danh sách tin nhắn ra màn hình
-    renderMessages: function() {
+    // Tải thêm tin nhắn cũ hơn khi vuốt lên đỉnh màn hình
+    loadOlderMessages: async function() {
+        if (this.isLoadingOlder || !this.hasMoreOlderMessages || this.messages.length === 0 || !this.activeId) return;
+        this.isLoadingOlder = true;
+
+        const stream = document.getElementById('wp-message-stream');
+        const oldScrollHeight = stream ? stream.scrollHeight : 0;
+        const firstMsgId = this.messages[0].id;
+
+        let topLoader = document.getElementById('wp-older-messages-loader');
+        if (!topLoader && stream) {
+            topLoader = document.createElement('div');
+            topLoader.id = 'wp-older-messages-loader';
+            topLoader.className = 'text-center py-2 text-slate-400 text-xs flex items-center justify-center gap-1.5';
+            topLoader.innerHTML = '<i class="fas fa-circle-notch fa-spin text-amber-500"></i> <span>Đang tải tin nhắn cũ hơn...</span>';
+            stream.insertBefore(topLoader, stream.firstChild);
+        }
+
+        try {
+            let url = `/api/workplace/messages?before_id=${firstMsgId}&limit=50&t=${Date.now()}`;
+            if (this.activeType === 'CHANNEL') {
+                url += `&channel_id=${this.activeId}`;
+            } else {
+                url += `&direct_user_id=${this.activeId}`;
+            }
+
+            const res = await fetch(url);
+            const json = await res.json();
+
+            if (json.success && json.data) {
+                const olderMsgs = json.data.messages || [];
+                if (olderMsgs.length === 0) {
+                    this.hasMoreOlderMessages = false;
+                } else {
+                    if (olderMsgs.length < 50) {
+                        this.hasMoreOlderMessages = false;
+                    }
+                    this.messages = [...olderMsgs, ...this.messages];
+                    this.lastMessageSignature = this.messages.map(m => `${m.id}_${m.updated_at || ''}_${m.reactions ? JSON.stringify(m.reactions) : ''}_${m.is_pinned}`).join('|');
+                    
+                    this.renderMessages(false);
+
+                    // Khôi phục vị trí cuộn chính xác tương ứng để màn hình không bị giật
+                    if (stream) {
+                        const newScrollHeight = stream.scrollHeight;
+                        stream.scrollTop = newScrollHeight - oldScrollHeight;
+                    }
+                }
+            }
+        } catch(e) {
+            console.error('Lỗi tải tin nhắn cũ:', e);
+        } finally {
+            if (topLoader) topLoader.remove();
+            this.isLoadingOlder = false;
+        }
+    },
+
+    // 7. Render danh sách tin nhắn ra màn hình (chỉ cuộn khi shouldAutoScroll = true)
+    renderMessages: function(shouldAutoScroll = false) {
         const container = document.getElementById('wp-message-stream');
         if (!container) return;
 
@@ -920,8 +1103,10 @@ window.modWorkplace = {
         });
 
         container.innerHTML = html;
-        // Tự động cuộn xuống đáy tin nhắn mới nhất
-        container.scrollTop = container.scrollHeight;
+        // Chỉ cuộn xuống đáy tin nhắn nếu được yêu cầu (tránh giật khi người dùng đang xem lịch sử phía trên)
+        if (shouldAutoScroll) {
+            container.scrollTop = container.scrollHeight;
+        }
     },
 
     formatContent: function(content) {
@@ -1013,7 +1198,7 @@ window.modWorkplace = {
 
             const json = await res.json();
             if (json.success) {
-                await this.loadMessages();
+                await this.loadMessages(true);
                 this.scrollToBottom(true);
             } else {
                 // Khôi phục nếu server trả lỗi
@@ -1424,7 +1609,7 @@ window.modWorkplace = {
         this.pollingTimer = setInterval(() => {
             // Chỉ nạp tin nhắn nếu tab đang hiển thị
             if (document.visibilityState === 'visible' && this.activeId) {
-                this.loadMessages();
+                this.loadMessages(false);
             }
         }, 3500);
     },
@@ -1438,7 +1623,7 @@ window.modWorkplace = {
 
     refresh: async function() {
         await this.loadChannels();
-        await this.loadMessages();
+        await this.loadMessages(true);
     }
 };
 
