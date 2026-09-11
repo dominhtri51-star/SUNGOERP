@@ -273,6 +273,105 @@ router.post('/sync-pending', async (req, res) => {
     }
 });
 
+// 4b. GET: XUẤT FILE EXCEL NHẬP LÊN CỔNG VININVOICE
+router.get('/:id/export-vininvoice-excel', async (req, res) => {
+    try {
+        const XLSX = require('xlsx');
+        const invRes = await pool.query(`SELECT * FROM invoices WHERE id = $1`, [req.params.id]);
+        if (invRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy hóa đơn' });
+
+        const invoice = invRes.rows[0];
+        let items = [];
+        if (typeof invoice.items_snapshot === 'string') {
+            try { items = JSON.parse(invoice.items_snapshot); } catch (e) { items = []; }
+        } else if (Array.isArray(invoice.items_snapshot)) {
+            items = invoice.items_snapshot;
+        }
+
+        if (items.length === 0) {
+            const netAmount = parseFloat(invoice.amount_before_tax || (parseFloat(invoice.total_amount || 0) - parseFloat(invoice.vat_amount || 0)));
+            const vatStr = (invoice.vat_rate === 0 || invoice.vat_rate === '0') ? '0%' : `${invoice.vat_rate || 8}%`;
+            items = [{
+                accounting_code: 'HH-VATTU',
+                accounting_name: invoice.company_name ? `Hàng hóa xuất HĐ theo đơn ${invoice.ref_id}` : 'Hàng hóa dịch vụ',
+                unit: 'Bộ',
+                quantity: 1,
+                unit_price: netAmount,
+                vat_rate: vatStr
+            }];
+        }
+
+        const headers = [
+            'STT', 'Mã sản phẩm', 'Tên sản phẩm', 'Đơn vị tính', 'Số lượng', 'Đơn giá', 
+            'Thuế  GTGT', 'Tính chất', 'Loại hàng hoá đặc trưng', 'Số khung', 'Số máy', 
+            'BKS phương tiện vận chuyển', 'Người gửi hàng', 'Địa chỉ người gửi', 'MST người gửi', 'Số định danh người gửi'
+        ];
+
+        const rows = items.map((it, idx) => {
+            const vatStr = (it.vat_rate === 0 || it.vat_rate === '0') ? '0%' : (it.vat_rate === 'KCT' ? 'KCT' : `${it.vat_rate || 8}%`);
+            return [
+                idx + 1,
+                it.accounting_code || it.sku || `SP${String(idx + 1).padStart(4, '0')}`,
+                it.accounting_name || it.commercial_name || it.product_name || 'Hàng hóa dịch vụ',
+                it.unit || 'Bộ',
+                parseFloat(it.quantity || 1),
+                parseFloat(it.unit_price || 0),
+                vatStr,
+                1,
+                '', '', '', '', '', '', '', ''
+            ];
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [
+            { wch: 6 }, { wch: 18 }, { wch: 45 }, { wch: 12 }, { wch: 12 }, { wch: 18 },
+            { wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 22 },
+            { wch: 20 }, { wch: 30 }, { wch: 16 }, { wch: 22 }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+        const cleanRef = (invoice.ref_id || 'HD').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const fileName = `VinInvoice_${cleanRef}.xlsx`;
+
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(buf);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 4c. GET: TẢI FILE MẪU EXCEL CHUẨN VININVOICE
+router.get('/sample-vininvoice-template', (req, res) => {
+    try {
+        const XLSX = require('xlsx');
+        const headers = [
+            'STT', 'Mã sản phẩm', 'Tên sản phẩm', 'Đơn vị tính', 'Số lượng', 'Đơn giá', 
+            'Thuế  GTGT', 'Tính chất', 'Loại hàng hoá đặc trưng', 'Số khung', 'Số máy', 
+            'BKS phương tiện vận chuyển', 'Người gửi hàng', 'Địa chỉ người gửi', 'MST người gửi', 'Số định danh người gửi'
+        ];
+        const sampleRow = [1, 'CF-04', 'Cafe Hạt Arabica', 'Kg', 5, 300000, '5%', 1, '', '', '', '', '', '', '', ''];
+        const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+        ws['!cols'] = [
+            { wch: 6 }, { wch: 18 }, { wch: 45 }, { wch: 12 }, { wch: 12 }, { wch: 18 },
+            { wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 22 },
+            { wch: 20 }, { wch: 30 }, { wch: 16 }, { wch: 22 }
+        ];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+        const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+        res.setHeader('Content-Disposition', `attachment; filename="SUNGO_Mau_Import_VinInvoice.xlsx"`);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(buf);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 5. POST: TẠO HÓA ĐƠN NHÁP ĐẨY LÊN API VININVOICE (DRAFT_CREATED)
 // TUYỆT ĐỐI KHÔNG XUẤT BẢN / KÝ SỐ TRỰC TIẾP
 router.post('/:id/create-draft', async (req, res) => {

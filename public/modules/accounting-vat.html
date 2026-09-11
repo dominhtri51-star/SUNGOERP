@@ -18,6 +18,12 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <a href="https://vininvoice.vn/sold/customer/invoice/hdbh/create" target="_blank" rel="noopener noreferrer" class="flex-1 md:flex-initial bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap" title="Mở cổng tạo hóa đơn VinInvoice">
+                <i class="fas fa-external-link-alt"></i> <span>Cổng VinInvoice</span>
+            </a>
+            <button onclick="window.modVAT.downloadSampleTemplate()" class="flex-1 md:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap" title="Tải file Excel mẫu 16 cột import VinInvoice">
+                <i class="fas fa-file-excel"></i> <span>File Mẫu Excel</span>
+            </button>
             <button onclick="window.modVAT.syncData()" class="flex-1 md:flex-initial bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-sync-alt"></i> <span>Quét Đơn Mới</span>
             </button>
@@ -41,10 +47,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-800/80 border border-slate-700">
-                <span class="w-5 h-5 rounded-full bg-blue-500 text-white font-black flex items-center justify-center text-[10px] shrink-0">2</span>
+                <span class="w-5 h-5 rounded-full bg-emerald-500 text-slate-900 font-black flex items-center justify-center text-[10px] shrink-0">2</span>
                 <div class="min-w-0">
-                    <p class="font-bold text-blue-300 truncate">Đẩy Nháp e-Invoice</p>
-                    <p class="text-[9.5px] text-slate-400 truncate">Đẩy cổng e-Invoice</p>
+                    <p class="font-bold text-emerald-300 truncate">Xuất Excel VinInvoice</p>
+                    <p class="text-[9.5px] text-slate-400 truncate">Nạp Excel lên cổng</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-800/80 border border-slate-700">
@@ -55,9 +61,9 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-800/80 border border-slate-700">
-                <span class="w-5 h-5 rounded-full bg-emerald-500 text-slate-900 font-black flex items-center justify-center text-[10px] shrink-0">4</span>
+                <span class="w-5 h-5 rounded-full bg-blue-500 text-white font-black flex items-center justify-center text-[10px] shrink-0">4</span>
                 <div class="min-w-0">
-                    <p class="font-bold text-emerald-300 truncate">Đã Xuất & Lưu</p>
+                    <p class="font-bold text-blue-300 truncate">Đã Xuất & Lưu</p>
                     <p class="text-[9.5px] text-slate-400 truncate">Đồng bộ Sổ thuế</p>
                 </div>
             </div>
@@ -121,13 +127,13 @@
         <!-- TAB BUTTONS -->
         <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-3 pt-2 gap-1.5 overflow-x-auto no-scrollbar">
             <button onclick="window.modVAT.switchTab('PENDING_DRAFT')" id="tab-btn-PENDING_DRAFT" class="px-3.5 py-2 font-bold text-xs bg-white border-t-2 border-amber-500 text-amber-700 rounded-t-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
-                <i class="fas fa-hourglass-half text-amber-500"></i> 1. Chờ Nháp <span id="badge-tab-pending" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800">0</span>
+                <i class="fas fa-hourglass-half text-amber-500"></i> 1. Chờ Nháp (Xuất Excel) <span id="badge-tab-pending" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800">0</span>
             </button>
             <button onclick="window.modVAT.switchTab('DRAFT_CREATED')" id="tab-btn-DRAFT_CREATED" class="px-3.5 py-2 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-xl transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
-                <i class="fas fa-cloud-upload-alt text-blue-500"></i> 2. Đã Xuất Nháp <span id="badge-tab-draft" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-800">0</span>
+                <i class="fas fa-cloud-upload-alt text-blue-500"></i> 2. Đã Nạp Cổng (Chờ KTT Ký) <span id="badge-tab-draft" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-800">0</span>
             </button>
             <button onclick="window.modVAT.switchTab('ISSUED')" id="tab-btn-ISSUED" class="px-3.5 py-2 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-xl transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
-                <i class="fas fa-check-circle text-emerald-500"></i> 3. Đã Xuất <span id="badge-tab-issued" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800">0</span>
+                <i class="fas fa-check-circle text-emerald-500"></i> 3. Đã Ký & Xuất HĐ <span id="badge-tab-issued" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800">0</span>
             </button>
             <button onclick="window.modVAT.switchTab('ALL')" id="tab-btn-ALL" class="px-3.5 py-2 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-xl transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-list text-slate-500"></i> 4. Tất Cả
@@ -144,7 +150,7 @@
                         <th class="p-3 border-b">Mặt Hàng & Mã Kế Toán</th>
                         <th class="p-3 border-b text-right">Doanh Thu Chưa VAT</th>
                         <th class="p-3 border-b text-right">Thuế VAT</th>
-                        <th class="p-3 pr-4 border-b text-center">Trạng Thái & Thao Tác</th>
+                        <th class="p-3 pr-4 border-b text-center">Thao Tác (VinInvoice)</th>
                     </tr>
                 </thead>
                 <tbody id="tbl-invoices" class="divide-y divide-slate-100 text-slate-700 font-medium">
@@ -248,15 +254,21 @@
         </div>
 
         <!-- Footer hành động -->
-        <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center shrink-0">
+        <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-2 shrink-0">
             <button onclick="window.modVAT.closeDetailModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition">Đóng</button>
-            <div class="flex gap-2">
-                <button onclick="window.modVAT.saveDetailOnly()" class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-lg transition shadow flex items-center gap-1.5">
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="window.modVAT.copyBuyerInfoFromModal()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-lg transition border border-slate-300 flex items-center gap-1.5 text-xs cursor-pointer" title="Sao chép tên, MST, địa chỉ khách hàng">
+                    <i class="fas fa-copy text-blue-600"></i> Copy TT Khách
+                </button>
+                <button onclick="window.modVAT.saveDetailOnly()" class="px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-lg transition shadow flex items-center gap-1.5 text-xs cursor-pointer">
                     <i class="fas fa-save"></i> Lưu Thông Tin
                 </button>
-                <button id="btn-modal-create-draft" onclick="window.modVAT.createDraftFromModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-lg transition shadow flex items-center gap-1.5">
-                    <i class="fas fa-paper-plane"></i> Tạo HĐ Nháp Đẩy Lên VinInvoice
+                <button onclick="window.modVAT.exportFromModal()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black rounded-lg transition shadow flex items-center gap-1.5 text-xs cursor-pointer">
+                    <i class="fas fa-file-excel"></i> Xuất Excel VinInvoice
                 </button>
+                <a href="https://vininvoice.vn/sold/customer/invoice/hdbh/create" target="_blank" rel="noopener noreferrer" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition shadow flex items-center gap-1.5 text-xs cursor-pointer">
+                    <i class="fas fa-external-link-alt"></i> Cổng VinInvoice
+                </a>
             </div>
         </div>
     </div>
@@ -323,6 +335,131 @@
             <button onclick="window.modVAT.saveConfirmIssued()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow flex items-center gap-1.5">
                 <i class="fas fa-check"></i> Xác Nhận Đã Xuất
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL HƯỚNG DẪN ĐẨY FILE LÊN CỔNG VININVOICE -->
+<!-- ========================================== -->
+<div id="vininvoice-guide-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl w-full max-w-xl shadow-2xl my-auto border border-slate-200 overflow-hidden space-y-0 text-xs">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-4 text-white flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center text-base shadow-md">
+                    <i class="fas fa-file-excel"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-sm sm:text-base text-white flex items-center gap-1.5">
+                        XUẤT EXCEL VININVOICE THÀNH CÔNG
+                    </h3>
+                    <p class="text-[11px] text-emerald-300">File đã được tải về máy • Dùng nạp trực tiếp lên cổng VinInvoice</p>
+                </div>
+            </div>
+            <button onclick="window.modVAT.closeGuideModal()" class="text-slate-400 hover:text-white transition p-1 cursor-pointer">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <div class="p-4 sm:p-5 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+            <!-- Tải file status banner -->
+            <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 flex items-start gap-3">
+                <i class="fas fa-check-circle text-emerald-600 text-lg mt-0.5 shrink-0"></i>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[11px] font-bold text-emerald-900">Đã xuất file Excel chuẩn 16 cột:</p>
+                    <p class="text-xs font-mono font-black text-emerald-700 truncate mt-0.5" id="guide-file-name">VinInvoice_HD.xlsx</p>
+                    <p class="text-[10px] text-emerald-800 mt-1">Đầy đủ STT, Mã SP, Tên SP, ĐVT, Số lượng, Đơn giá chưa thuế, Thuế GTGT (8%/10%/0%), Tính chất 1 theo đúng quy chuẩn VinInvoice.</p>
+                </div>
+            </div>
+
+            <!-- THÔNG TIN BÊN MUA (DÁN VÀO CỔNG VININVOICE) -->
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <h4 class="font-black text-[11px] text-slate-800 uppercase flex items-center gap-1.5">
+                        <i class="fas fa-building text-blue-600"></i> Thông Tin Khách Hàng (Dán Vào VinInvoice)
+                    </h4>
+                    <button type="button" onclick="window.modVAT.copyAllBuyerInfoFromGuide()" class="text-[10.5px] bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-2 py-1 rounded-lg border border-blue-200 transition cursor-pointer flex items-center gap-1">
+                        <i class="fas fa-copy"></i> Sao Chép Toàn Bộ
+                    </button>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200">
+                        <div class="min-w-0 pr-2">
+                            <span class="text-[10px] text-slate-400 block font-bold">TÊN ĐƠN VỊ / NGƯỜI MUA:</span>
+                            <span class="font-bold text-slate-900 text-xs truncate block" id="guide-buyer-name">-</span>
+                        </div>
+                        <button type="button" onclick="window.modVAT.copyBuyerField(document.getElementById('guide-buyer-name').innerText, 'Tên người mua')" class="text-slate-400 hover:text-blue-600 p-1.5 transition cursor-pointer" title="Sao chép tên">
+                            <i class="fas fa-copy text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200">
+                        <div class="min-w-0 pr-2">
+                            <span class="text-[10px] text-slate-400 block font-bold">MÃ SỐ THUẾ (MST):</span>
+                            <span class="font-mono font-black text-blue-700 text-xs truncate block" id="guide-buyer-tax">-</span>
+                        </div>
+                        <button type="button" onclick="window.modVAT.copyBuyerField(document.getElementById('guide-buyer-tax').innerText, 'Mã số thuế')" class="text-slate-400 hover:text-blue-600 p-1.5 transition cursor-pointer" title="Sao chép MST">
+                            <i class="fas fa-copy text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200">
+                        <div class="min-w-0 pr-2">
+                            <span class="text-[10px] text-slate-400 block font-bold">ĐỊA CHỈ:</span>
+                            <span class="text-slate-700 text-xs truncate block" id="guide-buyer-address">-</span>
+                        </div>
+                        <button type="button" onclick="window.modVAT.copyBuyerField(document.getElementById('guide-buyer-address').innerText, 'Địa chỉ')" class="text-slate-400 hover:text-blue-600 p-1.5 transition cursor-pointer" title="Sao chép địa chỉ">
+                            <i class="fas fa-copy text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200">
+                        <div class="min-w-0 pr-2">
+                            <span class="text-[10px] text-slate-400 block font-bold">EMAIL NHẬN HÓA ĐƠN:</span>
+                            <span class="text-slate-700 text-xs truncate block" id="guide-buyer-email">-</span>
+                        </div>
+                        <button type="button" onclick="window.modVAT.copyBuyerField(document.getElementById('guide-buyer-email').innerText, 'Email nhận HĐ')" class="text-slate-400 hover:text-blue-600 p-1.5 transition cursor-pointer" title="Sao chép email">
+                            <i class="fas fa-copy text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 BƯỚC THỰC HIỆN TRÊN VININVOICE -->
+            <div class="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200 space-y-2">
+                <h4 class="font-black text-[11px] text-amber-900 uppercase flex items-center gap-1.5">
+                    <i class="fas fa-list-ol text-amber-600"></i> 3 Bước Đẩy Lên Cổng VinInvoice:
+                </h4>
+                <ol class="space-y-1.5 text-xs text-slate-700 pl-1">
+                    <li class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-amber-200 text-amber-900 font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
+                        <span>Bấm <b>"Mở Cổng VinInvoice"</b> bên dưới để vào trang lập hóa đơn mới.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-amber-200 text-amber-900 font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
+                        <span>Dán thông tin Khách hàng (Tên, MST, Địa chỉ, Email) vào mục Người mua.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="w-5 h-5 rounded-full bg-emerald-500 text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">3</span>
+                        <span>Ở bảng hàng hóa, bấm nút <b>"Nhập từ excel"</b> và chọn file Excel vừa tải về!</span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-2">
+            <button type="button" onclick="window.modVAT.closeGuideModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition cursor-pointer">Đóng</button>
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="window.modVAT.markUploadedDraft()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition shadow flex items-center gap-1.5 cursor-pointer" title="Chuyển hóa đơn sang tab Đã Nạp Cổng">
+                    <i class="fas fa-check"></i> Đánh Dấu Đã Nạp Cổng
+                </button>
+                <a href="https://vininvoice.vn/sold/customer/invoice/hdbh/create" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-black rounded-lg transition shadow flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-external-link-alt"></i> Mở Cổng VinInvoice
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -504,29 +641,40 @@
                         itemsSummary = `<span class="text-[11px] text-slate-400 italic">Chưa có chi tiết</span>`;
                     }
 
-                    // Cột hành động
+                    // Cột hành động (VinInvoice)
                     let actionHtml = '';
                     if (isPending) {
                         actionHtml = `
                             <div class="flex flex-col gap-1.5 items-center">
-                                <button onclick="window.modVAT.createDraft(${i.id})" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-2.5 rounded-lg transition shadow-2xs text-[10px] uppercase flex items-center justify-center gap-1 cursor-pointer">
-                                    <i class="fas fa-paper-plane"></i> Tạo Nháp e-Invoice
+                                <button onclick="window.modVAT.exportVinInvoiceExcel(${i.id})" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-bold py-1.5 px-2 rounded-lg transition shadow-2xs text-[10.5px] flex items-center justify-center gap-1 cursor-pointer" title="Xuất file Excel 16 cột chuẩn VinInvoice">
+                                    <i class="fas fa-file-excel"></i> Xuất Excel VinInvoice
                                 </button>
-                                <button onclick="window.modVAT.openDetailModal(${i.id})" class="text-[10px] text-slate-600 hover:text-blue-600 font-bold underline cursor-pointer">
-                                    <i class="fas fa-edit mr-0.5"></i> Sửa / Map Kế Toán
-                                </button>
+                                <div class="flex items-center justify-between w-full px-1 text-[10px]">
+                                    <button onclick="window.modVAT.copyBuyerInfo(${i.id})" class="text-blue-600 hover:text-blue-800 font-bold inline-flex items-center gap-0.5 cursor-pointer" title="Sao chép tên, MST, địa chỉ khách hàng">
+                                        <i class="fas fa-copy"></i> Copy TT
+                                    </button>
+                                    <span class="text-slate-300">•</span>
+                                    <button onclick="window.modVAT.openDetailModal(${i.id})" class="text-slate-600 hover:text-amber-600 font-bold inline-flex items-center gap-0.5 cursor-pointer" title="Sửa thông tin hoặc ánh xạ mã kế toán">
+                                        <i class="fas fa-edit"></i> Map Hàng
+                                    </button>
+                                </div>
                             </div>
                         `;
                     } else if (isDraft) {
                         actionHtml = `
                             <div class="flex flex-col gap-1.5 items-center">
-                                <div class="bg-blue-50 border border-blue-200 px-2 py-1 rounded text-center w-full">
-                                    <p class="text-[9px] font-bold text-blue-800 uppercase tracking-wider">ĐÃ ĐẨY NHÁP</p>
-                                    <p class="text-[10px] font-mono font-black text-blue-600 truncate">${i.draft_code || 'DRAFT'}</p>
+                                <div class="bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-center w-full">
+                                    <p class="text-[9px] font-bold text-blue-800 uppercase tracking-wider">ĐÃ NẠP CỔNG</p>
+                                    <p class="text-[10px] font-mono font-black text-blue-600 truncate">${i.draft_code || 'VININVOICE'}</p>
                                 </div>
-                                <button onclick="window.modVAT.openConfirmIssued(${i.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-2.5 rounded-lg transition shadow-2xs text-[10px] uppercase flex items-center justify-center gap-1 animate-pulse cursor-pointer">
-                                    <i class="fas fa-check-double"></i> KTT Đã Duyệt & Ký Số
-                                </button>
+                                <div class="flex items-center gap-1 w-full">
+                                    <button onclick="window.modVAT.exportVinInvoiceExcel(${i.id})" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1 px-1 rounded text-[9.5px] transition flex items-center justify-center gap-1 cursor-pointer" title="Tải lại file Excel">
+                                        <i class="fas fa-file-excel text-emerald-600"></i> Tải Lại
+                                    </button>
+                                    <button onclick="window.modVAT.openConfirmIssued(${i.id})" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-1 rounded text-[9.5px] transition shadow-2xs flex items-center justify-center gap-1 animate-pulse cursor-pointer" title="Kế toán trưởng đã ký số trên VinInvoice">
+                                        <i class="fas fa-check-double"></i> KTT Đã Ký
+                                    </button>
+                                </div>
                             </div>
                         `;
                     } else if (isIssued) {
@@ -594,9 +742,9 @@
                             <i class="fas fa-copy text-[9px] text-emerald-600"></i>
                         </span>`;
                     } else if (isDraft) {
-                        badge = `<span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-[10px]">Nháp: ${i.draft_code || 'DRAFT'}</span>`;
+                        badge = `<span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-[10px]">Đã Nạp: ${i.draft_code || 'VININVOICE'}</span>`;
                     } else {
-                        badge = `<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[10px]">Chờ Lập Nháp</span>`;
+                        badge = `<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[10px]">Chờ Nháp (Excel)</span>`;
                     }
 
                     return `
@@ -630,15 +778,21 @@
 
                         <div class="flex items-center justify-between pt-1 border-t border-slate-100">
                             <span class="text-[10px] text-slate-400">${new Date(i.created_at).toLocaleDateString('vi-VN')}</span>
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex flex-wrap items-center gap-1.5">
                                 ${isPending ? `
-                                    <button type="button" onclick="window.modVAT.createDraft(${i.id})" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
-                                        <i class="fas fa-paper-plane"></i> Nháp e-Invoice
+                                    <button type="button" onclick="window.modVAT.exportVinInvoiceExcel(${i.id})" class="px-2.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
+                                        <i class="fas fa-file-excel"></i> Xuất Excel
                                     </button>
-                                    <button type="button" onclick="window.modVAT.openDetailModal(${i.id})" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+                                    <button type="button" onclick="window.modVAT.copyBuyerInfo(${i.id})" class="px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition border border-blue-200 cursor-pointer" title="Sao chép tên, MST, địa chỉ">
+                                        <i class="fas fa-copy"></i> Copy TT
+                                    </button>
+                                    <button type="button" onclick="window.modVAT.openDetailModal(${i.id})" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer" title="Map Hàng">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                 ` : isDraft ? `
+                                    <button type="button" onclick="window.modVAT.exportVinInvoiceExcel(${i.id})" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                        <i class="fas fa-file-excel text-emerald-600"></i> Tải Excel
+                                    </button>
                                     <button type="button" onclick="window.modVAT.openConfirmIssued(${i.id})" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
                                         <i class="fas fa-check-double"></i> KTT Đã Ký
                                     </button>
@@ -816,6 +970,203 @@
                 window.modVAT.closeDetailModal();
                 await window.modVAT.createDraft(window.modVAT.selectedInvId);
             } catch(e) { alert("Lỗi kết nối đẩy nháp!"); }
+        },
+
+        // --- XUẤT EXCEL & SAO CHÉP THÔNG TIN VININVOICE ---
+        copyBuyerInfo: (id) => {
+            const inv = window.modVAT.list.find(x => x.id === id);
+            if (!inv) return;
+            const lines = [
+                `Tên người mua / Đơn vị: ${inv.company_name || 'Khách Lẻ'}`,
+                `Mã số thuế: ${inv.tax_code || ''}`,
+                `Địa chỉ: ${inv.company_address || ''}`,
+                `Email nhận HĐ: ${inv.vat_email || ''}`
+            ];
+            window.copyToClipboard(lines.join('\n'), 'thông tin khách hàng');
+        },
+
+        copyBuyerField: (text, label) => {
+            window.copyToClipboard(text || '', label);
+        },
+
+        copyBuyerInfoFromModal: () => {
+            const name = document.getElementById('m-inv-company')?.value || '';
+            const tax = document.getElementById('m-inv-taxcode')?.value || '';
+            const addr = document.getElementById('m-inv-address')?.value || '';
+            const email = document.getElementById('m-inv-email')?.value || '';
+            const text = [
+                `Tên người mua / Đơn vị: ${name}`,
+                `Mã số thuế: ${tax}`,
+                `Địa chỉ: ${addr}`,
+                `Email nhận HĐ: ${email}`
+            ].join('\n');
+            window.copyToClipboard(text, 'thông tin khách hàng');
+        },
+
+        copyAllBuyerInfoFromGuide: () => {
+            const name = document.getElementById('guide-buyer-name')?.innerText || '';
+            const tax = document.getElementById('guide-buyer-tax')?.innerText || '';
+            const addr = document.getElementById('guide-buyer-address')?.innerText || '';
+            const email = document.getElementById('guide-buyer-email')?.innerText || '';
+            const text = [
+                `Tên người mua / Đơn vị: ${name}`,
+                `Mã số thuế: ${tax}`,
+                `Địa chỉ: ${addr}`,
+                `Email nhận HĐ: ${email}`
+            ].join('\n');
+            window.copyToClipboard(text, 'toàn bộ thông tin khách hàng');
+        },
+
+        exportVinInvoiceExcel: (id) => {
+            const inv = window.modVAT.list.find(x => x.id === id);
+            if (!inv) return;
+
+            try {
+                if (typeof XLSX === 'undefined') {
+                    window.location.href = `/api/invoices/${id}/export-vininvoice-excel`;
+                    return;
+                }
+
+                const headers = [
+                    'STT', 'Mã sản phẩm', 'Tên sản phẩm', 'Đơn vị tính', 'Số lượng', 'Đơn giá', 
+                    'Thuế  GTGT', 'Tính chất', 'Loại hàng hoá đặc trưng', 'Số khung', 'Số máy', 
+                    'BKS phương tiện vận chuyển', 'Người gửi hàng', 'Địa chỉ người gửi', 'MST người gửi', 'Số định danh người gửi'
+                ];
+
+                let items = [];
+                if (typeof inv.items_snapshot === 'string') {
+                    try { items = JSON.parse(inv.items_snapshot); } catch(e) { items = []; }
+                } else if (Array.isArray(inv.items_snapshot)) {
+                    items = inv.items_snapshot;
+                }
+
+                if (!items || items.length === 0) {
+                    const netAmount = parseFloat(inv.amount_before_tax || (parseFloat(inv.total_amount || 0) - parseFloat(inv.vat_amount || 0)));
+                    const vatStr = (inv.vat_rate === 0 || inv.vat_rate === '0') ? '0%' : (inv.vat_rate === 'KCT' ? 'KCT' : `${inv.vat_rate || 8}%`);
+                    items = [{
+                        accounting_code: 'HH-VATTU',
+                        accounting_name: inv.company_name ? `Hàng hóa xuất HĐ theo đơn ${inv.ref_id}` : 'Hàng hóa dịch vụ',
+                        unit: 'Bộ',
+                        quantity: 1,
+                        unit_price: netAmount,
+                        vat_rate: vatStr
+                    }];
+                }
+
+                const rows = items.map((it, idx) => {
+                    const vatStr = (it.vat_rate === 0 || it.vat_rate === '0') ? '0%' : (it.vat_rate === 'KCT' ? 'KCT' : `${it.vat_rate || 8}%`);
+                    return [
+                        idx + 1,
+                        it.accounting_code || it.sku || `SP${String(idx + 1).padStart(4, '0')}`,
+                        it.accounting_name || it.commercial_name || it.product_name || 'Hàng hóa dịch vụ',
+                        it.unit || 'Bộ',
+                        parseFloat(it.quantity || 1),
+                        parseFloat(it.unit_price || 0),
+                        vatStr,
+                        1,
+                        '', '', '', '', '', '', '', ''
+                    ];
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+                ws['!cols'] = [
+                    { wch: 6 }, { wch: 18 }, { wch: 45 }, { wch: 12 }, { wch: 12 }, { wch: 18 },
+                    { wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 22 },
+                    { wch: 20 }, { wch: 30 }, { wch: 16 }, { wch: 22 }
+                ];
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+                const cleanRef = (inv.ref_id || 'HD').replace(/[^a-zA-Z0-9_-]/g, '_');
+                const fileName = `VinInvoice_${cleanRef}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+
+                // Mở modal hướng dẫn & copy thông tin khách hàng
+                window.modVAT.showVinInvoiceGuide(inv, fileName);
+            } catch(e) {
+                console.error("Lỗi client-side xuất excel:", e);
+                window.location.href = `/api/invoices/${id}/export-vininvoice-excel`;
+            }
+        },
+
+        showVinInvoiceGuide: (inv, fileName) => {
+            window.modVAT.selectedInvId = inv.id;
+            document.getElementById('guide-file-name').innerText = fileName;
+            document.getElementById('guide-buyer-name').innerText = inv.company_name || 'Khách Lẻ';
+            document.getElementById('guide-buyer-tax').innerText = inv.tax_code || 'Chưa có MST';
+            document.getElementById('guide-buyer-address').innerText = inv.company_address || 'Chưa có địa chỉ';
+            document.getElementById('guide-buyer-email').innerText = inv.vat_email || 'Chưa có email';
+
+            const modal = document.getElementById('vininvoice-guide-modal');
+            if (modal) modal.classList.replace('hidden', 'flex');
+        },
+
+        closeGuideModal: () => {
+            const modal = document.getElementById('vininvoice-guide-modal');
+            if (modal) modal.classList.replace('flex', 'hidden');
+        },
+
+        markUploadedDraft: async () => {
+            if (!window.modVAT.selectedInvId) return;
+            try {
+                const res = await fetch(`/api/invoices/${window.modVAT.selectedInvId}/create-draft`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider: 'VinInvoice', notes: 'Đã nạp file Excel lên cổng VinInvoice' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ Đã chuyển trạng thái sang [Đã Nạp Cổng] thành công!\nHóa đơn đang chờ Kế toán trưởng ký duyệt phát hành trên VinInvoice.");
+                    window.modVAT.closeGuideModal();
+                    await window.modVAT.load();
+                    window.modVAT.switchTab('DRAFT_CREATED');
+                } else alert("Lỗi: " + data.error);
+            } catch(e) { alert("Lỗi kết nối cập nhật trạng thái!"); }
+        },
+
+        downloadSampleTemplate: () => {
+            try {
+                if (typeof XLSX === 'undefined') {
+                    window.location.href = '/api/invoices/sample-vininvoice-template';
+                    return;
+                }
+                const headers = [
+                    'STT', 'Mã sản phẩm', 'Tên sản phẩm', 'Đơn vị tính', 'Số lượng', 'Đơn giá', 
+                    'Thuế  GTGT', 'Tính chất', 'Loại hàng hoá đặc trưng', 'Số khung', 'Số máy', 
+                    'BKS phương tiện vận chuyển', 'Người gửi hàng', 'Địa chỉ người gửi', 'MST người gửi', 'Số định danh người gửi'
+                ];
+                const sampleRow = [1, 'CF-04', 'Cafe Hạt Arabica', 'Kg', 5, 300000, '5%', 1, '', '', '', '', '', '', '', ''];
+                const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+                ws['!cols'] = [
+                    { wch: 6 }, { wch: 18 }, { wch: 45 }, { wch: 12 }, { wch: 12 }, { wch: 18 },
+                    { wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 22 },
+                    { wch: 20 }, { wch: 30 }, { wch: 16 }, { wch: 22 }
+                ];
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+                XLSX.writeFile(wb, "SUNGO_Mau_Import_VinInvoice.xlsx");
+            } catch(e) {
+                window.location.href = '/api/invoices/sample-vininvoice-template';
+            }
+        },
+
+        exportFromModal: async () => {
+            if (!window.modVAT.selectedInvId) return;
+            const payload = window.modVAT.collectModalPayload();
+            try {
+                await fetch(`/api/invoices/${window.modVAT.selectedInvId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                await window.modVAT.load();
+                window.modVAT.closeDetailModal();
+                window.modVAT.exportVinInvoiceExcel(window.modVAT.selectedInvId);
+            } catch(e) {
+                console.error("Lỗi lưu & xuất Excel từ modal:", e);
+                window.modVAT.exportVinInvoiceExcel(window.modVAT.selectedInvId);
+            }
         },
 
         // --- XÁC NHẬN ĐÃ PHÁT HÀNH TỪ VININVOICE ---
