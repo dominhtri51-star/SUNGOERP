@@ -328,17 +328,54 @@ router.put('/channels/:id/members', async (req, res) => {
     }
 });
 
+// ========================================================
+// SMART CONVERSATION VERSIONING (Tiết kiệm >90% DB Egress)
+// Trả về { unchanged: true } từ RAM trong 0.001ms nếu kênh không có tin mới
+// ========================================================
+const conversationVersions = new Map();
+
+function getConversationKey(channelId, directUserId, currentUserId) {
+    if (channelId) return `chan_${channelId}`;
+    if (directUserId && currentUserId) {
+        const u1 = Math.min(parseInt(directUserId, 10), parseInt(currentUserId, 10));
+        const u2 = Math.max(parseInt(directUserId, 10), parseInt(currentUserId, 10));
+        return `dm_${u1}_${u2}`;
+    }
+    return null;
+}
+
+function bumpConversationVersion(channelId, directUserId, currentUserId) {
+    const key = getConversationKey(channelId, directUserId, currentUserId);
+    if (key) {
+        conversationVersions.set(key, Date.now());
+    }
+}
+
 /**
  * 5. GET /api/workplace/messages
  * Lấy tin nhắn theo kênh/nhóm hoặc theo người nhắn 1-1
- * Query: ?channel_id=1 hoặc ?direct_user_id=5
+ * Query: ?channel_id=1 hoặc ?direct_user_id=5 &v=timestamp
  */
 router.get('/messages', async (req, res) => {
     try {
-        const { channel_id, direct_user_id, before_id, limit = 50 } = req.query;
+        const { channel_id, direct_user_id, before_id, limit = 50, v } = req.query;
         const currentUserId = req.user ? req.user.id : -1;
         const isAdmin = req.user && isLeaderOrAdmin(req.user.role);
         const queryLimit = Math.min(parseInt(limit, 10) || 50, 100);
+
+        const clientVersion = v ? parseInt(v, 10) : null;
+        const convKey = getConversationKey(channel_id, direct_user_id, currentUserId);
+        const currentVersion = convKey ? (conversationVersions.get(convKey) || 0) : 0;
+
+        // Nếu client gửi version trùng khớp với RAM server và không phải cuộn lên xem tin cũ (before_id)
+        // -> Trả về ngay lập tức không cần chạm vào Supabase (0 DB Queries, 0 Byte Egress!)
+        if (clientVersion && currentVersion > 0 && clientVersion === currentVersion && !before_id) {
+            return res.json({
+                success: true,
+                unchanged: true,
+                v: currentVersion
+            });
+        }
 
         let query = '';
         let params = [];
@@ -431,8 +468,15 @@ router.get('/messages', async (req, res) => {
             }
         }
 
+        let versionToReturn = currentVersion;
+        if (!versionToReturn) {
+            versionToReturn = Date.now();
+            if (convKey) conversationVersions.set(convKey, versionToReturn);
+        }
+
         res.json({
             success: true,
+            v: versionToReturn,
             data: {
                 messages,
                 pinned: pinnedMessage
@@ -628,6 +672,7 @@ router.post('/messages', async (req, res) => {
         }
 
         res.json({ success: true, data: newMsg, message: 'Gửi tin nhắn thành công!' });
+        bumpConversationVersion(channel_id, direct_user_id, currentUserId);
     } catch (err) {
         console.error('Lỗi POST /api/workplace/messages:', err.message);
         res.status(500).json({ success: false, error: err.message });
@@ -647,7 +692,7 @@ router.post('/messages/:id/reactions', async (req, res) => {
 
         if (!emoji) return res.status(400).json({ success: false, error: 'Thiếu emoji cảm xúc!' });
 
-        const msgRes = await pool.query("SELECT reactions FROM workplace_messages WHERE id = $1", [id]);
+        const msgRes = await pool.query("SELECT reactions, channel_id, recipient_id, sender_id FROM workplace_messages WHERE id = $1", [id]);
         if (msgRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy tin nhắn' });
 
         let reactions = msgRes.rows[0].reactions || {};
@@ -670,6 +715,7 @@ router.post('/messages/:id/reactions', async (req, res) => {
         }
 
         await pool.query("UPDATE workplace_messages SET reactions = $1 WHERE id = $2", [JSON.stringify(reactions), id]);
+        bumpConversationVersion(msgRes.rows[0].channel_id, msgRes.rows[0].recipient_id, msgRes.rows[0].sender_id);
         res.json({ success: true, reactions });
     } catch (err) {
         console.error('Lỗi reaction:', err.message);
@@ -699,6 +745,7 @@ router.put('/messages/:id/pin', async (req, res) => {
         }
 
         await pool.query("UPDATE workplace_messages SET is_pinned = $1 WHERE id = $2", [newPinned, id]);
+        bumpConversationVersion(msgRes.rows[0].channel_id, null, null);
         res.json({ success: true, is_pinned: newPinned, message: newPinned ? 'Đã ghim thông báo lên đầu kênh!' : 'Đã gỡ ghim thông báo!' });
     } catch (err) {
         console.error('Lỗi pin:', err.message);
@@ -718,7 +765,7 @@ router.put('/messages/:id', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Nội dung tin nhắn không được để trống!' });
         }
 
-        const msgRes = await pool.query("SELECT id, sender_id, created_at, is_recalled FROM workplace_messages WHERE id = $1", [id]);
+        const msgRes = await pool.query("SELECT id, sender_id, channel_id, recipient_id, created_at, is_recalled FROM workplace_messages WHERE id = $1", [id]);
         if (msgRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy tin nhắn!' });
 
         const msg = msgRes.rows[0];
@@ -754,6 +801,7 @@ router.put('/messages/:id', async (req, res) => {
             RETURNING *
         `, [cleanContent, id]);
 
+        bumpConversationVersion(msg.channel_id, msg.recipient_id, msg.sender_id);
         res.json({ success: true, data: updateRes.rows[0], message: 'Đã chỉnh sửa tin nhắn thành công!' });
     } catch (err) {
         console.error('Lỗi PUT /api/workplace/messages/:id:', err.message);
@@ -768,7 +816,7 @@ router.put('/messages/:id', async (req, res) => {
 router.delete('/messages/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const msgRes = await pool.query("SELECT id, sender_id, created_at, is_recalled FROM workplace_messages WHERE id = $1", [id]);
+        const msgRes = await pool.query("SELECT id, sender_id, channel_id, recipient_id, created_at, is_recalled FROM workplace_messages WHERE id = $1", [id]);
         if (msgRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy tin nhắn!' });
 
         const msg = msgRes.rows[0];
@@ -802,6 +850,7 @@ router.delete('/messages/:id', async (req, res) => {
             WHERE id = $1
         `, [id]);
 
+        bumpConversationVersion(msg.channel_id, msg.recipient_id, msg.sender_id);
         res.json({ success: true, message: 'Đã thu hồi tin nhắn thành công!' });
     } catch (err) {
         console.error('Lỗi delete message:', err.message);

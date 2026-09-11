@@ -1192,8 +1192,24 @@ window.modWorkplace = {
                 url += `&direct_user_id=${this.activeId}`;
             }
 
+            // Gửi kèm version hiện có để server nhận diện 0-query từ RAM nếu chưa có tin mới
+            const convKey = `${this.activeType}_${this.activeId}`;
+            if (!this.convVersions) this.convVersions = {};
+            if (!forceScroll && this.convVersions[convKey]) {
+                url += `&v=${this.convVersions[convKey]}`;
+            }
+
             const res = await fetch(url);
             const json = await res.json();
+
+            // Nếu server phản hồi dữ liệu không đổi (unchanged) -> Thoát ngay lập tức (0 DOM, 0 DB)
+            if (json.success && json.unchanged) {
+                return;
+            }
+
+            if (json.success && json.v) {
+                this.convVersions[convKey] = json.v;
+            }
 
             if (json.success && json.data) {
                 const newMsgs = json.data.messages || [];
@@ -3312,7 +3328,7 @@ window.modWorkplace = {
         alert(info);
     },
 
-    // 16. Smart Polling (3.5s)
+    // 16. Smart Polling (4s - Đã tích hợp Version Check 0-query)
     startPolling: function() {
         this.stopPolling();
         this.pollingTimer = setInterval(() => {
@@ -3320,7 +3336,7 @@ window.modWorkplace = {
             if (document.visibilityState === 'visible' && this.activeId) {
                 this.loadMessages(false);
             }
-        }, 3500);
+        }, 4000);
     },
 
     stopPolling: function() {

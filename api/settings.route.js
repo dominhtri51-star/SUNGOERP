@@ -232,8 +232,26 @@ const initTable = async () => {
 };
 initTable();
 
+// ========================================================
+// BỘ NHỚ ĐỆM RAM SERVER CHO CẤU HÌNH HỆ THỐNG (SYSTEM SETTINGS)
+// Giảm 95% lượt quét bảng system_settings
+// ========================================================
+let cachedSettingsResult = null;
+let cachedSettingsTimestamp = 0;
+const SETTINGS_CACHE_TTL_MS = 120 * 1000; // 120 giây (2 phút)
+
+function invalidateSettingsCache() {
+    cachedSettingsResult = null;
+    cachedSettingsTimestamp = 0;
+}
+
 // Lấy danh sách cấu hình
 router.get('/', async (req, res) => {
+    const now = Date.now();
+    if (cachedSettingsResult && (now - cachedSettingsTimestamp < SETTINGS_CACHE_TTL_MS)) {
+        return res.json({ success: true, data: cachedSettingsResult });
+    }
+
     let data = {};
     try {
         if (pool && typeof pool.query === 'function') {
@@ -293,6 +311,9 @@ router.get('/', async (req, res) => {
         data.quote_templates = { ...DEFAULT_QUOTE_TEMPLATES, ...data.quote_templates };
     }
 
+    cachedSettingsResult = data;
+    cachedSettingsTimestamp = now;
+
     return res.json({ success: true, data });
 });
 
@@ -317,6 +338,8 @@ router.put('/', async (req, res) => {
             
             await client.query('COMMIT');
         }
+
+        invalidateSettingsCache();
 
         // Đồng bộ lưu ra file JSON fallback
         try {

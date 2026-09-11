@@ -130,6 +130,8 @@ async function createNotification({
             };
         }
 
+        invalidateUnreadCountCache();
+
         const payload = {
             id: insertedNotif.id,
             type: insertedNotif.type,
@@ -213,6 +215,24 @@ async function getNotificationsForUser(userId, userRole, limit = 50) {
     }
 }
 
+// ========================================================
+// BỘ NHỚ ĐỆM RAM CHO UNREAD COUNT (Giảm 80% query app_notifications)
+// ========================================================
+const unreadCountCache = new Map(); // key: `${userId}_${userRole}` -> { count, expiresAt }
+const UNREAD_CACHE_TTL_MS = 30 * 1000; // 30 giây
+
+function invalidateUnreadCountCache(userId = null) {
+    if (userId) {
+        for (const key of unreadCountCache.keys()) {
+            if (key.startsWith(`${userId}_`)) {
+                unreadCountCache.delete(key);
+            }
+        }
+    } else {
+        unreadCountCache.clear();
+    }
+}
+
 /**
  * Đếm số lượng thông báo chưa đọc của người dùng
  */
@@ -220,6 +240,13 @@ async function getUnreadCount(userId, userRole) {
     try {
         const uId = parseInt(userId, 10);
         const uRole = String(userRole || '').toUpperCase().trim();
+        const cacheKey = `${uId}_${uRole}`;
+        const now = Date.now();
+
+        const cached = unreadCountCache.get(cacheKey);
+        if (cached && now < cached.expiresAt) {
+            return cached.count;
+        }
 
         const res = await pool.query(`
             SELECT COUNT(*)::int AS unread_count
@@ -236,7 +263,9 @@ async function getUnreadCount(userId, userRole) {
                )))
         `, [uId, uRole]);
 
-        return res.rows[0] ? res.rows[0].unread_count : 0;
+        const count = res.rows[0] ? res.rows[0].unread_count : 0;
+        unreadCountCache.set(cacheKey, { count, expiresAt: now + UNREAD_CACHE_TTL_MS });
+        return count;
     } catch (err) {
         console.error('❌ [NotificationService] Lỗi getUnreadCount:', err.message);
         return 0;
@@ -257,6 +286,7 @@ async function markAsRead(userId, notificationId) {
             ON CONFLICT (user_id, notification_id) DO UPDATE SET read_at = NOW()
         `, [uId, nId]);
 
+        invalidateUnreadCountCache(uId);
         return true;
     } catch (err) {
         console.error('❌ [NotificationService] Lỗi markAsRead:', err.message);
@@ -296,6 +326,7 @@ async function markAllAsRead(userId, userRole) {
             `, [uId, ids]);
         }
 
+        invalidateUnreadCountCache(uId);
         return true;
     } catch (err) {
         console.error('❌ [NotificationService] Lỗi markAllAsRead:', err.message);

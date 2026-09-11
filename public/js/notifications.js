@@ -88,10 +88,13 @@ window.modNotifications = {
             window.addEventListener(evt, unlockAudio, { passive: true });
         });
 
-        // Tự động khôi phục Audio Context khi người dùng quay lại tab
+        // Tự động khôi phục Audio Context và kiểm tra thông báo khi người dùng quay lại tab
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && this.audioCtx && this.audioCtx.state === 'suspended') {
-                try { this.audioCtx.resume(); } catch(e) {}
+            if (document.visibilityState === 'visible') {
+                if (this.audioCtx && this.audioCtx.state === 'suspended') {
+                    try { this.audioCtx.resume(); } catch(e) {}
+                }
+                this.fetchUnreadCount();
             }
         });
 
@@ -145,14 +148,14 @@ window.modNotifications = {
         }
     },
 
-    // 3. Fallback Polling (15s)
+    // 3. Fallback Polling (60s - Đã có SSE Real-time kết nối ngầm phát chuông tức thì)
     startPolling: function() {
         if (this.pollingTimer) clearInterval(this.pollingTimer);
         this.pollingTimer = setInterval(() => {
             if (document.visibilityState === 'visible') {
                 this.fetchUnreadCount();
             }
-        }, 15000);
+        }, 60000);
     },
 
     // 4. Xử lý khi nhận được thông báo mới (cả real-time SSE hoặc Polling)
