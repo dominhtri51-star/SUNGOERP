@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const googleDriveService = require('../services/googleDrive.service');
 const { recalculateAllOrders, recalculateOrderProfit } = require('../services/orderProfit.service');
+const fifoInventory = require('../services/fifoInventory.service');
 
 const parseSafeNum = (val) => {
     if (val === null || val === undefined || val === '') return 0;
@@ -341,10 +342,15 @@ router.post('/', async (req, res) => {
                 itemParams
             );
 
-            // Trừ kho song song
-            await Promise.all(items.filter(i => i.product_id).map(item => {
+            // Trừ kho song song & Khấu trừ lô hàng FIFO
+            await Promise.all(items.filter(i => i.product_id).map(async (item) => {
                 const qty = parseFloat(item.quantity) || 1;
-                return client.query("UPDATE products SET stock_qty = GREATEST(0, stock_qty - $1) WHERE id = $2", [qty, item.product_id]);
+                await client.query("UPDATE products SET stock_qty = GREATEST(0, stock_qty - $1) WHERE id = $2", [qty, item.product_id]);
+                try {
+                    await fifoInventory.consumeInventoryFifo(client, item.product_id, qty);
+                } catch (fifoErr) {
+                    console.error(`[FIFO] Lỗi khấu trừ tồn kho lô hàng sp ${item.product_id}:`, fifoErr.message);
+                }
             }));
         }
 
@@ -494,7 +500,13 @@ router.put('/:id', async (req, res) => {
                 const oldItemsRes = await client.query("SELECT product_id, quantity FROM order_items WHERE order_id = $1", [orderIdInt]);
                 for (let oldItem of oldItemsRes.rows) {
                     if (oldItem.product_id) {
-                        await client.query("UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2", [parseFloat(oldItem.quantity) || 0, oldItem.product_id]);
+                        const oQty = parseFloat(oldItem.quantity) || 0;
+                        await client.query("UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2", [oQty, oldItem.product_id]);
+                        try {
+                            await fifoInventory.restoreInventoryFifo(client, oldItem.product_id, oQty);
+                        } catch (fifoErr) {
+                            console.error(`[FIFO] Lỗi hoàn tồn kho lô hàng cũ sp ${oldItem.product_id}:`, fifoErr.message);
+                        }
                     }
                 }
             }
@@ -524,6 +536,11 @@ router.put('/:id', async (req, res) => {
                 // Trừ kho thực tế nếu trạng thái đơn không phải CANCELLED hoặc RETURNED
                 if (finalStatus !== 'CANCELLED' && finalStatus !== 'RETURNED' && i.product_id) {
                     await client.query("UPDATE products SET stock_qty = GREATEST(0, stock_qty - $1) WHERE id = $2", [qty, i.product_id]);
+                    try {
+                        await fifoInventory.consumeInventoryFifo(client, i.product_id, qty);
+                    } catch (fifoErr) {
+                        console.error(`[FIFO] Lỗi khấu trừ tồn kho lô hàng sp ${i.product_id}:`, fifoErr.message);
+                    }
                 }
 
                 // Tự động kích hoạt bảo hành
@@ -555,12 +572,20 @@ router.put('/:id', async (req, res) => {
         const grossProfit = newTotalAmount - newCogs;
         const netProfit = (finalFeePayer === 'CUSTOMER') ? (Math.max(0, newSubtotal - discAmount - ptsDiscount) - newCogs) : (grossProfit - totalOrderCosts);
 
-        // KỊCH BẢN HỦY ĐƠN: CỘNG LẠI TỒN KHO THỰC TẾ
+        // KỊCH BẢN HỦY ĐƠN: CỘNG LẠI TỒN KHO THỰC TẾ & KHÔI PHỤC LÔ HÀNG FIFO
         let finalNotes = notes !== undefined ? notes : (oldOrder.notes || '');
         if (oldStatus !== 'CANCELLED' && finalStatus === 'CANCELLED') {
             if (items && items.length > 0) {
                 for(let i of items) {
-                    await client.query("UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2", [i.quantity, i.product_id]);
+                    if (i.product_id) {
+                        const cancelQty = parseFloat(i.quantity) || 0;
+                        await client.query("UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2", [cancelQty, i.product_id]);
+                        try {
+                            await fifoInventory.restoreInventoryFifo(client, i.product_id, cancelQty);
+                        } catch (fifoErr) {
+                            console.error(`[FIFO] Lỗi hoàn tồn kho lô khi hủy sp ${i.product_id}:`, fifoErr.message);
+                        }
+                    }
                 }
             }
             finalNotes = `[HỆ THỐNG]: Đã hoàn lại tồn kho. Lý do hủy: ${cancel_reason || 'Không có'}. Hoàn tiền khách: ${refund_amount || 0}đ.\n` + finalNotes;
@@ -1040,9 +1065,14 @@ router.post('/returns/:id/process', async (req, res) => {
                 }
 
                 if (item.product_id) {
-                    // Hàng tốt đạt chuẩn -> Cộng vào tồn kho bán hàng (stock_qty)
+                    // Hàng tốt đạt chuẩn -> Cộng vào tồn kho bán hàng (stock_qty) & Khôi phục lô FIFO
                     if (goodQty > 0) {
                         await client.query("UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2", [goodQty, item.product_id]);
+                        try {
+                            await fifoInventory.restoreInventoryFifo(client, item.product_id, goodQty);
+                        } catch (fifoErr) {
+                            console.error(`[FIFO] Lỗi hoàn tồn kho lô trả hàng sp ${item.product_id}:`, fifoErr.message);
+                        }
                     }
                     // Hàng lỗi / hỏng / chờ bảo hành -> Cộng vào kho hàng lỗi (defective_qty)
                     if (defectQty > 0) {
@@ -1627,7 +1657,11 @@ router.post('/bulk-delete', async (req, res) => {
                 const itemsRes = await client.query('SELECT product_id, quantity FROM order_items WHERE order_id = $1', [orderId]);
                 for (let item of itemsRes.rows) {
                     if (item.product_id) {
-                        await client.query('UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2', [item.quantity, item.product_id]);
+                        const rQty = parseFloat(item.quantity) || 0;
+                        await client.query('UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2', [rQty, item.product_id]);
+                        try {
+                            await fifoInventory.restoreInventoryFifo(client, item.product_id, rQty);
+                        } catch (fifoErr) {}
                     }
                 }
             }
@@ -1700,7 +1734,11 @@ router.delete('/:id/force', async (req, res) => {
                 const itemsRes = await pool.query('SELECT product_id, quantity FROM order_items WHERE order_id = $1', [orderId]);
                 for (let item of itemsRes.rows) {
                     if (item.product_id) {
-                        await pool.query('UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2', [item.quantity, item.product_id]);
+                        const rQty = parseFloat(item.quantity) || 0;
+                        await pool.query('UPDATE products SET stock_qty = stock_qty + $1 WHERE id = $2', [rQty, item.product_id]);
+                        try {
+                            await fifoInventory.restoreInventoryFifo(pool, item.product_id, rQty);
+                        } catch (fifoErr) {}
                     }
                 }
             }

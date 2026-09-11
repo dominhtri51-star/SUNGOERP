@@ -81,7 +81,7 @@ router.get('/supplier-debts', async (req, res) => {
                 (Number(po.supplier_id) === Number(s.id) || (po.supplier_name && po.supplier_name.toLowerCase() === (s.name || '').toLowerCase())) &&
                 po.status !== 'Đã Hủy'
             );
-            const totalPurchased = supPurchases.reduce((sum, po) => sum + parseFloat(po.total_amount || 0), 0);
+            const totalPurchased = supPurchases.reduce((sum, po) => sum + parseFloat(po.items_amount || po.total_amount || 0), 0);
 
             // Tổng tiền đã thanh toán (chỉ tính phiếu 'Đã Thanh Toán')
             const supPayments = payments.filter(p => 
@@ -164,7 +164,7 @@ router.get('/supplier/:id/statement', async (req, res) => {
             (Number(p.supplier_id) === Number(supId) || (p.supplier_name && p.supplier_name.toLowerCase() === supplier.name.toLowerCase()))
         );
 
-        const totalPurchased = supPurchases.filter(po => po.status !== 'Đã Hủy').reduce((sum, po) => sum + parseFloat(po.total_amount || 0), 0);
+        const totalPurchased = supPurchases.filter(po => po.status !== 'Đã Hủy').reduce((sum, po) => sum + parseFloat(po.items_amount || po.total_amount || 0), 0);
         const totalPaid = supPayments.filter(p => p.status === 'Đã Thanh Toán').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
         const currentDebt = Math.max(0, totalPurchased - totalPaid);
 

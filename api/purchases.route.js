@@ -5,6 +5,7 @@ const multer = require('multer');
 const pool = require('../config/database');
 const router = express.Router();
 const googleDriveService = require('../services/googleDrive.service');
+const fifoInventory = require('../services/fifoInventory.service');
 
 const dbFile = path.join(__dirname, '../data/purchases.json');
 
@@ -40,6 +41,22 @@ function formatPurchaseRow(row) {
     }
     if (!Array.isArray(items)) items = [];
 
+    const shippingFee = parseFloat(row.shipping_fee) || 0;
+    const otherFee = parseFloat(row.other_fee) || 0;
+    const feeNotes = row.fee_notes || '';
+
+    // Tiền hàng (Giá nhập từ NCC)
+    let itemsAmount = parseFloat(row.items_amount) || 0;
+    if (!itemsAmount && items.length > 0) {
+        itemsAmount = items.reduce((sum, it) => sum + ((parseFloat(it.qty) || 0) * (parseFloat(it.price) || 0)), 0);
+    }
+    if (!itemsAmount && row.total_amount) {
+        itemsAmount = parseFloat(row.total_amount) || 0;
+    }
+
+    // Tổng giá trị lô hàng (Giá vốn nhập kho = Tiền hàng + Phí ship + Phí khác)
+    const totalCost = parseFloat(row.total_cost) || (itemsAmount + shippingFee + otherFee);
+
     return {
         id: row.id,
         po_code: row.po_code,
@@ -49,7 +66,13 @@ function formatPurchaseRow(row) {
         status: row.status || 'Chờ Duyệt',
         items: items,
         docs: docs,
-        total_amount: parseFloat(row.total_amount) || 0,
+        items_amount: itemsAmount,
+        shipping_fee: shippingFee,
+        other_fee: otherFee,
+        fee_notes: feeNotes,
+        total_cost: totalCost,
+        // Nợ NCC: CHỈ tính theo giá trị sản phẩm giá nhập!
+        total_amount: itemsAmount,
         receive_date: row.receive_date,
         delivery_note: row.delivery_note || '',
         vehicle_info: row.vehicle_info || '',
@@ -73,7 +96,7 @@ router.get('/', async (req, res) => {
     res.json({ success: true, data: readFallbackDB() });
 });
 
-// [POST] Tạo Đơn Mua Hàng mới
+// [POST] Tạo Đơn Mua Hàng mới (Có phân bổ chi phí ship/chi khác vào giá vốn FIFO)
 router.post('/', async (req, res) => {
     try {
         const payload = req.body;
@@ -81,10 +104,19 @@ router.post('/', async (req, res) => {
         const supplierId = payload.supplier_id ? parseInt(payload.supplier_id) : null;
         const supplierName = (payload.supplier_name || '').trim();
         const note = (payload.note || '').trim();
-        const items = Array.isArray(payload.items) ? payload.items : [];
-        const totalAmount = parseFloat(payload.total_amount) || 0;
+        const rawItems = Array.isArray(payload.items) ? payload.items : [];
+        const shippingFee = Math.max(0, parseFloat(payload.shipping_fee) || 0);
+        const otherFee = Math.max(0, parseFloat(payload.other_fee) || 0);
+        const feeNotes = (payload.fee_notes || '').trim();
         const status = payload.status || 'Chờ Duyệt';
         const docs = (payload.docs && typeof payload.docs === 'object') ? payload.docs : {};
+
+        // Phân bổ chi phí phát sinh vào từng sản phẩm
+        const allotted = fifoInventory.allotFeesToItems(rawItems, shippingFee, otherFee, feeNotes);
+        const items = allotted.items;
+        const itemsAmount = allotted.items_amount;
+        const totalCost = allotted.total_cost;
+        const totalAmount = itemsAmount; // Công nợ NCC chỉ tính theo giá trị hàng hóa
 
         let newPO = null;
 
@@ -92,14 +124,22 @@ router.post('/', async (req, res) => {
             try {
                 const query = `
                     INSERT INTO purchases (
-                        po_code, supplier_id, supplier_name, note, items, docs, total_amount, status, created_at, updated_at
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+                        po_code, supplier_id, supplier_name, note, items, docs, 
+                        total_amount, items_amount, shipping_fee, other_fee, fee_notes, total_cost,
+                        status, created_at, updated_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
                     RETURNING *
                 `;
                 const result = await pool.query(query, [
-                    poCode, supplierId, supplierName, note, JSON.stringify(items), JSON.stringify(docs), totalAmount, status
+                    poCode, supplierId, supplierName, note, JSON.stringify(items), JSON.stringify(docs), 
+                    totalAmount, itemsAmount, shippingFee, otherFee, feeNotes, totalCost, status
                 ]);
                 newPO = formatPurchaseRow(result.rows[0]);
+
+                // Nếu tạo đơn ở trạng thái 'Hoàn Tất Nhập Kho' thì ghi nhận ngay lô hàng FIFO
+                if (status === 'Hoàn Tất Nhập Kho') {
+                    await fifoInventory.recordPurchaseBatches(pool, newPO);
+                }
             } catch (dbErr) {
                 console.error("Lỗi insert DB purchases:", dbErr.message);
             }
@@ -115,6 +155,11 @@ router.post('/', async (req, res) => {
                 supplier_name: supplierName,
                 note: note,
                 items: items,
+                items_amount: itemsAmount,
+                shipping_fee: shippingFee,
+                other_fee: otherFee,
+                fee_notes: feeNotes,
+                total_cost: totalCost,
                 total_amount: totalAmount,
                 status: status,
                 docs: docs,
@@ -141,9 +186,18 @@ router.put('/:id', async (req, res) => {
         const supplierId = payload.supplier_id ? parseInt(payload.supplier_id) : null;
         const supplierName = (payload.supplier_name || '').trim();
         const note = (payload.note || '').trim();
-        const items = Array.isArray(payload.items) ? payload.items : [];
-        const totalAmount = parseFloat(payload.total_amount) || 0;
+        const rawItems = Array.isArray(payload.items) ? payload.items : [];
+        const shippingFee = Math.max(0, parseFloat(payload.shipping_fee) || 0);
+        const otherFee = Math.max(0, parseFloat(payload.other_fee) || 0);
+        const feeNotes = (payload.fee_notes || '').trim();
         const status = payload.status || 'Chờ Duyệt';
+
+        // Phân bổ chi phí phát sinh vào từng sản phẩm
+        const allotted = fifoInventory.allotFeesToItems(rawItems, shippingFee, otherFee, feeNotes);
+        const items = allotted.items;
+        const itemsAmount = allotted.items_amount;
+        const totalCost = allotted.total_cost;
+        const totalAmount = itemsAmount; // Nợ NCC = tiền hàng
 
         let updatedPO = null;
 
@@ -158,16 +212,26 @@ router.put('/:id', async (req, res) => {
                         note = $4,
                         items = $5,
                         total_amount = $6,
-                        status = $7,
+                        items_amount = $7,
+                        shipping_fee = $8,
+                        other_fee = $9,
+                        fee_notes = $10,
+                        total_cost = $11,
+                        status = $12,
                         updated_at = NOW()
-                    WHERE id = $8
+                    WHERE id = $13
                     RETURNING *
                 `;
                 const result = await pool.query(query, [
-                    poCode, supplierId, supplierName, note, JSON.stringify(items), totalAmount, status, id
+                    poCode, supplierId, supplierName, note, JSON.stringify(items), 
+                    totalAmount, itemsAmount, shippingFee, otherFee, feeNotes, totalCost, status, id
                 ]);
                 if (result.rows.length > 0) {
                     updatedPO = formatPurchaseRow(result.rows[0]);
+                    // Nếu đơn ở trạng thái Hoàn Tất Nhập Kho, tự động tạo/cập nhật lô hàng FIFO
+                    if (status === 'Hoàn Tất Nhập Kho') {
+                        await fifoInventory.recordPurchaseBatches(pool, updatedPO);
+                    }
                 }
             } catch (dbErr) {
                 console.error("Lỗi update DB purchases:", dbErr.message);
@@ -177,7 +241,19 @@ router.put('/:id', async (req, res) => {
         let data = readFallbackDB();
         const index = data.findIndex(x => x.id === id);
         if (index !== -1) {
-            data[index] = { ...data[index], ...payload, updated_at: new Date().toISOString() };
+            data[index] = { 
+                ...data[index], 
+                ...payload, 
+                items: items,
+                items_amount: itemsAmount,
+                shipping_fee: shippingFee,
+                other_fee: otherFee,
+                fee_notes: feeNotes,
+                total_cost: totalCost,
+                total_amount: totalAmount,
+                status: status,
+                updated_at: new Date().toISOString() 
+            };
             writeFallbackDB(data);
             if (!updatedPO) updatedPO = data[index];
         }
@@ -309,6 +385,11 @@ router.put('/:id/receive', uploadWms.array('receipt_documents', 5), async (req, 
                         updated_at = NOW()
                     WHERE id = $7
                 `, [po.receive_date, po.status, po.delivery_note, po.vehicle_info, JSON.stringify(po.items), JSON.stringify(po.docs), id]);
+
+                // TỰ ĐỘNG GHI NHẬN LÔ HÀNG FIFO VÀ TÍNH LẠI GIÁ VỐN SẢN PHẨM
+                if (po.status === 'Hoàn Tất Nhập Kho') {
+                    await fifoInventory.recordPurchaseBatches(pool, po);
+                }
             } catch (dbErr) {
                 console.error("Lỗi update DB receive purchases:", dbErr.message);
             }
@@ -333,8 +414,25 @@ router.put('/:id/status', async (req, res) => {
 
         if (pool && typeof pool.query === 'function') {
             try {
-                await pool.query("UPDATE purchases SET status = $1, updated_at = NOW() WHERE id = $2", [status, id]);
-            } catch(e) {}
+                const resDb = await pool.query("UPDATE purchases SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *", [status, id]);
+                if (resDb.rows.length > 0) {
+                    const po = formatPurchaseRow(resDb.rows[0]);
+                    // Kích hoạt FIFO khi chuyển sang Hoàn Tất Nhập Kho
+                    if (status === 'Hoàn Tất Nhập Kho') {
+                        await fifoInventory.recordPurchaseBatches(pool, po);
+                    } else if (status === 'Đã Hủy') {
+                        // Xóa các lô hàng của PO bị hủy
+                        await pool.query("DELETE FROM inventory_batches WHERE po_id = $1", [id]);
+                        if (po.items) {
+                            for (const it of po.items) {
+                                if (it.product_id) await fifoInventory.recalculateProductFifoCost(pool, it.product_id);
+                            }
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error("Lỗi update status purchases:", e);
+            }
         }
 
         let data = readFallbackDB();
@@ -346,6 +444,17 @@ router.put('/:id/status', async (req, res) => {
         res.json({ success: true });
     } catch (e) { 
         res.status(500).json({ success: false }); 
+    }
+});
+
+// [GET] Danh sách Lô Hàng FIFO của một sản phẩm
+router.get('/products/:productId/batches', async (req, res) => {
+    try {
+        const productId = parseInt(req.params.productId);
+        const batches = await fifoInventory.getProductBatches(pool, productId);
+        res.json({ success: true, data: batches });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 
@@ -377,6 +486,7 @@ router.delete('/:id', async (req, res) => {
         }
 
         if (pool && typeof pool.query === 'function') {
+            await pool.query("DELETE FROM inventory_batches WHERE po_id = $1", [id]);
             await pool.query("DELETE FROM purchases WHERE id = $1", [id]);
         }
         let data = readFallbackDB();
