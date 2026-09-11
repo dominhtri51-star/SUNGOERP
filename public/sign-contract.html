@@ -116,61 +116,100 @@
             <div class="p-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-stamp text-amber-300 text-lg"></i>
-                    <h3 class="font-black text-sm uppercase">KÝ SỐ DOANH NGHIỆP BÊN A (CA / HSM)</h3>
+                    <h3 class="font-black text-sm uppercase">KÝ SỐ DOANH NGHIỆP BÊN A (USB TOKEN / CA / HSM)</h3>
                 </div>
                 <button onclick="closeCorpSignModal()" class="text-white/80 hover:text-white"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-5 space-y-3.5 text-xs bg-slate-50">
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Tên Doanh Nghiệp / Bên Mua (Bên A) <span class="text-red-500">*</span></label>
-                    <input type="text" id="corp-company-name" class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase outline-none focus:border-blue-500">
-                </div>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">Mã Số Thuế (MST) <span class="text-red-500">*</span></label>
-                        <input type="text" id="corp-tax-code" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold outline-none focus:border-blue-500">
+            <div class="p-5 space-y-4 text-xs bg-slate-50 overflow-y-auto max-h-[80vh]">
+                <!-- PHƯƠNG THỨC 1: KÝ BẰNG USB TOKEN (FILE PDF - KHUYÊN DÙNG CHO DOANH NGHIỆP) -->
+                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 rounded-xl border-2 border-emerald-300 shadow-sm space-y-2.5">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-[11px]">1</span>
+                            <div>
+                                <h4 class="font-black text-emerald-950 uppercase text-xs">CÁCH 1: KÝ BẰNG USB TOKEN (FILE PDF - KHUYÊN DÙNG)</h4>
+                                <p class="text-[10.5px] text-emerald-800 font-medium">Áp dụng cho USB Token NewCA, Viettel, VNPT, BKAV, FPT, SmartCA...</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 bg-emerald-200 text-emerald-900 rounded font-black text-[9px] whitespace-nowrap">PHÁP LÝ CA 100%</span>
                     </div>
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">Nhà Cung Cấp Chứng Thư (CA)</label>
-                        <select id="corp-ca-provider" class="w-full border border-slate-300 rounded-lg p-2 font-bold outline-none">
-                            <option value="NewCA">NewCA</option>
-                            <option value="Viettel-CA">Viettel-CA</option>
-                            <option value="VNPT-CA">VNPT-CA</option>
-                            <option value="BKAV-CA">BKAV-CA</option>
-                            <option value="FPT-CA">FPT-CA</option>
-                            <option value="MISA eSign">MISA eSign</option>
-                            <option value="SmartCA">SmartCA</option>
-                            <option value="Doanh Nghiệp CA">Khác / HSM Nội Bộ</option>
-                        </select>
+                    <div class="bg-white/85 p-2.5 rounded-lg border border-emerald-200 text-[11px] text-slate-700 space-y-1 leading-relaxed">
+                        <p>1. Bấm <b>"1. Tải Hợp Đồng PDF"</b> để xuất văn bản về máy tính.</p>
+                        <p>2. Cắm <b>USB Token</b> của công ty vào máy, mở file PDF bằng phần mềm <b>Adobe Acrobat / Foxit Reader</b> để ký số bằng chứng thư số.</p>
+                        <p>3. Bấm <b>"2. Tải Lên PDF Đã Ký USB Token"</b> để hoàn tất gửi văn bản có chữ ký số cho SUNGO.</p>
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">Người Đại Diện Ký Số <span class="text-red-500">*</span></label>
-                        <input type="text" id="corp-rep-name" class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase outline-none">
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">Chức Vụ</label>
-                        <input type="text" id="corp-position" value="Giám Đốc / Đại diện pháp luật" class="w-full border border-slate-300 rounded-lg p-2 font-medium outline-none">
+                    <div class="flex flex-wrap items-center gap-2 pt-0.5">
+                        <button type="button" onclick="window.print()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-lg transition text-xs flex items-center gap-1.5 cursor-pointer shadow-xs">
+                            <i class="fas fa-file-pdf"></i> 1. Tải Hợp Đồng PDF
+                        </button>
+                        <button type="button" onclick="closeCorpSignModal(); openUploadModal();" class="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-bold rounded-lg transition text-xs flex items-center gap-1.5 cursor-pointer shadow-xs">
+                            <i class="fas fa-cloud-arrow-up"></i> 2. Tải Lên PDF Đã Ký USB Token
+                        </button>
                     </div>
                 </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Ghi Chú Ký Xác Nhận</label>
-                    <input type="text" id="corp-note" value="Bên A xác nhận ký số và cam kết thực hiện đúng các điều khoản hợp đồng." class="w-full border border-slate-300 rounded-lg p-2 font-medium outline-none">
-                </div>
-                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <label class="flex items-start gap-2 cursor-pointer">
-                        <input type="checkbox" id="corp-agree-chk" class="w-4 h-4 mt-0.5 rounded text-blue-600 focus:ring-blue-500">
-                        <span class="text-[11px] text-blue-950 font-bold leading-tight">
-                            Tôi cam kết thông tin chứng thư số trên là chính xác và có giá trị pháp lý đại diện Doanh Nghiệp ký kết văn bản này.
-                        </span>
-                    </label>
+
+                <!-- PHƯƠNG THỨC 2: XÁC NHẬN KÝ SỐ TRỰC TUYẾN (CLOUD HSM / SOFT CA) -->
+                <div class="bg-white p-3.5 rounded-xl border border-indigo-200 shadow-sm space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-[11px]">2</span>
+                        <h4 class="font-black text-indigo-950 uppercase text-xs">CÁCH 2: XÁC NHẬN KÝ SỐ TRỰC TUYẾN (CLOUD HSM / SOFT CA)</h4>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tên Doanh Nghiệp / Bên Mua (Bên A) <span class="text-red-500">*</span></label>
+                        <input type="text" id="corp-company-name" class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase outline-none focus:border-blue-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Mã Số Thuế (MST) <span class="text-red-500">*</span></label>
+                            <input type="text" id="corp-tax-code" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Nhà Cung Cấp Chứng Thư (CA)</label>
+                            <select id="corp-ca-provider" class="w-full border border-slate-300 rounded-lg p-2 font-bold outline-none">
+                                <option value="NewCA">NewCA</option>
+                                <option value="Viettel-CA">Viettel-CA</option>
+                                <option value="VNPT-CA">VNPT-CA</option>
+                                <option value="BKAV-CA">BKAV-CA</option>
+                                <option value="FPT-CA">FPT-CA</option>
+                                <option value="MISA eSign">MISA eSign</option>
+                                <option value="SmartCA">SmartCA</option>
+                                <option value="Doanh Nghiệp CA">Khác / HSM Nội Bộ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Số Serial Chứng Thư Số</label>
+                        <input type="text" id="corp-serial" placeholder="Ví dụ: 54:02:16... (Để trống nếu dùng USB Token ngoài)" class="w-full border border-slate-300 rounded-lg p-2 font-mono outline-none focus:border-blue-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Người Đại Diện Ký Số <span class="text-red-500">*</span></label>
+                            <input type="text" id="corp-rep-name" class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Chức Vụ</label>
+                            <input type="text" id="corp-position" value="Giám Đốc / Đại diện pháp luật" class="w-full border border-slate-300 rounded-lg p-2 font-medium outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Ghi Chú Ký Xác Nhận</label>
+                        <input type="text" id="corp-note" value="Bên A xác nhận ký số và cam kết thực hiện đúng các điều khoản hợp đồng." class="w-full border border-slate-300 rounded-lg p-2 font-medium outline-none">
+                    </div>
+                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <label class="flex items-start gap-2 cursor-pointer">
+                            <input type="checkbox" id="corp-agree-chk" class="w-4 h-4 mt-0.5 rounded text-blue-600 focus:ring-blue-500">
+                            <span class="text-[11px] text-blue-950 font-bold leading-tight">
+                                Tôi cam kết thông tin chứng thư số trên là chính xác và có giá trị pháp lý đại diện Doanh Nghiệp ký kết văn bản này.
+                            </span>
+                        </label>
+                    </div>
                 </div>
             </div>
-            <div class="p-4 border-t border-slate-200 bg-white flex justify-end gap-2">
+            <div class="p-4 border-t border-slate-200 bg-white flex justify-end gap-2 shrink-0">
                 <button onclick="closeCorpSignModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs">Hủy</button>
                 <button onclick="submitCorpDigitalSign()" id="btn-submit-corp-sign" class="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-black rounded-lg text-xs shadow flex items-center gap-1.5 uppercase">
-                    <i class="fas fa-stamp"></i> Đóng Dấu Số Doanh Nghiệp
+                    <i class="fas fa-stamp"></i> Đóng Dấu Số Doanh Nghiệp (Cách 2)
                 </button>
             </div>
         </div>

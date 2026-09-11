@@ -454,7 +454,7 @@
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Số Serial Chứng Thư Số</label>
-                        <input type="text" id="cert-serial" oninput="window.modContract.updateCertPreview()" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-slate-800 outline-none uppercase focus:border-rose-500">
+                        <input type="text" id="cert-serial" oninput="window.modContract.updateCertPreview()" placeholder="Để trống nếu cắm USB Token ngoài (hoặc nhập serial NewCA)" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-slate-800 outline-none uppercase focus:border-rose-500">
                     </div>
                     <div class="md:col-span-2">
                         <label class="block font-bold text-slate-700 mb-1">Phương Thức Ký Số</label>
@@ -511,7 +511,7 @@
                                 <p class="text-[10px] text-slate-500 font-bold mt-0.5" id="prev-cert-signer">KÝ BỞI: ÔNG ĐỖ MINH TRÍ - GIÁM ĐỐC</p>
                             </div>
                         </div>
-                        <p class="text-[10px] text-slate-600" id="prev-cert-tax">MST: 0315614349 • Serial: 54:02:16:88:99:AA:BB:CC</p>
+                        <p class="text-[10px] text-slate-600" id="prev-cert-tax">MST: 0315614349 • Ký số USB Token NewCA</p>
                         <p class="text-[10px] text-emerald-700 font-black mt-1 flex items-center gap-1" id="prev-cert-ca">
                             <i class="fas fa-check-circle"></i> CHỨNG THƯ SỐ HỢP LỆ (NewCA Certified)
                         </p>
@@ -533,6 +533,8 @@
 <!-- ========================================================= -->
 <!-- 1. MODAL KẾ TOÁN TRƯỞNG THỰC HIỆN ĐỐI SOÁT & LÊN LỆNH TRÌNH KÝ -->
 <!-- ========================================================= -->
+<!-- 1. MODAL KẾ TOÁN LẬP HỢP ĐỒNG TRÌNH GIÁM ĐỐC PHÊ DUYỆT -->
+<!-- ========================================================= -->
 <div id="contract-ktt-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm hidden items-center justify-center z-[10000] p-4">
     <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col">
         <!-- Header -->
@@ -542,8 +544,8 @@
                     <i class="fas fa-file-invoice-dollar text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="font-black text-sm uppercase tracking-wider">KẾ TOÁN TRƯỞNG LÊN LỆNH TRÌNH KÝ HỢP ĐỒNG</h3>
-                    <p class="text-[11px] text-white/80 font-medium">Vai trò: Người thực hiện, kiểm tra đối soát pháp nhân VAT & đơn giá</p>
+                    <h3 class="font-black text-sm uppercase tracking-wider">KẾ TOÁN LẬP HỢP ĐỒNG TRÌNH GIÁM ĐỐC PHÊ DUYỆT</h3>
+                    <p class="text-[11px] text-white/80 font-medium">Bước 1: Kế toán đối soát pháp nhân VAT, đơn giá và trình Giám Đốc xem xét ký duyệt</p>
                 </div>
             </div>
             <button onclick="document.getElementById('contract-ktt-modal').classList.replace('flex', 'hidden')" class="text-white/80 hover:text-white"><i class="fas fa-times text-lg"></i></button>
@@ -582,24 +584,24 @@
                 </div>
             </div>
 
-            <!-- Thẩm định của KTT -->
+            <!-- Thẩm định của Kế toán -->
             <div class="bg-white p-4 rounded-xl border border-blue-200 shadow-sm space-y-3">
                 <h4 class="font-black text-blue-800 uppercase text-xs border-b pb-2 flex items-center gap-1.5">
-                    <i class="fas fa-pen-to-square"></i> 2. Thẩm Định & Ghi Chú Trình Giám Đốc
+                    <i class="fas fa-pen-to-square"></i> 2. Ý Kiến Kế Toán Lập Hợp Đồng Trình Giám Đốc
                 </h4>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Người Thực Hiện Trình Ký</label>
-                    <input type="text" id="ktt-name-input" value="KẾ TOÁN TRƯỞNG SUNGO" class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase text-slate-800 outline-none">
+                    <label class="block font-bold text-slate-700 mb-1">Người Lập Hợp Đồng Trình Ký</label>
+                    <input type="text" id="ktt-name-input" value="KẾ TOÁN SUNGO" class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase text-slate-800 outline-none">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Ý Kiến Thẩm Định Của Kế Toán Trưởng <span class="text-red-500">*</span></label>
-                    <textarea id="ktt-note-input" rows="2" class="w-full border border-slate-300 rounded-lg p-2 font-medium text-slate-800 outline-none">Kế toán trưởng đã đối soát khớp hồ sơ pháp nhân xuất hóa đơn VAT trong CRM, bảng giá hàng hóa và các đợt giải ngân. Kính trình Giám đốc ĐỖ MINH TRÍ xem xét phê duyệt và đóng dấu chữ ký số.</textarea>
+                    <label class="block font-bold text-slate-700 mb-1">Ghi Chú / Đề Xuất Trình Giám Đốc <span class="text-red-500">*</span></label>
+                    <textarea id="ktt-note-input" rows="2" class="w-full border border-slate-300 rounded-lg p-2 font-medium text-slate-800 outline-none">Kế toán đã lập hợp đồng, đối soát khớp hồ sơ pháp nhân xuất hóa đơn VAT trong CRM, bảng giá và các đợt thanh toán. Kính trình Giám đốc ĐỖ MINH TRÍ xem xét phê duyệt.</textarea>
                 </div>
                 <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <label class="flex items-start gap-2 cursor-pointer">
                         <input type="checkbox" id="ktt-confirm-checkbox" class="w-4 h-4 mt-0.5 rounded text-blue-600 focus:ring-blue-500">
                         <span class="text-[11px] text-blue-950 font-bold leading-tight">
-                            Tôi (Kế toán trưởng) xác nhận đã kiểm tra, đối soát kỹ lưỡng số liệu hóa đơn VAT, bảng giá và chịu trách nhiệm về tính chính xác của hồ sơ trình Giám Đốc.
+                            Tôi (Kế toán lập hợp đồng) xác nhận đã kiểm tra, đối soát kỹ lưỡng số liệu hóa đơn VAT, bảng giá và chịu trách nhiệm về tính chính xác của hồ sơ trình Giám Đốc.
                         </span>
                     </label>
                 </div>
@@ -610,14 +612,14 @@
         <div class="p-4 border-t border-slate-200 bg-white flex justify-end gap-2 shrink-0">
             <button onclick="document.getElementById('contract-ktt-modal').classList.replace('flex', 'hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition text-xs">Hủy</button>
             <button onclick="window.modContract.submitKttApproval()" id="btn-submit-ktt" class="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 uppercase">
-                <i class="fas fa-paper-plane"></i> Gửi Lệnh Trình Giám Đốc Ký Số
+                <i class="fas fa-paper-plane"></i> Gửi Lệnh Trình Giám Đốc Phê Duyệt
             </button>
         </div>
     </div>
 </div>
 
 <!-- ========================================================= -->
-<!-- 2. MODAL GIÁM ĐỐC PHÊ DUYỆT & ĐÓNG DẤU CHỮ KÝ SỐ TỐI CAO -->
+<!-- 2. MODAL GIÁM ĐỐC PHÊ DUYỆT HỢP ĐỒNG (QUYỀN TỐI CAO) -->
 <!-- ========================================================= -->
 <div id="contract-director-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm hidden items-center justify-center z-[10000] p-4">
     <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col">
@@ -628,8 +630,8 @@
                     <i class="fas fa-crown text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="font-black text-sm uppercase tracking-wider">GIÁM ĐỐC PHÊ DUYỆT & ĐÓNG DẤU CHỮ KÝ SỐ</h3>
-                    <p class="text-[11px] text-white/80 font-medium">Quyền tối cao: ÔNG ĐỖ MINH TRÍ - Người chịu trách nhiệm pháp lý hoàn toàn</p>
+                    <h3 class="font-black text-sm uppercase tracking-wider">GIÁM ĐỐC PHÊ DUYỆT HỢP ĐỒNG</h3>
+                    <p class="text-[11px] text-white/80 font-medium">Bước 2: ÔNG ĐỖ MINH TRÍ - Giám Đốc duyệt ký / yêu cầu sửa / không ký</p>
                 </div>
             </div>
             <button onclick="document.getElementById('contract-director-modal').classList.replace('flex', 'hidden')" class="text-white/80 hover:text-white"><i class="fas fa-times text-lg"></i></button>
@@ -637,13 +639,13 @@
 
         <!-- Body -->
         <div class="flex-1 overflow-y-auto p-5 space-y-4 text-xs bg-slate-50">
-            <!-- Phiếu trình ký của KTT -->
+            <!-- Phiếu trình ký của Kế toán -->
             <div class="bg-white p-4 rounded-xl border border-indigo-200 shadow-sm space-y-2">
                 <h4 class="font-black text-indigo-900 uppercase text-xs border-b pb-1.5 flex items-center gap-1.5">
-                    <i class="fas fa-clipboard-check text-blue-600"></i> Phiếu Thẩm Định & Đề Xuất Của Kế Toán Trưởng
+                    <i class="fas fa-clipboard-check text-blue-600"></i> Phiếu Thẩm Định Của Kế Toán Lập Hợp Đồng
                 </h4>
                 <div class="bg-indigo-50/70 p-3 rounded-lg border border-indigo-100 space-y-1">
-                    <p class="text-slate-600">Người thực hiện: <b class="text-slate-900" id="dir-ktt-name">KẾ TOÁN TRƯỞNG</b> • Thời gian: <span id="dir-ktt-time" class="font-bold text-blue-700">---</span></p>
+                    <p class="text-slate-600">Người thực hiện: <b class="text-slate-900" id="dir-ktt-name">KẾ TOÁN</b> • Thời gian: <span id="dir-ktt-time" class="font-bold text-blue-700">---</span></p>
                     <p class="text-slate-800 italic" id="dir-ktt-note">"Đã đối soát đầy đủ"</p>
                 </div>
             </div>
@@ -669,93 +671,149 @@
                 </div>
             </div>
 
-            <!-- Phê duyệt của Giám Đốc: Chọn 1 trong 2 phương thức -->
-            <div class="space-y-3.5">
-                <!-- PHƯƠNG THỨC 1: KÝ SỐ USB TOKEN NEWCA (PHÁP LÝ CA 100%) -->
-                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl border-2 border-emerald-300 shadow-sm space-y-3">
-                    <div class="flex items-start justify-between gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">1</span>
-                            <div>
-                                <h4 class="font-black text-emerald-950 uppercase text-xs">PHƯƠNG THỨC 1: KÝ BẰNG USB TOKEN NEWCA (FILE PDF GỐC)</h4>
-                                <p class="text-[10.5px] text-emerald-800 font-medium">Chuẩn pháp lý 100% CA có thẩm quyền theo Nghị định 130/2018/NĐ-CP (Ngân hàng, Thuế, Đối tác lớn)</p>
-                            </div>
+            <!-- Quyết định phê duyệt của Giám Đốc -->
+            <div class="bg-white p-4 rounded-xl border-2 border-indigo-200 shadow-sm space-y-3">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-xs">✓</span>
+                        <div>
+                            <h4 class="font-black text-indigo-950 uppercase text-xs">PHÊ DUYỆT BAN HÀNH (CHUYỂN KẾ TOÁN TRƯỞNG KÝ SỐ USB TOKEN)</h4>
+                            <p class="text-[10.5px] text-slate-500 font-medium">Giám Đốc duyệt thông qua nội dung, chuyển tiếp cho KTT cắm NewCA USB Token ký số</p>
                         </div>
-                        <span class="px-2 py-0.5 bg-emerald-200 text-emerald-900 rounded font-black text-[10px] whitespace-nowrap">KHUYÊN DÙNG ĐỐI NGOẠI</span>
                     </div>
-                    <div class="bg-white/85 p-3 rounded-lg border border-emerald-200 text-[11px] text-slate-700 space-y-1.5 leading-relaxed">
-                        <p class="font-bold text-slate-900">Quy trình thực hiện chuẩn:</p>
-                        <ol class="list-decimal list-inside space-y-1 pl-1">
-                            <li>Bấm <b>"1. Tải Hợp Đồng PDF Về Máy"</b> bên dưới để xuất văn bản hợp đồng hoàn chỉnh.</li>
-                            <li>Cắm <b>USB Token NewCA</b> vào máy tính, mở file PDF bằng phần mềm <b>Adobe Acrobat</b> hoặc <b>Foxit Reader</b> -> Ký số bằng USB Token NewCA và nhập mã PIN USB Token.</li>
-                            <li>Bấm <b>"2. Tải Lên PDF Đã Ký USB Token"</b> để lưu trữ vĩnh viễn văn bản có chữ ký số điện tử trên hệ thống SUNGO ERP.</li>
-                        </ol>
+                    <span class="px-2 py-0.5 bg-indigo-100 text-indigo-900 rounded font-black text-[10px] whitespace-nowrap">QUY TRÌNH 3 BƯỚC</span>
+                </div>
+
+                <div class="p-2.5 bg-blue-50/80 border border-blue-200 rounded-lg text-[11px] text-blue-950">
+                    <i class="fas fa-info-circle text-blue-600 mr-1"></i> Khi Giám Đốc phê duyệt, hợp đồng sẽ được đóng dấu <b>"DẤU PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ"</b> và tự động chuyển sang trạng thái <b>"Chờ KTT Ký Số USB Token"</b>.
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Người Đại Diện Ban Giám Đốc</label>
+                        <input type="text" id="dir-name-input" value="ÔNG ĐỖ MINH TRÍ" readonly class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase text-slate-800 bg-slate-100 outline-none">
                     </div>
-                    <div class="flex flex-wrap items-center gap-2 pt-1">
-                        <button type="button" onclick="window.modContract.downloadContractPDF()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 cursor-pointer">
-                            <i class="fas fa-file-pdf"></i> 1. Tải Hợp Đồng PDF Về Máy
-                        </button>
-                        <button type="button" onclick="document.getElementById('contract-director-modal').classList.replace('flex', 'hidden'); window.modContract.openUploadSignedModal();" class="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 cursor-pointer">
-                            <i class="fas fa-cloud-arrow-up"></i> 2. Tải Lên PDF Đã Ký USB Token
-                        </button>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Mã PIN Duyệt Giám Đốc <span class="text-rose-600">*</span></label>
+                        <input type="password" id="dir-pin-input" placeholder="Nhập mã PIN duyệt Giám đốc (123456)..." class="w-full border-2 border-indigo-300 rounded-lg p-2 outline-none font-mono font-bold text-slate-900 tracking-widest focus:border-indigo-600 bg-white">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block font-bold text-slate-700 mb-1">Ý Kiến Chỉ Đạo Của Giám Đốc</label>
+                        <input type="text" id="dir-note-input" value="Ban Giám Đốc phê duyệt ban hành. Chuyển Kế toán trưởng cắm USB Token NewCA ký số." class="w-full border border-slate-300 rounded-lg p-2 font-medium text-slate-800 outline-none">
                     </div>
                 </div>
 
-                <!-- PHƯƠNG THỨC 2: PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ ERP (NHANH CHÓNG / TIỆN LỢI) -->
-                <div class="bg-white p-4 rounded-xl border-2 border-indigo-200 shadow-sm space-y-3">
-                    <div class="flex items-start justify-between gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-xs">2</span>
-                            <div>
-                                <h4 class="font-black text-indigo-950 uppercase text-xs">PHƯƠNG THỨC 2: PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ ERP (DUYỆT TRỰC TUYẾN)</h4>
-                                <p class="text-[10.5px] text-slate-500 font-medium">Dành cho Giám đốc duyệt ban hành nhanh trên điện thoại/máy tính khi chưa cắm USB Token</p>
-                            </div>
-                        </div>
-                        <span class="px-2 py-0.5 bg-indigo-100 text-indigo-900 rounded font-black text-[10px] whitespace-nowrap">DUYỆT NHANH ERP</span>
-                    </div>
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <label class="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" id="dir-confirm-checkbox" class="w-4 h-4 mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-[11px] text-amber-950 font-bold leading-tight">
+                            Tôi (Giám đốc ĐỖ MINH TRÍ - Đại diện pháp luật) xác nhận phê duyệt nội dung và chuyển Kế toán trưởng thực hiện ký số USB Token NewCA.
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
 
-                    <div class="p-2.5 bg-blue-50/80 border border-blue-200 rounded-lg text-[11px] text-blue-950">
-                        <i class="fas fa-info-circle text-blue-600 mr-1"></i> Hệ thống sẽ đóng <b>"DẤU PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ (ERP Internal e-Approval)"</b> kèm mã băm SHA-256 bảo mật và định danh người ký (không mạo danh chứng thư số CA khi chưa cắm Token).
-                    </div>
+        <!-- Footer với 3 lựa chọn của Giám Đốc: Không ký / Sửa lại / Phê duyệt chuyển KTT -->
+        <div class="p-4 border-t border-slate-200 bg-white flex flex-wrap justify-between items-center gap-2 shrink-0">
+            <div class="flex items-center gap-2">
+                <button onclick="window.modContract.directorCancel()" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-lg border border-red-300 transition text-xs flex items-center gap-1 cursor-pointer" title="Từ chối ban hành hợp đồng">
+                    <i class="fas fa-ban"></i> Không Ký / Từ Chối
+                </button>
+                <button onclick="window.modContract.directorReject()" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-lg border border-amber-300 transition text-xs flex items-center gap-1 cursor-pointer" title="Yêu cầu kế toán đối soát sửa lại">
+                    <i class="fas fa-undo"></i> Yêu Cầu Sửa Lại
+                </button>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="document.getElementById('contract-director-modal').classList.replace('flex', 'hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition text-xs">Đóng</button>
+                <button onclick="window.modContract.submitDirectorApproval()" id="btn-submit-dir" class="px-5 py-2 bg-indigo-700 hover:bg-indigo-800 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 uppercase cursor-pointer">
+                    <i class="fas fa-check-double"></i> Phê Duyệt & Chuyển KTT Ký Token
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<!-- ========================================================= -->
+<!-- 3. MODAL KẾ TOÁN TRƯỞNG KÝ SỐ USB TOKEN NEWCA -->
+<!-- ========================================================= -->
+<div id="contract-ktt-token-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm hidden items-center justify-center z-[10000] p-4">
+    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col">
+        <!-- Header -->
+        <div class="p-4 flex items-center justify-between bg-gradient-to-r from-emerald-700 to-teal-800 text-white shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center font-black text-amber-300">
+                    <i class="fas fa-key text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-sm uppercase tracking-wider">KẾ TOÁN TRƯỞNG KÝ SỐ USB TOKEN NEWCA</h3>
+                    <p class="text-[11px] text-white/80 font-medium">Bước 3: Kế toán trưởng giữ thiết bị USB Token phần cứng NewCA thực hiện ký số hoàn tất</p>
+                </div>
+            </div>
+            <button onclick="document.getElementById('contract-ktt-token-modal').classList.replace('flex', 'hidden')" class="text-white/80 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-5 space-y-4 text-xs bg-slate-50">
+            <!-- Thông tin Giám Đốc đã duyệt -->
+            <div class="bg-emerald-50 border border-emerald-300 rounded-xl p-3.5 space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="font-black text-emerald-900 text-xs flex items-center gap-1.5">
+                        <i class="fas fa-crown text-amber-500"></i> GIÁM ĐỐC ĐỖ MINH TRÍ ĐÃ PHÊ DUYỆT BAN HÀNH
+                    </span>
+                    <span class="px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-bold text-[10px]">ĐÃ DUYỆT NỘI BỘ</span>
+                </div>
+                <p class="text-slate-700">Hợp đồng: <b class="font-mono text-purple-700 text-xs" id="ktt-token-code">---</b> • Khách hàng: <b id="ktt-token-cust">---</b> • Tổng tiền: <b class="text-rose-700 font-black" id="ktt-token-val">0 đ</b></p>
+                <p class="text-slate-600">Thời gian duyệt: <span id="ktt-token-dir-time" class="font-bold text-blue-700">---</span></p>
+                <p class="text-slate-800 italic" id="ktt-token-dir-note">"Ban Giám Đốc phê duyệt ban hành."</p>
+            </div>
+
+            <!-- Hướng dẫn 3 bước ký số bằng USB Token NewCA -->
+            <div class="bg-white p-4 rounded-xl border-2 border-emerald-300 shadow-sm space-y-3">
+                <h4 class="font-black text-emerald-950 uppercase text-xs flex items-center gap-1.5">
+                    <i class="fas fa-shield-halved text-emerald-600"></i> Quy Trình Ký Số USB Token NewCA Hợp Chuẩn Pháp Lý 100%
+                </h4>
+                <div class="space-y-2.5 text-slate-700 text-[11.5px] leading-relaxed">
+                    <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <span class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5">1</span>
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">Người Đại Diện Ban Giám Đốc</label>
-                            <input type="text" id="dir-name-input" value="ÔNG ĐỖ MINH TRÍ" readonly class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase text-slate-800 bg-slate-100 outline-none">
+                            <p class="font-bold text-slate-900">Tải Hợp Đồng PDF Về Máy Tính:</p>
+                            <p class="text-slate-600 text-[11px]">Bấm nút <b>"1. Tải Hợp Đồng PDF Về Máy"</b> bên dưới để xuất văn bản đã có dấu phê duyệt của Giám Đốc.</p>
                         </div>
+                    </div>
+                    <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5">2</span>
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">Mã PIN Duyệt Giám Đốc <span class="text-rose-600">*</span></label>
-                            <input type="password" id="dir-pin-input" placeholder="Nhập mã PIN duyệt Giám đốc (123456)..." class="w-full border-2 border-indigo-300 rounded-lg p-2 outline-none font-mono font-bold text-slate-900 tracking-widest focus:border-indigo-600 bg-white">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block font-bold text-slate-700 mb-1">Ý Kiến Chỉ Đạo Của Giám Đốc</label>
-                            <input type="text" id="dir-note-input" value="Ban Giám Đốc phê duyệt ban hành và chịu trách nhiệm pháp lý hoàn toàn." class="w-full border border-slate-300 rounded-lg p-2 font-medium text-slate-800 outline-none">
+                            <p class="font-bold text-slate-900">Cắm USB Token NewCA & Ký Số:</p>
+                            <p class="text-slate-600 text-[11px]">Kế toán trưởng cắm USB Token NewCA vào máy tính, mở file PDF bằng <b>Adobe Acrobat</b> hoặc <b>Foxit Reader</b> -> Chọn ký số tại vị trí BÊN B và nhập mã PIN USB Token.</p>
                         </div>
                     </div>
+                    <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <span class="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5">3</span>
+                        <div>
+                            <p class="font-bold text-slate-900">Tải Lên Hoặc Xác Nhận Hoàn Tất:</p>
+                            <p class="text-slate-600 text-[11px]">Bấm <b>"2. Tải Lên PDF Đã Ký USB Token"</b> để lưu trữ văn bản có chứng thư điện tử vĩnh viễn trên ERP, hoặc bấm <b>"3. Xác Nhận Đã Ký Số Xong"</b>.</p>
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                        <label class="flex items-start gap-2 cursor-pointer">
-                            <input type="checkbox" id="dir-confirm-checkbox" class="w-4 h-4 mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
-                            <span class="text-[11px] text-amber-950 font-bold leading-tight">
-                                Tôi (Giám đốc ĐỖ MINH TRÍ - Đại diện pháp luật) xác nhận phê duyệt điện tử nội bộ ban hành văn bản Hợp đồng này.
-                            </span>
-                        </label>
-                    </div>
+                <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200">
+                    <button type="button" onclick="window.modContract.downloadContractPDF()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-file-pdf"></i> 1. Tải Hợp Đồng PDF Về Máy
+                    </button>
+                    <button type="button" onclick="document.getElementById('contract-ktt-token-modal').classList.replace('flex', 'hidden'); window.modContract.openUploadSignedModal();" class="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-cloud-arrow-up"></i> 2. Tải Lên PDF Đã Ký USB Token
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="p-4 border-t border-slate-200 bg-white flex justify-between items-center gap-2 shrink-0">
-            <button onclick="window.modContract.directorReject()" class="px-3.5 py-2 bg-slate-100 hover:bg-rose-50 text-rose-700 font-bold rounded-lg border border-rose-200 transition text-xs flex items-center gap-1">
-                <i class="fas fa-undo"></i> Yêu Cầu KTT Chỉnh Sửa Lại
+            <button onclick="document.getElementById('contract-ktt-token-modal').classList.replace('flex', 'hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition text-xs">Đóng</button>
+            <button onclick="window.modContract.submitKttSignToken()" id="btn-submit-ktt-token" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 uppercase cursor-pointer">
+                <i class="fas fa-check-circle"></i> 3. Xác Nhận Đã Ký Xong Bằng Token NewCA
             </button>
-            <div class="flex items-center gap-2">
-                <button onclick="document.getElementById('contract-director-modal').classList.replace('flex', 'hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition text-xs">Đóng</button>
-                <button onclick="window.modContract.submitDirectorApproval()" id="btn-submit-dir" class="px-5 py-2.5 bg-indigo-700 hover:bg-indigo-800 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 uppercase cursor-pointer">
-                    <i class="fas fa-shield-halved"></i> Phê Duyệt Điện Tử Nội Bộ ERP
-                </button>
-            </div>
         </div>
     </div>
 </div>
@@ -985,6 +1043,17 @@ window.modContract = {
         }
     },
 
+    checkKttRole: () => {
+        try {
+            const uStr = localStorage.getItem('sungo_user') || localStorage.getItem('currentUser') || sessionStorage.getItem('sungo_user') || sessionStorage.getItem('currentUser');
+            const u = JSON.parse(uStr || '{}');
+            const role = (u.role || '').toUpperCase();
+            return role === 'KE_TOAN_TRUONG' || role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'GIAM_DOC' || role === 'TONG_GIAM_DOC';
+        } catch(e) {
+            return false;
+        }
+    },
+
     init: async () => {
         const isAdmin = window.modContract.checkAdminRole();
         const btnCert = document.getElementById('btn-cert-settings');
@@ -1072,7 +1141,7 @@ window.modContract = {
         document.getElementById('cert-position').value = cfg.position || 'Giám Đốc';
         document.getElementById('cert-director-pin').value = cfg.director_pin || '123456';
         document.getElementById('cert-ca-provider').value = cfg.ca_provider || 'NewCA';
-        document.getElementById('cert-serial').value = cfg.cert_serial || '54:02:16:88:99:AA:BB:CC';
+        document.getElementById('cert-serial').value = cfg.cert_serial || '';
         document.getElementById('cert-method').value = cfg.signing_method || 'USB Token Chuyên Dụng';
         document.getElementById('cert-valid-from').value = cfg.cert_valid_from || '2024-01-01';
         document.getElementById('cert-valid-to').value = cfg.cert_valid_to || '2027-12-31';
@@ -1090,12 +1159,12 @@ window.modContract = {
         const cRep = document.getElementById('cert-rep').value.trim() || 'ÔNG ĐỖ MINH TRÍ';
         const cPos = document.getElementById('cert-position').value.trim() || 'Giám Đốc';
         const cCA = document.getElementById('cert-ca-provider').value || 'NewCA';
-        const cSerial = document.getElementById('cert-serial').value.trim() || '54:02:16:88:99:AA:BB:CC';
+        const cSerial = document.getElementById('cert-serial').value.trim();
         const cMethod = document.getElementById('cert-method')?.value || '';
 
         document.getElementById('prev-cert-company').innerText = cName.toUpperCase();
         document.getElementById('prev-cert-signer').innerText = `KÝ BỞI: ${cRep.toUpperCase()} - ${cPos.toUpperCase()}`;
-        document.getElementById('prev-cert-tax').innerText = `MST: ${cTax} • Serial: ${cSerial}`;
+        document.getElementById('prev-cert-tax').innerText = cSerial ? `MST: ${cTax} • Serial: ${cSerial}` : `MST: ${cTax} • Ký số USB Token NewCA`;
         document.getElementById('prev-cert-ca').innerHTML = `<i class="fas fa-check-circle"></i> CHỨNG THƯ SỐ HỢP LỆ (${cCA} Certified)`;
 
         const hintEl = document.getElementById('cert-usb-token-hint');
@@ -1179,16 +1248,16 @@ window.modContract = {
                 }
 
                 let signStatus = '';
-                if (c.digital_stamp_b && c.digital_stamp_b.is_valid && (c.digital_stamp_a || c.e_signature_a || c.signed_file_url)) {
-                    signStatus = '<span class="bg-emerald-100 text-emerald-900 border border-emerald-400 px-2 py-0.5 rounded text-[10px] font-black"><i class="fas fa-handshake mr-0.5"></i> Đã Ký 2 Bên</span>';
-                } else if (c.digital_stamp_b && c.digital_stamp_b.is_valid) {
-                    signStatus = '<span class="bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-stamp mr-0.5"></i> 3. Giám Đốc Đã Ký Số</span>';
+                if (c.contract_status === 'SIGNED' || (c.digital_stamp_b && c.digital_stamp_b.is_valid && (c.digital_stamp_b.ktt_signed || c.signed_file_url))) {
+                    signStatus = '<span class="bg-emerald-100 text-emerald-900 border border-emerald-400 px-2 py-0.5 rounded text-[10px] font-black"><i class="fas fa-check-circle mr-0.5"></i> 4. Đã Ký Hoàn Tất (NewCA)</span>';
+                } else if (c.contract_status === 'PENDING_KTT_SIGN') {
+                    signStatus = '<span class="bg-cyan-50 text-cyan-800 border border-cyan-300 px-2 py-0.5 rounded text-[10px] font-black animate-pulse"><i class="fas fa-key mr-0.5 text-cyan-600"></i> 3. Chờ KTT Ký Token</span>';
                 } else if (c.contract_status === 'PENDING_DIRECTOR_APPROVAL') {
-                    signStatus = '<span class="bg-rose-50 text-rose-800 border border-rose-300 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse"><i class="fas fa-crown mr-0.5"></i> 2. Chờ Giám Đốc Ký</span>';
-                } else if (c.contract_status === 'DRAFT_KTT_SUBMITTED') {
-                    signStatus = '<span class="bg-blue-50 text-blue-800 border border-blue-300 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-file-invoice-dollar mr-0.5"></i> 1. KTT Đã Trình Ký</span>';
+                    signStatus = '<span class="bg-rose-50 text-rose-800 border border-rose-300 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse"><i class="fas fa-crown mr-0.5 text-amber-500"></i> 2. Chờ Giám Đốc Duyệt</span>';
+                } else if (c.contract_status === 'REJECTED') {
+                    signStatus = '<span class="bg-red-100 text-red-700 border border-red-300 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-ban mr-0.5"></i> Giám Đốc Không Ký</span>';
                 } else {
-                    signStatus = '<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-medium"><i class="fas fa-pen-ruler mr-0.5"></i> Dự Thảo (Draft)</span>';
+                    signStatus = '<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-medium"><i class="fas fa-pen-ruler mr-0.5"></i> 1. Kế toán soạn (Draft)</span>';
                 }
 
                 let colorBar = 'bg-slate-300';
@@ -1313,7 +1382,7 @@ window.modContract = {
 
                     <div class="flex items-center justify-between pt-1 border-t border-slate-100">
                         <div class="text-[10px]">
-                            ${c.digital_stamp_b && c.digital_stamp_b.is_valid ? '<span class="text-emerald-700 font-bold"><i class="fas fa-check-circle mr-1"></i>Đã ký số</span>' : '<span class="text-slate-400">Dự thảo</span>'}
+                            ${c.contract_status === 'SIGNED' || (c.digital_stamp_b && c.digital_stamp_b.is_valid && (c.digital_stamp_b.ktt_signed || c.signed_file_url)) ? '<span class="text-emerald-700 font-bold"><i class="fas fa-check-circle mr-1"></i>Đã ký số hoàn tất</span>' : (c.contract_status === 'PENDING_KTT_SIGN' ? '<span class="text-cyan-700 font-bold"><i class="fas fa-key mr-1"></i>Chờ KTT ký USB Token</span>' : (c.contract_status === 'PENDING_DIRECTOR_APPROVAL' ? '<span class="text-rose-600 font-bold animate-pulse"><i class="fas fa-crown mr-1"></i>Chờ Giám Đốc duyệt</span>' : (c.contract_status === 'REJECTED' ? '<span class="text-red-600 font-bold"><i class="fas fa-ban mr-1"></i>Không ký</span>' : '<span class="text-slate-400">1. Soạn thảo</span>')))}
                         </div>
                         <div class="flex items-center gap-1.5">
                             <button type="button" onclick="window.modContract.openView(${c.id})" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
@@ -1949,10 +2018,11 @@ window.modContract = {
                 badge.className = 'px-2 py-0.5 rounded text-[10px] font-black bg-amber-600 text-white';
             }
 
-            // Render dynamic toolbar action buttons based on 2-tier approval status & public link / file scan
+            // Render dynamic toolbar action buttons based on 3-tier approval status
             const btnWrapper = document.getElementById('btn-stamp-wrapper');
             if (btnWrapper) {
                 const isAdmin = window.modContract.checkAdminRole();
+                const isKtt = window.modContract.checkKttRole();
                 let extraBtns = `
                     <button onclick="window.modContract.openEdit(${c.id})" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Chỉnh sửa chi tiết hợp đồng, thông số và bảo hành">
                         <i class="fas fa-pen-to-square"></i> Chỉnh Sửa HĐ
@@ -1981,31 +2051,54 @@ window.modContract = {
                     `;
                 }
 
-                if (c.digital_stamp_b && c.digital_stamp_b.is_valid) {
+                if (c.contract_status === 'SIGNED' || (c.digital_stamp_b && c.digital_stamp_b.is_valid && (c.digital_stamp_b.ktt_signed || c.signed_file_url))) {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
                         <span class="bg-emerald-600/30 text-emerald-300 border border-emerald-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
-                            <i class="fas fa-check-circle"></i> Giám Đốc Đã Ký Số SUNGO
+                            <i class="fas fa-check-circle"></i> Đã Ký Hoàn Tất (NewCA)
                         </span>
-                        <button onclick="window.modContract.revokeStamp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Thu hồi chữ ký số để KTT chỉnh sửa lại">
+                        <button onclick="window.modContract.revokeStamp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Thu hồi chữ ký số để chỉnh sửa lại">
                             <i class="fas fa-rotate-left"></i> Thu Hồi Dấu Số (Để Sửa)
+                        </button>
+                    `;
+                } else if (c.contract_status === 'PENDING_KTT_SIGN') {
+                    btnWrapper.innerHTML = `
+                        ${extraBtns}
+                        <span class="bg-blue-600/30 text-blue-300 border border-blue-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
+                            <i class="fas fa-crown text-amber-300"></i> Đã Giám Đốc Duyệt
+                        </span>
+                        <button onclick="window.modContract.openKttTokenModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow-lg flex items-center gap-1.5 animate-pulse cursor-pointer" title="Kế toán trưởng cắm USB Token NewCA vào máy tính để ký số">
+                            <i class="fas fa-key text-amber-300"></i> 💎 KTT Ký Số USB Token NewCA
+                        </button>
+                        <button onclick="window.modContract.revokeStamp()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2.5 rounded-lg text-xs transition flex items-center gap-1 cursor-pointer" title="Hủy duyệt để sửa lại">
+                            <i class="fas fa-rotate-left"></i> Hủy Duyệt
                         </button>
                     `;
                 } else if (c.contract_status === 'PENDING_DIRECTOR_APPROVAL') {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
-                        <button onclick="window.modContract.openDirectorModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 animate-pulse cursor-pointer">
-                            <i class="fas fa-crown"></i> Giám Đốc Phê Duyệt & Ký Số
+                        <button onclick="window.modContract.openDirectorModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 animate-pulse cursor-pointer">
+                            <i class="fas fa-crown text-amber-300"></i> Giám Đốc Duyệt Ký
                         </button>
-                        <button onclick="window.modContract.directorReject()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2.5 rounded-lg text-xs transition flex items-center gap-1 cursor-pointer" title="Yêu cầu KTT sửa lại">
-                            <i class="fas fa-undo"></i> Trả Về KTT Sửa
+                        <button onclick="window.modContract.directorReject()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2.5 rounded-lg text-xs transition flex items-center gap-1 cursor-pointer" title="Yêu cầu kế toán sửa lại">
+                            <i class="fas fa-undo"></i> Yêu Cầu Sửa
+                        </button>
+                    `;
+                } else if (c.contract_status === 'REJECTED') {
+                    btnWrapper.innerHTML = `
+                        ${extraBtns}
+                        <span class="bg-red-600/30 text-red-300 border border-red-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
+                            <i class="fas fa-ban"></i> Giám Đốc Không Ký
+                        </span>
+                        <button onclick="window.modContract.openKttModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer">
+                            <i class="fas fa-paper-plane"></i> Kế Toán Trình Ký Lại
                         </button>
                     `;
                 } else {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
-                        <button onclick="window.modContract.openKttModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer">
-                            <i class="fas fa-file-invoice-dollar"></i> KTT Lên Lệnh Trình Ký
+                        <button onclick="window.modContract.openKttModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-paper-plane"></i> 1. Kế Toán Trình Giám Đốc Duyệt
                         </button>
                     `;
                 }
@@ -2173,15 +2266,38 @@ window.modContract = {
         }
 
         let sigBHtml = '';
-        if (c.digital_stamp_b && c.digital_stamp_b.is_valid) {
+        if (c.contract_status === 'PENDING_KTT_SIGN' && c.digital_stamp_b && c.digital_stamp_b.is_valid) {
             const st = c.digital_stamp_b;
-            const isInternal = st.signing_type === 'INTERNAL_APPROVAL';
+            sigBHtml = `
+                <div class="mt-2 relative p-2.5 border-2 border-cyan-500 rounded-lg bg-cyan-50/70 text-left text-[11px] leading-tight shadow-sm space-y-1.5">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-8 h-8 rounded-full border-2 border-cyan-600 flex items-center justify-center font-black text-xs text-cyan-700 bg-white">SUNGO</div>
+                        <div>
+                            <p class="font-black text-cyan-900 uppercase text-[10.5px]">GIÁM ĐỐC ĐÃ PHÊ DUYỆT BAN HÀNH</p>
+                            <p class="text-[10px] text-slate-500 font-medium">Duyệt ngày: ${new Date(st.approved_at || st.signed_at || Date.now()).toLocaleString('vi-VN')}</p>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-600">MST: ${st.tax_code || cert.tax_code} • Hash: ${st.hash ? st.hash.slice(0, 18) : ''}...</p>
+                    <div class="p-2 bg-white rounded border border-cyan-200 text-[10.5px] space-y-0.5">
+                        <p class="text-blue-800">📋 <b>Người lập trình ký:</b> ${st.prepared_by || 'KẾ TOÁN SUNGO'}</p>
+                        <p class="text-indigo-900">👑 <b>Giám Đốc phê duyệt:</b> ${st.approved_by || 'ÔNG ĐỖ MINH TRÍ'}</p>
+                        <p class="text-slate-600 italic">"${st.approval_note || 'Ban Giám Đốc phê duyệt ban hành. Chuyển Kế toán trưởng cắm USB Token NewCA ký số.'}"</p>
+                    </div>
+                    <div class="bg-amber-100 text-amber-900 px-2.5 py-1.5 rounded text-[10.5px] font-black flex items-center gap-1.5 border border-amber-300">
+                        <i class="fas fa-key text-amber-600 animate-bounce"></i> ĐANG CHỜ KẾ TOÁN TRƯỞNG CẮM USB TOKEN NEWCA KÝ SỐ
+                    </div>
+                    <p class="font-black text-slate-900 mt-1 text-center uppercase">${st.signer || 'ÔNG ĐỖ MINH TRÍ - GIÁM ĐỐC'}</p>
+                </div>
+            `;
+        } else if (c.digital_stamp_b && c.digital_stamp_b.is_valid) {
+            const st = c.digital_stamp_b;
+            const isInternal = st.signing_type === 'INTERNAL_APPROVAL' && !st.ktt_signed;
             const badgeBorder = isInternal ? 'border-blue-600 bg-blue-50/70' : 'border-rose-600 bg-rose-50/70';
             const badgeTitleColor = isInternal ? 'text-blue-800' : 'text-rose-700';
             const logoColor = isInternal ? 'border-blue-600 text-blue-600' : 'border-rose-600 text-rose-600';
-            const badgeAuthority = isInternal
-                ? `<p class="text-[10px] text-blue-700 font-black mt-1 flex items-center gap-1"><i class="fas fa-shield-halved text-blue-600"></i> DẤU PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ (ERP Internal e-Approval)</p>`
-                : `<p class="text-[10px] text-emerald-700 font-black mt-1 flex items-center gap-1"><i class="fas fa-check-circle text-emerald-600"></i> CHỨNG THƯ SỐ HỢP LỆ (${st.certificate_authority || 'NewCA Certified'})</p>`;
+            const badgeAuthority = !isInternal || st.ktt_signed
+                ? `<p class="text-[10px] text-emerald-700 font-black mt-1 flex items-center gap-1"><i class="fas fa-check-circle text-emerald-600"></i> CHỨNG THƯ SỐ HỢP LỆ (${st.ktt_signed?.ca_provider || st.certificate_authority || 'NewCA Certified'})</p>`
+                : `<p class="text-[10px] text-blue-700 font-black mt-1 flex items-center gap-1"><i class="fas fa-shield-halved text-blue-600"></i> DẤU PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ (ERP Internal e-Approval)</p>`;
 
             const signerName = (st.signer || `${cert.representative || 'ÔNG ĐỖ MINH TRÍ'} - ${cert.position || 'GIÁM ĐỐC'}`).replace(/\s*-\s*$/, ' - GIÁM ĐỐC');
 
@@ -2192,6 +2308,16 @@ window.modContract = {
                         <a href="${c.signed_file_url}" target="_blank" class="inline-flex items-center gap-1 text-[10.5px] font-black text-emerald-700 hover:text-emerald-900 hover:underline">
                             <i class="fas fa-file-pdf text-rose-600"></i> Xem File Hợp Đồng Ký Số USB Token Gốc
                         </a>
+                    </div>
+                `;
+            }
+
+            let kttSignedBlock = '';
+            if (st.ktt_signed) {
+                kttSignedBlock = `
+                    <div class="mt-1.5 p-2 bg-emerald-50 rounded border border-emerald-200 text-[10px] text-emerald-950 font-medium">
+                        <p class="font-bold"><i class="fas fa-key text-emerald-700 mr-1"></i> Ký số USB Token: <b>${st.ktt_signed.signer || 'KẾ TOÁN TRƯỞNG SUNGO'}</b></p>
+                        <p class="text-slate-600 text-[9.5px]">Ký số NewCA thành công lúc: ${new Date(st.ktt_signed.signed_at).toLocaleString('vi-VN')}</p>
                     </div>
                 `;
             }
@@ -2207,10 +2333,11 @@ window.modContract = {
                     </div>
                     <p class="text-[10px] text-slate-500">MST: ${st.tax_code || cert.tax_code} • Hash: ${st.hash ? st.hash.slice(0, 18) : ''}...</p>
                     <div class="my-1.5 py-1 border-y border-dashed border-slate-300 text-[10px] space-y-0.5">
-                        <p class="text-blue-800">📋 <b>Người thực hiện & Trình ký:</b> ${st.prepared_by || 'KẾ TOÁN TRƯỞNG'}</p>
+                        <p class="text-blue-800">📋 <b>Người lập trình ký:</b> ${st.prepared_by || 'KẾ TOÁN SUNGO'}</p>
                         <p class="text-purple-900">👑 <b>Người phê duyệt:</b> ${st.approved_by || 'ÔNG ĐỖ MINH TRÍ (GIÁM ĐỐC)'}</p>
                         <p class="text-slate-600 italic">"${st.approval_note || 'Ban Giám Đốc phê duyệt ban hành và chịu trách nhiệm pháp lý hoàn toàn.'}"</p>
                     </div>
+                    ${kttSignedBlock}
                     ${badgeAuthority}
                     ${attachedSignedFileLink}
                     <p class="font-black text-slate-900 mt-2 text-center uppercase">${signerName}</p>
@@ -2237,9 +2364,18 @@ window.modContract = {
             sigBHtml = `
                 <div class="h-28 flex flex-col items-center justify-center text-amber-700 text-xs border-2 border-dashed border-amber-300 rounded mt-2 p-2 bg-amber-50 text-center">
                     <i class="fas fa-hourglass-half text-amber-500 text-base mb-1 animate-spin"></i>
-                    <span class="font-black text-[11px] uppercase text-amber-900">KTT ĐÃ LÊN LỆNH TRÌNH KÝ</span>
-                    <span class="text-[10px] text-slate-600 mt-0.5">Người trình: <b>${req.prepared_by || 'KẾ TOÁN TRƯỞNG'}</b></span>
-                    <span class="text-[10px] text-rose-600 font-bold mt-0.5">ĐANG CHỜ GIÁM ĐỐC DUYỆT KÝ</span>
+                    <span class="font-black text-[11px] uppercase text-amber-900">KẾ TOÁN ĐÃ TRÌNH KÝ</span>
+                    <span class="text-[10px] text-slate-600 mt-0.5">Người trình: <b>${req.prepared_by || 'KẾ TOÁN SUNGO'}</b></span>
+                    <span class="text-[10px] text-rose-600 font-bold mt-0.5">ĐANG CHỜ GIÁM ĐỐC ĐỖ MINH TRÍ DUYỆT KÝ</span>
+                </div>
+                <p class="font-bold mt-1 text-center">${(cert.representative || 'ÔNG ĐỖ MINH TRÍ')} - ${(cert.position || 'GIÁM ĐỐC')}</p>
+            `;
+        } else if (c.contract_status === 'REJECTED') {
+            sigBHtml = `
+                <div class="h-24 flex flex-col items-center justify-center text-red-700 text-xs border-2 border-dashed border-red-300 rounded mt-2 p-2 bg-red-50 text-center">
+                    <i class="fas fa-ban text-red-500 text-base mb-1"></i>
+                    <span class="font-bold text-red-800 text-[11px] uppercase">GIÁM ĐỐC TỪ CHỐI KÝ</span>
+                    <span class="text-[10px] text-slate-500 mt-0.5">(Hợp đồng đã bị từ chối ban hành)</span>
                 </div>
                 <p class="font-bold mt-1 text-center">${(cert.representative || 'ÔNG ĐỖ MINH TRÍ')} - ${(cert.position || 'GIÁM ĐỐC')}</p>
             `;
@@ -2249,8 +2385,8 @@ window.modContract = {
             sigBHtml = `
                 <div class="h-24 flex flex-col items-center justify-center text-slate-400 text-xs border-2 border-dashed border-slate-300 rounded mt-2 p-2 bg-slate-50 text-center">
                     <i class="fas fa-lock text-slate-300 text-base mb-1"></i>
-                    <span class="font-bold text-slate-600 text-[11px] uppercase">CHƯA LÊN LỆNH TRÌNH KÝ</span>
-                    <span class="text-[10px] text-slate-400 italic mt-0.5">(KTT đối soát & lên lệnh trình Giám Đốc)</span>
+                    <span class="font-bold text-slate-600 text-[11px] uppercase">CHƯA TRÌNH KÝ GIÁM ĐỐC</span>
+                    <span class="text-[10px] text-slate-400 italic mt-0.5">(Kế toán đối soát & lên lệnh trình Giám Đốc)</span>
                 </div>
                 <p class="font-bold mt-1 text-center">${(cert.representative || 'ÔNG ĐỖ MINH TRÍ')} - ${(cert.position || 'GIÁM ĐỐC')}</p>
             `;
@@ -2519,8 +2655,8 @@ window.modContract = {
         const terms = c.payment_terms || [];
         document.getElementById('ktt-terms-count').innerText = terms.length > 0 ? `${terms.length} đợt giải ngân` : 'Thanh toán 100% từng đơn';
 
-        document.getElementById('ktt-name-input').value = 'KẾ TOÁN TRƯỞNG SUNGO';
-        document.getElementById('ktt-note-input').value = 'Kế toán trưởng đã đối soát khớp hồ sơ pháp nhân xuất hóa đơn VAT trong CRM, bảng giá hàng hóa và các đợt giải ngân. Kính trình Giám đốc ĐỖ MINH TRÍ xem xét phê duyệt và đóng dấu chữ ký số.';
+        document.getElementById('ktt-name-input').value = 'KẾ TOÁN SUNGO';
+        document.getElementById('ktt-note-input').value = 'Kế toán đã lập hợp đồng, đối soát khớp hồ sơ pháp nhân xuất hóa đơn VAT trong CRM, bảng giá và các đợt thanh toán. Kính trình Giám đốc ĐỖ MINH TRÍ xem xét phê duyệt ban hành.';
         document.getElementById('ktt-confirm-checkbox').checked = false;
 
         document.getElementById('contract-ktt-modal').classList.replace('hidden', 'flex');
@@ -2532,7 +2668,7 @@ window.modContract = {
 
         const chk = document.getElementById('ktt-confirm-checkbox');
         if (!chk.checked) {
-            return alert("⚠️ Kế toán trưởng vui lòng đánh dấu xác nhận chịu trách nhiệm tính chính xác của hồ sơ trình ký!");
+            return alert("⚠️ Kế toán lập hợp đồng vui lòng đánh dấu xác nhận chịu trách nhiệm tính chính xác của hồ sơ trình ký!");
         }
 
         const kttName = document.getElementById('ktt-name-input').value.trim();
@@ -2563,7 +2699,7 @@ window.modContract = {
         } catch (e) {
             alert("Lỗi kết nối khi gửi lệnh trình ký!");
         } finally {
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi Lệnh Trình Giám Đốc Ký Số';
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi Lệnh Trình Giám Đốc Phê Duyệt';
             btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     },
@@ -2577,12 +2713,12 @@ window.modContract = {
         document.getElementById('dir-total-val').innerText = window.modContract.fmt(c.total_value) + ' VNĐ';
         document.getElementById('dir-cust-company').innerText = (c.customer_company || c.customer_name) + (c.customer_taxcode ? ` (MST: ${c.customer_taxcode})` : '');
 
-        document.getElementById('dir-ktt-name').innerText = req.prepared_by || 'KẾ TOÁN TRƯỞNG SUNGO';
+        document.getElementById('dir-ktt-name').innerText = req.prepared_by || 'KẾ TOÁN SUNGO';
         document.getElementById('dir-ktt-time').innerText = req.prepared_at ? new Date(req.prepared_at).toLocaleString('vi-VN') : 'Vừa mới đây';
-        document.getElementById('dir-ktt-note').innerText = `"${req.prepared_note || 'KTT đã đối soát hồ sơ VAT trong CRM, kính trình Giám Đốc.'}"`;
+        document.getElementById('dir-ktt-note').innerText = `"${req.prepared_note || 'Kế toán đã lập hợp đồng và đối soát hồ sơ VAT trong CRM, kính trình Giám Đốc.'}"`;
 
         document.getElementById('dir-name-input').value = window.modContract.certConfig?.representative || 'ÔNG ĐỖ MINH TRÍ';
-        document.getElementById('dir-note-input').value = 'Ban Giám Đốc phê duyệt ban hành và chịu trách nhiệm pháp lý hoàn toàn.';
+        document.getElementById('dir-note-input').value = 'Ban Giám Đốc phê duyệt ban hành. Chuyển Kế toán trưởng cắm USB Token NewCA ký số.';
         document.getElementById('dir-pin-input').value = '';
         document.getElementById('dir-confirm-checkbox').checked = false;
 
@@ -2599,7 +2735,7 @@ window.modContract = {
 
         const chk = document.getElementById('dir-confirm-checkbox');
         if (!chk.checked) {
-            return alert("⚠️ Giám đốc vui lòng đánh dấu xác nhận phê duyệt điện tử nội bộ!");
+            return alert("⚠️ Giám đốc vui lòng đánh dấu xác nhận phê duyệt nội dung!");
         }
 
         const dirName = document.getElementById('dir-name-input').value.trim();
@@ -2634,9 +2770,9 @@ window.modContract = {
                 alert("Lỗi phê duyệt: " + data.error);
             }
         } catch (e) {
-            alert("Lỗi kết nối khi gửi phê duyệt điện tử nội bộ!");
+            alert("Lỗi kết nối khi gửi phê duyệt Giám Đốc!");
         } finally {
-            btn.innerHTML = '<i class="fas fa-shield-halved"></i> Phê Duyệt Điện Tử Nội Bộ ERP';
+            btn.innerHTML = '<i class="fas fa-check-double"></i> Phê Duyệt & Chuyển KTT Ký Token';
             btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     },
@@ -2645,7 +2781,7 @@ window.modContract = {
         if (!window.modContract.currentContract) return;
         const c = window.modContract.currentContract;
 
-        const reason = prompt(`❓ Giám đốc yêu cầu Kế toán trưởng chỉnh sửa lại Hợp đồng #${c.contract_code}?\nNhập ý kiến chỉ đạo / lý do yêu cầu sửa:`, "Yêu cầu đối soát lại tên công ty xuất hóa đơn VAT và giá bán theo báo giá mới nhất");
+        const reason = prompt(`❓ Giám đốc yêu cầu Kế toán chỉnh sửa lại Hợp đồng #${c.contract_code}?\nNhập ý kiến chỉ đạo / lý do yêu cầu sửa:`, "Yêu cầu đối soát lại tên công ty xuất hóa đơn VAT và giá bán theo báo giá mới nhất");
         if (!reason) return;
 
         try {
@@ -2668,6 +2804,83 @@ window.modContract = {
             }
         } catch (e) {
             alert("Lỗi khi gửi yêu cầu chỉnh sửa!");
+        }
+    },
+
+    directorCancel: async () => {
+        if (!window.modContract.currentContract) return;
+        const c = window.modContract.currentContract;
+        if (!confirm(`❓ Giám đốc xác nhận KHÔNG KÝ và TỪ CHỐI ban hành hợp đồng #${c.contract_code}?`)) return;
+
+        try {
+            const res = await fetch(`/api/contracts/${c.id}/director-cancel`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('contract-director-modal').classList.replace('flex', 'hidden');
+                await window.modContract.openView(c.id);
+                await window.modContract.load();
+            } else {
+                alert("Lỗi: " + data.error);
+            }
+        } catch (e) {
+            alert("Lỗi kết nối khi từ chối hợp đồng!");
+        }
+    },
+
+    openKttTokenModal: () => {
+        if (!window.modContract.currentContract) return;
+        const c = window.modContract.currentContract;
+        const dirInfo = c.digital_stamp_b || {};
+
+        document.getElementById('ktt-token-code').innerText = c.contract_code;
+        document.getElementById('ktt-token-cust').innerText = c.customer_company || c.customer_name;
+        document.getElementById('ktt-token-val').innerText = window.modContract.fmt(c.total_value) + ' VNĐ';
+        document.getElementById('ktt-token-dir-time').innerText = dirInfo.approved_at ? new Date(dirInfo.approved_at).toLocaleString('vi-VN') : 'Đã duyệt ban hành';
+        document.getElementById('ktt-token-dir-note').innerText = `"${dirInfo.approval_note || 'Ban Giám Đốc phê duyệt ban hành. Chuyển Kế toán trưởng cắm USB Token NewCA ký số.'}"`;
+
+        document.getElementById('contract-ktt-token-modal').classList.replace('hidden', 'flex');
+    },
+
+    submitKttSignToken: async () => {
+        if (!window.modContract.currentContract) return;
+        const c = window.modContract.currentContract;
+        const note = prompt(`🔐 Kế toán trưởng xác nhận đã cắm USB Token NewCA và thực hiện ký số cho Hợp đồng #${c.contract_code}?\nNhập ghi chú xác nhận (nếu có):`, "Kế toán trưởng đã đối soát và ký số phần cứng USB Token NewCA hoàn tất.");
+        if (note === null) return;
+
+        const btn = document.getElementById('btn-submit-ktt-token');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xác nhận...';
+            btn.classList.add('opacity-50', 'pointer-events-none');
+        }
+
+        try {
+            const res = await fetch(`/api/contracts/${c.id}/ktt-sign-token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ktt_name: 'KẾ TOÁN TRƯỞNG SUNGO',
+                    ktt_note: note,
+                    ca_provider: window.modContract.certConfig?.ca_provider || 'NewCA'
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                const modal = document.getElementById('contract-ktt-token-modal');
+                if (modal) modal.classList.replace('flex', 'hidden');
+                await window.modContract.openView(c.id);
+                await window.modContract.load();
+            } else {
+                alert("Lỗi: " + data.error);
+            }
+        } catch (e) {
+            alert("Lỗi kết nối khi lưu ký số USB Token!");
+        } finally {
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> 3. Xác Nhận Đã Ký Xong Bằng Token NewCA';
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+            }
         }
     },
 

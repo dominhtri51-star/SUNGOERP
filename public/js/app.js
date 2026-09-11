@@ -255,6 +255,25 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'warehouse-out': 'EDIT',
         'return-orders': 'EDIT'
     },
+    'KE_TOAN_TRUONG': {
+        'admin-products': 'VIEW',
+        'accounting-vault': 'EDIT',
+        'accounting-cashbook': 'EDIT',
+        'debt-book': 'EDIT',
+        'accounting-cash': 'EDIT',
+        'accounting-payments': 'EDIT',
+        'contract-billing': 'EDIT',
+        'accounting-vat': 'EDIT',
+        'accounting-tax': 'EDIT',
+        'business-health': 'EDIT',
+        'hr-employees': 'EDIT',
+        'attendance-manager': 'EDIT',
+        'sales-commissions': 'EDIT',
+        'debt-kpi': 'EDIT',
+        'payroll-manager': 'EDIT',
+        'finance-loans': 'EDIT',
+        'finance-capital': 'EDIT'
+    },
     'KE_TOAN': {
         'admin-products': 'VIEW',
         'accounting-vault': 'EDIT',
@@ -476,6 +495,12 @@ const roleBottomNavs = {
         { id: 'warehouse-out', icon: 'fa-dolly', label: 'Lệnh Xuất' },
         { id: 'return-orders', icon: 'fa-undo', label: 'Kho QC' },
         { id: '__more__', icon: 'fa-bars', label: 'Tất Cả' }
+    ],
+    'KE_TOAN_TRUONG': [
+        { id: 'contract-billing', icon: 'fa-file-signature', label: 'Hợp Đồng' },
+        { id: 'accounting-cashbook', icon: 'fa-book-journal-whills', label: 'Sổ Quỹ' },
+        { id: 'debt-book', icon: 'fa-book-bookmark', label: 'Sổ Nợ' },
+        { id: '__more__', icon: 'fa-bars', label: 'Menu' }
     ],
     'KE_TOAN': [
         { id: 'accounting-cashbook', icon: 'fa-book-journal-whills', label: 'Sổ Quỹ' },

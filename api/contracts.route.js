@@ -257,7 +257,7 @@ router.get('/digital-cert-settings', async (req, res) => {
             representative: 'ÔNG ĐỖ MINH TRÍ',
             position: 'Giám Đốc',
             ca_provider: 'NewCA',
-            cert_serial: '54:02:16:88:99:AA:BB:CC',
+            cert_serial: '',
             cert_valid_from: '2024-01-01',
             cert_valid_to: '2027-12-31',
             signing_method: 'USB Token Chuyên Dụng',
@@ -394,7 +394,7 @@ router.post('/public/sign-digital-stamp/:token', async (req, res) => {
             signer: `${signerName} - ${signerPos}`.toUpperCase(),
             ca_provider: caProv,
             certificate_authority: `${caProv} Certified`,
-            certificate_serial: cert_serial || 'CA-A-' + Date.now(),
+            certificate_serial: cert_serial ? cert_serial.trim() : null,
             note: note || 'Bên A xác nhận ký số và cam kết thực hiện hợp đồng',
             signed_at: timestamp,
             hash: hash,
@@ -932,10 +932,10 @@ router.post('/:id/submit-for-approval', async (req, res) => {
         const timestamp = new Date().toISOString();
 
         const signingRequest = {
-            prepared_by: prepared_by || 'KẾ TOÁN TRƯỞNG',
-            prepared_role: 'KẾ TOÁN TRƯỞNG',
+            prepared_by: prepared_by || 'KẾ TOÁN LẬP HỢP ĐỒNG',
+            prepared_role: 'KẾ TOÁN VIÊN',
             prepared_at: timestamp,
-            prepared_note: prepared_note || 'Đã kiểm tra đối soát hồ sơ VAT trong CRM, bảng giá và các đợt giải ngân. Kính trình Giám đốc phê duyệt ký số.',
+            prepared_note: prepared_note || 'Đã kiểm tra đối soát hồ sơ VAT trong CRM, bảng giá và các đợt giải ngân. Kính trình Giám đốc phê duyệt ban hành.',
             status: 'PENDING_DIRECTOR'
         };
 
@@ -950,7 +950,7 @@ router.post('/:id/submit-for-approval', async (req, res) => {
 
         res.json({
             success: true,
-            message: `✅ Kế toán trưởng đã lên lệnh trình ký thành công! Hợp đồng #${contract.contract_code} đang chờ Giám Đốc ĐỖ MINH TRÍ phê duyệt ký số.`,
+            message: `✅ Kế toán đã gửi hồ sơ trình ký thành công! Hợp đồng #${contract.contract_code} đang chờ Giám Đốc ĐỖ MINH TRÍ phê duyệt ban hành.`,
             data: updateRes.rows[0]
         });
     } catch (err) {
@@ -976,7 +976,7 @@ router.post('/:id/digital-stamp', async (req, res) => {
             representative: 'ÔNG ĐỖ MINH TRÍ',
             position: 'Giám Đốc',
             ca_provider: 'NewCA',
-            cert_serial: '54:02:16:88:99:AA:BB:CC',
+            cert_serial: '',
             signing_method: 'USB Token Chuyên Dụng',
             stamp_type: 'VECTOR_STAMP',
             stamp_image_url: '',
@@ -997,7 +997,7 @@ router.post('/:id/digital-stamp', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Mã PIN phê duyệt của Giám Đốc không chính xác! Vui lòng thử lại.' });
         }
 
-        // Lấy thông tin lệnh trình ký của KTT nếu có
+        // Lấy thông tin lệnh trình ký của Kế toán nếu có
         let signingRequest = {};
         if (contract.signing_request) {
             try {
@@ -1015,13 +1015,15 @@ router.post('/:id/digital-stamp', async (req, res) => {
 
         const isUsbToken = signing_type === 'USB_TOKEN';
         const finalSigningType = isUsbToken ? 'USB_TOKEN' : 'INTERNAL_APPROVAL';
+        // Quy trình chuẩn SUNGO: Giám đốc duyệt điện tử nội bộ -> chuyển trạng thái cho Kế Toán Trưởng ký USB Token NewCA
+        const nextStatus = isUsbToken ? 'SIGNED' : 'PENDING_KTT_SIGN';
 
         const digitalStamp = {
             company: certConfig.company_name,
             tax_code: certConfig.tax_code,
             signer: signerTitle,
-            prepared_by: signingRequest.prepared_by || 'KẾ TOÁN TRƯỞNG',
-            prepared_role: 'KẾ TOÁN TRƯỞNG (NGƯỜI THỰC HIỆN)',
+            prepared_by: signingRequest.prepared_by || 'KẾ TOÁN VIÊN',
+            prepared_role: 'KẾ TOÁN VIÊN (NGƯỜI LẬP HỢP ĐỒNG)',
             prepared_at: signingRequest.prepared_at || timestamp,
             prepared_note: signingRequest.prepared_note || 'Đã đối soát hồ sơ VAT trong CRM và danh mục đơn giá',
             approved_by: finalDirector,
@@ -1029,7 +1031,7 @@ router.post('/:id/digital-stamp', async (req, res) => {
             approval_note: approval_note || 'Ban Giám Đốc phê duyệt ban hành và chịu trách nhiệm pháp lý hoàn toàn',
             approved_at: timestamp,
             signing_type: finalSigningType,
-            certificate_serial: certConfig.cert_serial,
+            certificate_serial: certConfig.cert_serial || null,
             certificate_authority: isUsbToken ? `${certConfig.ca_provider} Certified` : 'SUNGO Internal e-Approval',
             signing_method: isUsbToken ? `USB Token Chuyên Dụng (${certConfig.ca_provider})` : 'Phê Duyệt Điện Tử Nội Bộ ERP',
             stamp_type: certConfig.stamp_type,
@@ -1042,17 +1044,17 @@ router.post('/:id/digital-stamp', async (req, res) => {
         const updateRes = await pool.query(`
             UPDATE contracts 
             SET digital_stamp_b = $1,
-                contract_status = 'SIGNED',
+                contract_status = $2,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = $2
+            WHERE id = $3
             RETURNING *
-        `, [JSON.stringify(digitalStamp), req.params.id]);
+        `, [JSON.stringify(digitalStamp), nextStatus, req.params.id]);
 
         res.json({
             success: true,
             message: isUsbToken 
-                ? `✅ Đã lưu nhận chữ ký số USB Token (${certConfig.ca_provider}) thành công!` 
-                : `✅ Giám Đốc (${finalDirector}) đã xác thực Mã PIN và phê duyệt điện tử nội bộ thành công!`,
+                ? `✅ Đã hoàn tất ký số USB Token (${certConfig.ca_provider}) thành công!` 
+                : `✅ Giám Đốc (${finalDirector}) đã phê duyệt ban hành! Hợp đồng đã chuyển tiếp cho Kế Toán Trưởng để cắm USB Token NewCA ký số.`,
             data: updateRes.rows[0]
         });
     } catch (err) {
@@ -1060,7 +1062,7 @@ router.post('/:id/digital-stamp', async (req, res) => {
     }
 });
 
-// 7e. POST: GIÁM ĐỐC TỪ CHỐI / YÊU CẦU KẾ TOÁN TRƯỞNG CHỈNH SỬA LẠI
+// 7e. POST: GIÁM ĐỐC TỪ CHỐI / YÊU CẦU KẾ TOÁN CHỈNH SỬA LẠI
 router.post('/:id/director-reject', async (req, res) => {
     try {
         const { reject_reason, director_name } = req.body;
@@ -1089,7 +1091,79 @@ router.post('/:id/director-reject', async (req, res) => {
 
         res.json({
             success: true,
-            message: `✅ Đã trả hồ sơ hợp đồng #${contract.contract_code} về cho Kế toán trưởng chỉnh sửa lại theo chỉ đạo của Giám Đốc!`,
+            message: `✅ Đã trả hồ sơ hợp đồng #${contract.contract_code} về cho Kế toán chỉnh sửa lại theo chỉ đạo của Giám Đốc!`,
+            data: updateRes.rows[0]
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 7e-2. POST: GIÁM ĐỐC TỪ CHỐI / HỦY BAN HÀNH HỢP ĐỒNG
+router.post('/:id/director-cancel', async (req, res) => {
+    try {
+        const contractRes = await pool.query(`SELECT * FROM contracts WHERE id = $1`, [req.params.id]);
+        if (contractRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy hợp đồng' });
+
+        const updateRes = await pool.query(`
+            UPDATE contracts 
+            SET contract_status = 'REJECTED',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $1
+            RETURNING *
+        `, [req.params.id]);
+
+        res.json({
+            success: true,
+            message: `✅ Giám Đốc đã từ chối ban hành hợp đồng #${contractRes.rows[0].contract_code}!`,
+            data: updateRes.rows[0]
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 7e-3. POST: KẾ TOÁN TRƯỞNG KÝ SỐ USB TOKEN NEWCA (HOÀN TẤT PHÁP LÝ CA)
+router.post('/:id/ktt-sign-token', async (req, res) => {
+    try {
+        const { ktt_name, ktt_note, ca_provider } = req.body;
+        const contractRes = await pool.query(`SELECT * FROM contracts WHERE id = $1`, [req.params.id]);
+        if (contractRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy hợp đồng' });
+
+        const contract = contractRes.rows[0];
+        const timestamp = new Date().toISOString();
+        const finalKtt = (ktt_name || 'KẾ TOÁN TRƯỞNG SUNGO').toUpperCase();
+        const finalCa = ca_provider || 'NewCA';
+
+        let digitalStamp = {};
+        if (contract.digital_stamp_b) {
+            try { digitalStamp = typeof contract.digital_stamp_b === 'string' ? JSON.parse(contract.digital_stamp_b) : contract.digital_stamp_b; } catch(e) {}
+        }
+
+        digitalStamp.ktt_signed = {
+            signer: finalKtt,
+            role: 'KẾ TOÁN TRƯỞNG (NGƯỜI QUẢN LÝ & KÝ SỐ USB TOKEN)',
+            signed_at: timestamp,
+            ca_provider: finalCa,
+            certificate_authority: `${finalCa} Certified`,
+            note: ktt_note || 'Kế toán trưởng đã đối soát và ký số phần cứng USB Token NewCA hoàn tất.'
+        };
+        digitalStamp.is_valid = true;
+        digitalStamp.signing_method = `USB Token Chuyên Dụng (${finalCa})`;
+        digitalStamp.certificate_authority = `${finalCa} Certified`;
+
+        const updateRes = await pool.query(`
+            UPDATE contracts 
+            SET digital_stamp_b = $1,
+                contract_status = 'SIGNED',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $2
+            RETURNING *
+        `, [JSON.stringify(digitalStamp), req.params.id]);
+
+        res.json({
+            success: true,
+            message: `✅ Kế Toán Trưởng (${finalKtt}) đã ký số USB Token (${finalCa}) thành công! Hợp đồng #${contract.contract_code} đã hoàn tất 100% quy trình pháp lý.`,
             data: updateRes.rows[0]
         });
     } catch (err) {
@@ -1248,6 +1322,10 @@ router.post('/:id/upload-signed-file', upload.single('signed_file'), async (req,
             SET signed_file_url = $1,
                 signed_file_name = $2,
                 signed_file_uploaded_at = CURRENT_TIMESTAMP,
+                contract_status = CASE 
+                    WHEN contract_status = 'PENDING_KTT_SIGN' THEN 'SIGNED' 
+                    ELSE contract_status 
+                END,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = $3
             RETURNING *
