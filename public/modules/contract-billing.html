@@ -438,7 +438,8 @@
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Nhà Cung Cấp Chứng Thư Số (CA Provider)</label>
-                        <select id="cert-ca-provider" class="w-full border border-slate-300 rounded-lg p-2 font-bold text-slate-800 outline-none">
+                        <select id="cert-ca-provider" onchange="window.modContract.updateCertPreview()" class="w-full border border-slate-300 rounded-lg p-2 font-bold text-slate-800 outline-none focus:border-rose-500">
+                            <option value="NewCA">NewCA (Công ty Cổ phần NewCA)</option>
                             <option value="Viettel-CA">Viettel-CA (Tập đoàn Viettel)</option>
                             <option value="VNPT-CA">VNPT-CA (Tập đoàn Bưu chính Viễn thông)</option>
                             <option value="FPT-CA">FPT-CA (Tập đoàn FPT)</option>
@@ -449,15 +450,21 @@
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Số Serial Chứng Thư Số</label>
-                        <input type="text" id="cert-serial" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-slate-800 outline-none uppercase">
+                        <input type="text" id="cert-serial" oninput="window.modContract.updateCertPreview()" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-slate-800 outline-none uppercase focus:border-rose-500">
                     </div>
-                    <div>
+                    <div class="md:col-span-2">
                         <label class="block font-bold text-slate-700 mb-1">Phương Thức Ký Số</label>
-                        <select id="cert-method" class="w-full border border-slate-300 rounded-lg p-2 font-medium outline-none">
+                        <select id="cert-method" onchange="window.modContract.updateCertPreview()" class="w-full border border-slate-300 rounded-lg p-2 font-medium outline-none focus:border-rose-500">
+                            <option value="USB Token Chuyên Dụng">USB Token Chuyên Dụng (Ký số phần cứng USB Token)</option>
                             <option value="Cloud HSM (Ký Số Tập Trung)">Cloud HSM (Ký Số Tập Trung - Không cần cắm USB)</option>
-                            <option value="USB Token Chuyên Dụng">USB Token Chuyên Dụng</option>
                             <option value="Soft Certificate (File .PFX)">Soft Certificate (File .PFX / .P12)</option>
                         </select>
+                    </div>
+                    <div id="cert-usb-token-hint" class="md:col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-950 flex items-start gap-2.5">
+                        <i class="fas fa-key text-amber-600 text-base mt-0.5 shrink-0"></i>
+                        <div class="text-[11px] leading-relaxed">
+                            <span class="font-bold text-amber-900">🔐 Chế độ Ký Số USB Token (NewCA Token Manager):</span> Hệ thống xác thực chứng thư số phần cứng từ USB Token NewCA cắm vào máy tính. Khi Giám Đốc bấm duyệt ký, hệ thống đọc chứng thư số và yêu cầu nhập mã PIN bảo mật để đóng dấu điện tử hợp pháp theo chuẩn Nghị định 130/2018/NĐ-CP.
+                        </div>
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Hiệu Lực Từ Ngày</label>
@@ -1005,10 +1012,9 @@ window.modContract = {
         document.getElementById('cert-company-name').value = cfg.company_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
         document.getElementById('cert-tax-code').value = cfg.tax_code || '0315614349';
         document.getElementById('cert-rep').value = cfg.representative || 'ÔNG ĐỖ MINH TRÍ';
-        document.getElementById('cert-position').value = cfg.position || 'Giám Đốc';
-        document.getElementById('cert-ca-provider').value = cfg.ca_provider || 'Viettel-CA';
+        document.getElementById('cert-ca-provider').value = cfg.ca_provider || 'NewCA';
         document.getElementById('cert-serial').value = cfg.cert_serial || '54:02:16:88:99:AA:BB:CC';
-        document.getElementById('cert-method').value = cfg.signing_method || 'Cloud HSM (Ký Số Tập Trung)';
+        document.getElementById('cert-method').value = cfg.signing_method || 'USB Token Chuyên Dụng';
         document.getElementById('cert-valid-from').value = cfg.cert_valid_from || '2024-01-01';
         document.getElementById('cert-valid-to').value = cfg.cert_valid_to || '2027-12-31';
         document.getElementById('cert-headquarters').value = cfg.headquarters || 'Tầng 2, Tòa nhà Mộc Gia số 121A - 123 – 125 Tân Thắng, Phường Tân Sơn Nhì, Thành phố Hồ Chí Minh';
@@ -1024,13 +1030,23 @@ window.modContract = {
         const cTax = document.getElementById('cert-tax-code').value.trim() || '0315614349';
         const cRep = document.getElementById('cert-rep').value.trim() || 'ÔNG ĐỖ MINH TRÍ';
         const cPos = document.getElementById('cert-position').value.trim() || 'Giám Đốc';
-        const cCA = document.getElementById('cert-ca-provider').value || 'Viettel-CA';
+        const cCA = document.getElementById('cert-ca-provider').value || 'NewCA';
         const cSerial = document.getElementById('cert-serial').value.trim() || '54:02:16:88:99:AA:BB:CC';
+        const cMethod = document.getElementById('cert-method')?.value || '';
 
         document.getElementById('prev-cert-company').innerText = cName.toUpperCase();
         document.getElementById('prev-cert-signer').innerText = `KÝ BỞI: ${cRep.toUpperCase()} - ${cPos.toUpperCase()}`;
         document.getElementById('prev-cert-tax').innerText = `MST: ${cTax} • Serial: ${cSerial}`;
         document.getElementById('prev-cert-ca').innerHTML = `<i class="fas fa-check-circle"></i> CHỨNG THƯ SỐ HỢP LỆ (${cCA} Certified)`;
+
+        const hintEl = document.getElementById('cert-usb-token-hint');
+        if (hintEl) {
+            if (cMethod.includes('USB Token')) {
+                hintEl.classList.remove('hidden');
+            } else {
+                hintEl.classList.add('hidden');
+            }
+        }
     },
 
     saveCertSettings: async () => {
