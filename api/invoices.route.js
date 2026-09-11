@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database.js');
+const vininvoiceService = require('../services/vininvoice.service.js');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -406,6 +407,88 @@ router.post('/:id/create-draft', async (req, res) => {
             data: updateRes.rows[0]
         });
     } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 5a. GET: LẤY CẤU HÌNH API KẾT NỐI VININVOICE
+router.get('/vininvoice/config', async (req, res) => {
+    try {
+        const config = await vininvoiceService.getConfig();
+        res.json({ success: true, data: config });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 5b. POST: LƯU CẤU HÌNH API KẾT NỐI VININVOICE
+router.post('/vininvoice/config', async (req, res) => {
+    try {
+        const updated = await vininvoiceService.saveConfig(req.body);
+        res.json({ success: true, message: 'Đã lưu cấu hình API VinInvoice thành công!', data: updated });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 5c. POST: KIỂM TRA KẾT NỐI API VININVOICE (LẤY LOGIN_KEY)
+router.post('/vininvoice/test-connection', async (req, res) => {
+    try {
+        const result = await vininvoiceService.testConnection();
+        res.json(result);
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 5d. POST: ĐẨY HÓA ĐƠN NHÁP TRỰC TIẾP LÊN VININVOICE QUA API (1-CHẠM)
+router.post('/:id/push-vininvoice-api', async (req, res) => {
+    try {
+        const invRes = await pool.query(`SELECT * FROM invoices WHERE id = $1`, [req.params.id]);
+        if (invRes.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy hóa đơn này trên hệ thống!' });
+        }
+
+        const invoice = invRes.rows[0];
+        let items = [];
+        try {
+            items = typeof invoice.items_snapshot === 'string' 
+                ? JSON.parse(invoice.items_snapshot) 
+                : (invoice.items_snapshot || []);
+        } catch(e) {
+            items = [];
+        }
+
+        if (items.length === 0) {
+            return res.status(400).json({ success: false, error: 'Hóa đơn chưa có danh mục sản phẩm/dịch vụ để xuất HĐĐT!' });
+        }
+
+        // Gọi dịch vụ VinInvoice tạo HĐ nháp trên cổng
+        const vinResult = await vininvoiceService.createDraftInvoice(invoice, items);
+
+        const draftCode = `VIN-${vinResult.invoiceId}`;
+        const symbol = vinResult.invoiceSerial ? `1${vinResult.invoiceSerial}` : (invoice.invoice_symbol || '1C26TMT');
+        const kttNotes = `Đã đẩy nháp tự động qua API VinInvoice (ID: ${vinResult.invoiceId}, Ký hiệu: ${vinResult.invoiceSerial || 'C26TMT'}). Chờ Kế toán trưởng duyệt và cắm USB Token NewCA ký số trên cổng VinInvoice.`;
+
+        const updateRes = await pool.query(`
+            UPDATE invoices
+            SET status = 'DRAFT_CREATED',
+                provider = 'VinInvoice',
+                invoice_symbol = $1,
+                draft_code = $2,
+                ktt_notes = $3
+            WHERE id = $4
+            RETURNING *
+        `, [symbol, draftCode, kttNotes, req.params.id]);
+
+        res.json({
+            success: true,
+            message: `🎉 Đã tạo Hóa Đơn Nháp thành công trên VinInvoice (Mã HĐ: ${vinResult.invoiceId})!`,
+            data: updateRes.rows[0],
+            vinResult: vinResult
+        });
+    } catch(err) {
+        console.error('Lỗi đẩy HĐ lên VinInvoice API:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

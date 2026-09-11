@@ -30,8 +30,8 @@
             <button onclick="window.modVAT.openManualModal()" class="flex-1 md:flex-initial bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-900 font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-edit"></i> <span>HĐ Ngoại Tuyến</span>
             </button>
-            <button onclick="window.modVAT.openConfig()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white transition text-xs font-bold cursor-pointer" title="Cổng e-Invoice">
-                <i class="fas fa-cogs"></i>
+            <button onclick="window.modVAT.openConfig()" class="flex-1 md:flex-initial bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap" title="Cài đặt kết nối API VinInvoice">
+                <i class="fas fa-plug text-amber-400"></i> <span>Cài Đặt API VinInvoice</span>
             </button>
         </div>
     </div>
@@ -47,17 +47,17 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-800/80 border border-slate-700">
-                <span class="w-5 h-5 rounded-full bg-emerald-500 text-slate-900 font-black flex items-center justify-center text-[10px] shrink-0">2</span>
+                <span class="w-5 h-5 rounded-full bg-blue-500 text-white font-black flex items-center justify-center text-[10px] shrink-0">2</span>
                 <div class="min-w-0">
-                    <p class="font-bold text-emerald-300 truncate">Xuất Excel VinInvoice</p>
-                    <p class="text-[9.5px] text-slate-400 truncate">Nạp Excel lên cổng</p>
+                    <p class="font-bold text-blue-300 truncate">Đẩy API / Xuất Excel</p>
+                    <p class="text-[9.5px] text-slate-400 truncate">1-Chạm lên VinInvoice</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-800/80 border border-slate-700">
                 <span class="w-5 h-5 rounded-full bg-purple-500 text-white font-black flex items-center justify-center text-[10px] shrink-0">3</span>
                 <div class="min-w-0">
-                    <p class="font-bold text-purple-300 truncate">KTT Duyệt Portal</p>
-                    <p class="text-[9.5px] text-slate-400 truncate">Rà soát & ký số</p>
+                    <p class="font-bold text-purple-300 truncate">KTT Ký USB Token</p>
+                    <p class="text-[9.5px] text-slate-400 truncate">Cắm NewCA ký trên cổng</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-800/80 border border-slate-700">
@@ -127,7 +127,7 @@
         <!-- TAB BUTTONS -->
         <div class="flex flex-wrap border-b border-slate-200 bg-slate-50 shrink-0 px-3 pt-2 gap-1.5 overflow-x-auto no-scrollbar">
             <button onclick="window.modVAT.switchTab('PENDING_DRAFT')" id="tab-btn-PENDING_DRAFT" class="px-3.5 py-2 font-bold text-xs bg-white border-t-2 border-amber-500 text-amber-700 rounded-t-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
-                <i class="fas fa-hourglass-half text-amber-500"></i> 1. Chờ Nháp (Xuất Excel) <span id="badge-tab-pending" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800">0</span>
+                <i class="fas fa-hourglass-half text-amber-500"></i> 1. Chờ Nháp (Đẩy API / Excel) <span id="badge-tab-pending" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800">0</span>
             </button>
             <button onclick="window.modVAT.switchTab('DRAFT_CREATED')" id="tab-btn-DRAFT_CREATED" class="px-3.5 py-2 font-bold text-xs border-t-2 border-transparent text-slate-600 hover:text-slate-900 rounded-t-xl transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-cloud-upload-alt text-blue-500"></i> 2. Đã Nạp Cổng (Chờ KTT Ký) <span id="badge-tab-draft" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-800">0</span>
@@ -263,8 +263,11 @@
                 <button onclick="window.modVAT.saveDetailOnly()" class="px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-lg transition shadow flex items-center gap-1.5 text-xs cursor-pointer">
                     <i class="fas fa-save"></i> Lưu Thông Tin
                 </button>
-                <button onclick="window.modVAT.exportFromModal()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black rounded-lg transition shadow flex items-center gap-1.5 text-xs cursor-pointer">
-                    <i class="fas fa-file-excel"></i> Xuất Excel VinInvoice
+                <button onclick="window.modVAT.pushFromModal()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-black rounded-lg transition shadow-md flex items-center gap-1.5 text-xs cursor-pointer" title="Đẩy hóa đơn nháp trực tiếp lên VinInvoice qua API (1-Chạm)">
+                    <i class="fas fa-bolt text-amber-300"></i> Đẩy API VinInvoice
+                </button>
+                <button onclick="window.modVAT.exportFromModal()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-lg transition shadow flex items-center gap-1.5 text-xs cursor-pointer">
+                    <i class="fas fa-file-excel"></i> Xuất Excel
                 </button>
                 <a href="https://vininvoice.vn/sold/customer/invoice/hdbh/create" target="_blank" rel="noopener noreferrer" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition shadow flex items-center gap-1.5 text-xs cursor-pointer">
                     <i class="fas fa-external-link-alt"></i> Cổng VinInvoice
@@ -508,42 +511,93 @@
 </div>
 
 <!-- ========================================== -->
-<!-- MODAL CẤU HÌNH CỔNG e-INVOICE -->
+<!-- MODAL CẤU HÌNH CỔNG API VININVOICE -->
 <!-- ========================================== -->
 <div id="vat-config-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-200 space-y-4">
-        <h3 class="font-black text-base border-b-2 border-blue-500 pb-2 text-slate-800 flex items-center gap-2">
-            <i class="fas fa-plug text-blue-500"></i> Cấu Hình Cổng Hóa Đơn Điện Tử
-        </h3>
-        <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 text-xs text-blue-900 font-medium">
-            <i class="fas fa-shield-alt text-blue-600 mr-1"></i> <b>Chế độ Lập Nháp An Toàn:</b> Hệ thống chỉ kết nối API để tạo Hóa Đơn Nháp. Tuyệt đối không tự động ký số hoặc phát hành hóa đơn thật.
+    <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="font-black text-base text-slate-900 flex items-center gap-2">
+                <span class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center text-sm shadow-xs"><i class="fas fa-plug"></i></span>
+                Cấu Hình API Cổng VinInvoice
+            </h3>
+            <button onclick="window.modVAT.closeConfig()" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 text-xs text-blue-900 font-medium space-y-1">
+            <p class="font-bold flex items-center gap-1.5 text-blue-950">
+                <i class="fas fa-shield-alt text-blue-600 text-sm"></i> Chế độ Tạo Nháp An Toàn (Draft Only):
+            </p>
+            <p class="text-[11.5px] text-blue-800 leading-relaxed">
+                Hệ thống chỉ kết nối API VinInvoice để tự động tạo <b>Hóa Đơn Nháp (create-from-3rd)</b> với Mẫu số và Ký hiệu đã đăng ký. Kế toán trưởng giữ USB Token NewCA sẽ đăng nhập cổng VinInvoice để kiểm tra lần cuối và ký số phát hành chính thức.
+            </p>
         </div>
         
-        <div class="space-y-3 text-xs">
+        <div class="space-y-3.5 text-xs">
             <div>
-                <label class="block font-bold text-slate-700 mb-1">Chọn Cổng Hóa Đơn Điện Tử</label>
-                <select id="v-provider" class="w-full border p-2 rounded-lg font-bold text-blue-800 bg-slate-50 outline-none">
-                    <option value="VinInvoice">VinInvoice (Mặc định)</option>
-                    <option value="VNPT Invoice">VNPT Invoice</option>
-                    <option value="MISA meInvoice">MISA meInvoice</option>
-                    <option value="Viettel S-Invoice">Viettel S-Invoice</option>
-                </select>
-            </div>
-            <div>
-                <label class="block font-bold text-slate-700 mb-1">Mẫu Số & Ký Hiệu Mặc Định</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="v-symbol1" value="1C26T" placeholder="1C26T" class="w-full border p-2 rounded-lg text-center font-bold text-slate-700">
-                    <input type="text" id="v-symbol2" value="AA/26E" placeholder="AA/26E" class="w-full border p-2 rounded-lg text-center font-bold text-slate-700">
+                <label class="block font-bold text-slate-700 mb-1">Địa Chỉ API Máy Chủ VinInvoice</label>
+                <div class="relative">
+                    <input type="text" id="v-api-url" value="https://vininvoice.vn/api" placeholder="https://vininvoice.vn/api" class="w-full border p-2 pl-8 rounded-lg font-mono font-bold text-slate-800 bg-slate-50 outline-none focus:border-blue-500">
+                    <i class="fas fa-globe absolute left-2.5 top-3 text-slate-400 text-xs"></i>
                 </div>
             </div>
-            <div>
-                <label class="block font-bold text-slate-700 mb-1">API Key / Token Bảo Mật</label>
-                <input type="password" value="●●●●●●●●●●●●●●●●" class="w-full border p-2 rounded-lg font-mono bg-slate-50">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Tài Khoản API (MST Doanh Nghiệp)</label>
+                    <div class="relative">
+                        <input type="text" id="v-username" value="0315614349" placeholder="0315614349" class="w-full border p-2 pl-8 rounded-lg font-mono font-bold text-slate-800 bg-white outline-none focus:border-blue-500">
+                        <i class="fas fa-user absolute left-2.5 top-3 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Mật Khẩu API</label>
+                    <div class="relative">
+                        <input type="password" id="v-password" value="12345678" placeholder="••••••••" class="w-full border p-2 pl-8 pr-8 rounded-lg font-mono text-slate-800 bg-white outline-none focus:border-blue-500">
+                        <i class="fas fa-lock absolute left-2.5 top-3 text-slate-400 text-xs"></i>
+                        <button type="button" onclick="window.modVAT.togglePasswordVisibility()" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                            <i id="v-pwd-icon" class="fas fa-eye text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <label class="block font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                    <span>Mẫu Số & Ký Hiệu Hóa Đơn (SUNGO)</span>
+                    <span class="text-[10px] bg-emerald-100 text-emerald-800 font-black px-2 py-0.5 rounded-full border border-emerald-200" id="v-form-serial-badge">1C26TMT</span>
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <span class="text-[10.5px] text-slate-500 block mb-0.5">Mẫu Số (invoiceForm):</span>
+                        <input type="text" id="v-form" value="1" placeholder="1" oninput="window.modVAT.updateFormSerialBadge()" class="w-full border p-2 rounded-lg text-center font-bold text-slate-800 bg-white outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <span class="text-[10.5px] text-slate-500 block mb-0.5">Ký Hiệu (invoiceSerial):</span>
+                        <input type="text" id="v-serial" value="C26TMT" placeholder="C26TMT" oninput="window.modVAT.updateFormSerialBadge()" class="w-full border p-2 rounded-lg text-center font-bold text-slate-800 uppercase bg-white outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <p class="text-[10px] text-slate-500 mt-1.5 italic">Ký hiệu chính thức do VinInvoice cấp phát cho Cty TNHH Điện Mặt Trời SUNGO (Mẫu 1, Ký hiệu C26TMT -> Mẫu số ký hiệu: 1C26TMT).</p>
+            </div>
+
+            <!-- Khung trạng thái kết nối -->
+            <div id="v-conn-status" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block" id="v-status-dot"></span>
+                    <span class="text-[11px] font-medium text-slate-600" id="v-status-text">Chưa kiểm tra kết nối</span>
+                </div>
+                <button type="button" onclick="window.modVAT.testConnection()" id="btn-test-vin-conn" class="px-3 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded-lg font-bold border border-slate-300 text-[11px] transition shadow-2xs flex items-center gap-1 cursor-pointer">
+                    <i class="fas fa-network-wired text-blue-600"></i> Kiểm Tra Kết Nối
+                </button>
             </div>
         </div>
+
         <div class="flex justify-end gap-2 pt-3 border-t">
-            <button onclick="document.getElementById('vat-config-modal').classList.replace('flex', 'hidden')" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300">Đóng</button>
-            <button onclick="alert('✅ Đã lưu cấu hình kết nối cổng e-Invoice thành công!'); document.getElementById('vat-config-modal').classList.replace('flex', 'hidden');" class="px-5 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700"><i class="fas fa-check mr-1"></i> Lưu Cấu Hình</button>
+            <button onclick="window.modVAT.closeConfig()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 text-xs cursor-pointer">Đóng</button>
+            <button onclick="window.modVAT.saveVinInvoiceConfig()" id="btn-save-vin-config" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl font-bold shadow-2xs text-xs flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-save"></i> Lưu Cấu Hình API
+            </button>
         </div>
     </div>
 </div>
@@ -645,17 +699,21 @@
                     let actionHtml = '';
                     if (isPending) {
                         actionHtml = `
-                            <div class="flex flex-col gap-1.5 items-center">
-                                <button onclick="window.modVAT.exportVinInvoiceExcel(${i.id})" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-bold py-1.5 px-2 rounded-lg transition shadow-2xs text-[10.5px] flex items-center justify-center gap-1 cursor-pointer" title="Xuất file Excel 16 cột chuẩn VinInvoice">
-                                    <i class="fas fa-file-excel"></i> Xuất Excel VinInvoice
+                            <div class="flex flex-col gap-1.5 items-center w-full">
+                                <button onclick="window.modVAT.pushVinInvoiceApi(${i.id})" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white font-black py-1.5 px-2 rounded-lg transition shadow-2xs text-[11px] flex items-center justify-center gap-1 cursor-pointer" title="Đẩy hóa đơn nháp trực tiếp lên VinInvoice qua API (1-Chạm)">
+                                    <i class="fas fa-bolt text-amber-300"></i> Đẩy API VinInvoice
                                 </button>
-                                <div class="flex items-center justify-between w-full px-1 text-[10px]">
+                                <div class="flex items-center justify-between w-full px-0.5 text-[10px]">
+                                    <button onclick="window.modVAT.exportVinInvoiceExcel(${i.id})" class="text-emerald-700 hover:text-emerald-900 font-bold inline-flex items-center gap-0.5 cursor-pointer" title="Xuất file Excel 16 cột">
+                                        <i class="fas fa-file-excel text-emerald-600"></i> Excel
+                                    </button>
+                                    <span class="text-slate-300">•</span>
                                     <button onclick="window.modVAT.copyBuyerInfo(${i.id})" class="text-blue-600 hover:text-blue-800 font-bold inline-flex items-center gap-0.5 cursor-pointer" title="Sao chép tên, MST, địa chỉ khách hàng">
                                         <i class="fas fa-copy"></i> Copy TT
                                     </button>
                                     <span class="text-slate-300">•</span>
                                     <button onclick="window.modVAT.openDetailModal(${i.id})" class="text-slate-600 hover:text-amber-600 font-bold inline-flex items-center gap-0.5 cursor-pointer" title="Sửa thông tin hoặc ánh xạ mã kế toán">
-                                        <i class="fas fa-edit"></i> Map Hàng
+                                        <i class="fas fa-edit"></i> Map
                                     </button>
                                 </div>
                             </div>
@@ -780,11 +838,14 @@
                             <span class="text-[10px] text-slate-400">${new Date(i.created_at).toLocaleDateString('vi-VN')}</span>
                             <div class="flex flex-wrap items-center gap-1.5">
                                 ${isPending ? `
-                                    <button type="button" onclick="window.modVAT.exportVinInvoiceExcel(${i.id})" class="px-2.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
-                                        <i class="fas fa-file-excel"></i> Xuất Excel
+                                    <button type="button" onclick="window.modVAT.pushVinInvoiceApi(${i.id})" class="px-2.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white rounded-xl text-xs font-black transition shadow-2xs flex items-center gap-1 cursor-pointer">
+                                        <i class="fas fa-bolt text-amber-300"></i> Đẩy API
+                                    </button>
+                                    <button type="button" onclick="window.modVAT.exportVinInvoiceExcel(${i.id})" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition border border-emerald-200 flex items-center gap-1 cursor-pointer">
+                                        <i class="fas fa-file-excel text-emerald-600"></i> Excel
                                     </button>
                                     <button type="button" onclick="window.modVAT.copyBuyerInfo(${i.id})" class="px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition border border-blue-200 cursor-pointer" title="Sao chép tên, MST, địa chỉ">
-                                        <i class="fas fa-copy"></i> Copy TT
+                                        <i class="fas fa-copy"></i>
                                     </button>
                                     <button type="button" onclick="window.modVAT.openDetailModal(${i.id})" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer" title="Map Hàng">
                                         <i class="fas fa-edit"></i>
@@ -970,6 +1031,22 @@
                 window.modVAT.closeDetailModal();
                 await window.modVAT.createDraft(window.modVAT.selectedInvId);
             } catch(e) { alert("Lỗi kết nối đẩy nháp!"); }
+        },
+
+        pushFromModal: async () => {
+            const payload = window.modVAT.collectModalPayload();
+            try {
+                // 1. Lưu thông tin cập nhật trước
+                await fetch(`/api/invoices/${window.modVAT.selectedInvId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const id = window.modVAT.selectedInvId;
+                window.modVAT.closeDetailModal();
+                // 2. Đẩy trực tiếp lên API VinInvoice
+                await window.modVAT.pushVinInvoiceApi(id);
+            } catch(e) { alert("Lỗi kết nối lưu hoặc đẩy API VinInvoice: " + e.message); }
         },
 
         // --- XUẤT EXCEL & SAO CHÉP THÔNG TIN VININVOICE ---
@@ -1212,8 +1289,184 @@
             } catch (e) { alert("Lỗi kết nối xác nhận phát hành!"); }
         },
 
-        // --- CẤU HÌNH & HÓA ĐƠN NGOẠI TUYẾN ---
-        openConfig: () => document.getElementById('vat-config-modal').classList.replace('hidden', 'flex'),
+        // --- CẤU HÌNH API VININVOICE & KẾT NỐI ---
+        loadConfig: async () => {
+            try {
+                const res = await fetch('/api/invoices/vininvoice/config');
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const c = data.data;
+                    if (document.getElementById('v-api-url')) document.getElementById('v-api-url').value = c.apiUrl || 'https://vininvoice.vn/api';
+                    if (document.getElementById('v-username')) document.getElementById('v-username').value = c.username || '0315614349';
+                    if (document.getElementById('v-password')) document.getElementById('v-password').value = c.password || '12345678';
+                    if (document.getElementById('v-form')) document.getElementById('v-form').value = c.invoiceForm || '1';
+                    if (document.getElementById('v-serial')) document.getElementById('v-serial').value = c.invoiceSerial || 'C26TMT';
+                    window.modVAT.updateFormSerialBadge();
+                }
+            } catch(e) {
+                console.warn('Lỗi đọc cấu hình VinInvoice:', e);
+            }
+        },
+
+        openConfig: () => {
+            document.getElementById('vat-config-modal').classList.replace('hidden', 'flex');
+            window.modVAT.loadConfig();
+        },
+
+        closeConfig: () => {
+            document.getElementById('vat-config-modal').classList.replace('flex', 'hidden');
+        },
+
+        togglePasswordVisibility: () => {
+            const pwdInput = document.getElementById('v-password');
+            const icon = document.getElementById('v-pwd-icon');
+            if (!pwdInput) return;
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                if (icon) icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                if (icon) icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        },
+
+        updateFormSerialBadge: () => {
+            const form = document.getElementById('v-form')?.value.trim() || '1';
+            const serial = document.getElementById('v-serial')?.value.trim().toUpperCase() || 'C26TMT';
+            const badge = document.getElementById('v-form-serial-badge');
+            if (badge) badge.innerText = `${form}${serial}`;
+        },
+
+        testConnection: async () => {
+            const btn = document.getElementById('btn-test-vin-conn');
+            const statusDot = document.getElementById('v-status-dot');
+            const statusText = document.getElementById('v-status-text');
+            
+            const origHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin text-blue-600"></i> Đang test...`;
+                btn.disabled = true;
+            }
+
+            try {
+                await window.modVAT.saveVinInvoiceConfig(true);
+
+                const res = await fetch('/api/invoices/vininvoice/test-connection', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse';
+                    if (statusText) statusText.innerHTML = `<b class="text-emerald-700">🟢 Kết nối thành công!</b> <span class="text-[10px] text-slate-500 font-mono">(Token: ${data.loginKey.slice(0, 8)}...)</span>`;
+                } else {
+                    if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-red-500 inline-block';
+                    if (statusText) statusText.innerHTML = `<b class="text-red-600">🔴 Thất bại:</b> <span class="text-[10px] text-red-500">${data.error || 'Sai thông tin'}</span>`;
+                }
+            } catch(e) {
+                if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-red-500 inline-block';
+                if (statusText) statusText.innerHTML = `<b class="text-red-600">🔴 Lỗi kết nối mạng</b>`;
+            }
+            if (btn) {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        },
+
+        saveVinInvoiceConfig: async (isSilent = false) => {
+            const btn = document.getElementById('btn-save-vin-config');
+            const origHtml = btn ? btn.innerHTML : '';
+            if (!isSilent && btn) {
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang lưu...`;
+                btn.disabled = true;
+            }
+
+            const payload = {
+                apiUrl: document.getElementById('v-api-url').value.trim(),
+                username: document.getElementById('v-username').value.trim(),
+                password: document.getElementById('v-password').value,
+                invoiceForm: document.getElementById('v-form').value.trim(),
+                invoiceSerial: document.getElementById('v-serial').value.trim().toUpperCase()
+            };
+
+            try {
+                const res = await fetch('/api/invoices/vininvoice/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (!isSilent) {
+                        alert("✅ Đã lưu cấu hình API VinInvoice thành công!");
+                        window.modVAT.closeConfig();
+                    }
+                } else {
+                    if (!isSilent) alert("Lỗi: " + (data.error || 'Không thể lưu cấu hình'));
+                }
+            } catch(e) {
+                if (!isSilent) alert("Lỗi kết nối máy chủ khi lưu cấu hình!");
+            }
+
+            if (!isSilent && btn) {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        },
+
+        pushVinInvoiceApi: async (id) => {
+            const inv = window.modVAT.list.find(x => x.id === id);
+            if (!inv) return;
+
+            const company = inv.company_name || 'Khách lẻ';
+            const tax = inv.tax_code || 'Không có';
+            const ok = confirm(
+                `🚀 ĐẨY HÓA ĐƠN LÊN CỔNG VININVOICE (API 1-CHẠM)\n\n` +
+                `• Đơn hàng / Tham chiếu: ${inv.ref_id}\n` +
+                `• Doanh nghiệp: ${company}\n` +
+                `• Mã số thuế: ${tax}\n` +
+                `• Mẫu hóa đơn: 1C26TMT\n\n` +
+                `Hệ thống sẽ gọi API VinInvoice tạo HÓA ĐƠN NHÁP ngay lập tức.\n` +
+                `Kế toán trưởng (KTT) giữ USB Token NewCA sẽ đăng nhập cổng VinInvoice để ký số phát hành sau.\n\n` +
+                `Bạn có chắc chắn muốn đẩy đơn này lên VinInvoice không?`
+            );
+            if (!ok) return;
+
+            // Hiển thị toast đang xử lý
+            const loadingAlert = document.createElement('div');
+            loadingAlert.id = 'vin-loading-toast';
+            loadingAlert.className = 'fixed top-5 right-5 z-[9999] bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-bounce';
+            loadingAlert.innerHTML = `<i class="fas fa-circle-notch fa-spin text-amber-400 text-lg"></i> <div><p class="font-bold text-xs">Đang đẩy hóa đơn lên VinInvoice...</p><p class="text-[10px] text-slate-400">Kết nối máy chủ vininvoice.vn</p></div>`;
+            document.body.appendChild(loadingAlert);
+
+            try {
+                const res = await fetch(`/api/invoices/${id}/push-vininvoice-api`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                
+                const toast = document.getElementById('vin-loading-toast');
+                if (toast) toast.remove();
+
+                if (data.success) {
+                    alert(
+                        `🎉 THÀNH CÔNG!\n\n` +
+                        `• ${data.message}\n` +
+                        `• Mã HĐ VinInvoice: ${data.data.invoiceId}\n` +
+                        `• Ký hiệu mẫu: ${data.data.invoiceSerial || '1C26TMT'}\n\n` +
+                        `Hóa đơn đã được chuyển sang tab "2. ĐÃ NẠP CỔNG". Kế toán trưởng có thể mở VinInvoice cắm USB Token để ký số!`
+                    );
+                    await window.modVAT.load();
+                    window.modVAT.switchTab('DRAFT_CREATED');
+                } else {
+                    alert(`❌ LỖI TẠO HĐ VININVOICE:\n\n${data.error || 'Có lỗi xảy ra khi gọi API VinInvoice'}`);
+                }
+            } catch(e) {
+                const toast = document.getElementById('vin-loading-toast');
+                if (toast) toast.remove();
+                alert("❌ Lỗi mạng hoặc kết nối máy chủ khi gọi API VinInvoice: " + e.message);
+            }
+        },
+
+        // --- HÓA ĐƠN NGOẠI TUYẾN ---
         
         openManualModal: () => {
             document.getElementById('vat-mo-date').valueAsDate = new Date();
