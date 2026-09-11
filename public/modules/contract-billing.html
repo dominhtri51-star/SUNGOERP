@@ -437,6 +437,10 @@
                         <input type="text" id="cert-position" class="w-full border border-slate-300 rounded-lg p-2 font-medium outline-none">
                     </div>
                     <div>
+                        <label class="block font-bold text-slate-700 mb-1">Mã PIN Duyệt Ký Của Giám Đốc <span class="text-rose-600">*</span></label>
+                        <input type="password" id="cert-director-pin" placeholder="Mã PIN duyệt (mặc định 123456)" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-slate-800 outline-none focus:border-rose-500">
+                    </div>
+                    <div>
                         <label class="block font-bold text-slate-700 mb-1">Nhà Cung Cấp Chứng Thư Số (CA Provider)</label>
                         <select id="cert-ca-provider" onchange="window.modContract.updateCertPreview()" class="w-full border border-slate-300 rounded-lg p-2 font-bold text-slate-800 outline-none focus:border-rose-500">
                             <option value="NewCA">NewCA (Công ty Cổ phần NewCA)</option>
@@ -460,10 +464,12 @@
                             <option value="Soft Certificate (File .PFX)">Soft Certificate (File .PFX / .P12)</option>
                         </select>
                     </div>
-                    <div id="cert-usb-token-hint" class="md:col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-950 flex items-start gap-2.5">
-                        <i class="fas fa-key text-amber-600 text-base mt-0.5 shrink-0"></i>
-                        <div class="text-[11px] leading-relaxed">
-                            <span class="font-bold text-amber-900">🔐 Chế độ Ký Số USB Token (NewCA Token Manager):</span> Hệ thống xác thực chứng thư số phần cứng từ USB Token NewCA cắm vào máy tính. Khi Giám Đốc bấm duyệt ký, hệ thống đọc chứng thư số và yêu cầu nhập mã PIN bảo mật để đóng dấu điện tử hợp pháp theo chuẩn Nghị định 130/2018/NĐ-CP.
+                    <div id="cert-usb-token-hint" class="md:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl p-3.5 text-amber-950 flex items-start gap-3">
+                        <i class="fas fa-shield-halved text-amber-600 text-lg mt-0.5 shrink-0"></i>
+                        <div class="text-[11px] leading-relaxed space-y-1">
+                            <p class="font-black text-amber-900 uppercase">QUY CHUẨN KÝ SỐ USB TOKEN NEWCA & PHÊ DUYỆT NỘI BỘ ERP:</p>
+                            <p><b>1. Ký Số USB Token NewCA (Chuẩn Pháp Lý CA 100%):</b> Trình duyệt web không can thiệp trực tiếp phần cứng USB. Quý khách bấm <i>"1. Tải Hợp Đồng PDF"</i> từ hệ thống, cắm USB Token NewCA và ký điện tử bằng Adobe Acrobat / Foxit Reader, sau đó bấm <i>"2. Tải Lên PDF Đã Ký USB Token"</i> để lưu trữ vĩnh viễn trên SUNGO ERP.</p>
+                            <p><b>2. Phê Duyệt Điện Tử Nội Bộ ERP (Tiện Lợi Nhanh Chóng):</b> Giám đốc nhập mã PIN bảo mật để ký duyệt ban hành tức thì trên hệ thống. Dấu ký ghi nhận trung thực <i>"DẤU PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ"</i>, minh bạch và an toàn tuyệt đối.</p>
                         </div>
                     </div>
                     <div>
@@ -507,7 +513,7 @@
                         </div>
                         <p class="text-[10px] text-slate-600" id="prev-cert-tax">MST: 0315614349 • Serial: 54:02:16:88:99:AA:BB:CC</p>
                         <p class="text-[10px] text-emerald-700 font-black mt-1 flex items-center gap-1" id="prev-cert-ca">
-                            <i class="fas fa-check-circle"></i> CHỨNG THƯ SỐ HỢP LỆ (Viettel-CA Certified)
+                            <i class="fas fa-check-circle"></i> CHỨNG THƯ SỐ HỢP LỆ (NewCA Certified)
                         </p>
                     </div>
                 </div>
@@ -663,45 +669,96 @@
                 </div>
             </div>
 
-            <!-- Phê duyệt của Giám Đốc -->
-            <div class="bg-white p-4 rounded-xl border border-rose-200 shadow-sm space-y-3">
-                <h4 class="font-black text-rose-800 uppercase text-xs border-b pb-2 flex items-center gap-1.5">
-                    <i class="fas fa-stamp"></i> Phê Duyệt Ban Hành & Đóng Dấu Số
-                </h4>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Người Đại Diện Pháp Luật Ký Số</label>
-                    <input type="text" id="dir-name-input" value="ÔNG ĐỖ MINH TRÍ" readonly class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase text-slate-800 bg-slate-100 outline-none">
+            <!-- Phê duyệt của Giám Đốc: Chọn 1 trong 2 phương thức -->
+            <div class="space-y-3.5">
+                <!-- PHƯƠNG THỨC 1: KÝ SỐ USB TOKEN NEWCA (PHÁP LÝ CA 100%) -->
+                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl border-2 border-emerald-300 shadow-sm space-y-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">1</span>
+                            <div>
+                                <h4 class="font-black text-emerald-950 uppercase text-xs">PHƯƠNG THỨC 1: KÝ BẰNG USB TOKEN NEWCA (FILE PDF GỐC)</h4>
+                                <p class="text-[10.5px] text-emerald-800 font-medium">Chuẩn pháp lý 100% CA có thẩm quyền theo Nghị định 130/2018/NĐ-CP (Ngân hàng, Thuế, Đối tác lớn)</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 bg-emerald-200 text-emerald-900 rounded font-black text-[10px] whitespace-nowrap">KHUYÊN DÙNG ĐỐI NGOẠI</span>
+                    </div>
+                    <div class="bg-white/85 p-3 rounded-lg border border-emerald-200 text-[11px] text-slate-700 space-y-1.5 leading-relaxed">
+                        <p class="font-bold text-slate-900">Quy trình thực hiện chuẩn:</p>
+                        <ol class="list-decimal list-inside space-y-1 pl-1">
+                            <li>Bấm <b>"1. Tải Hợp Đồng PDF Về Máy"</b> bên dưới để xuất văn bản hợp đồng hoàn chỉnh.</li>
+                            <li>Cắm <b>USB Token NewCA</b> vào máy tính, mở file PDF bằng phần mềm <b>Adobe Acrobat</b> hoặc <b>Foxit Reader</b> -> Ký số bằng USB Token NewCA và nhập mã PIN USB Token.</li>
+                            <li>Bấm <b>"2. Tải Lên PDF Đã Ký USB Token"</b> để lưu trữ vĩnh viễn văn bản có chữ ký số điện tử trên hệ thống SUNGO ERP.</li>
+                        </ol>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <button type="button" onclick="window.modContract.downloadContractPDF()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-file-pdf"></i> 1. Tải Hợp Đồng PDF Về Máy
+                        </button>
+                        <button type="button" onclick="document.getElementById('contract-director-modal').classList.replace('flex', 'hidden'); window.modContract.openUploadSignedModal();" class="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-cloud-arrow-up"></i> 2. Tải Lên PDF Đã Ký USB Token
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Ý Kiến Chỉ Đạo Của Giám Đốc</label>
-                    <input type="text" id="dir-note-input" value="Ban Giám Đốc phê duyệt ban hành và chịu trách nhiệm pháp lý hoàn toàn." class="w-full border border-slate-300 rounded-lg p-2 font-medium text-slate-800 outline-none">
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Mã PIN / Mật Khẩu Duyệt Của Giám Đốc <span class="text-red-500">*</span></label>
-                    <input type="password" id="dir-pin-input" placeholder="Nhập mã PIN xác nhận phê duyệt..." class="w-full border-2 border-slate-300 rounded-lg p-2 outline-none font-bold text-slate-900 tracking-widest focus:border-rose-500">
-                </div>
-                <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <label class="flex items-start gap-2 cursor-pointer">
-                        <input type="checkbox" id="dir-confirm-checkbox" class="w-4 h-4 mt-0.5 rounded text-rose-600 focus:ring-rose-500">
-                        <span class="text-[11px] text-amber-950 font-bold leading-tight">
-                            Tôi (Giám đốc ĐỖ MINH TRÍ - Đại diện pháp luật) chính thức phê duyệt ký số và chịu trách nhiệm pháp luật hoàn toàn đối với văn bản Hợp đồng này.
-                        </span>
-                    </label>
+
+                <!-- PHƯƠNG THỨC 2: PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ ERP (NHANH CHÓNG / TIỆN LỢI) -->
+                <div class="bg-white p-4 rounded-xl border-2 border-indigo-200 shadow-sm space-y-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-xs">2</span>
+                            <div>
+                                <h4 class="font-black text-indigo-950 uppercase text-xs">PHƯƠNG THỨC 2: PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ ERP (DUYỆT TRỰC TUYẾN)</h4>
+                                <p class="text-[10.5px] text-slate-500 font-medium">Dành cho Giám đốc duyệt ban hành nhanh trên điện thoại/máy tính khi chưa cắm USB Token</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 bg-indigo-100 text-indigo-900 rounded font-black text-[10px] whitespace-nowrap">DUYỆT NHANH ERP</span>
+                    </div>
+
+                    <div class="p-2.5 bg-blue-50/80 border border-blue-200 rounded-lg text-[11px] text-blue-950">
+                        <i class="fas fa-info-circle text-blue-600 mr-1"></i> Hệ thống sẽ đóng <b>"DẤU PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ (ERP Internal e-Approval)"</b> kèm mã băm SHA-256 bảo mật và định danh người ký (không mạo danh chứng thư số CA khi chưa cắm Token).
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Người Đại Diện Ban Giám Đốc</label>
+                            <input type="text" id="dir-name-input" value="ÔNG ĐỖ MINH TRÍ" readonly class="w-full border border-slate-300 rounded-lg p-2 font-bold uppercase text-slate-800 bg-slate-100 outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Mã PIN Duyệt Giám Đốc <span class="text-rose-600">*</span></label>
+                            <input type="password" id="dir-pin-input" placeholder="Nhập mã PIN duyệt Giám đốc (123456)..." class="w-full border-2 border-indigo-300 rounded-lg p-2 outline-none font-mono font-bold text-slate-900 tracking-widest focus:border-indigo-600 bg-white">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-slate-700 mb-1">Ý Kiến Chỉ Đạo Của Giám Đốc</label>
+                            <input type="text" id="dir-note-input" value="Ban Giám Đốc phê duyệt ban hành và chịu trách nhiệm pháp lý hoàn toàn." class="w-full border border-slate-300 rounded-lg p-2 font-medium text-slate-800 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <label class="flex items-start gap-2 cursor-pointer">
+                            <input type="checkbox" id="dir-confirm-checkbox" class="w-4 h-4 mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                            <span class="text-[11px] text-amber-950 font-bold leading-tight">
+                                Tôi (Giám đốc ĐỖ MINH TRÍ - Đại diện pháp luật) xác nhận phê duyệt điện tử nội bộ ban hành văn bản Hợp đồng này.
+                            </span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <div class="p-4 border-t border-slate-200 bg-white flex justify-between gap-2 shrink-0">
-            <button onclick="window.modContract.directorReject()" class="px-4 py-2 bg-slate-100 hover:bg-rose-50 text-rose-700 font-bold rounded-lg border border-rose-200 transition text-xs flex items-center gap-1">
+        <div class="p-4 border-t border-slate-200 bg-white flex justify-between items-center gap-2 shrink-0">
+            <button onclick="window.modContract.directorReject()" class="px-3.5 py-2 bg-slate-100 hover:bg-rose-50 text-rose-700 font-bold rounded-lg border border-rose-200 transition text-xs flex items-center gap-1">
                 <i class="fas fa-undo"></i> Yêu Cầu KTT Chỉnh Sửa Lại
             </button>
             <div class="flex items-center gap-2">
                 <button onclick="document.getElementById('contract-director-modal').classList.replace('flex', 'hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition text-xs">Đóng</button>
-                <button onclick="window.modContract.submitDirectorApproval()" id="btn-submit-dir" class="px-5 py-2.5 bg-rose-700 hover:bg-rose-800 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 uppercase">
-                    <i class="fas fa-crown"></i> Phê Duyệt & Ký Số SUNGO
+                <button onclick="window.modContract.submitDirectorApproval()" id="btn-submit-dir" class="px-5 py-2.5 bg-indigo-700 hover:bg-indigo-800 active:scale-95 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 uppercase cursor-pointer">
+                    <i class="fas fa-shield-halved"></i> Phê Duyệt Điện Tử Nội Bộ ERP
                 </button>
             </div>
+        </div>
+    </div>
+</div>
 <!-- ========================================================= -->
 <!-- 3. MODAL TẢI LÊN & QUẢN LÝ FILE HỢP ĐỒNG ĐÃ KÝ (PDF / SCAN) -->
 <!-- ========================================================= -->
@@ -1012,6 +1069,8 @@ window.modContract = {
         document.getElementById('cert-company-name').value = cfg.company_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
         document.getElementById('cert-tax-code').value = cfg.tax_code || '0315614349';
         document.getElementById('cert-rep').value = cfg.representative || 'ÔNG ĐỖ MINH TRÍ';
+        document.getElementById('cert-position').value = cfg.position || 'Giám Đốc';
+        document.getElementById('cert-director-pin').value = cfg.director_pin || '123456';
         document.getElementById('cert-ca-provider').value = cfg.ca_provider || 'NewCA';
         document.getElementById('cert-serial').value = cfg.cert_serial || '54:02:16:88:99:AA:BB:CC';
         document.getElementById('cert-method').value = cfg.signing_method || 'USB Token Chuyên Dụng';
@@ -1054,7 +1113,8 @@ window.modContract = {
             company_name: document.getElementById('cert-company-name').value.trim().toUpperCase(),
             tax_code: document.getElementById('cert-tax-code').value.trim(),
             representative: document.getElementById('cert-rep').value.trim().toUpperCase(),
-            position: document.getElementById('cert-position').value.trim(),
+            position: document.getElementById('cert-position').value.trim() || 'Giám Đốc',
+            director_pin: document.getElementById('cert-director-pin').value.trim() || '123456',
             ca_provider: document.getElementById('cert-ca-provider').value,
             cert_serial: document.getElementById('cert-serial').value.trim().toUpperCase(),
             signing_method: document.getElementById('cert-method').value,
@@ -2115,24 +2175,62 @@ window.modContract = {
         let sigBHtml = '';
         if (c.digital_stamp_b && c.digital_stamp_b.is_valid) {
             const st = c.digital_stamp_b;
+            const isInternal = st.signing_type === 'INTERNAL_APPROVAL';
+            const badgeBorder = isInternal ? 'border-blue-600 bg-blue-50/70' : 'border-rose-600 bg-rose-50/70';
+            const badgeTitleColor = isInternal ? 'text-blue-800' : 'text-rose-700';
+            const logoColor = isInternal ? 'border-blue-600 text-blue-600' : 'border-rose-600 text-rose-600';
+            const badgeAuthority = isInternal
+                ? `<p class="text-[10px] text-blue-700 font-black mt-1 flex items-center gap-1"><i class="fas fa-shield-halved text-blue-600"></i> DẤU PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ (ERP Internal e-Approval)</p>`
+                : `<p class="text-[10px] text-emerald-700 font-black mt-1 flex items-center gap-1"><i class="fas fa-check-circle text-emerald-600"></i> CHỨNG THƯ SỐ HỢP LỆ (${st.certificate_authority || 'NewCA Certified'})</p>`;
+
+            const signerName = (st.signer || `${cert.representative || 'ÔNG ĐỖ MINH TRÍ'} - ${cert.position || 'GIÁM ĐỐC'}`).replace(/\s*-\s*$/, ' - GIÁM ĐỐC');
+
+            let attachedSignedFileLink = '';
+            if (c.signed_file_url) {
+                attachedSignedFileLink = `
+                    <div class="mt-2 pt-1.5 border-t border-slate-200 text-center">
+                        <a href="${c.signed_file_url}" target="_blank" class="inline-flex items-center gap-1 text-[10.5px] font-black text-emerald-700 hover:text-emerald-900 hover:underline">
+                            <i class="fas fa-file-pdf text-rose-600"></i> Xem File Hợp Đồng Ký Số USB Token Gốc
+                        </a>
+                    </div>
+                `;
+            }
+
             sigBHtml = `
-                <div class="mt-2 relative p-2.5 border-2 border-rose-600 rounded-lg bg-rose-50/60 text-left text-[11px] leading-tight shadow-sm">
+                <div class="mt-2 relative p-2.5 border-2 ${badgeBorder} rounded-lg text-left text-[11px] leading-tight shadow-sm">
                     <div class="flex items-center gap-2 mb-1.5">
-                        <div class="w-9 h-9 rounded-full border-2 border-rose-600 flex items-center justify-center text-rose-600 font-black text-xs shrink-0 bg-white">SUNGO</div>
+                        <div class="w-9 h-9 rounded-full border-2 ${logoColor} flex items-center justify-center font-black text-xs shrink-0 bg-white">SUNGO</div>
                         <div>
-                            <p class="font-black text-rose-700 uppercase leading-tight text-[10.5px]">${st.company || cert.company_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO'}</p>
+                            <p class="font-black ${badgeTitleColor} uppercase leading-tight text-[10.5px]">${st.company || cert.company_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO'}</p>
                             <p class="text-[10px] text-slate-600 font-bold mt-0.5">NGÀY PHÊ DUYỆT: ${new Date(st.signed_at || st.approved_at).toLocaleString('vi-VN')}</p>
                         </div>
                     </div>
-                    <p class="text-[10px] text-slate-500">MST: ${st.tax_code || cert.tax_code} • Hash: ${st.hash?.slice(0, 18)}...</p>
-                    <div class="my-1.5 py-1 border-y border-dashed border-rose-300 text-[10px] space-y-0.5">
+                    <p class="text-[10px] text-slate-500">MST: ${st.tax_code || cert.tax_code} • Hash: ${st.hash ? st.hash.slice(0, 18) : ''}...</p>
+                    <div class="my-1.5 py-1 border-y border-dashed border-slate-300 text-[10px] space-y-0.5">
                         <p class="text-blue-800">📋 <b>Người thực hiện & Trình ký:</b> ${st.prepared_by || 'KẾ TOÁN TRƯỞNG'}</p>
-                        <p class="text-purple-900">👑 <b>Người phê duyệt tối cao:</b> ${st.approved_by || 'ÔNG ĐỖ MINH TRÍ (GIÁM ĐỐC)'}</p>
+                        <p class="text-purple-900">👑 <b>Người phê duyệt:</b> ${st.approved_by || 'ÔNG ĐỖ MINH TRÍ (GIÁM ĐỐC)'}</p>
                         <p class="text-slate-600 italic">"${st.approval_note || 'Ban Giám Đốc phê duyệt ban hành và chịu trách nhiệm pháp lý hoàn toàn.'}"</p>
                     </div>
-                    <p class="text-[10px] text-emerald-700 font-black mt-0.5"><i class="fas fa-check-circle"></i> CHỨNG THƯ SỐ HỢP LỆ (${st.certificate_authority || 'Viettel-CA Certified'})</p>
-                    <p class="font-black text-slate-900 mt-2 text-center uppercase">${st.signer || `${cert.representative} - ${cert.position}`}</p>
+                    ${badgeAuthority}
+                    ${attachedSignedFileLink}
+                    <p class="font-black text-slate-900 mt-2 text-center uppercase">${signerName}</p>
                 </div>
+            `;
+        } else if (c.signed_file_url) {
+            sigBHtml = `
+                <div class="mt-2 p-3 border-2 border-emerald-500 rounded-lg bg-emerald-50/70 text-center text-xs shadow-sm space-y-1.5">
+                    <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 text-sm">
+                        <i class="fas fa-file-circle-check"></i>
+                    </div>
+                    <p class="font-black text-emerald-950 text-[11px] uppercase">ĐÃ ĐÍNH KÈM FILE HỢP ĐỒNG KÝ SỐ USB TOKEN</p>
+                    <p class="text-[10px] text-slate-600 font-medium">Bản PDF ký bằng USB Token NewCA / Scan mộc đỏ</p>
+                    <div class="pt-1">
+                        <a href="${c.signed_file_url}" target="_blank" class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px] transition shadow-xs">
+                            <i class="fas fa-eye"></i> Xem File Ký Số Gốc
+                        </a>
+                    </div>
+                </div>
+                <p class="font-bold mt-1 text-center">${(cert.representative || 'ÔNG ĐỖ MINH TRÍ')} - ${(cert.position || 'GIÁM ĐỐC')}</p>
             `;
         } else if (c.contract_status === 'PENDING_DIRECTOR_APPROVAL') {
             const req = c.signing_request || {};
@@ -2143,7 +2241,7 @@ window.modContract = {
                     <span class="text-[10px] text-slate-600 mt-0.5">Người trình: <b>${req.prepared_by || 'KẾ TOÁN TRƯỞNG'}</b></span>
                     <span class="text-[10px] text-rose-600 font-bold mt-0.5">ĐANG CHỜ GIÁM ĐỐC DUYỆT KÝ</span>
                 </div>
-                <p class="font-bold mt-1 text-center">${cert.representative || 'ÔNG ĐỖ MINH TRÍ'}</p>
+                <p class="font-bold mt-1 text-center">${(cert.representative || 'ÔNG ĐỖ MINH TRÍ')} - ${(cert.position || 'GIÁM ĐỐC')}</p>
             `;
         } else if (c.e_signature_b) {
             sigBHtml = `<div class="mt-2 text-center"><img src="${c.e_signature_b}" class="max-h-24 mx-auto object-contain"><p class="font-bold mt-1">${cert.representative || 'ÔNG ĐỖ MINH TRÍ'}</p></div>`;
@@ -2154,7 +2252,7 @@ window.modContract = {
                     <span class="font-bold text-slate-600 text-[11px] uppercase">CHƯA LÊN LỆNH TRÌNH KÝ</span>
                     <span class="text-[10px] text-slate-400 italic mt-0.5">(KTT đối soát & lên lệnh trình Giám Đốc)</span>
                 </div>
-                <p class="font-bold mt-1 text-center">${cert.representative || 'ÔNG ĐỖ MINH TRÍ'}</p>
+                <p class="font-bold mt-1 text-center">${(cert.representative || 'ÔNG ĐỖ MINH TRÍ')} - ${(cert.position || 'GIÁM ĐỐC')}</p>
             `;
         }
 
@@ -2491,21 +2589,28 @@ window.modContract = {
         document.getElementById('contract-director-modal').classList.replace('hidden', 'flex');
     },
 
+    downloadContractPDF: () => {
+        window.modContract.printContractPDF();
+    },
+
     submitDirectorApproval: async () => {
         if (!window.modContract.currentContract) return;
         const c = window.modContract.currentContract;
 
         const chk = document.getElementById('dir-confirm-checkbox');
         if (!chk.checked) {
-            return alert("⚠️ Giám đốc vui lòng đánh dấu xác nhận phê duyệt và chịu trách nhiệm pháp lý!");
+            return alert("⚠️ Giám đốc vui lòng đánh dấu xác nhận phê duyệt điện tử nội bộ!");
         }
 
         const dirName = document.getElementById('dir-name-input').value.trim();
         const dirNote = document.getElementById('dir-note-input').value.trim();
         const dirPin = document.getElementById('dir-pin-input').value.trim();
+        if (!dirPin) {
+            return alert("⚠️ Vui lòng nhập Mã PIN phê duyệt của Giám đốc!");
+        }
 
         const btn = document.getElementById('btn-submit-dir');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang ký số...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang phê duyệt...';
         btn.classList.add('opacity-50', 'pointer-events-none');
 
         try {
@@ -2515,7 +2620,8 @@ window.modContract = {
                 body: JSON.stringify({
                     director_name: dirName,
                     approval_note: dirNote,
-                    director_pin: dirPin
+                    director_pin: dirPin,
+                    signing_type: 'INTERNAL_APPROVAL'
                 })
             });
             const data = await res.json();
@@ -2528,9 +2634,9 @@ window.modContract = {
                 alert("Lỗi phê duyệt: " + data.error);
             }
         } catch (e) {
-            alert("Lỗi kết nối khi gửi phê duyệt ký số!");
+            alert("Lỗi kết nối khi gửi phê duyệt điện tử nội bộ!");
         } finally {
-            btn.innerHTML = '<i class="fas fa-crown"></i> Phê Duyệt & Ký Số SUNGO';
+            btn.innerHTML = '<i class="fas fa-shield-halved"></i> Phê Duyệt Điện Tử Nội Bộ ERP';
             btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     },

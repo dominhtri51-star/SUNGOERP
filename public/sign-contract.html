@@ -438,8 +438,12 @@
                             <p class="text-blue-800">📋 <b>Người thực hiện:</b> ` + (stb.prepared_by || 'KẾ TOÁN TRƯỞNG') + `</p>
                             <p class="text-purple-900">👑 <b>Người duyệt tối cao:</b> ` + (stb.approved_by || 'ÔNG ĐỖ MINH TRÍ (GIÁM ĐỐC)') + `</p>
                         </div>
-                        <p class="text-[10px] text-emerald-700 font-black mt-0.5"><i class="fas fa-check-circle"></i> CHỨNG THƯ SỐ HỢP LỆ (` + (stb.certificate_authority || 'Viettel-CA Certified') + `)</p>
-                        <p class="font-black text-slate-900 mt-2 text-center uppercase">` + (stb.signer || (cert.representative + ' - ' + cert.position)) + `</p>
+                        ` + (stb.signing_type === 'INTERNAL_APPROVAL' ? `
+                            <p class="text-[10px] text-blue-700 font-black mt-1 flex items-center gap-1"><i class="fas fa-shield-halved text-blue-600"></i> DẤU PHÊ DUYỆT ĐIỆN TỬ NỘI BỘ (ERP Internal e-Approval)</p>
+                        ` : `
+                            <p class="text-[10px] text-emerald-700 font-black mt-1 flex items-center gap-1"><i class="fas fa-check-circle text-emerald-600"></i> CHỨNG THƯ SỐ HỢP LỆ (` + (stb.certificate_authority || 'NewCA Certified') + `)</p>
+                        `) + `
+                        <p class="font-black text-slate-900 mt-2 text-center uppercase">` + ((stb.signer || ((cert.representative || 'ÔNG ĐỖ MINH TRÍ') + ' - ' + (cert.position || 'GIÁM ĐỐC')))).replace(/\s*-\s*$/, ' - GIÁM ĐỐC') + `</p>
                     </div>
                 `;
             } else {

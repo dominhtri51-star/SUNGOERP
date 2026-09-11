@@ -255,6 +255,7 @@ router.get('/digital-cert-settings', async (req, res) => {
             company_name: 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO',
             tax_code: '0315614349',
             representative: 'ÔNG ĐỖ MINH TRÍ',
+            position: 'Giám Đốc',
             ca_provider: 'NewCA',
             cert_serial: '54:02:16:88:99:AA:BB:CC',
             cert_valid_from: '2024-01-01',
@@ -265,7 +266,8 @@ router.get('/digital-cert-settings', async (req, res) => {
             bank_account: '19134128005010',
             bank_name: 'Techcombank - Ngân hàng TMCP Kỹ Thương Việt Nam',
             headquarters: 'Tầng 2, Tòa nhà Mộc Gia số 121A - 123 – 125 Tân Thắng, Phường Tân Sơn Nhì, Thành phố Hồ Chí Minh',
-            hotline: '0855.959.656 / 0359.591.212'
+            hotline: '0855.959.656 / 0359.591.212',
+            director_pin: '123456'
         };
 
         if (result.rows.length > 0 && result.rows[0].setting_value) {
@@ -328,7 +330,7 @@ router.get('/public/sign/:token', async (req, res) => {
             tax_code: '0315614349',
             representative: 'ÔNG ĐỖ MINH TRÍ',
             position: 'Giám Đốc',
-            ca_provider: 'Viettel-CA',
+            ca_provider: 'NewCA',
             bank_account: '19134128005010',
             bank_name: 'Techcombank',
             headquarters: 'Tầng 2, Tòa nhà Mộc Gia số 121A - 123 – 125 Tân Thắng, Phường Tân Sơn Nhì, Thành phố Hồ Chí Minh',
@@ -959,20 +961,12 @@ router.post('/:id/submit-for-approval', async (req, res) => {
 // 7d. POST: GIÁM ĐỐC PHÊ DUYỆT & ĐÓNG DẤU CHỮ KÝ SỐ DOANH NGHIỆP SUNGO (CHỊU TRÁCH NHIỆM HOÀN TOÀN)
 router.post('/:id/digital-stamp', async (req, res) => {
     try {
-        const { director_name, approval_note, director_pin } = req.body;
+        const { director_name, approval_note, director_pin, signing_type } = req.body;
 
         const contractRes = await pool.query(`SELECT * FROM contracts WHERE id = $1`, [req.params.id]);
         if (contractRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy hợp đồng' });
 
         const contract = contractRes.rows[0];
-
-        // Lấy thông tin lệnh trình ký của KTT nếu có
-        let signingRequest = {};
-        if (contract.signing_request) {
-            try {
-                signingRequest = typeof contract.signing_request === 'string' ? JSON.parse(contract.signing_request) : contract.signing_request;
-            } catch(e) {}
-        }
 
         // Lấy cấu hình chứng thư số mới nhất
         const certRes = await pool.query("SELECT setting_value FROM system_settings WHERE setting_key = 'digital_cert_config'");
@@ -982,37 +976,62 @@ router.post('/:id/digital-stamp', async (req, res) => {
             representative: 'ÔNG ĐỖ MINH TRÍ',
             position: 'Giám Đốc',
             ca_provider: 'NewCA',
-            cert_serial: 'SUNGO-CA-88997722-VN',
+            cert_serial: '54:02:16:88:99:AA:BB:CC',
             signing_method: 'USB Token Chuyên Dụng',
             stamp_type: 'VECTOR_STAMP',
-            stamp_image_url: ''
+            stamp_image_url: '',
+            director_pin: '123456'
         };
 
         if (certRes.rows.length > 0 && certRes.rows[0].setting_value) {
             try { certConfig = { ...certConfig, ...JSON.parse(certRes.rows[0].setting_value) }; } catch(e) {}
         }
 
+        // 1. KIỂM TRA MÃ PIN PHÊ DUYỆT CỦA GIÁM ĐỐC
+        const inputPin = (director_pin || '').trim();
+        const expectedPin = (certConfig.director_pin || '123456').trim();
+        if (!inputPin) {
+            return res.status(400).json({ success: false, error: 'Vui lòng nhập Mã PIN Phê Duyệt của Giám Đốc!' });
+        }
+        if (inputPin !== expectedPin) {
+            return res.status(400).json({ success: false, error: 'Mã PIN phê duyệt của Giám Đốc không chính xác! Vui lòng thử lại.' });
+        }
+
+        // Lấy thông tin lệnh trình ký của KTT nếu có
+        let signingRequest = {};
+        if (contract.signing_request) {
+            try {
+                signingRequest = typeof contract.signing_request === 'string' ? JSON.parse(contract.signing_request) : contract.signing_request;
+            } catch(e) {}
+        }
+
         const timestamp = new Date().toISOString();
         const finalDirector = (director_name || certConfig.representative || 'ÔNG ĐỖ MINH TRÍ').toUpperCase();
+        const signerPos = (certConfig.position || 'Giám Đốc').trim();
+        const signerTitle = `${finalDirector} - ${signerPos}`.toUpperCase();
 
         const hashInput = `${contract.contract_code}-${contract.total_value}-${contract.customer_company}-${certConfig.tax_code}-${finalDirector}-${timestamp}`;
         const hash = crypto.createHash('sha256').update(hashInput).digest('hex').toUpperCase();
 
+        const isUsbToken = signing_type === 'USB_TOKEN';
+        const finalSigningType = isUsbToken ? 'USB_TOKEN' : 'INTERNAL_APPROVAL';
+
         const digitalStamp = {
             company: certConfig.company_name,
             tax_code: certConfig.tax_code,
-            signer: `${certConfig.representative} - ${certConfig.position}`.toUpperCase(),
+            signer: signerTitle,
             prepared_by: signingRequest.prepared_by || 'KẾ TOÁN TRƯỞNG',
             prepared_role: 'KẾ TOÁN TRƯỞNG (NGƯỜI THỰC HIỆN)',
             prepared_at: signingRequest.prepared_at || timestamp,
             prepared_note: signingRequest.prepared_note || 'Đã đối soát hồ sơ VAT trong CRM và danh mục đơn giá',
             approved_by: finalDirector,
             approved_role: 'GIÁM ĐỐC (NGƯỜI PHÊ DUYỆT & CHỊU TRÁCH NHIỆM PHÁP LÝ HOÀN TOÀN)',
-            approval_note: approval_note || 'Ban Giám Đốc phê duyệt ban hành và chịu trách nhiệm pháp lý',
+            approval_note: approval_note || 'Ban Giám Đốc phê duyệt ban hành và chịu trách nhiệm pháp lý hoàn toàn',
             approved_at: timestamp,
+            signing_type: finalSigningType,
             certificate_serial: certConfig.cert_serial,
-            certificate_authority: `${certConfig.ca_provider} Certified`,
-            signing_method: certConfig.signing_method,
+            certificate_authority: isUsbToken ? `${certConfig.ca_provider} Certified` : 'SUNGO Internal e-Approval',
+            signing_method: isUsbToken ? `USB Token Chuyên Dụng (${certConfig.ca_provider})` : 'Phê Duyệt Điện Tử Nội Bộ ERP',
             stamp_type: certConfig.stamp_type,
             stamp_image_url: certConfig.stamp_image_url || '',
             signed_at: timestamp,
@@ -1031,7 +1050,9 @@ router.post('/:id/digital-stamp', async (req, res) => {
 
         res.json({
             success: true,
-            message: `✅ Giám Đốc (${finalDirector}) đã phê duyệt và đóng dấu chữ ký số Doanh Nghiệp SUNGO thành công!`,
+            message: isUsbToken 
+                ? `✅ Đã lưu nhận chữ ký số USB Token (${certConfig.ca_provider}) thành công!` 
+                : `✅ Giám Đốc (${finalDirector}) đã xác thực Mã PIN và phê duyệt điện tử nội bộ thành công!`,
             data: updateRes.rows[0]
         });
     } catch (err) {
