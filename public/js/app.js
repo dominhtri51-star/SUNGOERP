@@ -932,6 +932,19 @@ async function loadModule(moduleId, title) {
         return;
     }
     window.__currentModuleId = moduleId;
+    document.body.setAttribute('data-module', moduleId);
+
+    // Tự động ẩn các nút nổi (AI Assistant, Chuông thông báo) khi ở Workplace để không che khuất nút gửi tin nhắn
+    const aiFabEl = document.getElementById('sungo-ai-fab');
+    const notifFabEl = document.getElementById('btn-notif-mobile');
+    if (moduleId === 'workplace') {
+        if (aiFabEl) aiFabEl.classList.add('hidden');
+        if (notifFabEl) notifFabEl.classList.add('hidden');
+    } else {
+        if (aiFabEl) aiFabEl.classList.remove('hidden');
+        if (notifFabEl) notifFabEl.classList.remove('hidden');
+    }
+
     if (!window.location.hash || !window.location.hash.replace('#', '').startsWith(moduleId)) {
         window.location.hash = moduleId;
     }

@@ -168,7 +168,7 @@
                     </div>
 
                     <!-- Nút gửi tin nhắn -->
-                    <button type="button" onclick="window.modWorkplace.handleSendMessage(event)" id="wp-btn-send" class="w-10 h-9 sm:w-11 sm:h-10 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center text-sm shadow-xs transition transform active:scale-95 shrink-0" title="Gửi tin nhắn">
+                    <button type="button" onclick="window.modWorkplace.handleSendMessage(event)" id="wp-btn-send" class="w-10 h-10 sm:w-11 sm:h-10 rounded-2xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white flex items-center justify-center text-sm shadow-md transition transform active:scale-95 shrink-0 cursor-pointer relative z-20" title="Gửi tin nhắn">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
@@ -429,6 +429,12 @@ window.modWorkplace = {
                 this.isAdmin = ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'DIRECTOR', 'TONG_GIAM_DOC'].includes(role);
             }
         } catch(e) {}
+
+        // Đảm bảo ẩn các nút nổi (AI Assistant, Chuông thông báo) để không che khuất nút gửi tin nhắn trên mobile
+        const aiFab = document.getElementById('sungo-ai-fab');
+        const notifFab = document.getElementById('btn-notif-mobile');
+        if (aiFab) aiFab.classList.add('hidden');
+        if (notifFab) notifFab.classList.add('hidden');
 
         // Hiển thị nút tạo nhóm nếu là Admin
         const btnCreateGroup = document.getElementById('wp-btn-create-group');

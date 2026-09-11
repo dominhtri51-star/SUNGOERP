@@ -1038,6 +1038,12 @@
 
         document.body.appendChild(container);
 
+        // Nếu đang ở module workplace, tự động ẩn nút nổi AI FAB để tránh che khuất nút gửi tin nhắn
+        if (window.__currentModuleId === 'workplace' || document.body.getAttribute('data-module') === 'workplace') {
+            const fab = document.getElementById('sungo-ai-fab');
+            if (fab) fab.classList.add('hidden');
+        }
+
         // Bắt sự kiện phím Enter trên input
         const inputEl = document.getElementById('sungo-ai-input');
         if (inputEl) {
