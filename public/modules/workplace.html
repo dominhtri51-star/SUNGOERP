@@ -1392,9 +1392,10 @@ window.modWorkplace = {
             let voiceAudioUrl = null;
             let voiceDuration = null;
 
-            if (attachments.length > 0) {
+            const fileAttachments = attachments.filter(att => att && att.type !== 'order_card' && att.type !== 'print_slip');
+            if (fileAttachments.length > 0) {
                 attachmentHtml = '<div class="mt-2 space-y-1.5">';
-                attachments.forEach(att => {
+                fileAttachments.forEach(att => {
                     const isAudio = (att.type && att.type.startsWith('audio/')) || /\.(webm|mp3|mp4|m4a|ogg|wav|aac)$/i.test(att.name || att.url || '');
                     const isImg = !isAudio && (att.type && att.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(att.name || att.url));
                     
@@ -3671,14 +3672,21 @@ window.modWorkplace = {
             const data = await res.json();
             if (data.success) {
                 if (window.showToast) window.showToast(`Đã chia sẻ đơn hàng ${orderCode}`, 'success');
-                this.playSendSound();
-                await this.loadMessages(true);
+                if (typeof this.playChime === 'function') {
+                    try { this.playChime(); } catch(_) {}
+                }
+                try {
+                    await this.loadMessages(true);
+                    this.scrollToBottom(true);
+                } catch(loadErr) {
+                    console.warn('Lỗi tải lại tin nhắn sau khi gửi thẻ:', loadErr);
+                }
             } else {
                 alert('❌ ' + (data.error || 'Không thể gửi đơn hàng'));
             }
         } catch(e) {
             console.error('Lỗi gửi thẻ đơn hàng:', e);
-            alert('❌ Lỗi kết nối máy chủ!');
+            alert('❌ Lỗi kết nối khi gửi đơn hàng: ' + (e.message || 'Lỗi mạng'));
         }
     },
 
@@ -3710,14 +3718,21 @@ window.modWorkplace = {
             const data = await res.json();
             if (data.success) {
                 if (window.showToast) window.showToast(`Đã gửi ${slipTitle} (${orderCode})`, 'success');
-                this.playSendSound();
-                await this.loadMessages(true);
+                if (typeof this.playChime === 'function') {
+                    try { this.playChime(); } catch(_) {}
+                }
+                try {
+                    await this.loadMessages(true);
+                    this.scrollToBottom(true);
+                } catch(loadErr) {
+                    console.warn('Lỗi tải lại tin nhắn sau khi gửi phiếu:', loadErr);
+                }
             } else {
                 alert('❌ ' + (data.error || 'Không thể gửi phiếu in'));
             }
         } catch(e) {
             console.error('Lỗi gửi phiếu in:', e);
-            alert('❌ Lỗi kết nối máy chủ!');
+            alert('❌ Lỗi kết nối khi gửi phiếu in: ' + (e.message || 'Lỗi mạng'));
         }
     },
 
