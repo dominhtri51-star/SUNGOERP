@@ -6,7 +6,8 @@ const googleDriveService = require('../services/googleDrive.service');
 
 const ALLOWED_EXTENSIONS = new Set([
     'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'heif', 'avif',
-    'pdf', 'xlsx', 'xls', 'csv', 'doc', 'docx', 'txt', 'zip'
+    'pdf', 'xlsx', 'xls', 'csv', 'doc', 'docx', 'txt', 'zip',
+    'webm', 'mp3', 'mp4', 'm4a', 'ogg', 'wav', 'aac'
 ]);
 const BLOCKED_EXTENSIONS = new Set([
     'html', 'htm', 'xhtml', 'svg', 'xml', 'exe', 'bat', 'cmd', 'sh', 'php', 'js', 'vbs', 'scr', 'msi', 'bin'
@@ -27,12 +28,13 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 } // Tối đa 50MB
 });
 
-// Middleware linh hoạt nhận field 'image', 'file', hoặc 'proof_file'
+// Middleware linh hoạt nhận field 'image', 'file', 'proof_file', 'signed_file' hoặc 'audio'
 const uploadFlexible = upload.fields([
     { name: 'image', maxCount: 1 },
     { name: 'file', maxCount: 1 },
     { name: 'proof_file', maxCount: 1 },
-    { name: 'signed_file', maxCount: 1 }
+    { name: 'signed_file', maxCount: 1 },
+    { name: 'audio', maxCount: 1 }
 ]);
 
 /**
@@ -50,11 +52,11 @@ router.get('/drive-status', async (req, res) => {
 
 /**
  * POST /api/upload
- * Upload 1 file ảnh hoặc tài liệu
+ * Upload 1 file ảnh, tài liệu hoặc file ghi âm thoại
  */
 router.post('/', uploadFlexible, async (req, res) => {
     try {
-        const file = req.files?.image?.[0] || req.files?.file?.[0] || req.files?.proof_file?.[0] || req.files?.signed_file?.[0] || req.file;
+        const file = req.files?.audio?.[0] || req.files?.image?.[0] || req.files?.file?.[0] || req.files?.proof_file?.[0] || req.files?.signed_file?.[0] || req.file;
 
         if (!file) {
             return res.status(400).json({ success: false, error: 'Chưa nhận được file upload!' });
@@ -63,7 +65,7 @@ router.post('/', uploadFlexible, async (req, res) => {
         if (!isSafeFile(file.originalname)) {
             return res.status(400).json({
                 success: false,
-                error: '⛔ Định dạng file không được phép tải lên! Hệ thống chỉ hỗ trợ ảnh (.jpg, .png, .webp, .heic) và tài liệu (.pdf, .xlsx, .docx).'
+                error: '⛔ Định dạng file không được phép tải lên! Hệ thống chỉ hỗ trợ ảnh, tài liệu và file ghi âm thoại (.webm, .mp3, .m4a, .ogg, .wav).'
             });
         }
 

@@ -45,6 +45,32 @@ const pool = require('../config/database');
                     is_pinned BOOLEAN DEFAULT FALSE,
                     priority VARCHAR(20) DEFAULT 'NORMAL',
                     reactions JSONB DEFAULT '{}'::jsonb,
+                    reply_to_id INTEGER REFERENCES workplace_messages(id) ON DELETE SET NULL,
+                    reply_to_sender VARCHAR(255),
+                    reply_to_content TEXT,
+                    is_edited BOOLEAN DEFAULT FALSE,
+                    is_recalled BOOLEAN DEFAULT FALSE,
+                    message_type VARCHAR(20) DEFAULT 'TEXT',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                -- Đảm bảo các cột mới tồn tại nếu bảng đã được tạo trước đó
+                ALTER TABLE workplace_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER REFERENCES workplace_messages(id) ON DELETE SET NULL;
+                ALTER TABLE workplace_messages ADD COLUMN IF NOT EXISTS reply_to_sender VARCHAR(255);
+                ALTER TABLE workplace_messages ADD COLUMN IF NOT EXISTS reply_to_content TEXT;
+                ALTER TABLE workplace_messages ADD COLUMN IF NOT EXISTS is_edited BOOLEAN DEFAULT FALSE;
+                ALTER TABLE workplace_messages ADD COLUMN IF NOT EXISTS is_recalled BOOLEAN DEFAULT FALSE;
+                ALTER TABLE workplace_messages ADD COLUMN IF NOT EXISTS message_type VARCHAR(20) DEFAULT 'TEXT';
+
+                -- 3.1. Bảng lưu Web Push Subscription cho PWA Mobile
+                CREATE TABLE IF NOT EXISTS user_push_subscriptions (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    endpoint TEXT NOT NULL UNIQUE,
+                    p256dh TEXT NOT NULL,
+                    auth TEXT NOT NULL,
+                    user_agent TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
@@ -54,6 +80,7 @@ const pool = require('../config/database');
                 CREATE INDEX IF NOT EXISTS idx_wp_msg_recipient ON workplace_messages(recipient_id, sender_id, id DESC);
                 CREATE INDEX IF NOT EXISTS idx_wp_msg_pinned ON workplace_messages(channel_id, is_pinned);
                 CREATE INDEX IF NOT EXISTS idx_wp_chan_members ON workplace_channel_members(channel_id, user_id);
+                CREATE INDEX IF NOT EXISTS idx_push_user_id ON user_push_subscriptions(user_id);
 
                 -- 5. Khởi tạo sẵn các kênh mặc định
                 INSERT INTO workplace_channels (name, slug, description, icon, type, is_announcement_only)
@@ -423,7 +450,10 @@ router.get('/messages', async (req, res) => {
  */
 router.post('/messages', async (req, res) => {
     try {
-        const { channel_id, direct_user_id, content, attachments, priority = 'NORMAL', is_pinned = false } = req.body;
+        const { 
+            channel_id, direct_user_id, content, attachments, priority = 'NORMAL', is_pinned = false,
+            reply_to_id, reply_to_sender, reply_to_content, message_type = 'TEXT'
+        } = req.body;
         const currentUserId = req.user ? req.user.id : null;
         const senderName = req.user ? (req.user.full_name || req.user.username) : 'Nhân Viên SUNGO';
         const senderRole = req.user ? req.user.role : 'SALE';
@@ -437,6 +467,21 @@ router.post('/messages', async (req, res) => {
 
         const cleanContent = (content || '').trim();
         const safeAttachments = Array.isArray(attachments) ? attachments : [];
+        const cleanMsgType = ['TEXT', 'AUDIO', 'FILE', 'IMAGE'].includes(message_type) ? message_type : 'TEXT';
+
+        let finalReplyToId = reply_to_id ? parseInt(reply_to_id, 10) : null;
+        let finalReplyToSender = reply_to_sender || null;
+        let finalReplyToContent = reply_to_content || null;
+
+        if (finalReplyToId && (!finalReplyToSender || !finalReplyToContent)) {
+            try {
+                const parentRes = await pool.query("SELECT sender_name, content FROM workplace_messages WHERE id = $1", [finalReplyToId]);
+                if (parentRes.rows.length > 0) {
+                    finalReplyToSender = finalReplyToSender || parentRes.rows[0].sender_name;
+                    finalReplyToContent = finalReplyToContent || parentRes.rows[0].content;
+                }
+            } catch(e) {}
+        }
 
         // Kiểm tra quyền nếu là kênh chỉ thông báo (Announcement Only)
         if (channel_id) {
@@ -491,13 +536,14 @@ router.post('/messages', async (req, res) => {
             return res.json({ success: true, data: dupCheck.rows[0], message: 'Tin nhắn đã được gửi thành công!' });
         }
 
-        // Chèn tin nhắn mới
+        // Chèn tin nhắn mới (bao gồm reply và message_type)
         const insertRes = await pool.query(`
             INSERT INTO workplace_messages (
                 channel_id, sender_id, sender_name, sender_role, 
-                recipient_id, content, attachments, priority, is_pinned
+                recipient_id, content, attachments, priority, is_pinned,
+                reply_to_id, reply_to_sender, reply_to_content, message_type
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             RETURNING *
         `, [
             channel_id ? parseInt(channel_id, 10) : null,
@@ -508,7 +554,11 @@ router.post('/messages', async (req, res) => {
             cleanContent,
             JSON.stringify(safeAttachments),
             priority,
-            shouldPin
+            shouldPin,
+            finalReplyToId,
+            finalReplyToSender,
+            finalReplyToContent,
+            cleanMsgType
         ]);
 
         const newMsg = insertRes.rows[0];
@@ -519,8 +569,15 @@ router.post('/messages', async (req, res) => {
             let notifTitle = `💬 Tin nhắn từ ${senderName}`;
             let notifLink = direct_user_id ? `#workplace?direct_user_id=${currentUserId}` : `#workplace?channel_id=${channel_id}`;
             let notifBody = cleanContent.length > 80 ? (cleanContent.substring(0, 80) + '...') : cleanContent;
-            if (!notifBody && safeAttachments.length > 0) {
+
+            if (cleanMsgType === 'AUDIO') {
+                notifBody = '🎙️ [Tin nhắn thoại ghi âm]';
+            } else if (!notifBody && safeAttachments.length > 0) {
                 notifBody = `[Đã gửi ${safeAttachments.length} tệp đính kèm / hình ảnh]`;
+            }
+
+            if (finalReplyToId && finalReplyToSender) {
+                notifBody = `[Trả lời ${finalReplyToSender}]: ${notifBody}`;
             }
 
             if (channel_id) {
@@ -544,6 +601,28 @@ router.post('/messages', async (req, res) => {
                     direct_user_id: direct_user_id ? parseInt(direct_user_id, 10) : null
                 }
             }).catch(e => console.error('Notification error on message:', e.message));
+
+            // Gửi Web Push Notification chạy ngầm tới điện thoại nếu người nhận tắt màn hình / không mở web
+            try {
+                const pushService = require('../services/push.service');
+                let targetPushUserIds = null;
+                if (direct_user_id) {
+                    targetPushUserIds = [parseInt(direct_user_id, 10)];
+                } else if (channel_id) {
+                    const membersRes = await pool.query("SELECT user_id FROM workplace_channel_members WHERE channel_id = $1", [channel_id]);
+                    if (membersRes.rows.length > 0) {
+                        targetPushUserIds = membersRes.rows.map(r => r.user_id);
+                    }
+                }
+                pushService.sendPushToUsers(targetPushUserIds, {
+                    title: notifTitle,
+                    body: notifBody,
+                    url: `/dashboard.html${notifLink}`,
+                    tag: `wp-chan-${channel_id || 'direct'}`
+                }, currentUserId).catch(() => {});
+            } catch (pushErr) {
+                // Ignore push error in background
+            }
         } catch (notifErr) {
             console.warn('⚠️ Lỗi gửi thông báo tin nhắn:', notifErr.message);
         }
@@ -628,27 +707,144 @@ router.put('/messages/:id/pin', async (req, res) => {
 });
 
 /**
- * 9. DELETE /api/workplace/messages/:id
- * Thu hồi tin nhắn (Chính chủ hoặc Quản trị viên)
+ * 9. PUT /api/workplace/messages/:id
+ * Chỉnh sửa nội dung tin nhắn trong vòng 15 phút (Chính chủ hoặc Quản trị viên)
+ */
+router.put('/messages/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { content } = req.body;
+        if (!content || !content.trim()) {
+            return res.status(400).json({ success: false, error: 'Nội dung tin nhắn không được để trống!' });
+        }
+
+        const msgRes = await pool.query("SELECT id, sender_id, created_at, is_recalled FROM workplace_messages WHERE id = $1", [id]);
+        if (msgRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy tin nhắn!' });
+
+        const msg = msgRes.rows[0];
+        if (msg.is_recalled) {
+            return res.status(400).json({ success: false, error: 'Không thể sửa tin nhắn đã thu hồi!' });
+        }
+
+        const isOwner = req.user && req.user.id === msg.sender_id;
+        const isAdmin = req.user && isLeaderOrAdmin(req.user.role);
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ success: false, error: 'Bạn chỉ có thể chỉnh sửa tin nhắn do chính mình gửi!' });
+        }
+
+        // Kiểm tra thời hạn 15 phút đối với nhân viên thường
+        if (!isAdmin) {
+            const msgTime = new Date(msg.created_at).getTime();
+            const now = Date.now();
+            const elapsedMinutes = (now - msgTime) / (60 * 1000);
+            if (elapsedMinutes > 15) {
+                return res.status(403).json({
+                    success: false,
+                    error: '⛔ Đã quá 15 phút kể từ lúc gửi! Tin nhắn đã bị khóa và không thể chỉnh sửa để bảo đảm tính minh bạch trong trao đổi công việc nội bộ.'
+                });
+            }
+        }
+
+        const cleanContent = content.trim();
+        const updateRes = await pool.query(`
+            UPDATE workplace_messages 
+            SET content = $1, is_edited = TRUE, updated_at = NOW()
+            WHERE id = $2
+            RETURNING *
+        `, [cleanContent, id]);
+
+        res.json({ success: true, data: updateRes.rows[0], message: 'Đã chỉnh sửa tin nhắn thành công!' });
+    } catch (err) {
+        console.error('Lỗi PUT /api/workplace/messages/:id:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * 10. DELETE /api/workplace/messages/:id
+ * Thu hồi tin nhắn trong vòng 15 phút (Chính chủ hoặc Quản trị viên)
  */
 router.delete('/messages/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const msgRes = await pool.query("SELECT sender_id FROM workplace_messages WHERE id = $1", [id]);
-        if (msgRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy tin nhắn' });
+        const msgRes = await pool.query("SELECT id, sender_id, created_at, is_recalled FROM workplace_messages WHERE id = $1", [id]);
+        if (msgRes.rows.length === 0) return res.status(404).json({ success: false, error: 'Không tìm thấy tin nhắn!' });
 
-        const isOwner = req.user && req.user.id === msgRes.rows[0].sender_id;
+        const msg = msgRes.rows[0];
+        const isOwner = req.user && req.user.id === msg.sender_id;
         const isAdmin = req.user && isLeaderOrAdmin(req.user.role);
 
         if (!isOwner && !isAdmin) {
             return res.status(403).json({ success: false, error: 'Bạn không có quyền thu hồi tin nhắn của người khác!' });
         }
 
-        await pool.query("DELETE FROM workplace_messages WHERE id = $1", [id]);
+        // Kiểm tra thời hạn 15 phút đối với nhân viên thường
+        if (!isAdmin) {
+            const msgTime = new Date(msg.created_at).getTime();
+            const now = Date.now();
+            const elapsedMinutes = (now - msgTime) / (60 * 1000);
+            if (elapsedMinutes > 15) {
+                return res.status(403).json({
+                    success: false,
+                    error: '⛔ Đã quá 15 phút kể từ lúc gửi! Tin nhắn đã bị khóa vĩnh viễn để bảo đảm tính minh bạch trong trao đổi công việc nội bộ.'
+                });
+            }
+        }
+
+        // Thực hiện thu hồi: cập nhật is_recalled = TRUE, dọn attachments và cập nhật content
+        await pool.query(`
+            UPDATE workplace_messages 
+            SET is_recalled = TRUE, 
+                content = 'Tin nhắn đã được thu hồi', 
+                attachments = '[]'::jsonb,
+                updated_at = NOW() 
+            WHERE id = $1
+        `, [id]);
+
         res.json({ success: true, message: 'Đã thu hồi tin nhắn thành công!' });
     } catch (err) {
         console.error('Lỗi delete message:', err.message);
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * 11. GET /api/workplace/push-config
+ * Lấy VAPID public key để kích hoạt Service Worker Web Push
+ */
+router.get('/push-config', (req, res) => {
+    try {
+        const pushService = require('../services/push.service');
+        res.json({
+            success: true,
+            publicKey: pushService.getPublicKey()
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * 12. POST /api/workplace/push-subscription
+ * Đăng ký thiết bị nhận thông báo ngầm từ PWA
+ */
+router.post('/push-subscription', async (req, res) => {
+    try {
+        const { subscription, user_agent } = req.body;
+        const currentUserId = req.user ? req.user.id : null;
+
+        if (!subscription || !subscription.endpoint) {
+            return res.status(400).json({ success: false, error: 'Thiếu thông tin subscription!' });
+        }
+
+        const pushService = require('../services/push.service');
+        const saved = await pushService.saveSubscription(currentUserId, subscription, user_agent);
+
+        res.json({ success: true, data: saved, message: 'Đã đăng ký nhận thông báo chạy ngầm thành công!' });
+    } catch (e) {
+        console.error('Lỗi lưu push subscription:', e.message);
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 

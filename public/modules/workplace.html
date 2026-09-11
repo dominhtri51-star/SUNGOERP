@@ -18,10 +18,18 @@
 
         <!-- Các nút hành động trên Header -->
         <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <!-- Nút bật/tắt âm báo chuông chat -->
+            <button id="wp-btn-sound-toggle" onclick="window.modWorkplace.toggleSound()" title="Bật/Tắt âm thanh thông báo chat" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-xl transition cursor-pointer">
+                <i id="wp-sound-icon" class="fas fa-volume-up text-xs sm:text-sm"></i>
+            </button>
+            <!-- Nút cài đặt thông báo ngầm cho điện thoại -->
+            <button id="wp-btn-mobile-push" onclick="window.modWorkplace.openMobilePushModal()" title="Thông báo ngầm trên điện thoại (PWA Web Push)" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-500 hover:text-amber-600 hover:bg-slate-100 rounded-xl transition cursor-pointer">
+                <i class="fas fa-mobile-alt text-xs sm:text-sm"></i>
+            </button>
             <button id="wp-btn-create-group" onclick="window.modWorkplace.openCreateGroupModal()" class="hidden bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition transform active:scale-95">
                 <i class="fas fa-plus-circle"></i> <span class="hidden sm:inline">Tạo Nhóm Phối Hợp Mới</span><span class="sm:hidden">+ Nhóm</span>
             </button>
-            <button onclick="window.modWorkplace.refresh()" title="Làm mới cuộc trò chuyện" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition">
+            <button onclick="window.modWorkplace.refresh()" title="Làm mới cuộc trò chuyện" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer">
                 <i class="fas fa-sync-alt text-xs sm:text-sm"></i>
             </button>
         </div>
@@ -159,18 +167,58 @@
                 <!-- Preview items inserted dynamic -->
             </div>
 
+            <!-- Vùng xem trước tin nhắn đang trả lời (Reply Preview Bar) -->
+            <div id="wp-reply-preview-bar" class="hidden bg-slate-100 border-t border-slate-200 px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs shrink-0 transition">
+                <div class="flex items-center gap-2 min-w-0 border-l-4 border-amber-500 pl-2">
+                    <i class="fas fa-reply text-amber-600 text-xs shrink-0"></i>
+                    <div class="min-w-0">
+                        <span class="text-slate-500 text-[11px]">Đang trả lời <strong id="wp-reply-sender" class="text-slate-800 font-bold">...</strong>:</span>
+                        <p id="wp-reply-text" class="text-xs text-slate-700 truncate font-medium"></p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.modWorkplace.cancelReply()" class="text-slate-400 hover:text-slate-700 p-1 text-xs shrink-0 cursor-pointer" title="Hủy trả lời">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
             <!-- Thanh soạn thảo và gửi tin nhắn (Footer Input) -->
             <div class="bg-white border-t border-slate-200 p-2 sm:p-4 shrink-0">
                 <div id="wp-message-form" class="flex items-end gap-1.5 sm:gap-2">
                     
                     <!-- Nút đính kèm ảnh & tài liệu (hỗ trợ chụp camera trên di động) -->
-                    <input type="file" id="wp-file-input" onchange="window.modWorkplace.handleFileSelected(event)" class="hidden" multiple accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.zip">
-                    <button type="button" onclick="document.getElementById('wp-file-input').click()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm transition shrink-0" title="Đính kèm ảnh hoặc tài liệu">
+                    <input type="file" id="wp-file-input" onchange="window.modWorkplace.handleFileSelected(event)" class="hidden" multiple accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.zip,audio/*">
+                    <button type="button" onclick="document.getElementById('wp-file-input').click()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm transition shrink-0 cursor-pointer" title="Đính kèm ảnh hoặc tài liệu">
                         <i class="fas fa-paperclip"></i>
                     </button>
 
+                    <!-- Nút ghi âm tin nhắn thoại -->
+                    <button type="button" id="wp-btn-voice-record" onclick="window.modWorkplace.toggleVoiceRecord()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-red-500 flex items-center justify-center text-sm transition shrink-0 cursor-pointer" title="Ghi âm tin nhắn thoại">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+
+                    <!-- Khung hiển thị trạng thái đang ghi âm thoại -->
+                    <div id="wp-voice-recording-bar" class="hidden flex-1 bg-red-50 border border-red-200 rounded-2xl px-3 py-1.5 sm:p-2 flex items-center justify-between transition">
+                        <div class="flex items-center gap-2">
+                            <span class="relative flex h-3 w-3">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                            <span class="text-xs font-bold text-red-600 flex items-center gap-1.5">
+                                <i class="fas fa-microphone-alt"></i> Đang ghi âm: <span id="wp-voice-timer" class="font-mono">00:00</span>
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="window.modWorkplace.cancelVoiceRecord()" class="text-xs font-bold text-slate-500 hover:text-red-600 px-2 py-1 rounded-lg transition cursor-pointer" title="Hủy bỏ ghi âm">
+                                <i class="fas fa-trash-alt mr-1"></i> Hủy
+                            </button>
+                            <button type="button" onclick="window.modWorkplace.finishAndSendVoiceRecord()" class="text-xs font-bold bg-red-500 hover:bg-red-600 active:bg-red-700 text-white px-3 py-1 rounded-xl shadow-xs transition flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-paper-plane"></i> Gửi
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Khung nhập nội dung tin nhắn (tự động co giãn dòng trên mobile) -->
-                    <div class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-3 py-1.5 sm:p-2 focus-within:border-amber-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-100 transition">
+                    <div id="wp-input-container" class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-3 py-1.5 sm:p-2 focus-within:border-amber-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-100 transition">
                         <textarea id="wp-message-input" rows="1" onkeydown="window.modWorkplace.handleKeydown(event)" placeholder="Nhập tin nhắn..." class="w-full bg-transparent text-xs sm:text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-hidden min-h-[28px] max-h-28 leading-relaxed"></textarea>
                     </div>
 
@@ -339,6 +387,100 @@
 </div>
 
 <!-- ======================================================== -->
+<!-- MODAL: CHỈNH SỬA TIN NHẮN (TRONG VÒNG 15 PHÚT)          -->
+<!-- ======================================================== -->
+<div id="wp-modal-edit-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between text-white shrink-0">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-edit text-base sm:text-lg"></i>
+                <h3 class="font-black text-sm sm:text-base">Chỉnh Sửa Tin Nhắn</h3>
+            </div>
+            <button onclick="window.modWorkplace.closeEditModal()" class="text-white/80 hover:text-white text-lg cursor-pointer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-4 sm:p-5 space-y-3">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-800 flex items-center gap-2">
+                <i class="fas fa-clock text-amber-600 shrink-0"></i>
+                <span>Chính sách minh bạch: Bạn có thể sửa chữa lỗi sai trong vòng 15 phút kể từ lúc gửi. Sau 15 phút tin nhắn sẽ tự động khóa.</span>
+            </div>
+            <textarea id="wp-edit-message-input" rows="4" placeholder="Nhập nội dung mới..." class="w-full text-xs sm:text-sm p-3 border border-slate-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-hidden leading-relaxed"></textarea>
+        </div>
+        <div class="bg-slate-50 px-4 sm:px-6 py-3 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0">
+            <button type="button" onclick="window.modWorkplace.closeEditModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer">Hủy Bỏ</button>
+            <button type="button" onclick="window.modWorkplace.submitEditMessage()" id="wp-btn-save-edit" class="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-xs transition cursor-pointer">Lưu Thay Đổi</button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: HƯỚNG DẪN & KÍCH HOẠT THÔNG BÁO NGẦM ĐIỆN THOẠI -->
+<!-- ======================================================== -->
+<div id="wp-modal-mobile-push" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        <div class="bg-gradient-to-r from-slate-900 to-amber-950 px-4 sm:px-6 py-4 flex items-center justify-between text-white shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-base">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-sm sm:text-base">Thông Báo Ngầm Trên Điện Thoại</h3>
+                    <p class="text-[11px] text-slate-400">Nhận tin nhắn & chuông ngay cả khi tắt màn hình</p>
+                </div>
+            </div>
+            <button onclick="window.modWorkplace.closeMobilePushModal()" class="text-white/80 hover:text-white text-lg cursor-pointer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-4 sm:p-5 space-y-3.5 text-xs text-slate-600 max-h-[75dvh] overflow-y-auto">
+            <!-- Trạng thái hiện tại -->
+            <div id="wp-push-status-card" class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex items-center justify-between">
+                <div>
+                    <div class="font-bold text-slate-800 text-xs">Trạng thái quyền thông báo</div>
+                    <div id="wp-push-status-text" class="text-[11px] text-slate-500 mt-0.5">Đang kiểm tra quyền thông báo...</div>
+                </div>
+                <span id="wp-push-status-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Chưa Bật</span>
+            </div>
+
+            <!-- Hướng dẫn iOS iPhone/iPad -->
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 space-y-2">
+                <div class="font-bold text-amber-900 flex items-center gap-2 text-xs">
+                    <i class="fab fa-apple text-sm text-slate-800"></i> Dành cho iPhone / iPad (iOS 16.4 trở lên):
+                </div>
+                <p class="text-[11px] text-amber-800 leading-relaxed">
+                    Theo quy chuẩn bảo mật của Apple, để nhận thông báo đẩy khi màn hình tắt:
+                </p>
+                <ol class="text-[11px] text-amber-900 space-y-1 pl-4 list-decimal leading-relaxed">
+                    <li>Mở trình duyệt <b>Safari</b> trên iPhone truy cập <b>app.sungo.vn</b>.</li>
+                    <li>Bấm nút <b>Chia sẻ</b> (<i class="fas fa-share-square"></i> ô vuông có mũi tên lên ở thanh dưới Safari).</li>
+                    <li>Cuộn xuống chọn <b>"Thêm vào Màn hình chính" (Add to Home Screen)</b>.</li>
+                    <li>Mở icon <b>SUNGO ERP</b> từ màn hình chính, bấm nút <b>"Bật Thông Báo Ngay"</b> bên dưới.</li>
+                </ol>
+            </div>
+
+            <!-- Hướng dẫn Android -->
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 space-y-1.5">
+                <div class="font-bold text-emerald-900 flex items-center gap-2 text-xs">
+                    <i class="fab fa-android text-sm text-emerald-600"></i> Dành cho Điện thoại Android (Chrome / Samsung):
+                </div>
+                <p class="text-[11px] text-emerald-800 leading-relaxed">
+                    Hỗ trợ thông báo ngầm trực tiếp! Chỉ cần bấm nút <b>"Bật Thông Báo Ngay"</b> bên dưới và chọn <b>"Cho phép" (Allow)</b> khi trình duyệt hỏi.
+                </p>
+            </div>
+        </div>
+        <div class="bg-slate-50 px-4 sm:px-6 py-3.5 border-t border-slate-100 flex items-center justify-between gap-2 shrink-0">
+            <button type="button" onclick="window.modWorkplace.testSoundChime()" class="px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-volume-up text-amber-600"></i> Thử Chuông
+            </button>
+            <button type="button" onclick="window.modWorkplace.requestPushPermission()" id="wp-btn-request-push" class="px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-bell"></i> <span>Bật Thông Báo Ngay</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
 <!-- JAVASCRIPT LOGIC PHÂN HỆ SUNGO WORKPLACE                -->
 <!-- ======================================================== -->
 <script>
@@ -358,6 +500,24 @@ window.modWorkplace = {
     filterTab: 'ALL',  // 'ALL' | 'CHANNELS' | 'DIRECT'
     isSending: false,  // Khóa chống gửi kép / duplicate message
     _onResize: null,
+
+    // Trả lời tin nhắn (Reply / Quote)
+    replyTarget: null, // { id, sender_name, content }
+
+    // Ghi âm tin nhắn thoại (Voice Note)
+    mediaRecorder: null,
+    audioChunks: [],
+    isRecordingVoice: false,
+    voiceStartTime: null,
+    voiceTimerInterval: null,
+
+    // Chỉnh sửa tin nhắn (15 phút)
+    editingMsgId: null,
+
+    // Trình phát âm thanh & Âm báo
+    soundEnabled: true,
+    activeAudio: null,
+    activeAudioBtn: null,
 
     // Trạng thái cuộn mượt mà & chống giật
     isAtBottom: true,
@@ -519,6 +679,7 @@ window.modWorkplace = {
 
         await this.loadChannels();
         this.initScrollTracker();
+        this.initSoundSetting();
 
         // Kiểm tra xem có tham số điều hướng từ thông báo không (#workplace?channel_id=... hoặc ?direct_user_id=...)
         let targetChanId = null;
@@ -843,6 +1004,16 @@ window.modWorkplace = {
                     }
                 }
 
+                // Phát âm báo chuông nếu có tin nhắn mới từ người khác trong kênh
+                if (!forceScroll && this.messages.length > 0 && newMsgs.length > 0) {
+                    const lastKnownId = this.messages[this.messages.length - 1].id;
+                    const currentUserId = this.currentUser ? this.currentUser.id : -1;
+                    const newerFromOthers = newMsgs.filter(m => m.id > lastKnownId && m.sender_id !== currentUserId);
+                    if (newerFromOthers.length > 0) {
+                        this.playChime();
+                    }
+                }
+
                 this.messages = newMsgs;
                 this.lastMessageSignature = currentSig;
 
@@ -937,6 +1108,7 @@ window.modWorkplace = {
     },
 
     // 7. Render danh sách tin nhắn ra màn hình (chỉ cuộn khi shouldAutoScroll = true)
+    // 7. Render danh sách tin nhắn ra màn hình (chỉ cuộn khi shouldAutoScroll = true)
     renderMessages: function(shouldAutoScroll = false) {
         const container = document.getElementById('wp-message-stream');
         if (!container) return;
@@ -961,6 +1133,10 @@ window.modWorkplace = {
             const isMe = msg.sender_id === currentUserId;
             const initials = (msg.sender_name || 'U').substring(0, 2).toUpperCase();
             const timeStr = this.formatTime(msg.created_at);
+
+            // Tính thời gian đã gửi để kiểm tra giới hạn 15 phút
+            const msgAgeMinutes = (Date.now() - new Date(msg.created_at).getTime()) / (60 * 1000);
+            const canEditOrRecall = isMe && (msgAgeMinutes <= 15 || this.isAdmin);
 
             // Parse attachments
             let attachments = [];
@@ -991,13 +1167,23 @@ window.modWorkplace = {
                 }
             }
 
-            // HTML của attachments
+            // HTML của attachments & Voice Notes
             let attachmentHtml = '';
+            let isVoiceMessage = msg.message_type === 'AUDIO';
+            let voiceAudioUrl = null;
+            let voiceDuration = null;
+
             if (attachments.length > 0) {
                 attachmentHtml = '<div class="mt-2 space-y-1.5">';
                 attachments.forEach(att => {
-                    const isImg = att.type && att.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(att.name || att.url);
-                    if (isImg) {
+                    const isAudio = (att.type && att.type.startsWith('audio/')) || /\.(webm|mp3|mp4|m4a|ogg|wav|aac)$/i.test(att.name || att.url || '');
+                    const isImg = !isAudio && (att.type && att.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(att.name || att.url));
+                    
+                    if (isAudio) {
+                        isVoiceMessage = true;
+                        voiceAudioUrl = att.url;
+                        voiceDuration = att.duration || null;
+                    } else if (isImg) {
                         attachmentHtml += `
                             <div class="max-w-xs rounded-xl overflow-hidden border border-slate-200 shadow-2xs group relative cursor-pointer" onclick="window.modWorkplace.zoomImage('${att.url}')">
                                 <img src="${att.url}" class="w-full max-h-56 object-cover transition transform group-hover:scale-102">
@@ -1027,78 +1213,171 @@ window.modWorkplace = {
             // Role label
             const roleBadge = msg.sender_role ? `<span class="text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${msg.sender_role.includes('ADMIN') || msg.sender_role.includes('GIAM_DOC') ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}">${msg.sender_role}</span>` : '';
 
-            if (isMe) {
-                // Tin nhắn của CHÍNH MÌNH (Bên Phải)
-                html += `
-                    <div class="flex flex-col items-end group">
-                        <div class="flex items-end gap-2 max-w-[88%] sm:max-w-[75%]">
-                            <!-- Nút reaction, sao chép & xóa hover / touch -->
-                            <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs mb-1">
-                                <button onclick="window.modWorkplace.copyMessage(${msg.id})" class="hover:text-amber-600 p-1 transition" title="Sao chép nội dung tin nhắn"><i class="fas fa-copy"></i></button>
-                                <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1">👍</button>
-                                <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1">❤️</button>
-                                <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-1" title="Thu hồi tin nhắn"><i class="fas fa-trash-alt"></i></button>
-                            </div>
-                            
-                            <!-- Bong bóng tin nhắn -->
-                            <div ondblclick="window.modWorkplace.copyMessage(${msg.id})" title="Nhấp đúp để sao chép tin nhắn" class="bg-amber-500 text-white rounded-2xl rounded-tr-xs p-2.5 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words select-text cursor-text">
-                                ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-200 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Đã Ghim</div>` : ''}
-                                <div>${this.formatContent(msg.content)}</div>
-                                ${attachmentHtml}
-                            </div>
+            // Khung trích dẫn trả lời (Reply quote box)
+            let replyQuoteHtml = '';
+            if (msg.reply_to_id) {
+                const replySender = window.escapeHtml ? window.escapeHtml(msg.reply_to_sender || 'Đồng nghiệp') : (msg.reply_to_sender || 'Đồng nghiệp');
+                const replyContent = window.escapeHtml ? window.escapeHtml(msg.reply_to_content || '') : (msg.reply_to_content || '');
+                replyQuoteHtml = `
+                    <div onclick="window.modWorkplace.scrollToMessage(${msg.reply_to_id})" class="mb-1.5 p-2 rounded-xl text-xs cursor-pointer border-l-4 transition select-none ${isMe ? 'bg-black/15 text-white/95 border-white/80 hover:bg-black/25' : 'bg-amber-50 text-slate-800 border-amber-500 hover:bg-amber-100/70'}" title="Bấm để cuộn tới tin nhắn được trả lời">
+                        <div class="font-bold flex items-center gap-1 text-[11px] opacity-95">
+                            <i class="fas fa-reply text-[10px]"></i> ${replySender}
                         </div>
-
-                        <!-- Reactions & thời gian -->
-                        <div class="flex items-center gap-1.5 mt-1 mr-1">
-                            ${reactionPills}
-                            <span class="text-[10px] text-slate-400">${timeStr}</span>
-                        </div>
+                        <div class="truncate text-[11px] opacity-85 mt-0.5">${replyContent}</div>
                     </div>
                 `;
-            } else {
-                // Tin nhắn của ĐỒNG NGHIỆP (Bên Trái)
-                html += `
-                    <div class="flex flex-col items-start group">
-                        <div class="flex items-start gap-2 max-w-[88%] sm:max-w-[75%]">
-                            <!-- Avatar -->
-                            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 shadow-2xs mt-0.5">
-                                ${initials}
+            }
+
+            // Khung tin nhắn thoại (Audio Player widget)
+            let voicePlayerHtml = '';
+            if (isVoiceMessage && voiceAudioUrl) {
+                const durText = voiceDuration ? `${Math.floor(voiceDuration/60)}:${String(voiceDuration%60).padStart(2, '0')}` : '00:00';
+                voicePlayerHtml = `
+                    <div class="my-1 p-2 rounded-xl flex items-center gap-2.5 ${isMe ? 'bg-amber-600/50 text-white' : 'bg-slate-100 text-slate-800 border border-slate-200'}">
+                        <button type="button" onclick="window.modWorkplace.togglePlayAudio(this, '${voiceAudioUrl}')" class="w-8 h-8 rounded-full ${isMe ? 'bg-white text-amber-600' : 'bg-amber-500 text-white'} flex items-center justify-center text-xs shadow-xs shrink-0 cursor-pointer transition transform active:scale-95">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="flex-1 min-w-[130px] sm:min-w-[170px]">
+                            <div class="flex items-center justify-between text-[10px] font-mono mb-1 ${isMe ? 'text-amber-100' : 'text-slate-500'}">
+                                <span class="wp-audio-time">${durText}</span>
+                                <span class="font-bold">🎙️ Tin nhắn thoại</span>
                             </div>
+                            <div class="w-full bg-slate-300/60 rounded-full h-1.5 overflow-hidden cursor-pointer wp-audio-track">
+                                <div class="bg-amber-400 h-full rounded-full wp-audio-progress" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <a href="${voiceAudioUrl}" download="sungo-voice-note.webm" class="text-xs p-1 opacity-75 hover:opacity-100 transition shrink-0" title="Tải file ghi âm"><i class="fas fa-download"></i></a>
+                    </div>
+                `;
+            }
 
-                            <!-- Thân tin nhắn -->
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-1.5 mb-1">
-                                    <span class="text-xs font-black text-slate-800">${msg.sender_name}</span>
-                                    ${roleBadge}
-                                    <span class="text-[10px] text-slate-400 ml-1">${timeStr}</span>
+            if (isMe) {
+                // Tin nhắn của CHÍNH MÌNH (Bên Phải)
+                if (msg.is_recalled) {
+                    html += `
+                        <div id="wp-msg-${msg.id}" class="flex flex-col items-end group">
+                            <div class="bg-slate-200/90 text-slate-500 rounded-2xl rounded-tr-xs p-2.5 sm:p-3 text-xs italic flex items-center gap-2 shadow-2xs">
+                                <i class="fas fa-ban text-slate-400 text-xs"></i>
+                                <span>Tin nhắn đã được thu hồi</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-1 mr-1">${timeStr}</span>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div id="wp-msg-${msg.id}" class="flex flex-col items-end group">
+                            <div class="flex items-end gap-2 max-w-[88%] sm:max-w-[75%]">
+                                <!-- Nút thao tác hover / touch -->
+                                <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs mb-1">
+                                    <button onclick="window.modWorkplace.setReplyTarget(${msg.id})" class="hover:text-amber-600 p-1 transition cursor-pointer" title="Trả lời tin nhắn này"><i class="fas fa-reply"></i></button>
+                                    <button onclick="window.modWorkplace.copyMessage(${msg.id})" class="hover:text-amber-600 p-1 transition cursor-pointer" title="Sao chép nội dung tin nhắn"><i class="fas fa-copy"></i></button>
+                                    <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1 cursor-pointer">👍</button>
+                                    <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1 cursor-pointer">❤️</button>
+                                    
+                                    ${canEditOrRecall ? `
+                                        ${!isVoiceMessage ? `
+                                            <button onclick="window.modWorkplace.openEditModal(${msg.id})" class="hover:text-blue-500 p-1 transition cursor-pointer" title="Chỉnh sửa tin nhắn (còn ${Math.max(1, Math.ceil(15 - msgAgeMinutes))} phút)"><i class="fas fa-pencil-alt"></i></button>
+                                        ` : ''}
+                                        <button onclick="window.modWorkplace.recallMessage(${msg.id})" class="hover:text-red-600 p-1 transition cursor-pointer" title="Thu hồi tin nhắn (còn ${Math.max(1, Math.ceil(15 - msgAgeMinutes))} phút)"><i class="fas fa-undo-alt"></i></button>
+                                    ` : `
+                                        ${!this.isAdmin ? `
+                                            <span class="text-slate-300 p-1 select-none" title="Tin nhắn đã quá 15 phút, đã khóa"><i class="fas fa-lock text-[10px]"></i></span>
+                                        ` : `
+                                            <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-1 cursor-pointer" title="Quản trị viên xóa tin"><i class="fas fa-trash-alt"></i></button>
+                                        `}
+                                    `}
                                 </div>
-
+                                
                                 <!-- Bong bóng tin nhắn -->
-                                <div ondblclick="window.modWorkplace.copyMessage(${msg.id})" title="Nhấp đúp để sao chép tin nhắn" class="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-2.5 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words select-text cursor-text">
-                                    ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-600 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Thông Báo Ghim</div>` : ''}
-                                    <div>${this.formatContent(msg.content)}</div>
+                                <div ondblclick="window.modWorkplace.copyMessage(${msg.id})" title="Nhấp đúp để sao chép tin nhắn" class="bg-amber-500 text-white rounded-2xl rounded-tr-xs p-2.5 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words select-text cursor-text">
+                                    ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-200 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Đã Ghim</div>` : ''}
+                                    ${replyQuoteHtml}
+                                    ${voicePlayerHtml}
+                                    ${!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại')) ? `<div>${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-amber-200 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
                                     ${attachmentHtml}
                                 </div>
+                            </div>
 
-                                <!-- Reactions & Thanh thả biểu cảm nhanh -->
-                                <div class="flex items-center gap-1.5 mt-1">
-                                    ${reactionPills}
-                                    <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs ml-1">
-                                        <button onclick="window.modWorkplace.copyMessage(${msg.id})" class="hover:text-amber-600 p-0.5 transition" title="Sao chép nội dung tin nhắn"><i class="fas fa-copy"></i></button>
-                                        <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-0.5">👍</button>
-                                        <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-0.5">❤️</button>
-                                        <button onclick="window.modWorkplace.quickReaction(${msg.id}, '🔥')" class="hover:text-orange-500 p-0.5">🔥</button>
-                                        <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👏')" class="hover:text-emerald-500 p-0.5">👏</button>
-                                        ${this.isAdmin && this.activeType === 'CHANNEL' ? `
-                                            <button onclick="window.modWorkplace.togglePinMessage(${msg.id})" class="hover:text-amber-600 p-0.5 ml-1" title="Ghim thông báo"><i class="fas fa-thumbtack"></i></button>
-                                            <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-0.5" title="Xóa tin nhắn"><i class="fas fa-trash-alt"></i></button>
-                                        ` : ''}
+                            <!-- Reactions & thời gian -->
+                            <div class="flex items-center gap-1.5 mt-1 mr-1">
+                                ${reactionPills}
+                                <span class="text-[10px] text-slate-400">${timeStr}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // Tin nhắn của ĐỒNG NGHIỆP (Bên Trái)
+                if (msg.is_recalled) {
+                    html += `
+                        <div id="wp-msg-${msg.id}" class="flex flex-col items-start group">
+                            <div class="flex items-start gap-2 max-w-[88%] sm:max-w-[75%]">
+                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-300 text-slate-600 flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 mt-0.5">
+                                    ${initials}
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-xs font-black text-slate-800">${msg.sender_name}</span>
+                                        ${roleBadge}
+                                        <span class="text-[10px] text-slate-400 ml-1">${timeStr}</span>
+                                    </div>
+                                    <div class="bg-slate-100 border border-slate-200 text-slate-500 rounded-2xl rounded-tl-xs p-2.5 sm:p-3 text-xs italic flex items-center gap-2 shadow-2xs">
+                                        <i class="fas fa-ban text-slate-400 text-xs"></i>
+                                        <span>Tin nhắn đã được thu hồi</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                } else {
+                    html += `
+                        <div id="wp-msg-${msg.id}" class="flex flex-col items-start group">
+                            <div class="flex items-start gap-2 max-w-[88%] sm:max-w-[75%]">
+                                <!-- Avatar -->
+                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 shadow-2xs mt-0.5">
+                                    ${initials}
+                                </div>
+
+                                <!-- Thân tin nhắn -->
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-xs font-black text-slate-800">${msg.sender_name}</span>
+                                        ${roleBadge}
+                                        <span class="text-[10px] text-slate-400 ml-1">${timeStr}</span>
+                                    </div>
+
+                                    <!-- Bong bóng tin nhắn -->
+                                    <div ondblclick="window.modWorkplace.copyMessage(${msg.id})" title="Nhấp đúp để sao chép tin nhắn" class="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-2.5 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words select-text cursor-text">
+                                        ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-600 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Thông Báo Ghim</div>` : ''}
+                                        ${replyQuoteHtml}
+                                        ${voicePlayerHtml}
+                                        ${!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại')) ? `<div>${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-slate-400 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
+                                        ${attachmentHtml}
+                                    </div>
+
+                                    <!-- Reactions & Thanh thả biểu cảm nhanh -->
+                                    <div class="flex items-center gap-1.5 mt-1">
+                                        ${reactionPills}
+                                        <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs ml-1">
+                                            <button onclick="window.modWorkplace.setReplyTarget(${msg.id})" class="hover:text-amber-600 p-0.5 transition cursor-pointer" title="Trả lời tin nhắn này"><i class="fas fa-reply"></i></button>
+                                            <button onclick="window.modWorkplace.copyMessage(${msg.id})" class="hover:text-amber-600 p-0.5 transition cursor-pointer" title="Sao chép nội dung tin nhắn"><i class="fas fa-copy"></i></button>
+                                            <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-0.5 cursor-pointer">👍</button>
+                                            <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-0.5 cursor-pointer">❤️</button>
+                                            <button onclick="window.modWorkplace.quickReaction(${msg.id}, '🔥')" class="hover:text-orange-500 p-0.5 cursor-pointer">🔥</button>
+                                            <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👏')" class="hover:text-emerald-500 p-0.5 cursor-pointer">👏</button>
+                                            ${this.isAdmin && this.activeType === 'CHANNEL' ? `
+                                                <button onclick="window.modWorkplace.togglePinMessage(${msg.id})" class="hover:text-amber-600 p-0.5 ml-1 cursor-pointer" title="Ghim thông báo"><i class="fas fa-thumbtack"></i></button>
+                                            ` : ''}
+                                            ${this.isAdmin ? `
+                                                <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-0.5 cursor-pointer" title="Quản trị viên xóa tin"><i class="fas fa-trash-alt"></i></button>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
             }
         });
 
@@ -1111,7 +1390,6 @@ window.modWorkplace = {
 
     formatContent: function(content) {
         if (!content) return '';
-        // Escape HTML và format xuống dòng
         const escaped = window.escapeHtml ? window.escapeHtml(content) : content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         return escaped.replace(/\n/g, '<br>');
     },
@@ -1127,18 +1405,9 @@ window.modWorkplace = {
 
     // 8. Xử lý sự kiện bàn phím (Enter để gửi trên desktop, Shift+Enter xuống dòng)
     handleKeydown: function(e) {
-        // 1. Chống gửi kép khi đang hoàn tất gõ tiếng Việt có dấu (IME composition / Unikey / EVKey / macOS Telex)
-        if (e.isComposing || e.keyCode === 229) {
-            return;
-        }
+        if (e.isComposing || e.keyCode === 229) return;
+        if (e.repeat) { e.preventDefault(); return; }
 
-        // 2. Chống lặp phím khi giữ phím Enter trên bàn phím (Key Repeat)
-        if (e.repeat) {
-            e.preventDefault();
-            return;
-        }
-
-        // 3. Nhấn Enter (không giữ Shift) trên máy tính để gửi tin nhắn
         if (e.key === 'Enter' && !e.shiftKey) {
             if (window.innerWidth >= 768) {
                 e.preventDefault();
@@ -1156,7 +1425,6 @@ window.modWorkplace = {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
         }
 
-        // Khóa chặn nếu đang có tiến trình gửi đang chạy
         if (this.isSending) return;
 
         const inputEl = document.getElementById('wp-message-input');
@@ -1165,16 +1433,17 @@ window.modWorkplace = {
 
         if (!content && this.stagedAttachments.length === 0) return;
 
-        // Bật khóa gửi tức thì
         this.isSending = true;
 
-        // Lưu bản sao và dọn sạch ngay ô nhập liệu trên giao diện để triệt tiêu mọi race condition
         const savedContent = inputEl.value;
         const savedAttachments = [...this.stagedAttachments];
+        const savedReply = this.replyTarget ? { ...this.replyTarget } : null;
+
         inputEl.value = '';
         inputEl.style.height = 'auto';
         this.stagedAttachments = [];
         this.renderAttachmentPreview();
+        this.cancelReply();
 
         const btnSend = document.getElementById('wp-btn-send');
         if (btnSend) {
@@ -1187,7 +1456,10 @@ window.modWorkplace = {
                 channel_id: this.activeType === 'CHANNEL' ? this.activeId : null,
                 direct_user_id: this.activeType === 'DIRECT' ? this.activeId : null,
                 content: content,
-                attachments: savedAttachments
+                attachments: savedAttachments,
+                reply_to_id: savedReply ? savedReply.id : null,
+                reply_to_sender: savedReply ? savedReply.sender_name : null,
+                reply_to_content: savedReply ? savedReply.content : null
             };
 
             const res = await fetch('/api/workplace/messages', {
@@ -1201,16 +1473,22 @@ window.modWorkplace = {
                 await this.loadMessages(true);
                 this.scrollToBottom(true);
             } else {
-                // Khôi phục nếu server trả lỗi
                 inputEl.value = savedContent;
                 this.stagedAttachments = savedAttachments;
+                if (savedReply) {
+                    this.replyTarget = savedReply;
+                    this.renderReplyBar();
+                }
                 this.renderAttachmentPreview();
                 alert('❌ ' + (json.error || 'Không thể gửi tin nhắn!'));
             }
         } catch(err) {
-            // Khôi phục nếu lỗi mạng
             inputEl.value = savedContent;
             this.stagedAttachments = savedAttachments;
+            if (savedReply) {
+                this.replyTarget = savedReply;
+                this.renderReplyBar();
+            }
             this.renderAttachmentPreview();
             alert('⚠️ Lỗi gửi tin nhắn: ' + err.message);
         } finally {
@@ -1218,12 +1496,10 @@ window.modWorkplace = {
                 btnSend.disabled = false;
                 btnSend.innerHTML = '<i class="fas fa-paper-plane"></i>';
             }
-            // Giữ khóa tối thiểu 250ms để hấp thụ toàn bộ sự kiện bàn phím dư thừa
             setTimeout(() => {
                 this.isSending = false;
             }, 250);
 
-            // Tự động focus lại ô soạn thảo trên máy tính
             if (window.innerWidth >= 768 && inputEl) {
                 inputEl.focus();
             }
@@ -1601,6 +1877,733 @@ window.modWorkplace = {
                 btnSave.innerText = 'Lưu Phân Công Thành Viên';
             }
         }
+    },
+
+    // ========================================================
+    // 17. TRẢ LỜI ĐOẠN CHAT (REPLY / QUOTE)
+    // ========================================================
+    setReplyTarget: function(msgId) {
+        const msg = this.messages.find(m => m.id === msgId);
+        if (!msg) return;
+
+        let previewText = msg.content || '';
+        if (msg.message_type === 'VOICE') {
+            previewText = '🎙️ [Tin nhắn thoại]';
+        } else if (!previewText && msg.attachments && msg.attachments.length > 0) {
+            previewText = '📎 [Tệp đính kèm: ' + (msg.attachments[0].name || 'file') + ']';
+        }
+
+        this.replyTarget = {
+            id: msg.id,
+            sender_name: msg.sender_name || 'Đồng nghiệp',
+            content: previewText.length > 120 ? previewText.substring(0, 120) + '...' : previewText
+        };
+
+        this.renderReplyBar();
+
+        const inputEl = document.getElementById('wp-message-input');
+        if (inputEl) {
+            inputEl.focus();
+        }
+    },
+
+    cancelReply: function() {
+        this.replyTarget = null;
+        this.renderReplyBar();
+    },
+
+    renderReplyBar: function() {
+        const barEl = document.getElementById('wp-reply-preview-bar');
+        const senderEl = document.getElementById('wp-reply-sender');
+        const textEl = document.getElementById('wp-reply-text');
+        if (!barEl) return;
+
+        if (this.replyTarget) {
+            if (senderEl) senderEl.innerText = this.replyTarget.sender_name;
+            if (textEl) textEl.innerText = this.replyTarget.content;
+            barEl.classList.remove('hidden');
+        } else {
+            barEl.classList.add('hidden');
+            if (senderEl) senderEl.innerText = '...';
+            if (textEl) textEl.innerText = '';
+        }
+    },
+
+    scrollToMessage: function(msgId) {
+        if (!msgId) return;
+        const el = document.getElementById(`wp-msg-${msgId}`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Hiệu ứng flash highlight tin nhắn được trả lời
+            el.classList.add('ring-4', 'ring-amber-400/80', 'rounded-2xl', 'transition-all', 'duration-300');
+            setTimeout(() => {
+                el.classList.remove('ring-4', 'ring-amber-400/80', 'rounded-2xl');
+            }, 1800);
+        } else {
+            if (window.showToast) {
+                window.showToast('Tin nhắn gốc ở phần lịch sử chat trước đó', 'info');
+            } else {
+                alert('ℹ️ Tin nhắn gốc ở phần lịch sử chat cũ hơn');
+            }
+        }
+    },
+
+    // ========================================================
+    // 18. PHÁT TIN NHẮN THOẠI (AUDIO PLAYER)
+    // ========================================================
+    togglePlayAudio: function(btn, audioUrl) {
+        if (!audioUrl) return;
+
+        if (this.activeAudio && this.activeAudioBtn === btn) {
+            if (this.activeAudio.paused) {
+                this.activeAudio.play();
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                this.activeAudio.pause();
+                btn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+            return;
+        }
+
+        // Nếu đang có audio khác phát, dừng lại
+        if (this.activeAudio) {
+            this.activeAudio.pause();
+            if (this.activeAudioBtn) {
+                this.activeAudioBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+            this.activeAudio = null;
+            this.activeAudioBtn = null;
+        }
+
+        const audio = new Audio(audioUrl);
+        this.activeAudio = audio;
+        this.activeAudioBtn = btn;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        const parentCard = btn.closest('div');
+        const progressBar = parentCard ? parentCard.querySelector('.wp-audio-progress') : null;
+        const timeEl = parentCard ? parentCard.querySelector('.wp-audio-time') : null;
+
+        audio.addEventListener('loadedmetadata', () => {
+            if (timeEl && audio.duration && !isNaN(audio.duration)) {
+                const totalSec = Math.floor(audio.duration);
+                timeEl.innerText = `${Math.floor(totalSec/60)}:${String(totalSec%60).padStart(2, '0')}`;
+            }
+        });
+
+        audio.addEventListener('play', () => {
+            btn.innerHTML = '<i class="fas fa-pause"></i>';
+        });
+
+        audio.addEventListener('pause', () => {
+            btn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            if (audio.duration && progressBar) {
+                const pct = (audio.currentTime / audio.duration) * 100;
+                progressBar.style.width = pct + '%';
+            }
+            if (timeEl && audio.duration) {
+                const rem = Math.floor(audio.duration - audio.currentTime);
+                timeEl.innerText = `${Math.floor(rem/60)}:${String(rem%60).padStart(2, '0')}`;
+            }
+        });
+
+        audio.addEventListener('ended', () => {
+            btn.innerHTML = '<i class="fas fa-play"></i>';
+            if (progressBar) progressBar.style.width = '0%';
+            if (timeEl && audio.duration) {
+                const totalSec = Math.floor(audio.duration);
+                timeEl.innerText = `${Math.floor(totalSec/60)}:${String(totalSec%60).padStart(2, '0')}`;
+            }
+            this.activeAudio = null;
+            this.activeAudioBtn = null;
+        });
+
+        audio.addEventListener('error', () => {
+            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            alert('⚠️ Không thể phát file âm thanh này!');
+            this.activeAudio = null;
+            this.activeAudioBtn = null;
+        });
+
+        audio.play().catch(e => {
+            btn.innerHTML = '<i class="fas fa-play"></i>';
+            console.warn("Lỗi autoplay âm thanh:", e);
+        });
+    },
+
+    // ========================================================
+    // 19. GHI ÂM TIN NHẮN THOẠI (MEDIA RECORDER)
+    // ========================================================
+    toggleVoiceRecord: function() {
+        if (this.isRecordingVoice) {
+            this.finishAndSendVoiceRecord();
+        } else {
+            this.startVoiceRecord();
+        }
+    },
+
+    startVoiceRecord: async function() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('⚠️ Trình duyệt hoặc thiết bị của bạn không hỗ trợ ghi âm trực tiếp qua Web Audio!');
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            let mimeType = 'audio/webm;codecs=opus';
+            if (!MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                if (MediaRecorder.isTypeSupported('audio/webm')) {
+                    mimeType = 'audio/webm';
+                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    mimeType = 'audio/mp4';
+                } else {
+                    mimeType = '';
+                }
+            }
+
+            const options = mimeType ? { mimeType } : {};
+            this.mediaRecorder = new MediaRecorder(stream, options);
+            this.audioChunks = [];
+
+            this.mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    this.audioChunks.push(e.data);
+                }
+            };
+
+            this.mediaRecorder.start(200);
+            this.isRecordingVoice = true;
+            this.voiceStartTime = Date.now();
+
+            // Hiển thị UI ghi âm
+            const recordBar = document.getElementById('wp-voice-recording-bar');
+            const inputContainer = document.getElementById('wp-input-container');
+            const btnSend = document.getElementById('wp-btn-send');
+            const btnVoiceRecord = document.getElementById('wp-btn-voice-record');
+
+            if (recordBar) recordBar.classList.remove('hidden');
+            if (inputContainer) inputContainer.classList.add('hidden');
+            if (btnSend) btnSend.classList.add('hidden');
+            if (btnVoiceRecord) btnVoiceRecord.classList.add('text-red-500', 'bg-red-50', 'ring-2', 'ring-red-200');
+
+            const timerEl = document.getElementById('wp-voice-timer');
+            if (timerEl) timerEl.innerText = '00:00';
+
+            if (this.voiceTimerInterval) clearInterval(this.voiceTimerInterval);
+            this.voiceTimerInterval = setInterval(() => {
+                const elapsedSec = Math.floor((Date.now() - this.voiceStartTime) / 1000);
+                const mm = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+                const ss = String(elapsedSec % 60).padStart(2, '0');
+                if (timerEl) timerEl.innerText = `${mm}:${ss}`;
+
+                // Tự động dừng nếu quá 3 phút (180s)
+                if (elapsedSec >= 180) {
+                    this.finishAndSendVoiceRecord();
+                }
+            }, 500);
+
+        } catch(err) {
+            console.error("Lỗi cấp quyền microphone:", err);
+            alert('⚠️ Không thể truy cập Micro. Vui lòng cho phép quyền truy cập Micro trên trình duyệt để ghi âm tin nhắn!');
+        }
+    },
+
+    cancelVoiceRecord: function() {
+        if (this.voiceTimerInterval) {
+            clearInterval(this.voiceTimerInterval);
+            this.voiceTimerInterval = null;
+        }
+
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            try {
+                this.mediaRecorder.stream.getTracks().forEach(t => t.stop());
+                this.mediaRecorder.stop();
+            } catch(e) {}
+        }
+
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.isRecordingVoice = false;
+
+        // Phục hồi UI
+        const recordBar = document.getElementById('wp-voice-recording-bar');
+        const inputContainer = document.getElementById('wp-input-container');
+        const btnSend = document.getElementById('wp-btn-send');
+        const btnVoiceRecord = document.getElementById('wp-btn-voice-record');
+
+        if (recordBar) recordBar.classList.add('hidden');
+        if (inputContainer) inputContainer.classList.remove('hidden');
+        if (btnSend) btnSend.classList.remove('hidden');
+        if (btnVoiceRecord) btnVoiceRecord.classList.remove('text-red-500', 'bg-red-50', 'ring-2', 'ring-red-200');
+    },
+
+    finishAndSendVoiceRecord: async function() {
+        if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') return;
+
+        if (this.voiceTimerInterval) {
+            clearInterval(this.voiceTimerInterval);
+            this.voiceTimerInterval = null;
+        }
+
+        const elapsedSec = Math.max(1, Math.floor((Date.now() - this.voiceStartTime) / 1000));
+        const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
+        const fileExt = mimeType.includes('mp4') ? 'm4a' : 'webm';
+
+        this.mediaRecorder.stream.getTracks().forEach(t => t.stop());
+
+        const timerEl = document.getElementById('wp-voice-timer');
+        if (timerEl) timerEl.innerText = 'Đang gửi...';
+
+        const recordPromise = new Promise((resolve) => {
+            this.mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(this.audioChunks, { type: mimeType });
+                resolve(audioBlob);
+            };
+            this.mediaRecorder.stop();
+        });
+
+        const audioBlob = await recordPromise;
+
+        // Khôi phục UI về bình thường
+        const recordBar = document.getElementById('wp-voice-recording-bar');
+        const inputContainer = document.getElementById('wp-input-container');
+        const btnSend = document.getElementById('wp-btn-send');
+        const btnVoiceRecord = document.getElementById('wp-btn-voice-record');
+
+        if (recordBar) recordBar.classList.add('hidden');
+        if (inputContainer) inputContainer.classList.remove('hidden');
+        if (btnSend) btnSend.classList.remove('hidden');
+        if (btnVoiceRecord) btnVoiceRecord.classList.remove('text-red-500', 'bg-red-50', 'ring-2', 'ring-red-200');
+
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.isRecordingVoice = false;
+
+        // Upload file âm thanh lên server
+        const audioFile = new File([audioBlob], `voice_${Date.now()}.${fileExt}`, { type: mimeType });
+        const formData = new FormData();
+        formData.append('file', audioFile);
+        formData.append('subfolder', 'workplace');
+
+        try {
+            const uploadRes = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const uploadJson = await uploadRes.json();
+
+            if (!uploadJson.success || !uploadJson.url) {
+                alert('❌ Lỗi tải lên ghi âm: ' + (uploadJson.error || 'Không xác định'));
+                return;
+            }
+
+            // Gửi tin nhắn thoại vào hội thoại hiện tại
+            const mm = Math.floor(elapsedSec / 60);
+            const ss = String(elapsedSec % 60).padStart(2, '0');
+            const durStr = `${mm}:${ss}`;
+
+            const payload = {
+                channel_id: this.activeType === 'CHANNEL' ? this.activeId : null,
+                direct_user_id: this.activeType === 'DIRECT' ? this.activeId : null,
+                content: `🎙️ Tin nhắn thoại (${durStr})`,
+                message_type: 'VOICE',
+                attachments: [{
+                    url: uploadJson.url,
+                    name: `voice_note.${fileExt}`,
+                    type: mimeType,
+                    size: audioBlob.size,
+                    duration: elapsedSec
+                }],
+                reply_to_id: this.replyTarget ? this.replyTarget.id : null,
+                reply_to_sender: this.replyTarget ? this.replyTarget.sender_name : null,
+                reply_to_content: this.replyTarget ? this.replyTarget.content : null
+            };
+
+            const msgRes = await fetch('/api/workplace/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const msgJson = await msgRes.json();
+            if (msgJson.success) {
+                this.cancelReply();
+                await this.loadMessages(true);
+                this.scrollToBottom(true);
+            } else {
+                alert('❌ Lỗi gửi ghi âm: ' + (msgJson.error || 'Không gửi được'));
+            }
+        } catch(err) {
+            alert('⚠️ Lỗi gửi tin nhắn thoại: ' + err.message);
+        }
+    },
+
+    // ========================================================
+    // 20. CHỈNH SỬA & THU HỒI TIN NHẮN (TRONG VÒNG 15 PHÚT)
+    // ========================================================
+    openEditModal: function(msgId) {
+        const msg = this.messages.find(m => m.id === msgId);
+        if (!msg) return;
+
+        if (msg.is_recalled) {
+            alert('⚠️ Tin nhắn đã thu hồi không thể chỉnh sửa!');
+            return;
+        }
+
+        const msgAgeMinutes = (Date.now() - new Date(msg.created_at).getTime()) / 60000;
+        if (!this.isAdmin && msgAgeMinutes > 15) {
+            alert('⚠️ Đã quá 15 phút! Theo quy chuẩn trao đổi minh bạch của công ty, tin nhắn đã được khóa vĩnh viễn.');
+            return;
+        }
+
+        this.editingMsgId = msgId;
+        const inputEl = document.getElementById('wp-edit-message-input');
+        if (inputEl) {
+            inputEl.value = msg.content || '';
+        }
+
+        const modal = document.getElementById('wp-modal-edit-message');
+        if (modal) modal.classList.remove('hidden');
+    },
+
+    closeEditModal: function() {
+        this.editingMsgId = null;
+        const modal = document.getElementById('wp-modal-edit-message');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    submitEditMessage: async function() {
+        if (!this.editingMsgId) return;
+
+        const inputEl = document.getElementById('wp-edit-message-input');
+        const newContent = inputEl ? inputEl.value.trim() : '';
+
+        if (!newContent) {
+            alert('⚠️ Nội dung tin nhắn không được để trống! Nếu muốn xóa, hãy sử dụng tính năng "Thu hồi tin nhắn".');
+            return;
+        }
+
+        const btnSave = document.getElementById('wp-btn-save-edit');
+        if (btnSave) {
+            btnSave.disabled = true;
+            btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+        }
+
+        try {
+            const res = await fetch(`/api/workplace/messages/${this.editingMsgId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newContent })
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                const msg = this.messages.find(m => m.id === this.editingMsgId);
+                if (msg) {
+                    msg.content = newContent;
+                    msg.is_edited = true;
+                    this.renderMessages();
+                }
+                this.closeEditModal();
+                if (window.showToast) window.showToast('Đã cập nhật tin nhắn', 'success');
+            } else {
+                alert('❌ ' + (json.error || 'Không thể chỉnh sửa tin nhắn!'));
+            }
+        } catch(err) {
+            alert('⚠️ Lỗi: ' + err.message);
+        } finally {
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.innerText = 'Lưu Thay Đổi';
+            }
+        }
+    },
+
+    recallMessage: async function(msgId) {
+        const msg = this.messages.find(m => m.id === msgId);
+        if (!msg) return;
+
+        const msgAgeMinutes = (Date.now() - new Date(msg.created_at).getTime()) / 60000;
+        if (!this.isAdmin && msgAgeMinutes > 15) {
+            alert('⚠️ Đã quá 15 phút! Theo quy chế công ty, tin nhắn đã được chốt và khóa lưu trữ.');
+            return;
+        }
+
+        if (!confirm("Bạn có chắc chắn muốn thu hồi tin nhắn này không?\nTin nhắn sẽ được chuyển thành 'Tin nhắn đã được thu hồi'.")) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/workplace/messages/${msgId}`, {
+                method: 'DELETE'
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                msg.is_recalled = true;
+                msg.content = 'Tin nhắn đã được thu hồi';
+                msg.attachments = [];
+                this.renderMessages();
+                if (window.showToast) window.showToast('Đã thu hồi tin nhắn thành công', 'info');
+            } else {
+                alert('❌ ' + (json.error || 'Không thể thu hồi tin nhắn!'));
+            }
+        } catch(err) {
+            alert('⚠️ Lỗi thu hồi: ' + err.message);
+        }
+    },
+
+    // ========================================================
+    // 21. ÂM BÁO CHAT & WEB AUDIO SYNTHESIZER
+    // ========================================================
+    initSoundSetting: function() {
+        const saved = localStorage.getItem('sungo_wp_sound');
+        this.soundEnabled = saved !== 'false';
+        this.updateSoundToggleUI();
+    },
+
+    toggleSound: function() {
+        this.soundEnabled = !this.soundEnabled;
+        localStorage.setItem('sungo_wp_sound', this.soundEnabled ? 'true' : 'false');
+        this.updateSoundToggleUI();
+        if (this.soundEnabled) {
+            this.playChime();
+            if (window.showToast) window.showToast('Đã BẬT âm thanh thông báo chat', 'success');
+        } else {
+            if (window.showToast) window.showToast('Đã TẮT âm thanh thông báo chat', 'info');
+        }
+    },
+
+    updateSoundToggleUI: function() {
+        const btn = document.getElementById('wp-btn-sound-toggle');
+        if (!btn) return;
+
+        if (this.soundEnabled) {
+            btn.className = "w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-xl transition cursor-pointer";
+            btn.title = "Âm báo chat: Đang BẬT (Bấm để tắt)";
+            btn.innerHTML = '<i class="fas fa-volume-up text-sm sm:text-base"></i>';
+        } else {
+            btn.className = "w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer";
+            btn.title = "Âm báo chat: Đang TẮT (Bấm để bật)";
+            btn.innerHTML = '<i class="fas fa-volume-mute text-sm sm:text-base"></i>';
+        }
+    },
+
+    playChime: function() {
+        if (!this.soundEnabled) return;
+
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+
+            const ctx = new AudioContext();
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+
+            const now = ctx.currentTime;
+
+            // Note 1 (E5: 659.25Hz) - Âm vang ngọt ngào
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(659.25, now);
+            gain1.gain.setValueAtTime(0.18, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.35);
+
+            // Note 2 (B5: 987.77Hz) - Chuông thông báo trong trẻo
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(987.77, now + 0.12);
+            gain2.gain.setValueAtTime(0.22, now + 0.12);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.12);
+            osc2.stop(now + 0.55);
+
+            // Rung thiết bị di động (nếu có hỗ trợ vibration API)
+            if (navigator.vibrate) {
+                navigator.vibrate([70, 40, 70]);
+            }
+        } catch(e) {
+            console.warn("Lỗi phát chuông:", e);
+        }
+    },
+
+    testSoundChime: function() {
+        this.playChime();
+        if (window.showToast) window.showToast('🔔 Đang phát âm báo thử nghiệm', 'info');
+    },
+
+    // ========================================================
+    // 22. THÔNG BÁO NGẦM TRÊN ĐIỆN THOẠI (PWA WEB PUSH)
+    // ========================================================
+    openMobilePushModal: function() {
+        const modal = document.getElementById('wp-modal-mobile-push');
+        if (modal) modal.classList.remove('hidden');
+        this.updatePushPermissionUI();
+    },
+
+    closeMobilePushModal: function() {
+        const modal = document.getElementById('wp-modal-mobile-push');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    updatePushPermissionUI: function() {
+        const statusText = document.getElementById('wp-push-status-text');
+        const statusBadge = document.getElementById('wp-push-status-badge');
+        const btnRequest = document.getElementById('wp-btn-request-push');
+
+        if (!('Notification' in window)) {
+            if (statusText) statusText.innerText = 'Trình duyệt này không hỗ trợ Web Notification API.';
+            if (statusBadge) {
+                statusBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700';
+                statusBadge.innerText = 'Không Hỗ Trợ';
+            }
+            if (btnRequest) btnRequest.disabled = true;
+            return;
+        }
+
+        const perm = Notification.permission;
+        if (perm === 'granted') {
+            if (statusText) statusText.innerText = '✅ Bạn đã cấp quyền nhận thông báo đẩy ngầm thành công!';
+            if (statusBadge) {
+                statusBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+                statusBadge.innerText = 'Đang Bật';
+            }
+            if (btnRequest) {
+                btnRequest.innerHTML = '<i class="fas fa-check-circle"></i> <span>Đã Kích Hoạt (Kiểm tra lại)</span>';
+                btnRequest.className = 'px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition flex items-center gap-1.5 cursor-pointer';
+            }
+        } else if (perm === 'denied') {
+            if (statusText) statusText.innerText = '❌ Quyền thông báo đã bị chặn trong Cài đặt trình duyệt.';
+            if (statusBadge) {
+                statusBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800';
+                statusBadge.innerText = 'Bị Chặn';
+            }
+            if (btnRequest) {
+                btnRequest.innerHTML = '<i class="fas fa-cog"></i> <span>Mở Cài Đặt Trình Duyệt</span>';
+                btnRequest.className = 'px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-600 hover:bg-slate-700 text-white shadow-md transition flex items-center gap-1.5 cursor-pointer';
+            }
+        } else {
+            if (statusText) statusText.innerText = 'Chưa bật. Hãy bấm nút bên dưới để cấp quyền nhận chuông báo ngầm.';
+            if (statusBadge) {
+                statusBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800';
+                statusBadge.innerText = 'Chưa Bật';
+            }
+            if (btnRequest) {
+                btnRequest.innerHTML = '<i class="fas fa-bell"></i> <span>Bật Thông Báo Ngay</span>';
+                btnRequest.className = 'px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white shadow-md transition flex items-center gap-1.5 cursor-pointer';
+            }
+        }
+    },
+
+    requestPushPermission: async function() {
+        if (!('Notification' in window)) {
+            alert('Trình duyệt không hỗ trợ Web Notification.');
+            return;
+        }
+
+        if (Notification.permission === 'denied') {
+            alert('⚠️ Quyền thông báo hiện đang bị chặn trên trình duyệt.\n\nVui lòng vào Cài đặt trình duyệt (hoặc bấm vào icon ổ khóa bên cạnh tên miền https://app.sungo.vn) và chọn "Cho phép" Thông báo!');
+            return;
+        }
+
+        const btnRequest = document.getElementById('wp-btn-request-push');
+        if (btnRequest) {
+            btnRequest.disabled = true;
+            btnRequest.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Đang đăng ký...</span>';
+        }
+
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert('⚠️ Bạn chưa cấp quyền thông báo. Vui lòng chọn "Cho phép" (Allow) để nhận tin nhắn!');
+                this.updatePushPermissionUI();
+                return;
+            }
+
+            // Lấy VAPID Public Key từ backend
+            const configRes = await fetch('/api/workplace/push-config');
+            const configJson = await configRes.json();
+
+            if (!configJson.success || !configJson.publicKey) {
+                alert('⚠️ Server chưa cấu hình VAPID Key: ' + (configJson.error || ''));
+                this.updatePushPermissionUI();
+                return;
+            }
+
+            if (!('serviceWorker' in navigator)) {
+                alert('Service Worker không được hỗ trợ trên trình duyệt này.');
+                this.updatePushPermissionUI();
+                return;
+            }
+
+            // Đảm bảo Service Worker đang chạy
+            const registration = await navigator.serviceWorker.ready;
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (!subscription) {
+                const convertedVapidKey = this.urlBase64ToUint8Array(configJson.publicKey);
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: convertedVapidKey
+                });
+            }
+
+            // Gửi token đăng ký lên server SUNGO ERP
+            const subRes = await fetch('/api/workplace/push-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subscription: subscription.toJSON(),
+                    device_name: navigator.userAgent.includes('iPhone') ? 'iPhone' : (navigator.userAgent.includes('Android') ? 'Android' : 'Desktop Browser')
+                })
+            });
+
+            const subJson = await subRes.json();
+            if (subJson.success) {
+                this.updatePushPermissionUI();
+                this.playChime();
+                alert('🎉 Kích hoạt thành công!\nTừ bây giờ, bạn sẽ nhận được thông báo chuông ngay cả khi khóa màn hình điện thoại.');
+            } else {
+                alert('❌ Lỗi lưu thông báo: ' + (subJson.error || 'Không xác định'));
+            }
+
+        } catch(err) {
+            console.error("Lỗi đăng ký push:", err);
+            alert('⚠️ Lỗi kích hoạt thông báo: ' + err.message);
+        } finally {
+            if (btnRequest) {
+                btnRequest.disabled = false;
+            }
+            this.updatePushPermissionUI();
+        }
+    },
+
+    urlBase64ToUint8Array: function(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
     },
 
     // 16. Smart Polling (3.5s)
