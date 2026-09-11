@@ -1349,20 +1349,23 @@
             }
 
             try {
+                // Tự động lưu cấu hình tạm thời nếu người dùng có thay đổi giá trị
                 await window.modVAT.saveVinInvoiceConfig(true);
 
                 const res = await fetch('/api/invoices/vininvoice/test-connection', { method: 'POST' });
                 const data = await res.json();
-                if (data.success) {
+                if (data && data.success) {
+                    const preview = data.loginKeyPreview || (data.loginKey ? (String(data.loginKey).slice(0, 8) + '...') : 'Hợp lệ');
                     if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse';
-                    if (statusText) statusText.innerHTML = `<b class="text-emerald-700">🟢 Kết nối thành công!</b> <span class="text-[10px] text-slate-500 font-mono">(Token: ${data.loginKey.slice(0, 8)}...)</span>`;
+                    if (statusText) statusText.innerHTML = `<b class="text-emerald-700">🟢 Kết nối thành công!</b> <span class="text-[10px] text-slate-500 font-mono">(Token: ${preview})</span>`;
                 } else {
                     if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-red-500 inline-block';
-                    if (statusText) statusText.innerHTML = `<b class="text-red-600">🔴 Thất bại:</b> <span class="text-[10px] text-red-500">${data.error || 'Sai thông tin'}</span>`;
+                    if (statusText) statusText.innerHTML = `<b class="text-red-600">🔴 Thất bại:</b> <span class="text-[10px] text-red-500">${(data && data.error) ? data.error : 'Sai thông tin hoặc tài khoản chưa kích hoạt'}</span>`;
                 }
             } catch(e) {
+                console.error('Lỗi kiểm tra kết nối VinInvoice:', e);
                 if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-red-500 inline-block';
-                if (statusText) statusText.innerHTML = `<b class="text-red-600">🔴 Lỗi kết nối mạng</b>`;
+                if (statusText) statusText.innerHTML = `<b class="text-red-600">🔴 Lỗi:</b> <span class="text-[10px] text-red-500">${e.message || 'Không thể kết nối máy chủ'}</span>`;
             }
             if (btn) {
                 btn.innerHTML = origHtml;
@@ -1378,13 +1381,16 @@
                 btn.disabled = true;
             }
 
+            const pwdVal = document.getElementById('v-password')?.value;
             const payload = {
-                apiUrl: document.getElementById('v-api-url').value.trim(),
-                username: document.getElementById('v-username').value.trim(),
-                password: document.getElementById('v-password').value,
-                invoiceForm: document.getElementById('v-form').value.trim(),
-                invoiceSerial: document.getElementById('v-serial').value.trim().toUpperCase()
+                apiUrl: document.getElementById('v-api-url')?.value?.trim() || 'https://vininvoice.vn/api',
+                username: document.getElementById('v-username')?.value?.trim() || '0315614349',
+                invoiceForm: document.getElementById('v-form')?.value?.trim() || '1',
+                invoiceSerial: document.getElementById('v-serial')?.value?.trim()?.toUpperCase() || 'C26TMT'
             };
+            if (pwdVal && !pwdVal.includes('•') && pwdVal.trim() !== '') {
+                payload.password = pwdVal;
+            }
 
             try {
                 const res = await fetch('/api/invoices/vininvoice/config', {
@@ -1393,16 +1399,16 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                if (data.success) {
+                if (data && data.success) {
                     if (!isSilent) {
                         alert("✅ Đã lưu cấu hình API VinInvoice thành công!");
                         window.modVAT.closeConfig();
                     }
                 } else {
-                    if (!isSilent) alert("Lỗi: " + (data.error || 'Không thể lưu cấu hình'));
+                    if (!isSilent) alert("Lỗi: " + (data && data.error ? data.error : 'Không thể lưu cấu hình'));
                 }
             } catch(e) {
-                if (!isSilent) alert("Lỗi kết nối máy chủ khi lưu cấu hình!");
+                if (!isSilent) alert("Lỗi kết nối máy chủ khi lưu cấu hình: " + e.message);
             }
 
             if (!isSilent && btn) {

@@ -39,7 +39,9 @@ const vininvoiceService = {
         const updated = {
             apiUrl: (newConfig.apiUrl || current.apiUrl || DEFAULT_CONFIG.apiUrl).trim().replace(/\/+$/, ''),
             username: (newConfig.username || current.username || DEFAULT_CONFIG.username).trim(),
-            password: (newConfig.password !== undefined ? newConfig.password : current.password),
+            password: (newConfig.password && newConfig.password.trim() !== '' && !newConfig.password.includes('•')
+                ? newConfig.password 
+                : current.password),
             invoiceForm: (newConfig.invoiceForm || current.invoiceForm || DEFAULT_CONFIG.invoiceForm).trim(),
             invoiceSerial: (newConfig.invoiceSerial || current.invoiceSerial || DEFAULT_CONFIG.invoiceSerial).trim().toUpperCase()
         };
@@ -100,6 +102,7 @@ const vininvoiceService = {
         return {
             success: true,
             message: `Kết nối API VinInvoice thành công! (Tài khoản: ${config.username}, Mẫu số: ${config.invoiceFormSerial})`,
+            loginKey: loginKey,
             loginKeyPreview: loginKey ? `${loginKey.substring(0, 8)}...` : '',
             config: {
                 apiUrl: config.apiUrl,
