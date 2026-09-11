@@ -481,6 +481,67 @@
 </div>
 
 <!-- ======================================================== -->
+<!-- MODAL: BẢNG TÁC VỤ TIN NHẮN CẢM ỨNG (ZALO STYLE SHEET)  -->
+<!-- ======================================================== -->
+<div id="wp-modal-message-actions" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop mờ -->
+    <div onclick="window.modWorkplace.closeMessageActions()" class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+    
+    <!-- Action Sheet trượt từ dưới lên trên Mobile hoặc giữa màn hình trên Desktop -->
+    <div class="absolute bottom-0 inset-x-0 sm:bottom-auto sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-200 z-10 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+        
+        <!-- Thanh kéo nhỏ cho mobile -->
+        <div class="sm:hidden flex justify-center pt-2.5 pb-1 cursor-pointer" onclick="window.modWorkplace.closeMessageActions()">
+            <div class="w-10 h-1 rounded-full bg-slate-300"></div>
+        </div>
+
+        <!-- HÀNG THẢ BIỂU CẢM NHANH NỔI BẬT (QUICK REACTIONS ROW) -->
+        <div class="px-3 py-2.5 bg-gradient-to-r from-slate-50 to-amber-50/60 border-b border-slate-100 flex items-center justify-around text-2xl select-none">
+            <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('❤️')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Yêu thích">❤️</button>
+            <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('👍')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Thích">👍</button>
+            <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('😆')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Haha">😆</button>
+            <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('😮')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Ngạc nhiên">😮</button>
+            <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('😭')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Buồn">😭</button>
+            <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('😡')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Tức giận">😡</button>
+            <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('🔥')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Tuyệt vời">🔥</button>
+            <button type="button" onclick="window.modWorkplace.submitQuickReactionFromSheet('👏')" class="hover:scale-125 active:scale-95 transform transition p-1 cursor-pointer" title="Vỗ tay">👏</button>
+        </div>
+
+        <!-- Trích đoạn tóm tắt tin nhắn đang thao tác -->
+        <div class="px-4 py-2 bg-slate-100/70 border-b border-slate-200/70 flex items-center justify-between text-xs shrink-0">
+            <div class="flex items-center gap-2 min-w-0 pr-2">
+                <span class="font-black text-slate-800 shrink-0" id="wp-action-sheet-sender">...</span>
+                <span class="text-slate-500 truncate text-[11px]" id="wp-action-sheet-snippet">...</span>
+            </div>
+            <button type="button" onclick="window.modWorkplace.closeMessageActions()" class="text-slate-400 hover:text-slate-700 p-1 text-sm shrink-0 cursor-pointer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- LƯỚI TÁC VỤ THÔNG MINH (SMART ACTIONS GRID) -->
+        <div id="wp-action-sheet-grid" class="p-3.5 sm:p-4 grid grid-cols-4 gap-2.5 overflow-y-auto">
+            <!-- Render các nút tác vụ động theo loại tin nhắn -->
+        </div>
+
+        <!-- Nút đóng dành cho mobile -->
+        <div class="p-2.5 sm:p-3 bg-slate-50 border-t border-slate-100 shrink-0">
+            <button type="button" onclick="window.modWorkplace.closeMessageActions()" class="w-full py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-200/70 hover:bg-slate-300 transition cursor-pointer">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- POPOVER MENU TÁC VỤ CHO DESKTOP (NÚT ...)                -->
+<!-- ======================================================== -->
+<div id="wp-popover-message-actions" class="fixed z-50 hidden bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 w-48 text-xs select-none transition animate-in fade-in zoom-in-95 duration-150">
+    <div id="wp-popover-list" class="flex flex-col">
+        <!-- Dropdown items inserted dynamically -->
+    </div>
+</div>
+
+<!-- ======================================================== -->
 <!-- JAVASCRIPT LOGIC PHÂN HỆ SUNGO WORKPLACE                -->
 <!-- ======================================================== -->
 <script>
@@ -1265,43 +1326,30 @@ window.modWorkplace = {
                     `;
                 } else {
                     html += `
-                        <div id="wp-msg-${msg.id}" class="flex flex-col items-end group">
-                            <div class="flex items-end gap-2 max-w-[88%] sm:max-w-[75%]">
-                                <!-- Nút thao tác hover / touch -->
-                                <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs mb-1">
-                                    <button onclick="window.modWorkplace.setReplyTarget(${msg.id})" class="hover:text-amber-600 p-1 transition cursor-pointer" title="Trả lời tin nhắn này"><i class="fas fa-reply"></i></button>
-                                    <button onclick="window.modWorkplace.copyMessage(${msg.id})" class="hover:text-amber-600 p-1 transition cursor-pointer" title="Sao chép nội dung tin nhắn"><i class="fas fa-copy"></i></button>
-                                    <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1 cursor-pointer">👍</button>
-                                    <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1 cursor-pointer">❤️</button>
-                                    
-                                    ${canEditOrRecall ? `
-                                        ${!isVoiceMessage ? `
-                                            <button onclick="window.modWorkplace.openEditModal(${msg.id})" class="hover:text-blue-500 p-1 transition cursor-pointer" title="Chỉnh sửa tin nhắn (còn ${Math.max(1, Math.ceil(15 - msgAgeMinutes))} phút)"><i class="fas fa-pencil-alt"></i></button>
-                                        ` : ''}
-                                        <button onclick="window.modWorkplace.recallMessage(${msg.id})" class="hover:text-red-600 p-1 transition cursor-pointer" title="Thu hồi tin nhắn (còn ${Math.max(1, Math.ceil(15 - msgAgeMinutes))} phút)"><i class="fas fa-undo-alt"></i></button>
-                                    ` : `
-                                        ${!this.isAdmin ? `
-                                            <span class="text-slate-300 p-1 select-none" title="Tin nhắn đã quá 15 phút, đã khóa"><i class="fas fa-lock text-[10px]"></i></span>
-                                        ` : `
-                                            <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-1 cursor-pointer" title="Quản trị viên xóa tin"><i class="fas fa-trash-alt"></i></button>
-                                        `}
-                                    `}
+                        <div id="wp-msg-${msg.id}" class="flex flex-col items-end group relative">
+                            <div class="flex items-end gap-1.5 max-w-[88%] sm:max-w-[75%] relative">
+                                <!-- Thanh tác vụ hover Desktop (Ẩn hoàn toàn trên di động) -->
+                                <div class="hidden md:flex opacity-0 group-hover:opacity-100 items-center gap-0.5 bg-white/95 border border-slate-200/90 shadow-sm rounded-full px-1.5 py-0.5 transition-all duration-150 text-slate-500 mb-1 backdrop-blur-xs">
+                                    <button type="button" onclick="window.modWorkplace.setReplyTarget(${msg.id})" class="hover:text-amber-600 p-1 transition cursor-pointer text-xs" title="Trả lời tin nhắn"><i class="fas fa-reply"></i></button>
+                                    <button type="button" onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1 transition cursor-pointer text-xs" title="Thích">👍</button>
+                                    <button type="button" onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1 transition cursor-pointer text-xs" title="Thả tim">❤️</button>
+                                    <button type="button" onclick="window.modWorkplace.openMessageActions(${msg.id}, this)" class="hover:text-amber-600 p-1 transition cursor-pointer text-xs font-black" title="Xem thêm tác vụ"><i class="fas fa-ellipsis-h"></i></button>
                                 </div>
                                 
-                                <!-- Bong bóng tin nhắn -->
-                                <div ondblclick="window.modWorkplace.copyMessage(${msg.id})" title="Nhấp đúp để sao chép tin nhắn" class="bg-amber-500 text-white rounded-2xl rounded-tr-xs p-2.5 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words select-text cursor-text">
+                                <!-- Bong bóng tin nhắn (Hỗ trợ dí cảm ứng trên di động & double click copy) -->
+                                <div data-wp-msg-bubble="${msg.id}" ondblclick="window.modWorkplace.copyMessage(${msg.id})" class="wp-msg-bubble select-none bg-amber-500 text-white rounded-2xl rounded-tr-xs p-2.5 sm:p-3.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words cursor-pointer active:brightness-95 transition">
                                     ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-200 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Đã Ghim</div>` : ''}
                                     ${replyQuoteHtml}
                                     ${voicePlayerHtml}
-                                    ${!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại')) ? `<div>${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-amber-200 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
+                                    ${!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại')) ? `<div class="select-text cursor-text">${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-amber-200 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
                                     ${attachmentHtml}
                                 </div>
                             </div>
 
-                            <!-- Reactions & thời gian -->
+                            <!-- Chân tin nhắn sạch sẽ: Chỉ hiện reactions (nếu có) và giờ gửi -->
                             <div class="flex items-center gap-1.5 mt-1 mr-1">
                                 ${reactionPills}
-                                <span class="text-[10px] text-slate-400">${timeStr}</span>
+                                <span class="text-[10px] text-slate-400 select-none">${timeStr}</span>
                             </div>
                         </div>
                     `;
@@ -1312,7 +1360,7 @@ window.modWorkplace = {
                     html += `
                         <div id="wp-msg-${msg.id}" class="flex flex-col items-start group">
                             <div class="flex items-start gap-2 max-w-[88%] sm:max-w-[75%]">
-                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-300 text-slate-600 flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 mt-0.5">
+                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-300 text-slate-600 flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 mt-0.5 select-none">
                                     ${initials}
                                 </div>
                                 <div class="min-w-0">
@@ -1331,10 +1379,10 @@ window.modWorkplace = {
                     `;
                 } else {
                     html += `
-                        <div id="wp-msg-${msg.id}" class="flex flex-col items-start group">
-                            <div class="flex items-start gap-2 max-w-[88%] sm:max-w-[75%]">
+                        <div id="wp-msg-${msg.id}" class="flex flex-col items-start group relative">
+                            <div class="flex items-start gap-2 max-w-[88%] sm:max-w-[75%] relative">
                                 <!-- Avatar -->
-                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 shadow-2xs mt-0.5">
+                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 shadow-2xs mt-0.5 select-none">
                                     ${initials}
                                 </div>
 
@@ -1343,36 +1391,30 @@ window.modWorkplace = {
                                     <div class="flex items-center gap-1.5 mb-1">
                                         <span class="text-xs font-black text-slate-800">${msg.sender_name}</span>
                                         ${roleBadge}
-                                        <span class="text-[10px] text-slate-400 ml-1">${timeStr}</span>
+                                        <span class="text-[10px] text-slate-400 ml-1 select-none">${timeStr}</span>
                                     </div>
 
-                                    <!-- Bong bóng tin nhắn -->
-                                    <div ondblclick="window.modWorkplace.copyMessage(${msg.id})" title="Nhấp đúp để sao chép tin nhắn" class="bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-2.5 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words select-text cursor-text">
-                                        ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-600 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Thông Báo Ghim</div>` : ''}
-                                        ${replyQuoteHtml}
-                                        ${voicePlayerHtml}
-                                        ${!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại')) ? `<div>${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-slate-400 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
-                                        ${attachmentHtml}
-                                    </div>
+                                    <div class="flex items-end gap-1.5">
+                                        <!-- Bong bóng tin nhắn (Hỗ trợ dí cảm ứng trên di động) -->
+                                        <div data-wp-msg-bubble="${msg.id}" ondblclick="window.modWorkplace.copyMessage(${msg.id})" class="wp-msg-bubble select-none bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-xs p-2.5 sm:p-3.5 shadow-2xs text-xs sm:text-sm leading-relaxed break-words cursor-pointer active:brightness-95 transition">
+                                            ${msg.is_pinned ? `<div class="text-[10px] font-black uppercase text-amber-600 mb-1 flex items-center gap-1"><i class="fas fa-thumbtack"></i> Thông Báo Ghim</div>` : ''}
+                                            ${replyQuoteHtml}
+                                            ${voicePlayerHtml}
+                                            ${!isVoiceMessage || (msg.content && !msg.content.startsWith('🎙️ Tin nhắn thoại')) ? `<div class="select-text cursor-text">${this.formatContent(msg.content)} ${msg.is_edited ? '<span class="text-[9px] text-slate-400 italic ml-1">(đã chỉnh sửa)</span>' : ''}</div>` : ''}
+                                            ${attachmentHtml}
+                                        </div>
 
-                                    <!-- Reactions & Thanh thả biểu cảm nhanh -->
-                                    <div class="flex items-center gap-1.5 mt-1">
-                                        ${reactionPills}
-                                        <div class="opacity-80 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 transition text-slate-400 text-xs ml-1">
-                                            <button onclick="window.modWorkplace.setReplyTarget(${msg.id})" class="hover:text-amber-600 p-0.5 transition cursor-pointer" title="Trả lời tin nhắn này"><i class="fas fa-reply"></i></button>
-                                            <button onclick="window.modWorkplace.copyMessage(${msg.id})" class="hover:text-amber-600 p-0.5 transition cursor-pointer" title="Sao chép nội dung tin nhắn"><i class="fas fa-copy"></i></button>
-                                            <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-0.5 cursor-pointer">👍</button>
-                                            <button onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-0.5 cursor-pointer">❤️</button>
-                                            <button onclick="window.modWorkplace.quickReaction(${msg.id}, '🔥')" class="hover:text-orange-500 p-0.5 cursor-pointer">🔥</button>
-                                            <button onclick="window.modWorkplace.quickReaction(${msg.id}, '👏')" class="hover:text-emerald-500 p-0.5 cursor-pointer">👏</button>
-                                            ${this.isAdmin && this.activeType === 'CHANNEL' ? `
-                                                <button onclick="window.modWorkplace.togglePinMessage(${msg.id})" class="hover:text-amber-600 p-0.5 ml-1 cursor-pointer" title="Ghim thông báo"><i class="fas fa-thumbtack"></i></button>
-                                            ` : ''}
-                                            ${this.isAdmin ? `
-                                                <button onclick="window.modWorkplace.deleteMessage(${msg.id})" class="hover:text-red-600 p-0.5 cursor-pointer" title="Quản trị viên xóa tin"><i class="fas fa-trash-alt"></i></button>
-                                            ` : ''}
+                                        <!-- Thanh tác vụ hover Desktop (Ẩn hoàn toàn trên di động) -->
+                                        <div class="hidden md:flex opacity-0 group-hover:opacity-100 items-center gap-0.5 bg-white/95 border border-slate-200/90 shadow-sm rounded-full px-1.5 py-0.5 transition-all duration-150 text-slate-500 mb-1 backdrop-blur-xs">
+                                            <button type="button" onclick="window.modWorkplace.setReplyTarget(${msg.id})" class="hover:text-amber-600 p-1 transition cursor-pointer text-xs" title="Trả lời tin nhắn"><i class="fas fa-reply"></i></button>
+                                            <button type="button" onclick="window.modWorkplace.quickReaction(${msg.id}, '👍')" class="hover:text-amber-500 p-1 transition cursor-pointer text-xs" title="Thích">👍</button>
+                                            <button type="button" onclick="window.modWorkplace.quickReaction(${msg.id}, '❤️')" class="hover:text-red-500 p-1 transition cursor-pointer text-xs" title="Thả tim">❤️</button>
+                                            <button type="button" onclick="window.modWorkplace.openMessageActions(${msg.id}, this)" class="hover:text-amber-600 p-1 transition cursor-pointer text-xs font-black" title="Xem thêm tác vụ"><i class="fas fa-ellipsis-h"></i></button>
                                         </div>
                                     </div>
+
+                                    <!-- Chân tin nhắn sạch sẽ: Chỉ hiện reactions nếu có người thả biểu cảm -->
+                                    ${reactionPills ? `<div class="flex items-center gap-1.5 mt-1">${reactionPills}</div>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -1382,6 +1424,8 @@ window.modWorkplace = {
         });
 
         container.innerHTML = html;
+        this.attachMessageTouchHandlers();
+
         // Chỉ cuộn xuống đáy tin nhắn nếu được yêu cầu (tránh giật khi người dùng đang xem lịch sử phía trên)
         if (shouldAutoScroll) {
             container.scrollTop = container.scrollHeight;
@@ -2604,6 +2648,413 @@ window.modWorkplace = {
             outputArray[i] = rawData.charCodeAt(i);
         }
         return outputArray;
+    },
+
+    // ========================================================
+    // 23. TÁC VỤ CẢM ỨNG (LONG-PRESS ZALO) & MENU TÁC VỤ THÔNG MINH
+    // ========================================================
+    selectedActionMsgId: null,
+    _cachedActions: [],
+
+    attachMessageTouchHandlers: function() {
+        const stream = document.getElementById('wp-message-stream');
+        if (!stream || stream._hasTouchLongPressAttached) return;
+        stream._hasTouchLongPressAttached = true;
+
+        let touchTimer = null;
+        let startX = 0;
+        let startY = 0;
+        let activeMsgId = null;
+        let activeBubble = null;
+
+        // Bắt đầu chạm ngón tay
+        stream.addEventListener('touchstart', (e) => {
+            const bubble = e.target.closest('[data-wp-msg-bubble]');
+            if (!bubble) return;
+
+            // Bỏ qua nếu bấm vào nút phát audio hoặc nút bấm chức năng bên trong
+            if (e.target.closest('button') || e.target.closest('a')) return;
+
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            activeMsgId = parseInt(bubble.getAttribute('data-wp-msg-bubble'), 10);
+            activeBubble = bubble;
+
+            if (touchTimer) clearTimeout(touchTimer);
+            touchTimer = setTimeout(() => {
+                if (activeMsgId && activeBubble) {
+                    if (navigator.vibrate) {
+                        try { navigator.vibrate(40); } catch(e) {}
+                    }
+                    window.modWorkplace.openMessageActions(activeMsgId, activeBubble);
+                }
+            }, 380); // 380ms để nhận diện dí cảm ứng
+        }, { passive: true });
+
+        // Di chuyển ngón tay (cuộn trang) -> Hủy ngay lập tức để người dùng cuộn mượt mà
+        stream.addEventListener('touchmove', (e) => {
+            if (!touchTimer) return;
+            const touch = e.touches[0];
+            const moveX = Math.abs(touch.clientX - startX);
+            const moveY = Math.abs(touch.clientY - startY);
+            if (moveX > 8 || moveY > 8) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        }, { passive: true });
+
+        // Nhấc ngón tay hoặc hủy chạm
+        const cancelTouch = () => {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        };
+        stream.addEventListener('touchend', cancelTouch, { passive: true });
+        stream.addEventListener('touchcancel', cancelTouch, { passive: true });
+
+        // Chặn context menu mặc định trên mobile để mở action sheet
+        stream.addEventListener('contextmenu', (e) => {
+            const bubble = e.target.closest('[data-wp-msg-bubble]');
+            if (bubble) {
+                e.preventDefault();
+                const msgId = parseInt(bubble.getAttribute('data-wp-msg-bubble'), 10);
+                if (msgId) {
+                    window.modWorkplace.openMessageActions(msgId, bubble);
+                }
+            }
+        });
+
+        // Đóng popover desktop khi click ra ngoài
+        document.addEventListener('click', (e) => {
+            const popover = document.getElementById('wp-popover-message-actions');
+            if (popover && !popover.classList.contains('hidden')) {
+                if (!popover.contains(e.target) && !e.target.closest('button[title="Xem thêm tác vụ"]')) {
+                    window.modWorkplace.closeMessageActions();
+                }
+            }
+        });
+    },
+
+    openMessageActions: function(msgId, triggerEl) {
+        const msg = this.messages.find(m => m.id === msgId);
+        if (!msg || msg.is_recalled) return;
+
+        this.selectedActionMsgId = msgId;
+
+        const currentUserId = this.currentUser ? this.currentUser.id : -1;
+        const isMe = msg.sender_id === currentUserId;
+        const msgAgeMinutes = (Date.now() - new Date(msg.created_at).getTime()) / 60000;
+        const canEditOrRecall = isMe && (this.isAdmin || msgAgeMinutes <= 15);
+        const isVoice = msg.message_type === 'VOICE' || (msg.attachments && msg.attachments.some(a => a.type && a.type.startsWith('audio')));
+        const hasMedia = (msg.attachments && msg.attachments.length > 0) || isVoice;
+        const hasImages = msg.attachments && msg.attachments.some(a => a.type && a.type.startsWith('image'));
+        const hasUrls = msg.content && /https?:\/\/[^\s]+/i.test(msg.content);
+
+        // Chuẩn bị danh sách các tác vụ thông minh
+        const actions = [];
+
+        // 1. Trả lời
+        actions.push({
+            id: 'reply',
+            icon: 'fas fa-reply',
+            color: 'text-purple-600 bg-purple-50',
+            label: 'Trả lời',
+            run: () => this.setReplyTarget(msgId)
+        });
+
+        // 2. Sao chép
+        if (msg.content) {
+            actions.push({
+                id: 'copy',
+                icon: 'fas fa-copy',
+                color: 'text-blue-600 bg-blue-50',
+                label: 'Sao chép',
+                run: () => this.copyMessage(msgId)
+            });
+        }
+
+        // 3. Tải ảnh / Tải media
+        if (hasMedia) {
+            actions.push({
+                id: 'download',
+                icon: 'fas fa-cloud-download-alt',
+                color: 'text-emerald-600 bg-emerald-50',
+                label: hasImages ? 'Tải ảnh' : 'Tải media',
+                run: () => this.downloadMessageMedia(msgId)
+            });
+        }
+
+        // 4. Đọc tin nhắn (Text-to-Speech)
+        if (msg.content && !isVoice) {
+            actions.push({
+                id: 'speak',
+                icon: 'fas fa-volume-up',
+                color: 'text-amber-600 bg-amber-50',
+                label: 'Đọc văn bản',
+                run: () => this.speakMessageText(msgId)
+            });
+        }
+
+        // 5. Mở liên kết nhanh
+        if (hasUrls) {
+            actions.push({
+                id: 'open_url',
+                icon: 'fas fa-external-link-alt',
+                color: 'text-cyan-600 bg-cyan-50',
+                label: 'Mở link',
+                run: () => this.openMessageLink(msgId)
+            });
+        }
+
+        // 6. Ghim / Bỏ ghim tin nhắn
+        if (this.isAdmin && this.activeType === 'CHANNEL') {
+            actions.push({
+                id: 'pin',
+                icon: 'fas fa-thumbtack',
+                color: 'text-orange-600 bg-orange-50',
+                label: msg.is_pinned ? 'Bỏ ghim' : 'Ghim tin',
+                run: () => this.togglePinMessage(msgId)
+            });
+        }
+
+        // 7. Chỉnh sửa tin nhắn (15 phút)
+        if (canEditOrRecall && !isVoice) {
+            actions.push({
+                id: 'edit',
+                icon: 'fas fa-pencil-alt',
+                color: 'text-indigo-600 bg-indigo-50',
+                label: 'Chỉnh sửa',
+                run: () => this.openEditModal(msgId)
+            });
+        }
+
+        // 8. Thu hồi tin nhắn (15 phút)
+        if (canEditOrRecall) {
+            actions.push({
+                id: 'recall',
+                icon: 'fas fa-undo-alt',
+                color: 'text-rose-600 bg-rose-50',
+                label: 'Thu hồi',
+                run: () => this.recallMessage(msgId)
+            });
+        }
+
+        // 9. Quản trị viên xóa tin
+        if (this.isAdmin && !canEditOrRecall) {
+            actions.push({
+                id: 'delete',
+                icon: 'fas fa-trash-alt',
+                color: 'text-red-600 bg-red-50',
+                label: 'Xóa tin',
+                run: () => this.deleteMessage(msgId)
+            });
+        }
+
+        // 10. Chi tiết tin nhắn
+        actions.push({
+            id: 'info',
+            icon: 'fas fa-info-circle',
+            color: 'text-slate-600 bg-slate-100',
+            label: 'Chi tiết',
+            run: () => this.showMessageInfo(msgId)
+        });
+
+        // Kiểm tra xem là màn hình Mobile hay Desktop
+        const isMobile = window.innerWidth < 768;
+
+        if (isMobile) {
+            // Hiển thị Action Sheet phong cách Zalo trên di động
+            const modal = document.getElementById('wp-modal-message-actions');
+            const senderEl = document.getElementById('wp-action-sheet-sender');
+            const snippetEl = document.getElementById('wp-action-sheet-snippet');
+            const gridEl = document.getElementById('wp-action-sheet-grid');
+
+            if (senderEl) senderEl.innerText = msg.sender_name || 'Đồng nghiệp';
+            if (snippetEl) {
+                let snippet = msg.content || '';
+                if (isVoice) snippet = '🎙️ [Tin nhắn thoại]';
+                else if (!snippet && hasMedia) snippet = '📎 [Tệp đính kèm]';
+                snippetEl.innerText = snippet.length > 50 ? snippet.substring(0, 50) + '...' : snippet;
+            }
+
+            if (gridEl) {
+                gridEl.innerHTML = actions.map(act => `
+                    <button type="button" onclick="window.modWorkplace.executeAction('${act.id}')" class="flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl bg-slate-50 hover:bg-amber-50 border border-slate-100 hover:border-amber-200 text-slate-700 transition active:scale-95 cursor-pointer group">
+                        <div class="w-10 h-10 rounded-xl ${act.color} shadow-2xs flex items-center justify-center text-base mb-1.5 group-hover:scale-110 transition">
+                            <i class="${act.icon}"></i>
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-800 text-center truncate max-w-full">${act.label}</span>
+                    </button>
+                `).join('');
+            }
+
+            this._cachedActions = actions;
+            if (modal) modal.classList.remove('hidden');
+
+        } else {
+            // Hiển thị Popover Menu cạnh nút "..." trên máy tính Desktop
+            const popover = document.getElementById('wp-popover-message-actions');
+            const listEl = document.getElementById('wp-popover-list');
+
+            if (listEl) {
+                listEl.innerHTML = actions.map(act => `
+                    <button type="button" onclick="window.modWorkplace.executeAction('${act.id}')" class="w-full px-3.5 py-2 text-left flex items-center gap-2.5 text-slate-700 hover:bg-amber-50 hover:text-amber-800 transition cursor-pointer text-xs font-semibold">
+                        <span class="w-5 text-center shrink-0"><i class="${act.icon}"></i></span>
+                        <span class="truncate">${act.label}</span>
+                    </button>
+                `).join('');
+            }
+
+            this._cachedActions = actions;
+
+            if (popover && triggerEl) {
+                popover.classList.remove('hidden');
+                const rect = triggerEl.getBoundingClientRect();
+                const popoverWidth = 192;
+                const popoverHeight = actions.length * 36 + 12;
+
+                let left = rect.left;
+                if (left + popoverWidth > window.innerWidth - 20) {
+                    left = rect.right - popoverWidth;
+                }
+
+                let top = rect.bottom + 6;
+                if (top + popoverHeight > window.innerHeight - 20) {
+                    top = rect.top - popoverHeight - 6;
+                }
+
+                popover.style.left = `${Math.max(10, left)}px`;
+                popover.style.top = `${Math.max(10, top)}px`;
+            }
+        }
+    },
+
+    executeAction: function(actionId) {
+        if (this._cachedActions) {
+            const act = this._cachedActions.find(a => a.id === actionId);
+            if (act && typeof act.run === 'function') {
+                act.run();
+            }
+        }
+        this.closeMessageActions();
+    },
+
+    closeMessageActions: function() {
+        const modal = document.getElementById('wp-modal-message-actions');
+        if (modal) modal.classList.add('hidden');
+
+        const popover = document.getElementById('wp-popover-message-actions');
+        if (popover) popover.classList.add('hidden');
+
+        this.selectedActionMsgId = null;
+    },
+
+    submitQuickReactionFromSheet: function(emoji) {
+        if (!this.selectedActionMsgId) return;
+        const msgId = this.selectedActionMsgId;
+        this.closeMessageActions();
+        this.quickReaction(msgId, emoji);
+    },
+
+    downloadMessageMedia: function(msgId) {
+        const msg = this.messages.find(m => m.id === msgId);
+        if (!msg) return;
+
+        let files = [];
+        if (msg.attachments && Array.isArray(msg.attachments)) {
+            files = msg.attachments;
+        }
+
+        if (files.length === 0 && msg.message_type === 'VOICE') {
+            files = [{ url: msg.content, name: 'voice_note.webm' }];
+        }
+
+        if (files.length === 0) {
+            if (window.showToast) window.showToast('Không tìm thấy file media trong tin nhắn này', 'error');
+            return;
+        }
+
+        files.forEach((f, idx) => {
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = f.url;
+                link.download = f.name || `media_download_${Date.now()}`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }, idx * 250);
+        });
+
+        if (window.showToast) window.showToast(`Đang tải ${files.length} tệp media về máy...`, 'success');
+    },
+
+    speakMessageText: function(msgId) {
+        const msg = this.messages.find(m => m.id === msgId);
+        if (!msg || !msg.content) return;
+
+        if (!('speechSynthesis' in window)) {
+            alert('Trình duyệt của bạn không hỗ trợ công nghệ đọc văn bản (Text-to-speech).');
+            return;
+        }
+
+        // Hủy bất kỳ đoạn thoại đang đọc dở
+        window.speechSynthesis.cancel();
+
+        // Lọc bỏ link url để đọc tự nhiên hơn
+        let text = msg.content.replace(/https?:\/\/[^\s]+/g, 'đường liên kết');
+        text = text.replace(/[*_~`]/g, '');
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'vi-VN';
+        utter.rate = 1.0;
+        utter.pitch = 1.0;
+
+        // Ưu tiên chọn giọng đọc tiếng Việt nếu có
+        const voices = window.speechSynthesis.getVoices();
+        const viVoice = voices.find(v => v.lang && (v.lang.includes('vi') || v.lang.includes('VI')));
+        if (viVoice) {
+            utter.voice = viVoice;
+        }
+
+        window.speechSynthesis.speak(utter);
+        if (window.showToast) window.showToast('🔊 Đang đọc nội dung tin nhắn...', 'info');
+    },
+
+    openMessageLink: function(msgId) {
+        const msg = this.messages.find(m => m.id === msgId);
+        if (!msg || !msg.content) return;
+
+        const match = msg.content.match(/https?:\/\/[^\s]+/);
+        if (match && match[0]) {
+            window.open(match[0], '_blank');
+        } else {
+            if (window.showToast) window.showToast('Không tìm thấy đường dẫn web trong tin nhắn', 'error');
+        }
+    },
+
+    showMessageInfo: function(msgId) {
+        const msg = this.messages.find(m => m.id === msgId);
+        if (!msg) return;
+
+        const dateStr = new Date(msg.created_at).toLocaleString('vi-VN');
+        const role = msg.sender_role ? ` (${msg.sender_role})` : '';
+        const editInfo = msg.is_edited ? '• Đã chỉnh sửa nội dung\n' : '';
+        const pinInfo = msg.is_pinned ? '• Đang được ghim trên kênh\n' : '';
+        
+        let reactionSummary = '';
+        if (msg.reactions && typeof msg.reactions === 'object') {
+            const counts = Object.entries(msg.reactions)
+                .map(([emoji, userIds]) => `${emoji} ${userIds.length}`)
+                .join('  ');
+            if (counts) reactionSummary = `• Biểu cảm: ${counts}\n`;
+        }
+
+        const info = `💬 CHI TIẾT TIN NHẮN (ID: ${msg.id})\n---------------------------\n• Người gửi: ${msg.sender_name}${role}\n• Thời gian gửi: ${dateStr}\n${editInfo}${pinInfo}${reactionSummary}• Độ dài: ${(msg.content || '').length} ký tự`;
+
+        alert(info);
     },
 
     // 16. Smart Polling (3.5s)
