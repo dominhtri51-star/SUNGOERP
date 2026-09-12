@@ -567,7 +567,7 @@ router.get('/messages', async (req, res) => {
                 messages,
                 pinned: pinnedMessage,
                 version: computedVersion,
-                expiresAt: now + 5000
+                expiresAt: now + 60 * 1000 // 60 giây RAM cache
             });
         }
 
