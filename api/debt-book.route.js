@@ -488,7 +488,7 @@ router.get('/partner/:id', async (req, res) => {
                 (o.total_amount - COALESCE(o.paid_amount, 0)) as remaining,
                 o.dispatched_at,
                 o.notes,
-                o.shipping_address,
+                COALESCE(o.customer_address, o.carrier_address, '') AS shipping_address,
                 COALESCE(e.full_name, o.sales_signed_name, 'Chưa gán') AS sales_name,
                 CASE 
                     WHEN (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED') OR o.dispatched_at IS NOT NULL) THEN true 
