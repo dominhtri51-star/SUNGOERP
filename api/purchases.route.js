@@ -458,42 +458,74 @@ router.get('/products/:productId/batches', async (req, res) => {
     }
 });
 
-// [DELETE] Xóa Đơn Mua Hàng (Chỉ cho phép xóa đơn nháp hoặc đã hủy)
+// [DELETE] Xóa Đơn Mua Hàng (Cho phép xóa tất cả các đơn kèm hoàn trả tồn kho và lô FIFO)
 router.delete('/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         if (!id) return res.status(400).json({ success: false, error: 'ID không hợp lệ' });
 
-        // Kiểm tra trạng thái đơn hàng trước khi xóa
-        let currentStatus = null;
+        // Lấy thông tin đơn mua hàng trước khi xóa
+        let currentPo = null;
         if (pool && typeof pool.query === 'function') {
-            const checkRes = await pool.query("SELECT status, po_code FROM purchases WHERE id = $1", [id]);
+            const checkRes = await pool.query("SELECT * FROM purchases WHERE id = $1", [id]);
             if (checkRes.rows.length > 0) {
-                currentStatus = checkRes.rows[0].status;
+                currentPo = formatPurchaseRow(checkRes.rows[0]);
             }
         }
-        if (!currentStatus) {
+        if (!currentPo) {
             let data = readFallbackDB();
             const found = data.find(x => Number(x.id) === Number(id));
-            if (found) currentStatus = found.status;
+            if (found) currentPo = found;
         }
 
-        if (currentStatus === 'Hoàn Tất Nhập Kho') {
-            return res.status(400).json({
-                success: false,
-                error: 'Không thể xóa đơn mua hàng đã Hoàn Tất Nhập Kho để đảm bảo tính toàn vẹn của tồn kho!'
-            });
+        if (!currentPo) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy Đơn mua hàng' });
         }
 
         if (pool && typeof pool.query === 'function') {
+            // Nếu đơn đã Hoàn Tất Nhập Kho, hoàn trả trừ lại số lượng tồn kho trong bảng products
+            if (currentPo.status === 'Hoàn Tất Nhập Kho' && currentPo.items && Array.isArray(currentPo.items)) {
+                for (const it of currentPo.items) {
+                    const pId = parseInt(it.product_id || it.id);
+                    const qty = parseFloat(it.actual_qty || it.qty) || 0;
+                    if (pId && qty > 0) {
+                        try {
+                            await pool.query(
+                                "UPDATE products SET stock_qty = GREATEST(0, stock_qty - $1) WHERE id = $2",
+                                [qty, pId]
+                            );
+                        } catch (stockErr) {
+                            console.error('Lỗi hoàn trả tồn kho khi xóa PO:', stockErr.message);
+                        }
+                    }
+                }
+            }
+
+            // Xóa các lô hàng FIFO gắn liền với PO
             await pool.query("DELETE FROM inventory_batches WHERE po_id = $1", [id]);
+            // Xóa đơn mua hàng
             await pool.query("DELETE FROM purchases WHERE id = $1", [id]);
+
+            // Tính toán lại giá vốn FIFO cho các sản phẩm liên quan
+            if (currentPo.items && Array.isArray(currentPo.items)) {
+                for (const it of currentPo.items) {
+                    const pId = parseInt(it.product_id || it.id);
+                    if (pId) {
+                        try {
+                            await fifoInventory.recalculateProductFifoCost(pool, pId);
+                        } catch (fifoErr) {
+                            console.error('Lỗi tính lại giá vốn FIFO:', fifoErr.message);
+                        }
+                    }
+                }
+            }
         }
+
         let data = readFallbackDB();
         data = data.filter(x => Number(x.id) !== Number(id));
         writeFallbackDB(data);
 
-        res.json({ success: true, message: 'Đã xóa Lệnh mua hàng thành công!' });
+        res.json({ success: true, message: `Đã xóa Lệnh mua hàng ${currentPo.po_code || id} thành công!` });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }

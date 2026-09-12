@@ -179,21 +179,25 @@
         </div>
 
         <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-3 pt-3 border-t shrink-0 gap-3">
-            <div id="pur-status-zone" class="hidden flex items-center gap-2">
+            <div id="pur-status-zone" class="hidden flex flex-wrap items-center gap-2">
                 <!-- Chọn trạng thái -->
-                <select id="p-status" onchange="window.modPurchase.quickUpdateStatus(this.value)" class="bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold py-2 px-3 rounded-lg outline-none focus:border-emerald-500 cursor-pointer">
-                    <option value="Chờ Duyệt">Chờ Duyệt</option>
-                    <option value="Đã Duyệt - Đợi Giao">Đã Duyệt - Đợi Giao</option>
-                    <option value="Đang Vận Chuyển">Đang Vận Chuyển</option>
-                    <option value="Đã Hủy">Đã Hủy</option>
-                </select>
-                <!-- Trạng thái bị khóa -->
-                <div id="p-status-locked" class="hidden text-emerald-700 font-bold bg-emerald-100 border border-emerald-300 py-2 px-3 rounded-lg text-xs shadow-inner">
-                    <i class="fas fa-lock mr-1"></i> Đã Nhập Kho (Khóa bởi WMS)
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-slate-500">Trạng thái:</span>
+                    <select id="p-status" onchange="window.modPurchase.quickUpdateStatus(this.value)" class="bg-slate-100 border border-slate-300 text-slate-800 text-xs font-bold py-2 px-3 rounded-lg outline-none focus:border-emerald-500 cursor-pointer">
+                        <option value="Chờ Duyệt">Chờ Duyệt</option>
+                        <option value="Đã Duyệt - Đợi Giao">Đã Duyệt - Đợi Giao</option>
+                        <option value="Đang Vận Chuyển">Đang Vận Chuyển</option>
+                        <option value="Hoàn Tất Nhập Kho">Hoàn Tất Nhập Kho</option>
+                        <option value="Đã Hủy">Đã Hủy</option>
+                    </select>
+                </div>
+                <!-- Thông báo nhắc nhở khi đã nhập kho -->
+                <div id="pur-wms-notice" class="hidden text-amber-800 font-semibold bg-amber-50 border border-amber-200 py-1 px-2.5 rounded-lg text-[11px] flex items-center gap-1">
+                    <i class="fas fa-exclamation-circle text-amber-600"></i> Đơn đã nhập kho (WMS) - Cho phép sửa hoặc xóa
                 </div>
             </div>
             <div class="flex items-center gap-2 ml-auto">
-                <button id="btn-delete-pur-modal" onclick="window.modPurchase.deleteCurrentPO()" class="hidden px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold transition text-xs flex items-center gap-1.5 cursor-pointer">
+                <button id="btn-delete-pur-modal" onclick="window.modPurchase.deleteCurrentPO()" class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold transition text-xs flex items-center gap-1.5 cursor-pointer" title="Xóa đơn mua hàng này">
                     <i class="fas fa-trash-alt"></i> Xóa đơn
                 </button>
                 <button onclick="document.getElementById('purchase-form-modal').classList.replace('flex', 'hidden')" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition text-xs cursor-pointer">Hủy</button>
@@ -201,6 +205,68 @@
                     <i class="fas fa-save"></i> Lưu Đơn Đặt Hàng
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CẢNH BÁO XÁC NHẬN XÓA ĐƠN MUA HÀNG -->
+<div id="modal-confirm-delete-po" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4" style="z-index: 9999;">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in duration-150">
+        <!-- Header cảnh báo đỏ -->
+        <div class="bg-red-50 border-b border-red-100 p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0 text-lg shadow-inner">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-black text-red-800 uppercase tracking-wide">Cảnh Báo Xác Nhận Xóa Đơn Mua</h3>
+                <p class="text-[11px] text-red-600 font-medium">Hành động này sẽ xóa đơn khỏi hệ thống</p>
+            </div>
+            <button onclick="window.modPurchase.closeDeleteModal()" class="ml-auto text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Nội dung thông tin đơn cần xóa -->
+        <div class="p-4.5 space-y-3 text-xs">
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-medium">Mã đơn mua hàng:</span>
+                    <span id="del-po-code" class="font-mono font-black text-slate-900 text-sm">PO-DOM-xxxx</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-medium">Nhà cung cấp:</span>
+                    <span id="del-po-supplier" class="font-bold text-slate-800 truncate max-w-[200px]">---</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-medium">Trạng thái hiện tại:</span>
+                    <span id="del-po-status" class="px-2 py-0.5 rounded font-black text-[10px] bg-slate-200 text-slate-700">---</span>
+                </div>
+                <div class="flex justify-between items-center pt-1 border-t border-slate-200">
+                    <span class="text-slate-500 font-medium">Tổng giá trị đơn:</span>
+                    <span id="del-po-amount" class="font-black text-emerald-700 text-sm">0 đ</span>
+                </div>
+            </div>
+
+            <!-- Cảnh báo quan trọng -->
+            <div class="bg-rose-50/80 border border-rose-200 rounded-xl p-3 text-[11.5px] text-rose-800 space-y-1 leading-relaxed">
+                <p class="font-bold flex items-center gap-1.5 text-rose-700">
+                    <i class="fas fa-shield-halved"></i> Cảnh báo hệ thống:
+                </p>
+                <p>• Đơn mua hàng sẽ bị <strong>xóa hoàn toàn</strong> khỏi danh sách và sổ theo dõi công nợ.</p>
+                <p id="del-po-wms-warning" class="hidden text-rose-900 font-semibold">• Đơn này đã nhập kho: Hệ thống sẽ tự động <strong>thu hồi/trừ số lượng tồn kho</strong> tương ứng và xóa bỏ các lô hàng FIFO liên quan.</p>
+            </div>
+
+            <p class="text-slate-600 font-semibold text-center text-xs">Bạn có chắc chắn muốn xóa đơn mua hàng này?</p>
+        </div>
+
+        <!-- Nút hành động -->
+        <div class="bg-slate-50 px-4.5 py-3 border-t border-slate-200 flex items-center justify-end gap-2.5">
+            <button type="button" onclick="window.modPurchase.closeDeleteModal()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl font-bold text-xs transition cursor-pointer">
+                Hủy Bỏ
+            </button>
+            <button id="btn-execute-delete-po" type="button" onclick="window.modPurchase.executeDeletePO()" class="px-4.5 py-2 bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded-xl font-black text-xs transition shadow-md flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-trash-alt"></i> Xác Nhận Xóa Vĩnh Viễn
+            </button>
         </div>
     </div>
 </div>
@@ -251,39 +317,92 @@
             } catch (e) { console.error("Lỗi tải danh mục:", e); }
         },
 
-        isDeletable: (status) => {
-            if (!status) return true;
-            const s = String(status).trim().toLowerCase();
-            return s === 'chờ duyệt' || s === 'đã hủy' || s === 'đã huỷ' || s === 'draft' || s === 'cancelled' || s === 'canceled';
-        },
+        isDeletable: () => true,
 
-        deletePO: async (id, poCode) => {
+        pendingDeleteId: null,
+
+        deletePO: (id, poCode) => {
             const item = window.modPurchase.list.find(x => Number(x.id) === Number(id));
-            const code = poCode || (item ? item.po_code : ('#' + id));
+            if (!item) return;
+            window.modPurchase.pendingDeleteId = id;
 
-            if (item && !window.modPurchase.isDeletable(item.status)) {
-                alert('⚠️ Không thể xóa đơn mua hàng ở trạng thái "' + item.status + '"!\nChỉ có thể xóa đơn ở trạng thái Đã Hủy hoặc Chờ Duyệt (nháp).');
-                return;
+            // Đổ dữ liệu vào modal xác nhận
+            const codeEl = document.getElementById('del-po-code');
+            const supEl = document.getElementById('del-po-supplier');
+            const stEl = document.getElementById('del-po-status');
+            const amtEl = document.getElementById('del-po-amount');
+            const wmsWarn = document.getElementById('del-po-wms-warning');
+
+            if (codeEl) codeEl.innerText = item.po_code || ('#' + id);
+            if (supEl) supEl.innerText = item.supplier_name || 'Chưa chọn NCC';
+            if (stEl) {
+                stEl.innerText = item.status || 'Chờ Duyệt';
+                stEl.className = 'px-2 py-0.5 rounded font-black text-[10px] ' + 
+                    (item.status === 'Hoàn Tất Nhập Kho' ? 'bg-emerald-100 text-emerald-800' :
+                     item.status === 'Đã Duyệt - Đợi Giao' ? 'bg-blue-100 text-blue-800' :
+                     item.status === 'Đang Vận Chuyển' ? 'bg-amber-100 text-amber-800' :
+                     item.status === 'Đã Hủy' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700');
+            }
+            if (amtEl) {
+                const tot = parseFloat(item.total_cost || item.items_amount || item.total_amount) || 0;
+                amtEl.innerText = window.modPurchase.fmt(tot) + ' đ';
             }
 
-            if (!confirm(`⚠️ XÁC NHẬN XÓA ĐƠN MUA HÀNG: ${code}?\n\nThao tác này sẽ xóa vĩnh viễn đơn mua hàng khỏi hệ thống và không thể hoàn tác.`)) {
-                return;
+            if (wmsWarn) {
+                if (item.status === 'Hoàn Tất Nhập Kho') {
+                    wmsWarn.classList.remove('hidden');
+                } else {
+                    wmsWarn.classList.add('hidden');
+                }
+            }
+
+            const modal = document.getElementById('modal-confirm-delete-po');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        },
+
+        closeDeleteModal: () => {
+            window.modPurchase.pendingDeleteId = null;
+            const modal = document.getElementById('modal-confirm-delete-po');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        },
+
+        executeDeletePO: async () => {
+            const id = window.modPurchase.pendingDeleteId;
+            if (!id) return;
+
+            const btn = document.getElementById('btn-execute-delete-po');
+            const origHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xóa...';
             }
 
             try {
                 const res = await fetch(`/api/purchases/${id}`, { method: 'DELETE' });
                 const data = await res.json();
                 if (data.success) {
+                    window.modPurchase.closeDeleteModal();
                     if (Number(window.modPurchase.editId) === Number(id)) {
                         document.getElementById('purchase-form-modal').classList.replace('flex', 'hidden');
                     }
                     await window.modPurchase.load();
-                    alert('✅ Đã xóa đơn mua hàng ' + code + ' thành công!');
+                    alert('✅ Đã xóa đơn mua hàng thành công!');
                 } else {
                     alert('❌ Lỗi: ' + (data.error || 'Không thể xóa đơn'));
                 }
             } catch (e) {
                 alert('❌ Mất kết nối server: ' + e.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
             }
         },
 
@@ -388,11 +507,9 @@
                                     <button onclick="window.modPurchase.openEdit(${i.id})" class="bg-white hover:bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold transition shadow-2xs border text-xs flex items-center gap-1 cursor-pointer">
                                         <i class="fas fa-edit text-emerald-500"></i> Xem / Sửa
                                     </button>
-                                    ${canDelete ? `
-                                    <button onclick="window.modPurchase.deletePO(${i.id}, '${i.po_code}')" class="bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 px-2 py-1 rounded-lg font-bold transition shadow-2xs text-xs flex items-center gap-1 cursor-pointer" title="Xóa đơn ${i.status}">
+                                    <button onclick="window.modPurchase.deletePO(${i.id}, '${i.po_code}')" class="bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 px-2.5 py-1 rounded-lg font-bold transition shadow-2xs text-xs flex items-center gap-1 cursor-pointer" title="Xóa đơn ${i.po_code}">
                                         <i class="fas fa-trash-alt"></i> Xóa
                                     </button>
-                                    ` : ''}
                                 </div>
                             </td>
                         </tr>
@@ -445,11 +562,9 @@
                         </div>
 
                         <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
-                            ${canDelete ? `
                             <button type="button" onclick="window.modPurchase.deletePO(${i.id}, '${i.po_code}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer">
                                 <i class="fas fa-trash-alt text-red-500"></i> Xóa đơn
                             </button>
-                            ` : ''}
                             <button type="button" onclick="window.modPurchase.openEdit(${i.id})" class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer">
                                 <i class="fas fa-edit text-emerald-600"></i> Xem Chi Tiết / Sửa
                             </button>
@@ -557,29 +672,23 @@
             
             document.getElementById('pur-status-zone').classList.remove('hidden');
             
-            // LOGIC BẢO VỆ DỮ LIỆU ĐÃ NHẬP KHO
+            // TRẠNG THÁI ĐƠN MUA HÀNG - CHO PHÉP CHỈNH SỬA & XÓA TẤT CẢ CÁC ĐƠN
             const selectStatus = document.getElementById('p-status');
-            const lockedStatus = document.getElementById('p-status-locked');
             const delBtn = document.getElementById('btn-delete-pur-modal');
+            const saveBtn = document.getElementById('btn-save-pur');
+            const wmsNotice = document.getElementById('pur-wms-notice');
             
-            if (item.status === 'Hoàn Tất Nhập Kho') {
-                selectStatus.classList.add('hidden');
-                lockedStatus.classList.remove('hidden');
-                // Ẩn nút Lưu để ngăn chặn việc sửa chữa số lượng sau khi kho đã chốt
-                document.getElementById('btn-save-pur').classList.add('hidden'); 
-                if (delBtn) delBtn.classList.add('hidden');
-            } else {
+            if (selectStatus) {
                 selectStatus.classList.remove('hidden');
-                lockedStatus.classList.add('hidden');
                 selectStatus.value = item.status || 'Chờ Duyệt';
-                document.getElementById('btn-save-pur').classList.remove('hidden');
-                if (delBtn) {
-                    if (window.modPurchase.isDeletable(item.status)) {
-                        delBtn.classList.remove('hidden');
-                    } else {
-                        delBtn.classList.add('hidden');
-                    }
-                }
+            }
+            if (saveBtn) saveBtn.classList.remove('hidden');
+            if (delBtn) delBtn.classList.remove('hidden');
+
+            if (item.status === 'Hoàn Tất Nhập Kho') {
+                if (wmsNotice) wmsNotice.classList.remove('hidden');
+            } else {
+                if (wmsNotice) wmsNotice.classList.add('hidden');
             }
             
             window.modPurchase.currentItems = item.items ? JSON.parse(JSON.stringify(item.items)) : [];
@@ -792,12 +901,11 @@
                 const item = window.modPurchase.list.find(x => Number(x.id) === Number(id));
                 if (item) item.status = newStatus;
                 const delBtn = document.getElementById('btn-delete-pur-modal');
-                if (delBtn) {
-                    if (window.modPurchase.isDeletable(newStatus)) {
-                        delBtn.classList.remove('hidden');
-                    } else {
-                        delBtn.classList.add('hidden');
-                    }
+                if (delBtn) delBtn.classList.remove('hidden');
+                const wmsNotice = document.getElementById('pur-wms-notice');
+                if (wmsNotice) {
+                    if (newStatus === 'Hoàn Tất Nhập Kho') wmsNotice.classList.remove('hidden');
+                    else wmsNotice.classList.add('hidden');
                 }
                 window.modPurchase.load();
             } catch(e) {}
