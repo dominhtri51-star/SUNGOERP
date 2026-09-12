@@ -56,8 +56,16 @@
         </div>
 
         <div class="w-full p-2.5 sm:p-4 md:p-6 max-w-6xl mx-auto space-y-4 pb-36 sm:pb-12">
-            <!-- Thống kê tổng quan -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
+            <!-- Thống kê tổng quan 4 chỉ số chuẩn mực kế toán -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-amber-200 shadow-2xs flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black shrink-0"><i class="fas fa-history"></i></div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider truncate">Nợ Đầu Kỳ (Chốt Cũ)</p>
+                        <p id="detail-opening-debt" class="font-black text-amber-700 text-base sm:text-lg truncate">0 đ</p>
+                        <p id="detail-opening-date" class="text-[9.5px] text-slate-400 truncate"></p>
+                    </div>
+                </div>
                 <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-blue-200 shadow-2xs flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shrink-0"><i class="fas fa-boxes"></i></div>
                     <div class="min-w-0"><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Phát Sinh Nợ (Tiền Hàng)</p><p id="detail-total-payable" class="font-black text-slate-800 text-base sm:text-lg truncate">0 đ</p></div>
@@ -92,11 +100,6 @@
                         <tbody id="detail-ledger" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-    </div>             </thead>
-                    <tbody id="detail-ledger" class="divide-y divide-slate-100"></tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -231,6 +234,7 @@ window.modSupplier = {
                         <td class="p-4">
                             <p class="font-bold text-blue-700 text-sm hover:underline">${i.name}</p>
                             <p class="text-[10px] text-slate-400 font-mono mt-0.5">Mã: ${i.supplier_code} | MST: ${i.tax_code || '---'}</p>
+                            ${Number(i.opening_debt) > 0 ? `<div class="mt-1"><span class="inline-flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shadow-2xs"><i class="fas fa-history text-amber-600"></i> Nợ ĐK: ${window.modSupplier.fmtMoney(i.opening_debt)} đ</span></div>` : ''}
                         </td>
                         <td class="p-4 text-xs">
                             <p class="font-medium text-slate-700"><i class="fas fa-phone text-slate-400 w-4"></i> ${i.phone || '---'}</p>
@@ -258,6 +262,7 @@ window.modSupplier = {
                                 <div class="min-w-0">
                                     <h4 class="font-black text-blue-700 text-xs sm:text-sm leading-tight hover:underline">${i.name}</h4>
                                     <p class="text-[10px] text-slate-400 font-mono mt-0.5">Mã: ${i.supplier_code} ${i.tax_code ? '| MST: ' + i.tax_code : ''}</p>
+                                    ${Number(i.opening_debt) > 0 ? `<div class="mt-1"><span class="inline-flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shadow-2xs"><i class="fas fa-history text-amber-600"></i> Nợ ĐK: ${window.modSupplier.fmtMoney(i.opening_debt)} đ</span></div>` : ''}
                                 </div>
                                 <span class="bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md text-[10px] font-black shrink-0">
                                     Nợ ${i.debt_days || 0} ngày
@@ -366,8 +371,18 @@ window.modSupplier = {
         const sup = window.modSupplier.list.find(x => x.id === id);
         if(!sup) return;
 
+        const openingDebt = parseFloat(sup.opening_debt || 0);
+        const openingDateStr = sup.opening_debt_date ? new Date(sup.opening_debt_date).toLocaleDateString('vi-VN') : '';
+        const openingNote = sup.opening_debt_note || 'Dư nợ từ trước khi sử dụng phần mềm';
+
         document.getElementById('detail-sup-name').innerText = sup.name;
-        document.getElementById('detail-terms').innerText = `(Chính sách nợ: ${sup.debt_days || 0} ngày)`;
+        document.getElementById('detail-terms').innerText = `(Chính sách nợ: ${sup.debt_days || 0} ngày${openingDebt > 0 ? ` • Nợ đầu kỳ: ${window.modSupplier.fmtMoney(openingDebt)} đ` : ''})`;
+
+        // Cập nhật thẻ Nợ Đầu Kỳ
+        const elOpDebt = document.getElementById('detail-opening-debt');
+        const elOpDate = document.getElementById('detail-opening-date');
+        if (elOpDebt) elOpDebt.innerText = window.modSupplier.fmtMoney(openingDebt) + ' đ';
+        if (elOpDate) elOpDate.innerText = openingDateStr ? `Chốt ngày: ${openingDateStr}` : (openingDebt > 0 ? 'Chốt ban đầu' : 'Không có nợ cũ');
         
         const tbody = document.getElementById('detail-ledger');
         tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-slate-400 text-2xl"></i></td></tr>';
@@ -394,12 +409,30 @@ window.modSupplier = {
                 let totalPaid = 0;
                 let ledger = [];
 
+                // Đưa Dư Nợ Đầu Kỳ vào Sổ nếu có
+                if (openingDebt > 0) {
+                    const parsedOpeningDate = sup.opening_debt_date ? new Date(sup.opening_debt_date) : new Date('2020-01-01');
+                    ledger.push({
+                        date: parsedOpeningDate,
+                        dateDisplay: openingDateStr || parsedOpeningDate.toLocaleDateString('vi-VN'),
+                        isOpening: true,
+                        type: 'OPENING',
+                        code: `<span class="inline-flex items-center gap-1 text-amber-800 font-black bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded text-[11px]"><i class="fas fa-history"></i> DƯ NỢ ĐẦU KỲ</span>`,
+                        desc: `<span class="text-amber-900 font-bold">${openingNote}</span>`,
+                        increase: openingDebt,
+                        decrease: 0,
+                        status: '<span class="text-amber-700 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-[10px]">Chốt Nợ Cũ</span>'
+                    });
+                }
+
                 // Đưa Đơn Mua Hàng vào Sổ
                 myPOs.forEach(po => {
                     if (po.status === 'Hoàn Tất Nhập Kho') {
                         totalPayable += (po.total_amount || 0);
                         ledger.push({
                             date: new Date(po.receive_date || po.updated_at || po.created_at),
+                            dateDisplay: new Date(po.receive_date || po.updated_at || po.created_at).toLocaleDateString('vi-VN'),
+                            isOpening: false,
                             type: 'PO',
                             code: `<span class="text-blue-600 font-bold"><i class="fas fa-file-import mr-1 text-slate-300"></i> ${po.po_code}</span>`,
                             desc: po.note || 'Nhập kho thiết bị / vật tư',
@@ -411,6 +444,8 @@ window.modSupplier = {
                         // Đơn chưa nhập kho, chỉ hiển thị thông tin, không cộng nợ
                         ledger.push({
                             date: new Date(po.created_at),
+                            dateDisplay: new Date(po.created_at).toLocaleDateString('vi-VN'),
+                            isOpening: false,
                             type: 'PO_PENDING',
                             code: `<span class="text-slate-400 font-bold"><i class="far fa-clock mr-1"></i> ${po.po_code}</span>`,
                             desc: po.note || 'Đang đặt hàng...',
@@ -426,6 +461,8 @@ window.modSupplier = {
                         totalPaid += (pay.amount || 0);
                         ledger.push({
                             date: new Date(pay.updated_at || pay.created_at),
+                            dateDisplay: new Date(pay.updated_at || pay.created_at).toLocaleDateString('vi-VN'),
+                            isOpening: false,
                             type: 'PAY',
                             code: `<span class="text-emerald-600 font-bold"><i class="fas fa-money-check-alt mr-1 text-slate-300"></i> ${pay.payment_code}</span>`,
                             desc: pay.note || 'Ủy nhiệm chi / Trả tiền hàng',
@@ -436,6 +473,8 @@ window.modSupplier = {
                     } else if (pay.status === 'Chờ Duyệt') {
                         ledger.push({
                             date: new Date(pay.created_at),
+                            dateDisplay: new Date(pay.created_at).toLocaleDateString('vi-VN'),
+                            isOpening: false,
                             type: 'PAY_PENDING',
                             code: `<span class="text-amber-500 font-bold"><i class="fas fa-hourglass-half mr-1"></i> ${pay.payment_code}</span>`,
                             desc: pay.note || 'Phiếu chi đang đợi sếp duyệt...',
@@ -445,32 +484,42 @@ window.modSupplier = {
                     }
                 });
 
-                // Sắp xếp theo ngày phát sinh
-                ledger.sort((a, b) => a.date - b.date);
+                // Sắp xếp: Dòng DƯ NỢ ĐẦU KỲ luôn ở trên cùng, các dòng sau xếp theo ngày phát sinh
+                ledger.sort((a, b) => {
+                    if (a.isOpening) return -1;
+                    if (b.isOpening) return 1;
+                    return a.date - b.date;
+                });
 
                 // Cập nhật giao diện Sổ Cái
                 if (ledger.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center font-bold text-slate-400">Chưa có phát sinh giao dịch nào</td></tr>';
                 } else {
                     tbody.innerHTML = ledger.map(item => {
-                        const incStr = item.increase > 0 ? `<span class="font-black text-red-500">+ ${window.modSupplier.fmtMoney(item.increase)}</span>` : '---';
+                        const incStr = item.increase > 0 ? `<span class="font-black ${item.isOpening ? 'text-amber-700' : 'text-red-500'}">+ ${window.modSupplier.fmtMoney(item.increase)}</span>` : '---';
                         const decStr = item.decrease > 0 ? `<span class="font-black text-emerald-600">- ${window.modSupplier.fmtMoney(item.decrease)}</span>` : '---';
-                        const rowClass = (item.type.includes('PENDING')) ? 'bg-slate-50 opacity-60' : 'hover:bg-blue-50/50';
+                        let rowClass = 'hover:bg-blue-50/50';
+                        if (item.isOpening) {
+                            rowClass = 'bg-amber-50/70 border-b-2 border-amber-200 font-medium';
+                        } else if (item.type && item.type.includes('PENDING')) {
+                            rowClass = 'bg-slate-50 opacity-60';
+                        }
 
                         return `
                         <tr class="${rowClass} transition border-b border-slate-50">
-                            <td class="p-3 text-[11px] font-mono text-slate-500 text-center">${item.date.toLocaleDateString('vi-VN')}</td>
+                            <td class="p-3 text-[11px] font-mono text-slate-500 text-center">${item.dateDisplay}</td>
                             <td class="p-3 text-xs">${item.code}</td>
                             <td class="p-3 text-xs italic text-slate-600">${item.desc}</td>
                             <td class="p-3 text-center text-[10px]">${item.status}</td>
-                            <td class="p-3 text-right bg-red-50/30">${incStr}</td>
+                            <td class="p-3 text-right ${item.isOpening ? 'bg-amber-100/40' : 'bg-red-50/30'}">${incStr}</td>
                             <td class="p-3 text-right bg-emerald-50/30">${decStr}</td>
                         </tr>`;
                     }).join('');
                 }
 
-                // Cập nhật thẻ Dashboard
-                let currentDebt = totalPayable - totalPaid;
+                // Cập nhật thẻ Dashboard theo nguyên tắc vàng kế toán
+                // Dư nợ cuối kỳ = Nợ đầu kỳ + Phát sinh Nợ (Mua hàng) - Phát sinh Có (Đã trả)
+                let currentDebt = openingDebt + totalPayable - totalPaid;
                 document.getElementById('detail-total-payable').innerText = window.modSupplier.fmtMoney(totalPayable) + ' đ';
                 document.getElementById('detail-total-paid').innerText = window.modSupplier.fmtMoney(totalPaid) + ' đ';
                 document.getElementById('detail-current-debt').innerText = window.modSupplier.fmtMoney(currentDebt > 0 ? currentDebt : 0) + ' đ';
