@@ -573,8 +573,8 @@ router.delete('/:id', async (req, res) => {
                         await pool.query(`
                             UPDATE customers 
                             SET 
-                                current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
-                                total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                                current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED')),
+                                total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED'))
                             WHERE id = $1
                         `, [custId]);
                     } catch (custErr) {}

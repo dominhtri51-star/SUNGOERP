@@ -14,13 +14,15 @@ function getAvatarInitials(name) {
 
 // Hàm tính toán số dư thực tế của khách hàng (Orders + Debt Transactions)
 async function calculatePartnerBalance(client, customerId) {
-    // 1. Tổng tiền đơn hàng bán (phát sinh nợ phải thu)
+    // 1. Tổng tiền đơn hàng bán (phát sinh nợ phải thu - chỉ tính đơn có lệnh xuất kho / đã xuất kho)
     const ordRes = await client.query(`
         SELECT 
             COALESCE(SUM(total_amount), 0) as total_sales,
             COALESCE(SUM(paid_amount), 0) as total_order_paid
         FROM orders 
-        WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+        WHERE customer_id = $1 
+          AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+          AND status NOT IN ('CANCELLED', 'RETURNED')
     `, [customerId]);
     const totalSales = parseFloat(ordRes.rows[0]?.total_sales || 0);
 
@@ -40,6 +42,7 @@ async function calculatePartnerBalance(client, customerId) {
         SELECT COALESCE(SUM(o.paid_amount), 0) as initial_paid
         FROM orders o
         WHERE o.customer_id = $1 
+          AND (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR o.dispatched_at IS NOT NULL)
           AND o.status NOT IN ('CANCELLED', 'RETURNED')
           AND o.id NOT IN (SELECT order_id FROM debt_transactions WHERE order_id IS NOT NULL AND customer_id = $1)
     `, [customerId]);
@@ -62,7 +65,9 @@ router.get('/summary', async (req, res) => {
                     COALESCE(SUM(total_amount), 0) as total_orders,
                     COALESCE(SUM(paid_amount), 0) as order_paid
                 FROM orders 
-                WHERE status NOT IN ('CANCELLED', 'RETURNED') AND customer_id IS NOT NULL
+                WHERE (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                  AND status NOT IN ('CANCELLED', 'RETURNED') 
+                  AND customer_id IS NOT NULL
                 GROUP BY customer_id
             ),
             partner_tx AS (
@@ -79,7 +84,8 @@ router.get('/summary', async (req, res) => {
                     o.customer_id,
                     COALESCE(SUM(o.paid_amount), 0) as unlinked_paid
                 FROM orders o
-                WHERE o.status NOT IN ('CANCELLED', 'RETURNED') 
+                WHERE (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR o.dispatched_at IS NOT NULL)
+                  AND o.status NOT IN ('CANCELLED', 'RETURNED') 
                   AND o.customer_id IS NOT NULL
                   AND o.id NOT IN (SELECT order_id FROM debt_transactions WHERE order_id IS NOT NULL)
                 GROUP BY o.customer_id
@@ -161,7 +167,9 @@ router.get('/partners', async (req, res) => {
                     COUNT(id) as orders_count,
                     MAX(created_at) as latest_order_date
                 FROM orders 
-                WHERE status NOT IN ('CANCELLED', 'RETURNED') AND customer_id IS NOT NULL
+                WHERE (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                  AND status NOT IN ('CANCELLED', 'RETURNED') 
+                  AND customer_id IS NOT NULL
                 GROUP BY customer_id
             ),
             partner_tx AS (
@@ -180,7 +188,8 @@ router.get('/partners', async (req, res) => {
                     o.customer_id,
                     COALESCE(SUM(o.paid_amount), 0) as unlinked_paid
                 FROM orders o
-                WHERE o.status NOT IN ('CANCELLED', 'RETURNED') 
+                WHERE (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR o.dispatched_at IS NOT NULL)
+                  AND o.status NOT IN ('CANCELLED', 'RETURNED') 
                   AND o.customer_id IS NOT NULL
                   AND o.id NOT IN (SELECT order_id FROM debt_transactions WHERE order_id IS NOT NULL)
                 GROUP BY o.customer_id
@@ -299,14 +308,16 @@ router.get('/partner/:id', async (req, res) => {
         const cust = custRes.rows[0];
         cust.initials = getAvatarInitials(cust.name);
 
-        // 2. Lấy tất cả Đơn Hàng hợp lệ của khách
+        // 2. Lấy tất cả Đơn Hàng hợp lệ của khách (chỉ các đơn có lệnh xuất kho / đã xuất kho)
         const ordersRes = await pool.query(`
             SELECT 
                 id, order_code, total_amount, paid_amount, 
                 (total_amount - COALESCE(paid_amount, 0)) as remaining,
                 created_at, status, notes
             FROM orders 
-            WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+            WHERE customer_id = $1 
+              AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+              AND status NOT IN ('CANCELLED', 'RETURNED')
             ORDER BY created_at ASC
         `, [id]);
 
@@ -603,7 +614,9 @@ router.put('/transaction/:id', async (req, res) => {
                 const paidOrders = await client.query(`
                     SELECT id, order_code, total_amount, paid_amount 
                     FROM orders 
-                    WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                    WHERE customer_id = $1 
+                      AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                      AND status NOT IN ('CANCELLED', 'RETURNED')
                       AND paid_amount > 0
                     ORDER BY created_at DESC FOR UPDATE
                 `, [custId]);
@@ -622,7 +635,9 @@ router.put('/transaction/:id', async (req, res) => {
                 const unpaidOrders = await client.query(`
                     SELECT id, order_code, total_amount, paid_amount 
                     FROM orders 
-                    WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                    WHERE customer_id = $1 
+                      AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                      AND status NOT IN ('CANCELLED', 'RETURNED')
                       AND (total_amount - COALESCE(paid_amount, 0)) > 0
                     ORDER BY created_at ASC FOR UPDATE
                 `, [custId]);
@@ -646,7 +661,9 @@ router.put('/transaction/:id', async (req, res) => {
                     const paidOrders = await client.query(`
                         SELECT id, order_code, total_amount, paid_amount 
                         FROM orders 
-                        WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                        WHERE customer_id = $1 
+                          AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                          AND status NOT IN ('CANCELLED', 'RETURNED')
                           AND paid_amount > 0
                         ORDER BY created_at DESC FOR UPDATE
                     `, [custId]);
@@ -664,7 +681,9 @@ router.put('/transaction/:id', async (req, res) => {
                     const unpaidOrders = await client.query(`
                         SELECT id, order_code, total_amount, paid_amount 
                         FROM orders 
-                        WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                        WHERE customer_id = $1 
+                          AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                          AND status NOT IN ('CANCELLED', 'RETURNED')
                           AND (total_amount - COALESCE(paid_amount, 0)) > 0
                         ORDER BY created_at ASC FOR UPDATE
                     `, [custId]);
@@ -788,7 +807,9 @@ router.delete('/transaction/:id', async (req, res) => {
             const paidOrders = await client.query(`
                 SELECT id, order_code, total_amount, paid_amount 
                 FROM orders 
-                WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                WHERE customer_id = $1 
+                  AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                  AND status NOT IN ('CANCELLED', 'RETURNED')
                   AND paid_amount > 0
                 ORDER BY created_at DESC FOR UPDATE
             `, [tx.customer_id]);

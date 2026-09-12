@@ -330,8 +330,8 @@ router.put('/:id/tier', async (req, res) => {
                 vip_level = $1, 
                 reward_points = $2,
                 debt_limit = $3,
-                current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $4 AND status NOT IN ('CANCELLED', 'RETURNED')),
-                total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $4 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $4 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED')),
+                total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $4 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED'))
             WHERE id = $4
         `, [tierVal, parseFloat(points) || 0, debtLimitVal, id]);
         

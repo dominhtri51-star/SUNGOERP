@@ -278,7 +278,7 @@ router.post('/', async (req, res) => {
             const custCheck = await client.query(`
                 SELECT id, name, full_name, 
                        COALESCE(debt_limit, 0) as debt_limit,
-                       COALESCE((SELECT SUM(total_amount - paid_amount) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as current_debt
+                       COALESCE((SELECT SUM(total_amount - paid_amount) FROM orders WHERE customer_id = $1 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED')), 0) as current_debt
                 FROM customers WHERE id = $1
             `, [customer_id]);
             
@@ -365,7 +365,9 @@ router.post('/', async (req, res) => {
                     SELECT COALESCE(SUM(total_amount - paid_amount), 0) as debt,
                            COALESCE(SUM(total_amount), 0) as sales
                     FROM orders 
-                    WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                    WHERE customer_id = $1 
+                      AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                      AND status NOT IN ('CANCELLED', 'RETURNED')
                 ) agg
                 WHERE id = $1
             `, [customer_id]);
@@ -715,7 +717,9 @@ router.put('/:id', async (req, res) => {
                     SELECT COALESCE(SUM(total_amount - paid_amount), 0) as debt,
                            COALESCE(SUM(total_amount), 0) as sales
                     FROM orders 
-                    WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                    WHERE customer_id = $1 
+                      AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                      AND status NOT IN ('CANCELLED', 'RETURNED')
                 ) agg
                 WHERE id = $1
             `, [cid]);
@@ -801,13 +805,13 @@ router.put('/:id/status', async (req, res) => {
             await pool.query("DELETE FROM cash_transactions WHERE order_id = $1 OR order_code = $2 OR notes LIKE $3", [orderId, orderCode, '%' + orderCode + '%']);
         }
         
-        // 4. Đồng bộ Công Nợ & Doanh Số về bảng customers
+        // 4. Đồng bộ Công Nợ & Doanh Số về bảng customers (chỉ các đơn đã xuất kho / có lệnh xuất)
         if (custId) {
             await pool.query(`
                 UPDATE customers 
                 SET 
-                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
-                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED')),
+                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED'))
                 WHERE id = $1
             `, [custId]);
         }
@@ -1682,13 +1686,13 @@ router.post('/bulk-delete', async (req, res) => {
             deletedIds.push(orderId);
         }
 
-        // 5. Đồng bộ lại công nợ & doanh số cho các khách hàng liên quan
+        // 5. Đồng bộ lại công nợ & doanh số cho các khách hàng liên quan (chỉ đơn có lệnh xuất)
         for (const custId of customerIdsToSync) {
             await client.query(`
                 UPDATE customers 
                 SET 
-                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
-                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED')),
+                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED'))
                 WHERE id = $1
             `, [custId]);
         }
@@ -1756,13 +1760,13 @@ router.delete('/:id/force', async (req, res) => {
         try { await pool.query('DELETE FROM return_orders WHERE order_id = $1', [orderId]); } catch(e) {}
         await pool.query('DELETE FROM orders WHERE id = $1', [orderId]);
 
-        // 3. Đồng bộ lại Công Nợ & Doanh Số về CRM Khách Hàng
+        // 3. Đồng bộ lại Công Nợ & Doanh Số về CRM Khách Hàng (chỉ đơn có lệnh xuất)
         if (custId) {
             await pool.query(`
                 UPDATE customers 
                 SET 
-                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED')),
-                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                    current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED')),
+                    total_sales = (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE customer_id = $1 AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED'))
                 WHERE id = $1
             `, [custId]);
         }

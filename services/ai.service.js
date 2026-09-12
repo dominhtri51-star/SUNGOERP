@@ -2912,9 +2912,9 @@ async function handleReportRevenue(text, context, user) {
             COUNT(id) AS total_orders,
             COALESCE(SUM(total_amount), 0) AS total_revenue,
             COALESCE(SUM(paid_amount), 0) AS total_paid,
-            COALESCE(SUM(total_amount - paid_amount), 0) AS total_receivable
+            COALESCE(SUM(CASE WHEN (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) THEN (total_amount - paid_amount) ELSE 0 END), 0) AS total_receivable
         FROM orders 
-        WHERE status NOT IN ('CANCELLED') AND ${dateFilter} ${userFilter}
+        WHERE status NOT IN ('CANCELLED', 'RETURNED') AND ${dateFilter} ${userFilter}
     `;
 
     const res = await pool.query(query, params);

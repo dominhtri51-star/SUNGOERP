@@ -64,7 +64,9 @@ router.post('/evaluate', async (req, res) => {
             const dueRes = await client.query(`
                 SELECT COALESCE(SUM(total_amount), 0) AS total_due
                 FROM orders
-                WHERE TO_CHAR(created_at, 'YYYY-MM') = $1 AND status NOT IN ('CANCELLED', 'RETURNED')
+                WHERE TO_CHAR(created_at, 'YYYY-MM') = $1 
+                  AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) 
+                  AND status NOT IN ('CANCELLED', 'RETURNED')
             `, [period]);
             totalDue = parseFloat(dueRes.rows[0].total_due) || 100000000; // Mặc định 100tr nếu chưa có dữ liệu
 

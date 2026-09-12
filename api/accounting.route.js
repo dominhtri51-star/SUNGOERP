@@ -276,7 +276,13 @@ router.delete('/cash/:id', async (req, res) => {
             try {
                 await pool.query(`
                     UPDATE customers 
-                    SET current_debt = (SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM orders WHERE customer_id = $1 AND status NOT IN ('CANCELLED', 'RETURNED'))
+                    SET current_debt = (
+                        SELECT COALESCE(SUM(total_amount - paid_amount), 0) 
+                        FROM orders 
+                        WHERE customer_id = $1 
+                          AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                          AND status NOT IN ('CANCELLED', 'RETURNED')
+                    )
                     WHERE id = $1
                 `, [tx.customer_id]);
             } catch(e) {}
@@ -337,7 +343,8 @@ router.get('/receivables-aging', async (req, res) => {
             FROM orders o
             LEFT JOIN customers c ON (o.customer_id = c.id OR (o.customer_id IS NULL AND (c.name = o.customer_name OR c.full_name = o.customer_name)))
             LEFT JOIN partner_dt pdt ON (c.id = pdt.cust_id)
-            WHERE o.status NOT IN ('CANCELLED', 'RETURNED')
+            WHERE (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR o.dispatched_at IS NOT NULL)
+              AND o.status NOT IN ('CANCELLED', 'RETURNED')
             GROUP BY COALESCE(NULLIF(c.name, ''), NULLIF(c.full_name, ''), o.customer_name, 'Khách Vãng Lai')
             HAVING ((SUM(o.total_amount) + MAX(COALESCE(pdt.total_paid_out, 0))) - (SUM(COALESCE(o.paid_amount, 0)) + MAX(COALESCE(pdt.total_received, 0)))) > 0
             ORDER BY remaining_debt DESC
@@ -426,7 +433,8 @@ router.get('/debt-statement', async (req, res) => {
                    (o.total_amount - COALESCE(o.paid_amount, 0)) as remaining,
                    o.created_at, o.status, o.notes
             FROM orders o
-            WHERE o.status NOT IN ('CANCELLED', 'RETURNED')
+            WHERE (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR o.dispatched_at IS NOT NULL)
+              AND o.status NOT IN ('CANCELLED', 'RETURNED')
               AND (
                   ($1::int > 0 AND (o.customer_id = $1 OR o.customer_name IN (SELECT name FROM customers WHERE id = $1) OR o.customer_name IN (SELECT full_name FROM customers WHERE id = $1)))
                   OR ($2::text != '' AND (o.customer_name = $2 OR o.customer_name ILIKE $2))
@@ -753,11 +761,12 @@ router.post('/collect-debt', async (req, res) => {
                 remainingToApply -= apply;
             }
         } else {
-            // Thu nợ tổng thể: Trừ theo thứ tự đơn cũ nhất trước (FIFO)
+            // Thu nợ tổng thể: Trừ theo thứ tự đơn cũ nhất trước (FIFO) - chỉ các đơn đã xuất / có lệnh xuất
             let orderQuery = `
                 SELECT id, order_code, total_amount, paid_amount 
                 FROM orders 
-                WHERE status NOT IN ('CANCELLED', 'RETURNED')
+                WHERE (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                  AND status NOT IN ('CANCELLED', 'RETURNED')
                   AND (total_amount - COALESCE(paid_amount, 0)) > 0
             `;
             let params = [];
@@ -784,14 +793,16 @@ router.post('/collect-debt', async (req, res) => {
             }
         }
 
-        // 3. Cập nhật current_debt trong bảng customers
+        // 3. Cập nhật current_debt trong bảng customers (chỉ tính đơn có lệnh xuất kho)
         if (customer_id && parseInt(customer_id) > 0) {
             await client.query(`
                 UPDATE customers 
                 SET current_debt = (
                     SELECT COALESCE(SUM(total_amount - COALESCE(paid_amount, 0)), 0)
                     FROM orders 
-                    WHERE customer_id = customers.id AND status NOT IN ('CANCELLED', 'RETURNED')
+                    WHERE customer_id = customers.id 
+                      AND (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL)
+                      AND status NOT IN ('CANCELLED', 'RETURNED')
                 )
                 WHERE id = $1
             `, [customer_id]);
@@ -947,7 +958,8 @@ router.get('/financial-statement', async (req, res) => {
             FROM orders o
             LEFT JOIN order_items oi ON o.id = oi.order_id
             LEFT JOIN products p ON oi.product_id = p.id
-            WHERE o.status NOT IN ('CANCELLED', 'RETURNED')
+            WHERE (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR o.dispatched_at IS NOT NULL)
+              AND o.status NOT IN ('CANCELLED', 'RETURNED')
               AND o.created_at::text LIKE $1
             GROUP BY o.id
         `, [`${currentPeriod}%`]);
@@ -1039,7 +1051,7 @@ router.get('/financial-statement', async (req, res) => {
         // 6. Tổng hợp công nợ 131 & 331
         let ar131 = 0;
         try {
-            const arRes = await pool.query("SELECT COALESCE(SUM(total_amount - COALESCE(paid_amount,0)), 0) as ar FROM orders WHERE status NOT IN ('CANCELLED', 'RETURNED')");
+            const arRes = await pool.query("SELECT COALESCE(SUM(total_amount - COALESCE(paid_amount,0)), 0) as ar FROM orders WHERE (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED', 'COMPLETED') OR dispatched_at IS NOT NULL) AND status NOT IN ('CANCELLED', 'RETURNED')");
             ar131 = parseFloat(arRes.rows[0]?.ar || 0);
         } catch (e) {}
 
