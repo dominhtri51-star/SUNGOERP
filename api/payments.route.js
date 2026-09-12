@@ -90,8 +90,9 @@ router.get('/supplier-debts', async (req, res) => {
             );
             const totalPaid = supPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
 
-            // Dư nợ hiện tại
-            const currentDebt = Math.max(0, totalPurchased - totalPaid);
+            // Dư nợ hiện tại (Bao gồm nợ đầu kỳ khi chưa có phần mềm)
+            const openingDebt = parseFloat(s.opening_debt || 0);
+            const currentDebt = Math.max(0, openingDebt + totalPurchased - totalPaid);
             totalPayableAll += currentDebt;
 
             // Đếm số đơn PO và số lần thanh toán
@@ -115,6 +116,9 @@ router.get('/supplier-debts', async (req, res) => {
                 bank_account: s.bank_account || '',
                 bank_name: s.bank_name || '',
                 account_holder: s.account_holder || s.name,
+                opening_debt: openingDebt,
+                opening_debt_date: s.opening_debt_date || null,
+                opening_debt_note: s.opening_debt_note || '',
                 total_purchased: totalPurchased,
                 total_paid: totalPaid,
                 current_debt: currentDebt,
@@ -149,6 +153,7 @@ router.get('/supplier-debts', async (req, res) => {
 router.get('/supplier/:id/statement', async (req, res) => {
     try {
         const supId = parseInt(req.params.id);
+        const { from_date, to_date } = req.query;
         const suppliers = await getSuppliersData();
         const purchases = await getPurchasesData();
         const payments = await getPaymentsData();
@@ -164,20 +169,57 @@ router.get('/supplier/:id/statement', async (req, res) => {
             (Number(p.supplier_id) === Number(supId) || (p.supplier_name && p.supplier_name.toLowerCase() === supplier.name.toLowerCase()))
         );
 
-        const totalPurchased = supPurchases.filter(po => po.status !== 'Đã Hủy').reduce((sum, po) => sum + parseFloat(po.items_amount || po.total_amount || 0), 0);
-        const totalPaid = supPayments.filter(p => p.status === 'Đã Thanh Toán').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-        const currentDebt = Math.max(0, totalPurchased - totalPaid);
+        const rawOpeningDebt = parseFloat(supplier.opening_debt || 0);
+        let validPurchases = supPurchases.filter(po => po.status !== 'Đã Hủy');
+        let validPayments = supPayments.filter(p => p.status === 'Đã Thanh Toán');
+
+        let periodOpeningDebt = rawOpeningDebt;
+
+        if (from_date) {
+            const fromTime = new Date(from_date).setHours(0, 0, 0, 0);
+            // Tính số phát sinh trước kỳ đối chiếu để tính số dư đầu kỳ chính xác
+            const prePurchases = validPurchases.filter(po => new Date(po.created_at || po.receive_date || Date.now()).getTime() < fromTime);
+            const prePoTotal = prePurchases.reduce((sum, po) => sum + parseFloat(po.items_amount || po.total_amount || 0), 0);
+
+            const prePayments = validPayments.filter(p => new Date(p.created_at || Date.now()).getTime() < fromTime);
+            const prePayTotal = prePayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+            periodOpeningDebt = rawOpeningDebt + prePoTotal - prePayTotal;
+
+            validPurchases = validPurchases.filter(po => new Date(po.created_at || po.receive_date || Date.now()).getTime() >= fromTime);
+            validPayments = validPayments.filter(p => new Date(p.created_at || Date.now()).getTime() >= fromTime);
+        }
+
+        if (to_date) {
+            const toTime = new Date(to_date).setHours(23, 59, 59, 999);
+            validPurchases = validPurchases.filter(po => new Date(po.created_at || po.receive_date || Date.now()).getTime() <= toTime);
+            validPayments = validPayments.filter(p => new Date(p.created_at || Date.now()).getTime() <= toTime);
+        }
+
+        const totalPurchasedPeriod = validPurchases.reduce((sum, po) => sum + parseFloat(po.items_amount || po.total_amount || 0), 0);
+        const totalPaidPeriod = validPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        const closingDebt = periodOpeningDebt + totalPurchasedPeriod - totalPaidPeriod;
+
+        // Tổng toàn bộ thời gian (All-time)
+        const allPurchased = supPurchases.filter(po => po.status !== 'Đã Hủy').reduce((sum, po) => sum + parseFloat(po.items_amount || po.total_amount || 0), 0);
+        const allPaid = supPayments.filter(p => p.status === 'Đã Thanh Toán').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        const allCurrentDebt = Math.max(0, rawOpeningDebt + allPurchased - allPaid);
 
         res.json({
             success: true,
             supplier: {
                 ...supplier,
-                total_purchased: totalPurchased,
-                total_paid: totalPaid,
-                current_debt: currentDebt
+                opening_debt: rawOpeningDebt,
+                period_opening_debt: periodOpeningDebt,
+                period_purchased: totalPurchasedPeriod,
+                period_paid: totalPaidPeriod,
+                period_closing_debt: closingDebt,
+                total_purchased: allPurchased,
+                total_paid: allPaid,
+                current_debt: allCurrentDebt
             },
-            purchases: supPurchases,
-            payments: supPayments
+            purchases: validPurchases,
+            payments: validPayments
         });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });

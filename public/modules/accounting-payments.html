@@ -116,6 +116,7 @@
                     <thead class="bg-slate-100 text-slate-600 sticky top-0 uppercase font-bold text-[10px] shadow-2xs z-10">
                         <tr>
                             <th class="p-3 pl-4 border-b">Nhà Cung Cấp</th>
+                            <th class="p-3 border-b text-right text-amber-700 font-bold">Nợ Đầu Kỳ</th>
                             <th class="p-3 border-b text-right">Tổng Nhập (PO)</th>
                             <th class="p-3 border-b text-right text-emerald-700">Đã Thanh Toán</th>
                             <th class="p-3 border-b text-right text-rose-700 font-black">Dư Nợ (331)</th>
@@ -125,7 +126,7 @@
                         </tr>
                     </thead>
                     <tbody id="tbl-supplier-debts" class="divide-y divide-slate-100 text-slate-700 font-medium">
-                        <tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold">Đang tải danh sách công nợ Nhà Cung Cấp...</td></tr>
+                        <tr><td colspan="8" class="p-8 text-center text-slate-400 font-bold">Đang tải danh sách công nợ Nhà Cung Cấp...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -396,6 +397,269 @@
     </div>
 </div>
 
+<!-- ========================================================= -->
+<!-- MODAL 1: CẬP NHẬT CÔNG NỢ ĐẦU KỲ NHÀ CUNG CẤP (TK 331) -->
+<!-- ========================================================= -->
+<div id="modal-supplier-opening-debt" class="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 hidden animate-fade-in" onclick="window.modPayment.closeOpeningDebtModal()">
+    <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 animate-slide-up flex flex-col" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="p-4 bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center text-sm font-black shadow-xs">
+                    <i class="fas fa-coins text-amber-300"></i>
+                </span>
+                <div>
+                    <h3 class="font-black text-sm uppercase tracking-wide">CÔNG NỢ ĐẦU KỲ NHÀ CUNG CẤP</h3>
+                    <p class="text-[10px] text-amber-200 font-medium">TK 331 • Dư nợ phát sinh trước khi dùng phần mềm</p>
+                </div>
+            </div>
+            <button type="button" onclick="window.modPayment.closeOpeningDebtModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5 space-y-4">
+            <input type="hidden" id="sup-od-id">
+
+            <!-- Card thông tin NCC -->
+            <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-3 flex items-center gap-3">
+                <div id="sup-od-avatar" class="w-10 h-10 rounded-xl bg-amber-600 text-white font-black text-sm flex items-center justify-center uppercase shrink-0 shadow-xs">
+                    N
+                </div>
+                <div class="min-w-0">
+                    <p class="font-black text-slate-900 text-sm truncate" id="sup-od-name">Nhà Cung Cấp</p>
+                    <p class="text-[11px] text-slate-500 font-medium mt-0.5" id="sup-od-code">Mã: NCC001</p>
+                </div>
+            </div>
+
+            <!-- Nhập số tiền nợ đầu kỳ -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">
+                    Số Tiền Nợ Đầu Kỳ (VNĐ) <span class="text-rose-600">*</span>
+                </label>
+                <div class="relative">
+                    <input type="text" id="sup-od-amount" oninput="this.value = window.modPayment.formatInputNumber(this.value)" placeholder="0" class="w-full border-2 border-amber-300 focus:border-amber-600 bg-amber-50/30 rounded-2xl py-3 pl-4 pr-14 text-lg font-black text-amber-900 outline-none transition">
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-xs text-amber-700">VNĐ</span>
+                </div>
+                <!-- Quick add chips -->
+                <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                    <span class="text-[10px] text-slate-400 font-bold">Thêm nhanh:</span>
+                    <button type="button" onclick="window.modPayment.quickAddOpeningDebt(10000000)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-800 text-[10px] font-bold transition cursor-pointer">+10 Tr</button>
+                    <button type="button" onclick="window.modPayment.quickAddOpeningDebt(50000000)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-800 text-[10px] font-bold transition cursor-pointer">+50 Tr</button>
+                    <button type="button" onclick="window.modPayment.quickAddOpeningDebt(100000000)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-800 text-[10px] font-bold transition cursor-pointer">+100 Tr</button>
+                    <button type="button" onclick="window.modPayment.quickAddOpeningDebt(500000000)" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-800 text-[10px] font-bold transition cursor-pointer">+500 Tr</button>
+                    <button type="button" onclick="document.getElementById('sup-od-amount').value = '0'" class="px-2 py-0.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold transition cursor-pointer">Xóa (0đ)</button>
+                </div>
+            </div>
+
+            <!-- Ngày ghi nhận nợ đầu kỳ -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">
+                    Ngày Ghi Nhận Công Nợ Đầu Kỳ
+                </label>
+                <input type="date" id="sup-od-date" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-amber-600">
+                <p class="text-[10px] text-slate-400 mt-1 italic">Mốc thời gian chốt số dư mang sang từ sổ sách kế toán cũ</p>
+            </div>
+
+            <!-- Ghi chú nguồn gốc nợ -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">
+                    Ghi Chú Nguồn Gốc Số Dư
+                </label>
+                <textarea id="sup-od-note" rows="2" placeholder="Ví dụ: Dư nợ tồn từ trước năm 2026, hợp đồng số..., biên bản chốt công nợ cũ..." class="w-full border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 outline-none focus:border-amber-600"></textarea>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-[11px] text-blue-900 leading-relaxed">
+                <i class="fas fa-info-circle text-blue-600 mr-1"></i>
+                Số tiền này sẽ được ghi nhận vào <b>Dư Nợ Đầu Kỳ (TK 331)</b> của Nhà Cung Cấp, tự động cộng vào tổng dư nợ phải trả và hiển thị làm dòng đầu tiên trong <b>Bảng Đối Chiếu Công Nợ Chi Tiết</b>.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+            <button type="button" onclick="window.modPayment.closeOpeningDebtModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer">
+                Hủy Bỏ
+            </button>
+            <button type="button" onclick="window.modPayment.saveOpeningDebt()" class="px-5 py-2 rounded-xl text-xs font-black text-white bg-amber-600 hover:bg-amber-700 shadow-md transition cursor-pointer flex items-center gap-1.5">
+                <i class="fas fa-floppy-disk"></i> Lưu Công Nợ Đầu Kỳ
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL 2: BẢNG ĐỐI CHIẾU CÔNG NỢ CHI TIẾT NHÀ CUNG CẤP (TK 331) -->
+<!-- ========================================================= -->
+<div id="supplier-statement-modal" class="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 hidden animate-fade-in" onclick="window.modPayment.closeDetailedStatement()">
+    <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[95vh] animate-slide-up" onclick="event.stopPropagation()">
+        <!-- Header thanh tác vụ (Ẩn khi in) -->
+        <div class="p-3 sm:p-4 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2.5 shrink-0 print:hidden">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm font-black">
+                    <i class="fas fa-file-invoice text-rose-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-400">
+                        BẢNG ĐỐI CHIẾU CÔNG NỢ NHÀ CUNG CẤP (TK 331)
+                    </h3>
+                    <p class="text-[10px] text-slate-400">Theo dõi chi tiết đơn nhập hàng (PO), thanh toán (UNC) và số dư lũy kế</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="window.modPayment.printStatement()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-print"></i> <span>In Đối Chiếu / PDF</span>
+                </button>
+                <button type="button" onclick="window.modPayment.exportStatementExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-file-excel"></i> <span>Tải Excel (.xlsx)</span>
+                </button>
+                <button type="button" onclick="window.modPayment.closeDetailedStatement()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Thanh lọc thời gian & Thống kê nhanh (Ẩn khi in) -->
+        <div class="bg-slate-50 p-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0 print:hidden">
+            <div class="flex flex-wrap items-center gap-2 font-bold text-slate-700">
+                <span class="text-slate-500 font-bold">Khoảng thời gian:</span>
+                <input type="date" id="sup-stmt-from-date" class="border border-slate-300 bg-white rounded-xl p-1.5 text-xs font-bold outline-none focus:border-rose-500">
+                <span class="text-slate-400">đến</span>
+                <input type="date" id="sup-stmt-to-date" class="border border-slate-300 bg-white rounded-xl p-1.5 text-xs font-bold outline-none focus:border-rose-500">
+                <button type="button" onclick="window.modPayment.reloadDetailedStatement()" class="bg-rose-600 text-white px-3 py-1.5 rounded-xl font-bold hover:bg-rose-700 transition cursor-pointer shadow-2xs">
+                    <i class="fas fa-filter mr-1"></i> Lọc
+                </button>
+                <div class="flex items-center gap-1 pl-1">
+                    <button type="button" onclick="window.modPayment.setStatementRange('YEAR')" class="px-2 py-1 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-[10px] font-bold text-slate-700 cursor-pointer">Đầu năm - nay</button>
+                    <button type="button" onclick="window.modPayment.setStatementRange('MONTH')" class="px-2 py-1 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-[10px] font-bold text-slate-700 cursor-pointer">Tháng này</button>
+                    <button type="button" onclick="window.modPayment.setStatementRange('ALL')" class="px-2 py-1 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-[10px] font-bold text-slate-700 cursor-pointer">Toàn bộ</button>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-500 italic">* Khung in khổ A4 Portrait chuẩn kế toán, chữ ký đại diện NCC và Kế toán trưởng SUNGO.</p>
+        </div>
+
+        <!-- Khu vực in A4 chuẩn -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-8 bg-white font-sans text-slate-900" id="supplier-statement-print-area">
+            <!-- Header Công Ty & Logo -->
+            <div class="flex justify-between items-start pb-4 border-b-2 border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="text-amber-500 font-black text-2xl tracking-widest flex items-center gap-1.5">
+                        <i class="fas fa-solar-panel text-3xl"></i>
+                        <span>SUNGO<span class="text-slate-900">ERP</span></span>
+                    </div>
+                </div>
+                <div class="text-right text-xs leading-relaxed">
+                    <h2 class="font-black text-sm uppercase text-slate-900">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</h2>
+                    <p class="text-slate-600">419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
+                    <p class="text-slate-600 font-medium">MST: <span class="font-bold">0315614349</span> &nbsp;|&nbsp; Điện thoại: <span class="font-bold">0937039889</span> &nbsp;|&nbsp; Email: <span class="font-bold">info@sungo.vn</span></p>
+                </div>
+            </div>
+
+            <!-- Tiêu đề Bảng Đối Chiếu -->
+            <div class="text-center my-4">
+                <h1 class="text-base sm:text-lg font-black uppercase text-slate-900 tracking-wide">
+                    BẢNG ĐỐI CHIẾU CÔNG NỢ NHÀ CUNG CẤP (TK 331)
+                </h1>
+                <p class="text-xs text-slate-600 italic mt-0.5" id="sup-stmt-date-range-text">Từ ngày: --/--/---- Đến ngày: --/--/----</p>
+            </div>
+
+            <!-- Thông tin 2 bên đối chiếu (Bên A - Bên B) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+                <div class="space-y-1">
+                    <p class="font-black uppercase text-[11px] text-blue-900">BÊN A (ĐƠN VỊ MUA HÀNG):</p>
+                    <p class="font-bold text-slate-900">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</p>
+                    <p class="text-slate-600">Mã số thuế: <b class="font-mono">0315614349</b></p>
+                    <p class="text-slate-600">Địa chỉ: 419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
+                    <p class="text-slate-600">Điện thoại: <b>0937.039.889</b></p>
+                </div>
+                <div class="space-y-1 border-t md:border-t-0 md:border-l border-slate-200 pt-2 md:pt-0 md:pl-3">
+                    <p class="font-black uppercase text-[11px] text-rose-900">BÊN B (NHÀ CUNG CẤP):</p>
+                    <p class="font-bold text-slate-900 text-sm" id="sup-stmt-partner-name">Nhà Cung Cấp</p>
+                    <p class="text-slate-600">Mã NCC: <b class="font-mono" id="sup-stmt-partner-code">NCC001</b> <span id="sup-stmt-partner-tax-wrap"></span></p>
+                    <p class="text-slate-600">Địa chỉ: <span id="sup-stmt-partner-address">---</span></p>
+                    <p class="text-slate-600">Điện thoại: <b id="sup-stmt-partner-phone">---</b> | TK Ngân hàng: <span id="sup-stmt-partner-bank">---</span></p>
+                </div>
+            </div>
+
+            <!-- Bảng 10 cột chuẩn 100% A4 Portrait -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border border-slate-800 border-collapse table-fixed">
+                    <colgroup>
+                        <col style="width: 4%;">     <!-- 1. STT -->
+                        <col style="width: 9.5%;">   <!-- 2. NGÀY -->
+                        <col style="width: 11%;">    <!-- 3. MÃ CHỨNG TỪ -->
+                        <col style="width: 23%;">    <!-- 4. DIỄN GIẢI NỘI DUNG -->
+                        <col style="width: 4.5%;">   <!-- 5. ĐVT -->
+                        <col style="width: 4.5%;">   <!-- 6. SL -->
+                        <col style="width: 9.5%;">   <!-- 7. ĐƠN GIÁ -->
+                        <col style="width: 11%;">    <!-- 8. PHÁT SINH MUA (PO) -->
+                        <col style="width: 11%;">    <!-- 9. ĐÃ THANH TOÁN (UNC) -->
+                        <col style="width: 11.5%;">  <!-- 10. DƯ NỢ CÒN LẠI -->
+                    </colgroup>
+                    <thead class="bg-slate-100 text-slate-900 text-center uppercase font-bold text-[9px] border-b-2 border-slate-800">
+                        <tr>
+                            <th class="border border-slate-800 py-1 px-0.5 whitespace-nowrap">STT</th>
+                            <th class="border border-slate-800 py-1 px-0.5 whitespace-nowrap">NGÀY</th>
+                            <th class="border border-slate-800 py-1 px-0.5 whitespace-nowrap">MÃ CHỨNG TỪ</th>
+                            <th class="border border-slate-800 py-1 px-1 text-left">TÊN HÀNG / DIỄN GIẢI NỘI DUNG</th>
+                            <th class="border border-slate-800 py-1 px-0.5 whitespace-nowrap">ĐVT</th>
+                            <th class="border border-slate-800 py-1 px-0.5 whitespace-nowrap text-center">SL</th>
+                            <th class="border border-slate-800 py-1 px-0.5 whitespace-nowrap text-right">ĐƠN GIÁ</th>
+                            <th class="border border-slate-800 py-1 px-0.5 whitespace-nowrap text-right text-rose-700">PHÁT SINH MUA</th>
+                            <th class="border border-slate-800 py-1 px-0.5 whitespace-nowrap text-right text-emerald-700">ĐÃ THANH TOÁN</th>
+                            <th class="border border-slate-800 py-1 px-0.5 whitespace-nowrap text-right text-rose-800">DƯ NỢ CÒN LẠI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sup-stmt-table-body" class="text-[9.5px] text-slate-800 divide-y divide-slate-300">
+                        <tr><td colspan="10" class="p-8 text-center text-slate-400">Đang tải dữ liệu đối chiếu...</td></tr>
+                    </tbody>
+                    <tfoot class="font-bold border-t-2 border-slate-800 text-[10px]">
+                        <tr class="bg-slate-50">
+                            <td colspan="7" class="border border-slate-800 py-1 px-1.5 text-right uppercase font-black">TỔNG PHÁT SINH MUA HÀNG (PO TRONG KỲ)</td>
+                            <td class="border border-slate-800 py-1 px-1 text-right font-black text-rose-700 font-mono tracking-tight whitespace-nowrap" id="sup-stmt-foot-purchased">0 đ</td>
+                            <td class="border border-slate-800 py-1 px-1 border-t border-b"></td>
+                            <td class="border border-slate-800 py-1 px-1 border-t border-b"></td>
+                        </tr>
+                        <tr class="bg-emerald-50/50">
+                            <td colspan="7" class="border border-slate-800 py-1 px-1.5 text-right uppercase font-bold text-emerald-800">TỔNG TIỀN ĐÃ THANH TOÁN (UNC TRONG KỲ)</td>
+                            <td class="border border-slate-800 py-1 px-1 border-t border-b"></td>
+                            <td class="border border-slate-800 py-1 px-1 text-right font-black text-emerald-700 font-mono tracking-tight whitespace-nowrap" id="sup-stmt-foot-paid">0 đ</td>
+                            <td class="border border-slate-800 py-1 px-1 border-t border-b"></td>
+                        </tr>
+                        <tr class="bg-amber-100/90">
+                            <td colspan="7" class="border border-slate-800 py-1 px-1.5 text-right uppercase font-black text-slate-900">DƯ NỢ CUỐI KỲ PHẢI TRẢ NCC (TK 331)</td>
+                            <td class="border border-slate-800 py-1 px-1 border-t border-b"></td>
+                            <td class="border border-slate-800 py-1 px-1 border-t border-b"></td>
+                            <td class="border border-slate-800 py-1 px-1 text-right font-black text-rose-700 text-[11px] font-mono tracking-tight whitespace-nowrap" id="sup-stmt-foot-closing">0 đ</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Dòng số tiền bằng chữ -->
+            <div class="mt-3 text-xs italic text-slate-800 font-semibold" id="sup-stmt-words-container">
+                Số tiền nợ còn lại bằng chữ: <span class="font-bold text-slate-900" id="sup-stmt-words">Không đồng.</span>
+            </div>
+
+            <!-- Khung chữ ký 2 bên -->
+            <div class="grid grid-cols-2 gap-4 mt-8 pt-4 text-center text-xs">
+                <div>
+                    <p class="font-black text-slate-800 uppercase">ĐẠI DIỆN NHÀ CUNG CẤP</p>
+                    <p class="text-slate-500 italic mt-0.5 text-[11px]">(Ký, ghi rõ họ tên và đóng dấu)</p>
+                    <div class="h-20"></div>
+                    <p class="font-black text-slate-900" id="sup-stmt-sign-partner-name">Nhà Cung Cấp</p>
+                </div>
+                <div>
+                    <p class="font-black text-slate-800 uppercase">ĐẠI DIỆN CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</p>
+                    <p class="text-slate-500 italic mt-0.5 text-[11px]">(Người lập bảng & Kế toán trưởng)</p>
+                    <div class="h-20"></div>
+                    <p class="font-black text-slate-900">Bộ Phận Kế Toán Tài Chính</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     .animate-slide-in-right { animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -463,7 +727,7 @@ window.modPayment = {
                 window.modPayment.populateSupplierDropdown(window.modPayment.supplierDebts);
             }
         } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Lỗi kết nối API Công nợ NCC!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-500 font-bold">Lỗi kết nối API Công nợ NCC!</td></tr>';
         }
     },
 
@@ -471,7 +735,7 @@ window.modPayment = {
         const tbody = document.getElementById('tbl-supplier-debts');
         const mobContainer = document.getElementById('tbl-supplier-debts-mobile');
         if (!list || list.length === 0) {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold">Chưa có dữ liệu Nhà Cung Cấp nào.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-400 font-bold">Chưa có dữ liệu Nhà Cung Cấp nào.</td></tr>';
             if (mobContainer) mobContainer.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold text-xs">Chưa có dữ liệu Nhà Cung Cấp nào.</div>';
             return;
         }
@@ -503,6 +767,10 @@ window.modPayment = {
                                 </div>
                             </div>
                         </td>
+                        <td class="p-3 text-right">
+                            <div class="font-bold text-amber-800 text-xs">${window.modPayment.fmt(s.opening_debt || 0)} đ</div>
+                            ${s.opening_debt_date ? `<span class="text-[9.5px] text-slate-400 block">${new Date(s.opening_debt_date).toLocaleDateString('vi-VN')}</span>` : ''}
+                        </td>
                         <td class="p-3 text-right font-bold text-slate-700 text-xs">${window.modPayment.fmt(s.total_purchased)} đ</td>
                         <td class="p-3 text-right font-bold text-emerald-700 text-xs">${window.modPayment.fmt(s.total_paid)} đ</td>
                         <td class="p-3 text-right font-black text-rose-700 text-sm">${window.modPayment.fmt(debt)} đ</td>
@@ -513,11 +781,14 @@ window.modPayment = {
                         <td class="p-3 text-center">${statusBadge}</td>
                         <td class="p-3 pr-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="window.modPayment.openCreateWithSupplier(${s.id})" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer">
-                                    <i class="fas fa-money-bill-wave mr-0.5"></i> Trả Nợ (UNC)
+                                <button onclick="window.modPayment.openCreateWithSupplier(${s.id})" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer" title="Lập ủy nhiệm chi trả nợ">
+                                    <i class="fas fa-money-bill-wave mr-0.5"></i> Trả Nợ
                                 </button>
-                                <button onclick="window.modPayment.openStatementDrawer(${s.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer">
-                                    <i class="fas fa-eye"></i> Sao Kê
+                                <button onclick="window.modPayment.openOpeningDebtModal(${s.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer" title="Cập nhật công nợ đầu kỳ">
+                                    <i class="fas fa-coins mr-0.5"></i> Nợ Đầu Kỳ
+                                </button>
+                                <button onclick="window.modPayment.openDetailedStatement(${s.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer" title="Bảng đối chiếu công nợ chi tiết & Xuất Excel/In">
+                                    <i class="fas fa-file-invoice mr-0.5"></i> Đối Chiếu
                                 </button>
                             </div>
                         </td>
@@ -555,14 +826,18 @@ window.modPayment = {
                         ${statusBadge}
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <div class="grid grid-cols-3 gap-1.5 text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100">
                         <div>
-                            <span class="text-slate-400 block text-[10px]">Tổng nhập (PO):</span>
-                            <b class="text-slate-700">${window.modPayment.fmt(s.total_purchased)} đ</b>
+                            <span class="text-slate-400 block text-[9.5px]">Nợ đầu kỳ:</span>
+                            <b class="text-amber-800 text-[10.5px]">${window.modPayment.fmt(s.opening_debt || 0)} đ</b>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[9.5px]">Tổng nhập:</span>
+                            <b class="text-slate-700 text-[10.5px]">${window.modPayment.fmt(s.total_purchased)} đ</b>
                         </div>
                         <div class="text-right">
-                            <span class="text-slate-400 block text-[10px]">Đã thanh toán:</span>
-                            <b class="text-emerald-700">${window.modPayment.fmt(s.total_paid)} đ</b>
+                            <span class="text-slate-400 block text-[9.5px]">Đã trả:</span>
+                            <b class="text-emerald-700 text-[10.5px]">${window.modPayment.fmt(s.total_paid)} đ</b>
                         </div>
                     </div>
 
@@ -571,12 +846,15 @@ window.modPayment = {
                             <span class="text-[10px] text-slate-400 uppercase font-bold block">Dư Nợ Phải Trả</span>
                             <strong class="text-sm font-black text-rose-600">${window.modPayment.fmt(debt)} đ</strong>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            <button type="button" onclick="window.modPayment.openCreateWithSupplier(${s.id})" class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <button type="button" onclick="window.modPayment.openCreateWithSupplier(${s.id})" class="px-2 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-xl text-[11px] font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
                                 <i class="fas fa-money-bill-wave"></i> Trả Nợ
                             </button>
-                            <button type="button" onclick="window.modPayment.openStatementDrawer(${s.id})" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
-                                <i class="fas fa-eye"></i>
+                            <button type="button" onclick="window.modPayment.openOpeningDebtModal(${s.id})" class="px-2 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-xl text-[11px] font-bold transition flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-coins"></i> Đầu Kỳ
+                            </button>
+                            <button type="button" onclick="window.modPayment.openDetailedStatement(${s.id})" class="px-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[11px] font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-file-invoice"></i> Đối Chiếu
                             </button>
                         </div>
                     </div>
@@ -988,6 +1266,771 @@ window.modPayment = {
     quickPayForSupplier: () => {
         if (!window.modPayment.selectedSupplierForStatement) return;
         window.modPayment.openCreateWithSupplier(window.modPayment.selectedSupplierForStatement);
+    },
+
+    formatInputNumber: (val) => {
+        if (!val) return '0';
+        const num = parseFloat(String(val).replace(/[^0-9]/g, '')) || 0;
+        return window.modPayment.fmt(num);
+    },
+
+    // =========================================================
+    // 5. QUẢN LÝ CÔNG NỢ ĐẦU KỲ NHÀ CUNG CẤP (TK 331)
+    // =========================================================
+    openOpeningDebtModal: (supId) => {
+        const sup = (window.modPayment.supplierDebts || []).find(s => Number(s.id) === Number(supId));
+        if (!sup) return alert("Không tìm thấy thông tin Nhà Cung Cấp!");
+
+        document.getElementById('sup-od-id').value = sup.id;
+        document.getElementById('sup-od-avatar').innerText = (sup.name || 'N').charAt(0).toUpperCase();
+        document.getElementById('sup-od-name').innerText = sup.name;
+        document.getElementById('sup-od-code').innerText = `Mã: ${sup.supplier_code || 'NCC' + sup.id} ${sup.phone ? '• 📞 ' + sup.phone : ''}`;
+        
+        const rawDebt = parseFloat(sup.opening_debt || 0);
+        document.getElementById('sup-od-amount').value = window.modPayment.fmt(rawDebt);
+        
+        const dateInp = document.getElementById('sup-od-date');
+        if (sup.opening_debt_date) {
+            dateInp.value = String(sup.opening_debt_date).slice(0, 10);
+        } else {
+            dateInp.value = new Date().toISOString().slice(0, 10);
+        }
+
+        document.getElementById('sup-od-note').value = sup.opening_debt_note || '';
+
+        const modal = document.getElementById('modal-supplier-opening-debt');
+        if (modal) {
+            if (modal.parentElement !== document.body) {
+                modal.classList.add('teleported-module-modal');
+                document.body.appendChild(modal);
+            }
+            modal.classList.remove('hidden');
+        }
+    },
+
+    closeOpeningDebtModal: () => {
+        const modal = document.getElementById('modal-supplier-opening-debt');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    quickAddOpeningDebt: (addAmount) => {
+        const inp = document.getElementById('sup-od-amount');
+        const current = parseFloat((inp.value || '').replace(/[^0-9]/g, '')) || 0;
+        inp.value = window.modPayment.fmt(current + addAmount);
+    },
+
+    saveOpeningDebt: async () => {
+        const supId = document.getElementById('sup-od-id')?.value;
+        if (!supId) return alert("Không xác định được Nhà Cung Cấp!");
+
+        const rawAmount = document.getElementById('sup-od-amount')?.value || '0';
+        const debtNum = parseFloat(rawAmount.replace(/[^0-9]/g, '')) || 0;
+        const debtDate = document.getElementById('sup-od-date')?.value || null;
+        const debtNote = (document.getElementById('sup-od-note')?.value || '').trim();
+
+        try {
+            const res = await fetch(`/api/suppliers/${supId}/opening-debt`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    opening_debt: debtNum,
+                    opening_debt_date: debtDate,
+                    opening_debt_note: debtNote
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("✅ Đã cập nhật Công nợ đầu kỳ thành công!");
+                window.modPayment.closeOpeningDebtModal();
+                await window.modPayment.reloadAll();
+            } else {
+                alert("⚠️ Lỗi: " + (data.error || 'Không thể cập nhật!'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Lỗi kết nối máy chủ!");
+        }
+    },
+
+    // =========================================================
+    // 6. BẢNG ĐỐI CHIẾU CÔNG NỢ CHI TIẾT NHÀ CUNG CẤP (TK 331)
+    // =========================================================
+    currentStatementData: null,
+
+    openDetailedStatement: async (supId) => {
+        window.modPayment.selectedSupplierForStatement = supId;
+        const modal = document.getElementById('supplier-statement-modal');
+        if (modal) {
+            if (modal.parentElement !== document.body) {
+                modal.classList.add('teleported-module-modal');
+                document.body.appendChild(modal);
+            }
+            modal.classList.remove('hidden');
+        }
+
+        // Mặc định khoảng ngày: Đầu năm hiện tại đến hôm nay
+        const now = new Date();
+        const curYear = now.getFullYear();
+        const fromInp = document.getElementById('sup-stmt-from-date');
+        const toInp = document.getElementById('sup-stmt-to-date');
+
+        if (fromInp && !fromInp.value) {
+            fromInp.value = `${curYear}-01-01`;
+        }
+        if (toInp && !toInp.value) {
+            toInp.value = now.toISOString().slice(0, 10);
+        }
+
+        await window.modPayment.reloadDetailedStatement();
+    },
+
+    closeDetailedStatement: () => {
+        const modal = document.getElementById('supplier-statement-modal');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    setStatementRange: async (type) => {
+        const now = new Date();
+        const curYear = now.getFullYear();
+        const curMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const todayStr = now.toISOString().slice(0, 10);
+        const fromInp = document.getElementById('sup-stmt-from-date');
+        const toInp = document.getElementById('sup-stmt-to-date');
+
+        if (type === 'YEAR') {
+            if (fromInp) fromInp.value = `${curYear}-01-01`;
+            if (toInp) toInp.value = todayStr;
+        } else if (type === 'MONTH') {
+            if (fromInp) fromInp.value = `${curYear}-${curMonth}-01`;
+            if (toInp) toInp.value = todayStr;
+        } else if (type === 'ALL') {
+            if (fromInp) fromInp.value = '';
+            if (toInp) toInp.value = '';
+        }
+
+        await window.modPayment.reloadDetailedStatement();
+    },
+
+    reloadDetailedStatement: async () => {
+        const supId = window.modPayment.selectedSupplierForStatement;
+        if (!supId) return;
+
+        const from = document.getElementById('sup-stmt-from-date')?.value || '';
+        const to = document.getElementById('sup-stmt-to-date')?.value || '';
+        const tbody = document.getElementById('sup-stmt-table-body');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> Đang tải bảng đối chiếu...</td></tr>`;
+        }
+
+        try {
+            const url = `/api/payments/supplier/${supId}/statement?from_date=${from}&to_date=${to}&t=` + Date.now();
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-rose-500 font-bold">Lỗi tải dữ liệu: ${data.error || 'Không xác định'}</td></tr>`;
+                return;
+            }
+
+            window.modPayment.currentStatementData = data;
+            window.modPayment.renderDetailedStatement(data);
+        } catch (err) {
+            console.error(err);
+            if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-rose-500 font-bold">Lỗi kết nối máy chủ!</td></tr>`;
+        }
+    },
+
+    renderDetailedStatement: (data) => {
+        const sup = data.supplier || {};
+        const purchases = data.purchases || [];
+        const payments = data.payments || [];
+        const fromDate = document.getElementById('sup-stmt-from-date')?.value;
+        const toDate = document.getElementById('sup-stmt-to-date')?.value;
+
+        // 1. Header range & partner info
+        const dateRangeEl = document.getElementById('sup-stmt-date-range-text');
+        if (dateRangeEl) {
+            const fromStr = fromDate ? new Date(fromDate).toLocaleDateString('vi-VN') : 'Đầu kỳ';
+            const toStr = toDate ? new Date(toDate).toLocaleDateString('vi-VN') : 'Hôm nay';
+            dateRangeEl.innerText = `Từ ngày: ${fromStr} Đến ngày: ${toStr}`;
+        }
+
+        const nameEl = document.getElementById('sup-stmt-partner-name');
+        if (nameEl) nameEl.innerText = sup.name || 'Nhà Cung Cấp';
+
+        const codeEl = document.getElementById('sup-stmt-partner-code');
+        if (codeEl) codeEl.innerText = sup.supplier_code || ('NCC' + sup.id);
+
+        const taxWrap = document.getElementById('sup-stmt-partner-tax-wrap');
+        if (taxWrap) {
+            taxWrap.innerHTML = sup.tax_code ? `| MST: <b class="font-mono">${sup.tax_code}</b>` : '';
+        }
+
+        const addrEl = document.getElementById('sup-stmt-partner-address');
+        if (addrEl) addrEl.innerText = sup.address || '---';
+
+        const phoneEl = document.getElementById('sup-stmt-partner-phone');
+        if (phoneEl) phoneEl.innerText = sup.phone || '---';
+
+        const bankEl = document.getElementById('sup-stmt-partner-bank');
+        if (bankEl) bankEl.innerText = sup.bank_account ? `${sup.bank_account} (${sup.bank_name || ''})` : '---';
+
+        const signPartnerEl = document.getElementById('sup-stmt-sign-partner-name');
+        if (signPartnerEl) signPartnerEl.innerText = sup.name || 'Nhà Cung Cấp';
+
+        // 2. Timeline build
+        const timeline = [];
+        purchases.forEach(po => {
+            const d = po.created_at || po.receive_date || Date.now();
+            timeline.push({
+                type: 'PURCHASE',
+                date: new Date(d).getTime(),
+                dateStr: new Date(d).toLocaleDateString('vi-VN'),
+                po: po
+            });
+        });
+
+        payments.forEach(p => {
+            const d = p.created_at || Date.now();
+            timeline.push({
+                type: 'PAYMENT',
+                date: new Date(d).getTime(),
+                dateStr: new Date(d).toLocaleDateString('vi-VN'),
+                payment: p
+            });
+        });
+
+        timeline.sort((a, b) => a.date - b.date);
+
+        // 3. Render table rows with running balance
+        const tbody = document.getElementById('sup-stmt-table-body');
+        if (!tbody) return;
+
+        let runningDebt = parseFloat(sup.period_opening_debt != null ? sup.period_opening_debt : (sup.opening_debt || 0));
+        let rowsHtml = '';
+        let stt = 1;
+
+        // Dòng 1: Số dư đầu kỳ mang sang
+        const openingDateStr = sup.opening_debt_date ? new Date(sup.opening_debt_date).toLocaleDateString('vi-VN') : (fromDate ? new Date(fromDate).toLocaleDateString('vi-VN') : '--/--/----');
+        rowsHtml += `
+            <tr class="bg-amber-50/60 font-bold border-b border-amber-200">
+                <td class="border border-slate-800 py-1 px-0.5 text-center font-mono text-slate-500 whitespace-nowrap">-</td>
+                <td class="border border-slate-800 py-1 px-0.5 text-center font-mono text-[9.5px] whitespace-nowrap text-slate-700">${openingDateStr}</td>
+                <td class="border border-slate-800 py-1 px-0.5 text-center font-mono text-[9px] font-black text-amber-900 whitespace-nowrap">ĐẦU KỲ</td>
+                <td class="border border-slate-800 py-1 px-1 font-bold text-slate-900 leading-snug">
+                    <span class="text-amber-900 uppercase">SỐ DƯ CÔNG NỢ ĐẦU KỲ MANG SANG</span>
+                    ${sup.opening_debt_note ? `<span class="text-[9px] text-slate-500 font-normal block italic mt-0.5">Ghi chú: ${sup.opening_debt_note}</span>` : ''}
+                </td>
+                <td class="border border-slate-800 py-1 px-0.5 text-center text-slate-400 whitespace-nowrap">-</td>
+                <td class="border border-slate-800 py-1 px-0.5 text-center text-slate-400 whitespace-nowrap">-</td>
+                <td class="border border-slate-800 py-1 px-0.5 text-right text-slate-400 whitespace-nowrap">-</td>
+                <td class="border border-slate-800 py-1 px-0.5 text-right text-slate-400 whitespace-nowrap">-</td>
+                <td class="border border-slate-800 py-1 px-0.5 text-right text-slate-400 whitespace-nowrap">-</td>
+                <td class="border border-slate-800 py-1 px-1 text-right font-mono font-black text-amber-900 bg-amber-100/40 text-[9.5px] tracking-tight whitespace-nowrap">
+                    ${window.modPayment.fmt(runningDebt)} đ
+                </td>
+            </tr>
+        `;
+
+        if (timeline.length === 0) {
+            rowsHtml += `
+                <tr>
+                    <td colspan="10" class="p-6 text-center text-slate-400 italic">
+                        Trong khoảng thời gian này không phát sinh thêm đơn mua hàng (PO) hay phiếu chi (UNC) nào.
+                    </td>
+                </tr>
+            `;
+        } else {
+            timeline.forEach(item => {
+                if (item.type === 'PURCHASE') {
+                    const po = item.po;
+                    const poAmount = parseFloat(po.items_amount || po.total_amount || 0);
+                    runningDebt += poAmount;
+
+                    let items = po.items;
+                    if (typeof items === 'string') {
+                        try { items = JSON.parse(items); } catch(e) { items = []; }
+                    }
+                    if (!items || !Array.isArray(items) || items.length === 0) {
+                        items = [{
+                            name: `Đơn đặt hàng ${po.po_code}`,
+                            unit: 'Lô',
+                            quantity: 1,
+                            price: poAmount,
+                            total: poAmount
+                        }];
+                    }
+
+                    const itemRowspan = items.length;
+                    items.forEach((it, idx) => {
+                        const isFirst = (idx === 0);
+                        const rowStt = stt++;
+                        const itQty = parseFloat(it.quantity || it.actual_qty || it.qty || 1);
+                        const itPrice = parseFloat(it.price || it.unit_price || 0);
+                        const itTotal = parseFloat(it.total || it.amount || (itQty * itPrice));
+
+                        rowsHtml += `
+                        <tr class="hover:bg-rose-50/20 transition border-b border-slate-200">
+                            <td class="border border-slate-800 py-1 px-0.5 text-center font-bold text-slate-600 whitespace-nowrap">${rowStt}</td>
+                            ${isFirst ? `
+                            <td rowspan="${itemRowspan}" class="border border-slate-800 py-1 px-0.5 text-center font-mono text-[9.5px] align-middle whitespace-nowrap">
+                                <div class="font-bold text-slate-900">${item.dateStr}</div>
+                            </td>
+                            <td rowspan="${itemRowspan}" class="border border-slate-800 py-1 px-0.5 text-center font-mono text-[9px] font-bold text-blue-700 align-middle whitespace-nowrap">
+                                ${po.po_code}
+                            </td>` : ''}
+                            <td class="border border-slate-800 py-1 px-1 font-bold text-slate-900 leading-snug">
+                                ${it.name || it.product_name || 'Vật tư / Thiết bị'}
+                            </td>
+                            <td class="border border-slate-800 py-1 px-0.5 text-center text-slate-600 whitespace-nowrap">${it.unit || 'Cái'}</td>
+                            <td class="border border-slate-800 py-1 px-0.5 text-center font-bold font-mono whitespace-nowrap">${itQty}</td>
+                            <td class="border border-slate-800 py-1 px-0.5 text-right font-mono text-[9.5px] tracking-tight whitespace-nowrap">${window.modPayment.fmt(itPrice)} đ</td>
+                            ${isFirst ? `
+                            <td rowspan="${itemRowspan}" class="border border-slate-800 py-1 px-1 text-right font-mono font-black text-rose-700 bg-rose-50/30 align-middle text-[9.5px] tracking-tight whitespace-nowrap">
+                                ${window.modPayment.fmt(poAmount)} đ
+                            </td>
+                            <td rowspan="${itemRowspan}" class="border border-slate-800 py-1 px-1 text-center font-mono text-slate-400 align-middle whitespace-nowrap">-</td>
+                            <td rowspan="${itemRowspan}" class="border border-slate-800 py-1 px-1 text-right font-mono font-black text-rose-700 bg-amber-50/20 align-middle text-[9.5px] tracking-tight whitespace-nowrap">
+                                ${window.modPayment.fmt(runningDebt)} đ
+                            </td>` : ''}
+                        </tr>
+                        `;
+                    });
+                } else if (item.type === 'PAYMENT') {
+                    const pay = item.payment;
+                    const payAmount = parseFloat(pay.amount || 0);
+                    runningDebt -= payAmount;
+                    const rowStt = stt++;
+
+                    rowsHtml += `
+                    <tr class="bg-emerald-50/40 hover:bg-emerald-50 transition border-b border-emerald-200">
+                        <td class="border border-slate-800 py-1 px-0.5 text-center font-bold text-slate-600 whitespace-nowrap">${rowStt}</td>
+                        <td class="border border-slate-800 py-1 px-0.5 text-center font-mono text-[9.5px] align-middle whitespace-nowrap">
+                            <div class="font-bold text-slate-900">${item.dateStr}</div>
+                        </td>
+                        <td class="border border-slate-800 py-1 px-0.5 text-center font-mono text-[9px] font-bold text-emerald-800 align-middle whitespace-nowrap">
+                            ${pay.payment_code}
+                        </td>
+                        <td class="border border-slate-800 py-1 px-1">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap">
+                                    <i class="fas fa-check mr-1"></i>ỦY NHIỆM CHI
+                                </span>
+                                <span class="font-bold text-slate-900 text-[9.5px]">${pay.note || 'Thanh toán tiền hàng cho NCC'}</span>
+                            </div>
+                            <div class="text-[9px] text-slate-500 font-normal mt-0.5">
+                                Phương thức: <b>${pay.payment_method || 'Chuyển Khoản'}</b> ${pay.bank_account ? `• TK Thụ Hưởng: <b>${pay.bank_account}</b> (${pay.bank_name || ''})` : ''}
+                            </div>
+                        </td>
+                        <td class="border border-slate-800 py-1 px-0.5 text-center text-slate-400 font-mono whitespace-nowrap">-</td>
+                        <td class="border border-slate-800 py-1 px-0.5 text-center text-slate-400 font-mono whitespace-nowrap">-</td>
+                        <td class="border border-slate-800 py-1 px-0.5 text-right text-slate-400 font-mono whitespace-nowrap">-</td>
+                        <td class="border border-slate-800 py-1 px-0.5 text-center text-slate-400 font-mono whitespace-nowrap">-</td>
+                        <td class="border border-slate-800 py-1 px-1 text-right font-mono font-black text-emerald-700 bg-emerald-100/30 align-middle text-[9.5px] tracking-tight whitespace-nowrap">
+                            ${window.modPayment.fmt(payAmount)} đ
+                        </td>
+                        <td class="border border-slate-800 py-1 px-1 text-right font-mono font-black ${runningDebt > 0 ? 'text-rose-700' : 'text-emerald-700'} align-middle text-[9.5px] tracking-tight whitespace-nowrap">
+                            ${window.modPayment.fmt(runningDebt)} đ
+                        </td>
+                    </tr>
+                    `;
+                }
+            });
+        }
+
+        tbody.innerHTML = rowsHtml;
+
+        // 4. Render Footers
+        const totalPurchasedPeriod = sup.period_purchased != null ? sup.period_purchased : purchases.reduce((acc, po) => acc + parseFloat(po.items_amount || po.total_amount || 0), 0);
+        const totalPaidPeriod = sup.period_paid != null ? sup.period_paid : payments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
+        const closingDebt = runningDebt;
+
+        document.getElementById('sup-stmt-foot-purchased').innerText = window.modPayment.fmt(totalPurchasedPeriod) + ' đ';
+        document.getElementById('sup-stmt-foot-paid').innerText = window.modPayment.fmt(totalPaidPeriod) + ' đ';
+        
+        const footClosing = document.getElementById('sup-stmt-foot-closing');
+        footClosing.innerText = window.modPayment.fmt(closingDebt) + ' đ';
+        footClosing.className = `border border-slate-800 py-1 px-1 text-right font-black text-[11px] font-mono tracking-tight whitespace-nowrap ${closingDebt > 0 ? 'text-rose-700' : 'text-emerald-700'}`;
+
+        // 5. Số tiền bằng chữ
+        const wordsEl = document.getElementById('sup-stmt-words');
+        if (wordsEl) {
+            wordsEl.innerText = window.modPayment.docSoTienTiengViet(Math.round(closingDebt));
+        }
+    },
+
+    executePrintIframe: (htmlContent, title) => {
+        const fullDocTitle = title || 'Bang_Doi_Chieu_Cong_No_NCC_SUNGO';
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        const printStyles = `
+            @page {
+                size: A4 portrait;
+                margin: 8mm 6mm 8mm 6mm;
+            }
+            * {
+                box-sizing: border-box;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                color: #0f172a;
+                background: #ffffff;
+                font-size: 10px;
+                line-height: 1.3;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                table-layout: fixed !important;
+            }
+            th, td {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+            .whitespace-nowrap, td[class*="font-mono"], th.whitespace-nowrap {
+                white-space: nowrap !important;
+                word-break: keep-all !important;
+                overflow-wrap: normal !important;
+            }
+            thead {
+                display: table-header-group !important;
+            }
+            tfoot {
+                display: table-footer-group !important;
+            }
+            tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            .print\\:hidden {
+                display: none !important;
+            }
+        `;
+
+        const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${fullDocTitle}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <style>${printStyles}</style>
+</head>
+<body>
+    <div style="width: 100%; max-width: 100%; margin: 0 auto; padding: 0;">
+        ${htmlContent}
+    </div>
+</body>
+</html>`;
+
+        if (isMobile) {
+            const printWin = window.open('', '_blank');
+            if (printWin) {
+                const autoPrintHtml = fullHtml.replace('</body>', `<script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                        }, 400);
+                    };
+                <\/script></body>`);
+                printWin.document.open();
+                printWin.document.write(autoPrintHtml);
+                printWin.document.close();
+                return;
+            }
+        }
+
+        let iframe = document.getElementById('sup-print-iframe');
+        if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.id = 'sup-print-iframe';
+            iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(iframe);
+        }
+
+        const origDocTitle = document.title;
+        document.title = fullDocTitle;
+
+        const restoreTitle = () => {
+            document.title = origDocTitle;
+            window.removeEventListener('afterprint', restoreTitle);
+        };
+        window.addEventListener('afterprint', restoreTitle);
+        setTimeout(restoreTitle, 4000);
+
+        try {
+            const frameDoc = iframe.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(fullHtml);
+            frameDoc.close();
+            frameDoc.title = fullDocTitle;
+
+            setTimeout(() => {
+                try {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                } catch (e) {
+                    console.error("Iframe print fallback error:", e);
+                    window.print();
+                }
+            }, 350);
+        } catch (err) {
+            console.error("Iframe write error:", err);
+            window.print();
+        }
+    },
+
+    printStatement: () => {
+        const area = document.getElementById('supplier-statement-print-area');
+        if (!area) return;
+        const d = window.modPayment.currentStatementData;
+        const sup = d?.supplier || {};
+        const safeName = (sup.name || 'NCC').replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_');
+        const docTitle = `Bang_Doi_Chieu_Cong_No_NCC_${safeName}_${new Date().toISOString().slice(0, 10)}`;
+        window.modPayment.executePrintIframe(area.innerHTML, docTitle);
+    },
+
+    ensureXLSX: () => {
+        return new Promise((resolve, reject) => {
+            if (typeof XLSX !== 'undefined') return resolve(window.XLSX);
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+            script.onload = () => resolve(window.XLSX);
+            script.onerror = () => reject(new Error('Không thể tải thư viện xuất Excel (XLSX)'));
+            document.head.appendChild(script);
+        });
+    },
+
+    exportStatementExcel: async () => {
+        const d = window.modPayment.currentStatementData;
+        if (!d) return alert("Không tìm thấy dữ liệu đối chiếu để xuất Excel!");
+
+        try {
+            const XLSX = await window.modPayment.ensureXLSX();
+            const sup = d.supplier || {};
+            const purchases = d.purchases || [];
+            const payments = d.payments || [];
+            const fromDate = document.getElementById('sup-stmt-from-date')?.value;
+            const toDate = document.getElementById('sup-stmt-to-date')?.value;
+
+            const fromDateStr = fromDate ? new Date(fromDate).toLocaleDateString('vi-VN') : 'Đầu kỳ';
+            const toDateStr = toDate ? new Date(toDate).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN');
+
+            const rows = [
+                ["CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO"],
+                ["Địa chỉ: 419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM"],
+                ["Mã số thuế: 0315614349 | Điện thoại: 0937.039.889 | Email: info@sungo.vn"],
+                [],
+                [`BẢNG ĐỐI CHIẾU CÔNG NỢ CHI TIẾT NHÀ CUNG CẤP (TK 331)`],
+                [`Đơn vị: ${(sup.name || 'NHÀ CUNG CẤP').toUpperCase()} | Mã: ${sup.supplier_code || 'NCC' + sup.id}${sup.tax_code ? ' | MST: ' + sup.tax_code : ''}`],
+                [`Từ ngày: ${fromDateStr} Đến ngày: ${toDateStr}`],
+                [],
+                [
+                    "STT",
+                    "NGÀY",
+                    "MÃ CHỨNG TỪ",
+                    "TÊN HÀNG / DIỄN GIẢI NỘI DUNG",
+                    "ĐVT",
+                    "SỐ LƯỢNG",
+                    "ĐƠN GIÁ (VNĐ)",
+                    "PHÁT SINH MUA (PO) (VNĐ)",
+                    "ĐÃ THANH TOÁN (UNC) (VNĐ)",
+                    "DƯ NỢ CÒN LẠI (VNĐ)"
+                ]
+            ];
+
+            let runningDebt = parseFloat(sup.period_opening_debt != null ? sup.period_opening_debt : (sup.opening_debt || 0));
+
+            // Dòng Số dư đầu kỳ
+            const openingDateStr = sup.opening_debt_date ? new Date(sup.opening_debt_date).toLocaleDateString('vi-VN') : (fromDate ? new Date(fromDate).toLocaleDateString('vi-VN') : '');
+            rows.push([
+                "-",
+                openingDateStr,
+                "ĐẦU KỲ",
+                `SỐ DƯ CÔNG NỢ ĐẦU KỲ MANG SANG ${sup.opening_debt_note ? '(' + sup.opening_debt_note + ')' : ''}`,
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                runningDebt
+            ]);
+
+            // Timeline
+            const timeline = [];
+            purchases.forEach(po => {
+                const dt = po.created_at || po.receive_date || Date.now();
+                timeline.push({
+                    type: 'PURCHASE',
+                    date: new Date(dt).getTime(),
+                    dateStr: new Date(dt).toLocaleDateString('vi-VN'),
+                    po: po
+                });
+            });
+
+            payments.forEach(p => {
+                const dt = p.created_at || Date.now();
+                timeline.push({
+                    type: 'PAYMENT',
+                    date: new Date(dt).getTime(),
+                    dateStr: new Date(dt).toLocaleDateString('vi-VN'),
+                    payment: p
+                });
+            });
+
+            timeline.sort((a, b) => a.date - b.date);
+
+            let stt = 1;
+            timeline.forEach(item => {
+                if (item.type === 'PURCHASE') {
+                    const po = item.po;
+                    const poAmount = parseFloat(po.items_amount || po.total_amount || 0);
+                    runningDebt += poAmount;
+
+                    let items = po.items;
+                    if (typeof items === 'string') {
+                        try { items = JSON.parse(items); } catch(e) { items = []; }
+                    }
+                    if (!items || !Array.isArray(items) || items.length === 0) {
+                        items = [{
+                            name: `Đơn mua hàng ${po.po_code}`,
+                            unit: 'Lô',
+                            quantity: 1,
+                            price: poAmount,
+                            total: poAmount
+                        }];
+                    }
+
+                    items.forEach((it, idx) => {
+                        const isFirst = (idx === 0);
+                        const itQty = parseFloat(it.quantity || it.actual_qty || it.qty || 1);
+                        const itPrice = parseFloat(it.price || it.unit_price || 0);
+                        const itTotal = parseFloat(it.total || it.amount || (itQty * itPrice));
+
+                        rows.push([
+                            stt++,
+                            isFirst ? item.dateStr : "",
+                            isFirst ? (po.po_code || "") : "",
+                            it.name || it.product_name || "Vật tư / Thiết bị",
+                            it.unit || "Cái",
+                            itQty,
+                            itPrice,
+                            isFirst ? poAmount : "",
+                            isFirst ? "-" : "",
+                            isFirst ? runningDebt : ""
+                        ]);
+                    });
+                } else if (item.type === 'PAYMENT') {
+                    const pay = item.payment;
+                    const payAmount = parseFloat(pay.amount || 0);
+                    runningDebt -= payAmount;
+
+                    rows.push([
+                        stt++,
+                        item.dateStr,
+                        pay.payment_code || "",
+                        `[ỦY NHIỆM CHI] ${pay.note || 'Thanh toán tiền hàng NCC'} (${pay.payment_method || 'CK'})`,
+                        "-",
+                        "-",
+                        "-",
+                        "-",
+                        payAmount,
+                        runningDebt
+                    ]);
+                }
+            });
+
+            const totalPurchasedPeriod = sup.period_purchased != null ? sup.period_purchased : purchases.reduce((acc, po) => acc + parseFloat(po.items_amount || po.total_amount || 0), 0);
+            const totalPaidPeriod = sup.period_paid != null ? sup.period_paid : payments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
+
+            rows.push([]);
+            rows.push(["", "", "", "", "", "", "TỔNG PHÁT SINH MUA HÀNG (PO TRONG KỲ)", totalPurchasedPeriod, "", ""]);
+            rows.push(["", "", "", "", "", "", "TỔNG TIỀN ĐÃ THANH TOÁN (UNC TRONG KỲ)", "", totalPaidPeriod, ""]);
+            rows.push(["", "", "", "", "", "", "DƯ NỢ CUỐI KỲ PHẢI TRẢ NCC (TK 331)", "", "", runningDebt]);
+            rows.push([]);
+            rows.push(["Số tiền nợ còn lại bằng chữ:", window.modPayment.docSoTienTiengViet(Math.round(runningDebt))]);
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+
+            ws['!cols'] = [
+                { wch: 6 },  // STT
+                { wch: 13 }, // NGÀY
+                { wch: 16 }, // MÃ CHỨNG TỪ
+                { wch: 38 }, // TÊN HÀNG / DIỄN GIẢI
+                { wch: 8 },  // ĐVT
+                { wch: 10 }, // SL
+                { wch: 15 }, // ĐƠN GIÁ
+                { wch: 18 }, // PHÁT SINH MUA
+                { wch: 18 }, // ĐÃ THANH TOÁN
+                { wch: 18 }  // DƯ NỢ CÒN LẠI
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Doi_Chieu_331");
+
+            const safeName = (sup.name || 'NCC').replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_');
+            const fileName = `Bang_Doi_Chieu_Cong_No_NCC_${safeName}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        } catch (e) {
+            console.error("Lỗi xuất Excel:", e);
+            alert("Lỗi xuất file Excel: " + e.message);
+        }
+    },
+
+    docSoTienTiengViet: (soTien) => {
+        let num = Math.round(parseFloat(soTien) || 0);
+        if (num === 0) return "Không đồng.";
+        let prefix = "";
+        if (num < 0) {
+            prefix = "Âm ";
+            num = Math.abs(num);
+        }
+        const chuSo = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+        const tien = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"];
+        
+        function docBlock(n, showZeroHundred) {
+            const tram = Math.floor(n / 100);
+            const chuc = Math.floor((n % 100) / 10);
+            const donVi = n % 10;
+            let str = "";
+            if (tram > 0 || showZeroHundred) str += chuSo[tram] + " trăm ";
+            if (chuc > 1) {
+                str += chuSo[chuc] + " mươi ";
+                if (donVi === 1) str += "mốt ";
+                else if (donVi === 5) str += "lăm ";
+                else if (donVi > 0) str += chuSo[donVi] + " ";
+            } else if (chuc === 1) {
+                str += "mười ";
+                if (donVi === 5) str += "lăm ";
+                else if (donVi > 0) str += chuSo[donVi] + " ";
+            } else if (chuc === 0 && donVi > 0) {
+                if (tram > 0 || showZeroHundred) str += "lẻ ";
+                str += chuSo[donVi] + " ";
+            }
+            return str;
+        }
+        const strNum = num.toString();
+        const blocks = [];
+        let temp = strNum;
+        while (temp.length > 0) {
+            blocks.unshift(parseInt(temp.slice(-3), 10));
+            temp = temp.slice(0, -3);
+        }
+        let result = "";
+        for (let i = 0; i < blocks.length; i++) {
+            const b = blocks[i];
+            const tier = blocks.length - 1 - i;
+            if (b > 0) {
+                const showZero = i > 0;
+                result += docBlock(b, showZero) + tien[tier] + " ";
+            }
+        }
+        result = prefix + result.trim() + " đồng chẵn.";
+        return result.charAt(0).toUpperCase() + result.slice(1);
     }
 };
 
