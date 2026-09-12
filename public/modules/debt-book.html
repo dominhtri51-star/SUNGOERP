@@ -48,7 +48,7 @@
             <div class="relative shrink-0">
                 <select id="filter-debt-status" onchange="window.modDebtBook.onFilterChange()" class="appearance-none bg-white border border-slate-200 rounded-xl px-3 py-1.5 pr-6 text-xs font-bold text-slate-700 outline-none shadow-2xs cursor-pointer">
                     <option value="RECEIVABLE" selected>🟢 Chỉ phải thu (Đã xuất)</option>
-                    <option value="UNCOMPLETED">📦 Có đơn chưa hoàn thành (Chưa xuất)</option>
+                    <option value="UNCOMPLETED">📦 Đơn có lệnh xuất (Chưa hoàn tất)</option>
                     <option value="ALL">Tất cả trạng thái nợ</option>
                     <option value="PAYABLE">🟠 Chỉ phải trả (Tiền cọc)</option>
                     <option value="ZERO">⚪ Đã hết nợ</option>
@@ -57,7 +57,7 @@
             </div>
         </div>
 
-        <!-- 3 THẺ TỔNG HỢP: PHẢI THU, PHẢI TRẢ & ĐƠN CHƯA HOÀN THÀNH / CHƯA XUẤT -->
+        <!-- 3 THẺ TỔNG HỢP: PHẢI THU, PHẢI TRẢ & ĐƠN CÓ LỆNH XUẤT CHƯA HOÀN THÀNH -->
         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             <!-- THẺ 1: PHẢI THU (MÀU XANH LÁ NHẸ) -->
             <div onclick="window.modDebtBook.quickFilterStatus('RECEIVABLE')" class="bg-emerald-50/90 hover:bg-emerald-100/90 active:scale-[0.98] border border-emerald-200/80 rounded-2xl p-3.5 sm:p-4.5 flex flex-col justify-between transition shadow-2xs cursor-pointer group">
@@ -87,20 +87,20 @@
                 </div>
             </div>
 
-            <!-- THẺ 3: ĐƠN CHƯA HOÀN THÀNH / CHƯA XUẤT KHO (MÀU TÍM INDIGO) -->
+            <!-- THẺ 3: ĐƠN CÓ LỆNH XUẤT CHƯA HOÀN THÀNH (MÀU TÍM INDIGO) -->
             <div onclick="window.modDebtBook.quickFilterStatus('UNCOMPLETED')" class="col-span-2 md:col-span-1 bg-indigo-50/90 hover:bg-indigo-100/90 active:scale-[0.98] border border-indigo-200/80 rounded-2xl p-3.5 sm:p-4.5 flex flex-col justify-between transition shadow-2xs cursor-pointer group">
                 <div class="flex items-center justify-between mb-1">
                     <div class="flex items-center gap-1.5 text-indigo-800 text-[11px] sm:text-xs font-bold">
                         <span class="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[9px] font-black group-hover:scale-110 transition">
-                            <i class="fas fa-box-open"></i>
+                            <i class="fas fa-truck-fast"></i>
                         </span>
-                        <span>Đơn chưa hoàn thành</span>
+                        <span>Đơn có lệnh xuất (Chưa hoàn tất)</span>
                     </div>
-                    <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-200/70 text-indigo-800 tracking-wider">Sale theo dõi</span>
+                    <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-200/70 text-indigo-800 tracking-wider">Đang giao</span>
                 </div>
                 <div>
                     <h2 class="text-base sm:text-2xl font-black text-indigo-950 tracking-tight leading-tight truncate" id="kpi-uncompleted-total">0</h2>
-                    <p class="text-[10px] text-indigo-700/90 font-medium mt-0.5" id="kpi-uncompleted-count">0 đơn chưa xuất kho</p>
+                    <p class="text-[10px] text-indigo-700/90 font-medium mt-0.5" id="kpi-uncompleted-count">0 đơn có lệnh xuất</p>
                 </div>
             </div>
         </div>
@@ -227,28 +227,28 @@
             </div>
         </div>
 
-        <!-- KHỐI ĐƠN HÀNG CHƯA HOÀN THÀNH / CHƯA XUẤT KHO (SALE THEO DÕI - KHÔNG TÍNH NỢ 131) -->
+        <!-- KHỐI ĐƠN HÀNG CÓ LỆNH XUẤT CHƯA HOÀN THÀNH (SALE & KHO THEO DÕI GIAO) -->
         <div id="detail-uncompleted-section" class="hidden max-w-2xl w-full mx-auto px-4 mt-4">
             <div class="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <div class="flex items-center gap-2">
                         <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
-                            <i class="fas fa-box-open"></i>
+                            <i class="fas fa-truck-fast"></i>
                         </span>
                         <div>
-                            <h4 class="text-xs sm:text-sm font-black text-indigo-950">Đơn hàng đang xử lý / Chưa xuất kho</h4>
-                            <p class="text-[10px] text-indigo-700 font-medium">Do Sales phụ trách theo dõi cọc & tiến độ (chưa ghi nợ chính thức)</p>
+                            <h4 class="text-xs sm:text-sm font-black text-indigo-950">Đơn có lệnh xuất đang giao / Chưa hoàn thành</h4>
+                            <p class="text-[10px] text-indigo-700 font-medium">Hàng đã có lệnh xuất kho / đang vận chuyển, chưa xác nhận hoàn tất</p>
                         </div>
                     </div>
                     <span id="detail-uncompleted-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-200 text-indigo-900 shrink-0">0 đơn</span>
                 </div>
 
                 <!-- ALERT NHẮC NHỞ KẾ TOÁN & SALE -->
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 mb-2.5 flex items-start gap-2 text-[11px] text-amber-900">
-                    <i class="fas fa-shield-halved text-amber-600 mt-0.5 text-xs shrink-0"></i>
+                <div class="bg-indigo-100/60 border border-indigo-200 rounded-xl p-2.5 mb-2.5 flex items-start gap-2 text-[11px] text-indigo-900">
+                    <i class="fas fa-circle-info text-indigo-600 mt-0.5 text-xs shrink-0"></i>
                     <div>
-                        <strong class="font-bold">Lưu ý Kế toán & Kinh doanh:</strong>
-                        <span>Đơn hàng chưa xuất kho không được tính vào công nợ 131. Sale đang giữ liên lạc & thu cọc, Kế toán tuyệt đối không đòi nợ trùng lặp với khách!</span>
+                        <strong class="font-bold">Theo dõi giao hàng & đối chiếu:</strong>
+                        <span>Đơn hàng đã có lệnh xuất kho đang trong quá trình vận chuyển / giao xe. Kế toán & Sale phối hợp theo dõi tiến độ giao nhận để thu nợ hoặc xác nhận hoàn tất.</span>
                     </div>
                 </div>
 
@@ -814,7 +814,7 @@ window.modDebtBook = {
                 }
                 const uncompletedCountEl = document.getElementById('kpi-uncompleted-count');
                 if (uncompletedCountEl) {
-                    uncompletedCountEl.innerText = `${s.unexported_orders_count || s.uncompleted_orders_count || 0} đơn chưa xuất kho (Sale theo dõi)`;
+                    uncompletedCountEl.innerText = `${s.uncompleted_orders_count || 0} đơn có lệnh xuất (chưa hoàn thành)`;
                 }
 
                 const remBadge = document.getElementById('badge-reminders-count');
@@ -879,8 +879,8 @@ window.modDebtBook = {
             const uncompletedChip = hasUncompleted ? `
                 <div class="mt-1 flex items-center gap-1.5 flex-wrap">
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200/80 text-[10px] font-bold text-indigo-700">
-                        <i class="fas fa-box text-[9px]"></i>
-                        <span>${p.uncompleted_orders_count} đơn chưa xuất (${window.modDebtBook.fmtMoney(p.uncompleted_orders_total)} đ)</span>
+                        <i class="fas fa-truck-fast text-[9px]"></i>
+                        <span>${p.uncompleted_orders_count} đơn đang giao (${window.modDebtBook.fmtMoney(p.uncompleted_orders_total)} đ)</span>
                     </span>
                     ${p.sales_names ? `<span class="text-[10px] text-slate-500 font-medium"><i class="fas fa-user-tie text-[9px] text-slate-400 mr-0.5"></i>Sale: <strong class="text-slate-700">${p.sales_names}</strong></span>` : ''}
                 </div>
@@ -1017,24 +1017,24 @@ window.modDebtBook = {
         }
 
         section.classList.remove('hidden');
-        const unexpCount = orders.filter(o => !o.is_dispatched).length;
         if (badge) {
-            badge.innerText = `${orders.length} đơn (${unexpCount} chưa xuất)`;
+            badge.innerText = `${orders.length} đơn có lệnh xuất`;
         }
 
         list.innerHTML = orders.map(o => {
             const d = new Date(o.created_at);
             const dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : '';
             
-            const dispatchBadge = o.is_dispatched ? `
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200 shrink-0">
-                    <i class="fas fa-truck-fast text-[9px]"></i> Đã phát lệnh / Đang giao (Đã tính nợ 131)
-                </span>
-            ` : `
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
-                    <i class="fas fa-clock text-[9px]"></i> HÀNG CHƯA XUẤT (Chưa tính nợ - Sale theo dõi)
-                </span>
-            `;
+            let statusBadge = '';
+            if (o.status === 'SHIPPING_CMD') {
+                statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200 shrink-0"><i class="fas fa-file-invoice text-[9px]"></i> Lệnh xuất kho (Đã tính nợ 131)</span>`;
+            } else if (o.status === 'PACKED') {
+                statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200 shrink-0"><i class="fas fa-box text-[9px]"></i> Đã đóng gói (Đã tính nợ 131)</span>`;
+            } else if (o.status === 'SHIPPED') {
+                statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0"><i class="fas fa-truck-fast text-[9px]"></i> Đang giao hàng (Đã tính nợ 131)</span>`;
+            } else {
+                statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200 shrink-0"><i class="fas fa-truck-fast text-[9px]"></i> Đã phát lệnh xuất (Đã tính nợ 131)</span>`;
+            }
 
             return `
             <div class="bg-white rounded-xl p-3 border border-indigo-100 shadow-2xs hover:border-indigo-300 transition">

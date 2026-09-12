@@ -136,17 +136,16 @@ router.get('/summary', async (req, res) => {
         `);
         const reminderCount = parseInt(reminderRes.rows[0]?.count || 0);
 
-        // Đếm tổng hợp các đơn hàng chưa hoàn thành & chưa xuất kho (để kế toán & sale phối hợp, tránh đòi nợ trùng)
+        // Đếm tổng hợp các đơn hàng chưa hoàn thành tính từ khi có lệnh xuất kho (loại trừ đơn nháp và đơn chuẩn bị)
         const uncompletedRes = await pool.query(`
             SELECT 
                 COUNT(id) as uncompleted_orders_count,
                 COALESCE(SUM(total_amount), 0) as uncompleted_orders_total,
                 COALESCE(SUM(total_amount - COALESCE(paid_amount, 0)), 0) as uncompleted_orders_remaining,
-                COUNT(DISTINCT customer_id) as uncompleted_customers_count,
-                COUNT(CASE WHEN (status IN ('PENDING', 'PROCESSING') AND dispatched_at IS NULL) THEN 1 END) as unexported_orders_count,
-                COALESCE(SUM(CASE WHEN (status IN ('PENDING', 'PROCESSING') AND dispatched_at IS NULL) THEN total_amount ELSE 0 END), 0) as unexported_orders_total
+                COUNT(DISTINCT customer_id) as uncompleted_customers_count
             FROM orders 
-            WHERE status NOT IN ('COMPLETED', 'CANCELLED', 'RETURNED')
+            WHERE (status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED') OR dispatched_at IS NOT NULL)
+              AND status NOT IN ('COMPLETED', 'CANCELLED', 'RETURNED')
         `);
         const unc = uncompletedRes.rows[0] || {};
 
@@ -161,9 +160,7 @@ router.get('/summary', async (req, res) => {
                 uncompleted_orders_count: parseInt(unc.uncompleted_orders_count || 0),
                 uncompleted_orders_total: Math.round(parseFloat(unc.uncompleted_orders_total || 0)),
                 uncompleted_orders_remaining: Math.round(parseFloat(unc.uncompleted_orders_remaining || 0)),
-                uncompleted_customers_count: parseInt(unc.uncompleted_customers_count || 0),
-                unexported_orders_count: parseInt(unc.unexported_orders_count || 0),
-                unexported_orders_total: Math.round(parseFloat(unc.unexported_orders_total || 0))
+                uncompleted_customers_count: parseInt(unc.uncompleted_customers_count || 0)
             }
         });
     } catch(err) {
@@ -220,12 +217,12 @@ router.get('/partners', async (req, res) => {
                     COUNT(o.id) as uncompleted_count,
                     COALESCE(SUM(o.total_amount), 0) as uncompleted_total,
                     COALESCE(SUM(o.total_amount - COALESCE(o.paid_amount, 0)), 0) as uncompleted_remaining,
-                    COUNT(CASE WHEN (o.status IN ('PENDING', 'PROCESSING') AND o.dispatched_at IS NULL) THEN 1 END) as unexported_count,
-                    COALESCE(SUM(CASE WHEN (o.status IN ('PENDING', 'PROCESSING') AND o.dispatched_at IS NULL) THEN o.total_amount ELSE 0 END), 0) as unexported_total,
                     ARRAY_TO_STRING(ARRAY_AGG(DISTINCT COALESCE(e.full_name, o.sales_signed_name, 'Sale')) FILTER (WHERE e.full_name IS NOT NULL OR o.sales_signed_name IS NOT NULL), ', ') as sales_names
                 FROM orders o
                 LEFT JOIN employees e ON o.employee_id = e.id
-                WHERE o.status NOT IN ('COMPLETED', 'CANCELLED', 'RETURNED') AND o.customer_id IS NOT NULL
+                WHERE (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED') OR o.dispatched_at IS NOT NULL)
+                  AND o.status NOT IN ('COMPLETED', 'CANCELLED', 'RETURNED') 
+                  AND o.customer_id IS NOT NULL
                 GROUP BY o.customer_id
             )
             SELECT 
@@ -242,8 +239,6 @@ router.get('/partners', async (req, res) => {
                 COALESCE(punc.uncompleted_count, 0) as uncompleted_count,
                 COALESCE(punc.uncompleted_total, 0) as uncompleted_total,
                 COALESCE(punc.uncompleted_remaining, 0) as uncompleted_remaining,
-                COALESCE(punc.unexported_count, 0) as unexported_count,
-                COALESCE(punc.unexported_total, 0) as unexported_total,
                 COALESCE(punc.sales_names, '') as sales_names,
                 GREATEST(po.latest_order_date, ptx.latest_tx_date) as last_activity_date,
                 ptx.active_reminder as reminder_date
@@ -293,8 +288,6 @@ router.get('/partners', async (req, res) => {
                 uncompleted_orders_count: parseInt(r.uncompleted_count || 0),
                 uncompleted_orders_total: Math.round(parseFloat(r.uncompleted_total || 0)),
                 uncompleted_orders_remaining: Math.round(parseFloat(r.uncompleted_remaining || 0)),
-                unexported_orders_count: parseInt(r.unexported_count || 0),
-                unexported_orders_total: Math.round(parseFloat(r.unexported_total || 0)),
                 sales_names: r.sales_names || ''
             };
         });
@@ -497,6 +490,7 @@ router.get('/partner/:id', async (req, res) => {
             FROM orders o
             LEFT JOIN employees e ON o.employee_id = e.id
             WHERE o.customer_id = $1 
+              AND (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED') OR o.dispatched_at IS NOT NULL)
               AND o.status NOT IN ('COMPLETED', 'CANCELLED', 'RETURNED')
             ORDER BY o.created_at DESC
         `, [id]);
@@ -513,14 +507,12 @@ router.get('/partner/:id', async (req, res) => {
             notes: o.notes || '',
             shipping_address: o.shipping_address || '',
             sales_name: o.sales_name,
-            is_dispatched: Boolean(o.is_dispatched)
+            is_dispatched: true
         }));
 
         const uncompletedCount = uncompletedOrders.length;
         const uncompletedTotal = uncompletedOrders.reduce((acc, o) => acc + o.total_amount, 0);
         const uncompletedRemaining = uncompletedOrders.reduce((acc, o) => acc + o.remaining, 0);
-        const unexportedCount = uncompletedOrders.filter(o => !o.is_dispatched).length;
-        const unexportedTotal = uncompletedOrders.filter(o => !o.is_dispatched).reduce((acc, o) => acc + o.total_amount, 0);
 
         res.json({
             success: true,
@@ -533,9 +525,7 @@ router.get('/partner/:id', async (req, res) => {
                 active_reminder: lastReminderRes.rows[0] || null,
                 uncompleted_orders_count: uncompletedCount,
                 uncompleted_orders_total: uncompletedTotal,
-                uncompleted_orders_remaining: uncompletedRemaining,
-                unexported_orders_count: unexportedCount,
-                unexported_orders_total: unexportedTotal
+                uncompleted_orders_remaining: uncompletedRemaining
             },
             transactions: timelineEvents,
             uncompleted_orders: uncompletedOrders
