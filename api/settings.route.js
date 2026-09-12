@@ -4,7 +4,7 @@ const router = express.Router();
 function isAuthorizedAdmin(req) {
     if (req.user && req.user.role) {
         const userRole = String(req.user.role).toUpperCase().trim();
-        const adminRoles = ["ADMIN", "SUPER_ADMIN", "GIAM_DOC", "TONG_GIAM_DOC", "DIRECTOR"];
+        const adminRoles = ["ADMIN", "SUPER_ADMIN", "GIAM_DOC", "TONG_GIAM_DOC", "DIRECTOR", "KE_TOAN", "KE_TOAN_TRUONG"];
         return adminRoles.includes(userRole);
     }
     return false;
@@ -218,7 +218,23 @@ const initTable = async () => {
                 ['quote_store_logo', 'https://sungo.vn/wp-content/uploads/2023/11/logo-sungo.png'],
                 ['delivery_notes', 'Hàng hóa đã xuất kho vui lòng kiểm tra kỹ. Không nhận đổi trả nếu không phải lỗi từ Nhà sản xuất.'],
                 ['quote_templates', JSON.stringify(DEFAULT_QUOTE_TEMPLATES)],
-                ['role_permissions', JSON.stringify(DEFAULT_ROLE_PERMISSIONS)]
+                ['role_permissions', JSON.stringify(DEFAULT_ROLE_PERMISSIONS)],
+                ['supplier_statement_config', JSON.stringify({
+                    company_name: 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO',
+                    tax_code: '0315614349',
+                    address: '419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM',
+                    phone: '0855.959.656',
+                    email: 'contact@sungo.vn',
+                    brand_name: 'SUNGO ERP',
+                    logo_url: 'https://w.ladicdn.com/59c7c20ca47ab2ec0ae66b42/logo-slogan-sungo-20240730095349-sow7b.png',
+                    show_logo: true,
+                    sign_title_a: 'ĐẠI DIỆN CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO',
+                    sign_sub_a: '(Người lập bảng & Kế toán trưởng)',
+                    sign_dept_a: 'Bộ Phận Kế Toán Tài Chính',
+                    sign_title_b: 'ĐẠI DIỆN NHÀ CUNG CẤP',
+                    sign_sub_b: '(Ký, ghi rõ họ tên và đóng dấu)',
+                    footer_note: '* Bảng đối chiếu công nợ này là cơ sở để hai bên đối chiếu và xác nhận số liệu thanh toán tiền hàng.'
+                })]
             ];
 
             for (const [k, v] of defaults) {

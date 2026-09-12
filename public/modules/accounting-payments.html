@@ -24,6 +24,9 @@
             <button onclick="window.modPayment.openCreateSupplier()" class="flex-1 md:flex-initial bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-2 px-3.5 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-building"></i> <span>Thêm NCC</span>
             </button>
+            <button onclick="window.modPayment.openStatementConfigModal()" class="flex-1 md:flex-initial bg-white hover:bg-slate-50 active:scale-95 text-slate-700 font-bold py-2 px-3 rounded-xl text-xs transition border border-slate-300 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap" title="Cài đặt thông tin công ty & mẫu in đối chiếu (331)">
+                <i class="fas fa-sliders-h text-amber-500"></i> <span>Cài Đặt Phiếu In</span>
+            </button>
             <button onclick="window.modPayment.reloadAll()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition border border-slate-200 text-xs font-bold cursor-pointer" title="Làm mới">
                 <i class="fas fa-sync-alt"></i>
             </button>
@@ -507,6 +510,9 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
+                <button type="button" onclick="window.modPayment.openStatementConfigModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-bold py-1.5 px-2.5 sm:px-3 rounded-xl text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer" title="Cài đặt thông tin công ty & mẫu in đối chiếu">
+                    <i class="fas fa-cog"></i> <span class="hidden sm:inline">Cài Đặt Phiếu In</span>
+                </button>
                 <button type="button" onclick="window.modPayment.printStatement()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
                     <i class="fas fa-print"></i> <span>In Đối Chiếu / PDF</span>
                 </button>
@@ -543,15 +549,18 @@
             <!-- Header Công Ty & Logo -->
             <div class="flex justify-between items-start pb-4 border-b-2 border-slate-800">
                 <div class="flex items-center gap-3">
-                    <div class="text-amber-500 font-black text-2xl tracking-widest flex items-center gap-1.5">
-                        <i class="fas fa-solar-panel text-3xl"></i>
-                        <span>SUNGO<span class="text-slate-900">ERP</span></span>
+                    <div id="stmt-view-logo-wrap" class="flex items-center gap-2">
+                        <img id="stmt-view-logo-img" src="https://w.ladicdn.com/59c7c20ca47ab2ec0ae66b42/logo-slogan-sungo-20240730095349-sow7b.png" alt="Logo" class="h-9 max-w-[150px] object-contain">
+                        <div id="stmt-view-brand-wrap" class="text-amber-500 font-black text-2xl tracking-widest hidden flex items-center gap-1.5">
+                            <i class="fas fa-solar-panel text-3xl"></i>
+                            <span id="stmt-view-brand-name">SUNGO<span class="text-slate-900">ERP</span></span>
+                        </div>
                     </div>
                 </div>
-                <div class="text-right text-xs leading-relaxed">
-                    <h2 class="font-black text-sm uppercase text-slate-900">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</h2>
-                    <p class="text-slate-600">419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
-                    <p class="text-slate-600 font-medium">MST: <span class="font-bold">0315614349</span> &nbsp;|&nbsp; Điện thoại: <span class="font-bold">0937039889</span> &nbsp;|&nbsp; Email: <span class="font-bold">info@sungo.vn</span></p>
+                <div class="text-right text-xs leading-relaxed max-w-[65%]">
+                    <h2 class="font-black text-sm uppercase text-slate-900" id="stmt-view-company-name">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</h2>
+                    <p class="text-slate-600" id="stmt-view-address">419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
+                    <p class="text-slate-600 font-medium" id="stmt-view-contact-wrap">MST: <span class="font-bold font-mono" id="stmt-view-tax">0315614349</span> &nbsp;|&nbsp; Điện thoại: <span class="font-bold" id="stmt-view-phone">0855.959.656</span> &nbsp;|&nbsp; Email: <span class="font-bold" id="stmt-view-email">contact@sungo.vn</span></p>
                 </div>
             </div>
 
@@ -567,10 +576,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
                 <div class="space-y-1">
                     <p class="font-black uppercase text-[11px] text-blue-900">BÊN A (ĐƠN VỊ MUA HÀNG):</p>
-                    <p class="font-bold text-slate-900">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</p>
-                    <p class="text-slate-600">Mã số thuế: <b class="font-mono">0315614349</b></p>
-                    <p class="text-slate-600">Địa chỉ: 419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
-                    <p class="text-slate-600">Điện thoại: <b>0937.039.889</b></p>
+                    <p class="font-bold text-slate-900" id="stmt-view-bena-name">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</p>
+                    <p class="text-slate-600">Mã số thuế: <b class="font-mono" id="stmt-view-bena-tax">0315614349</b></p>
+                    <p class="text-slate-600">Địa chỉ: <span id="stmt-view-bena-address">419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</span></p>
+                    <p class="text-slate-600">Điện thoại: <b id="stmt-view-bena-phone">0855.959.656</b> &nbsp;|&nbsp; Email: <span id="stmt-view-bena-email">contact@sungo.vn</span></p>
                 </div>
                 <div class="space-y-1 border-t md:border-t-0 md:border-l border-slate-200 pt-2 md:pt-0 md:pl-3">
                     <p class="font-black uppercase text-[11px] text-rose-900">BÊN B (NHÀ CUNG CẤP):</p>
@@ -649,20 +658,230 @@
                 Số tiền nợ còn lại bằng chữ: <span class="font-bold text-slate-900" id="sup-stmt-words">Không đồng.</span>
             </div>
 
+            <!-- Ghi chú chân trang phiếu đối chiếu -->
+            <p class="text-[10.5px] text-slate-500 italic mt-2.5 leading-relaxed" id="stmt-view-footer-note">* Bảng đối chiếu công nợ này là cơ sở để hai bên đối chiếu và xác nhận số liệu thanh toán tiền hàng.</p>
+
             <!-- Khung chữ ký 2 bên -->
             <div class="grid grid-cols-2 gap-4 mt-8 pt-4 text-center text-xs">
                 <div>
-                    <p class="font-black text-slate-800 uppercase">ĐẠI DIỆN NHÀ CUNG CẤP</p>
-                    <p class="text-slate-500 italic mt-0.5 text-[11px]">(Ký, ghi rõ họ tên và đóng dấu)</p>
+                    <p class="font-black text-slate-800 uppercase" id="stmt-view-sign-title-b">ĐẠI DIỆN NHÀ CUNG CẤP</p>
+                    <p class="text-slate-500 italic mt-0.5 text-[11px]" id="stmt-view-sign-sub-b">(Ký, ghi rõ họ tên và đóng dấu)</p>
                     <div class="h-20"></div>
                     <p class="font-black text-slate-900" id="sup-stmt-sign-partner-name">Nhà Cung Cấp</p>
                 </div>
                 <div>
-                    <p class="font-black text-slate-800 uppercase">ĐẠI DIỆN CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</p>
-                    <p class="text-slate-500 italic mt-0.5 text-[11px]">(Người lập bảng & Kế toán trưởng)</p>
+                    <p class="font-black text-slate-800 uppercase" id="stmt-view-sign-title-a">ĐẠI DIỆN CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</p>
+                    <p class="text-slate-500 italic mt-0.5 text-[11px]" id="stmt-view-sign-sub-a">(Người lập bảng & Kế toán trưởng)</p>
                     <div class="h-20"></div>
-                    <p class="font-black text-slate-900">Bộ Phận Kế Toán Tài Chính</p>
+                    <p class="font-black text-slate-900" id="stmt-view-sign-dept-a">Bộ Phận Kế Toán Tài Chính</p>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL 3: CÀI ĐẶT THÔNG TIN PHIẾU IN ĐỐI CHIẾU CÔNG NỢ (TK 331) -->
+<!-- ========================================================= -->
+<div id="modal-statement-config" class="fixed inset-0 z-[110] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 hidden animate-fade-in" onclick="window.modPayment.closeStatementConfigModal()">
+    <div class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh] animate-slide-up" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="p-3.5 sm:p-4 bg-slate-900 text-white flex items-center justify-between gap-3 shrink-0">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-base font-black shrink-0">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <div class="truncate">
+                    <h3 class="text-xs sm:text-sm font-black uppercase text-amber-400 truncate">
+                        CÀI ĐẶT THÔNG TIN PHIẾU ĐỐI CHIẾU CÔNG NỢ (TK 331)
+                    </h3>
+                    <p class="text-[10px] text-slate-400">Tùy chỉnh thông tin công ty, địa chỉ, MST, hotline, email và chữ ký đại diện trên phiếu in A4 & file Excel</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="window.modPayment.loadFromSystemSettings()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold py-1.5 px-3 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer border border-slate-700 transition" title="Tải thông tin từ cấu hình hệ thống ERP">
+                    <i class="fas fa-rotate"></i> <span class="hidden sm:inline">Lấy từ Cài Đặt Hệ Thống</span>
+                </button>
+                <button type="button" onclick="window.modPayment.closeStatementConfigModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Form Body with Scroll -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-slate-50/50">
+            <!-- Nhóm 1: Thông tin Doanh Nghiệp (Bên A) -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h4 class="text-xs font-black uppercase text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-building text-blue-600"></i>
+                        <span>1. Thông Tin Đơn Vị Mua Hàng (Bên A / Header Phiếu In)</span>
+                    </h4>
+                    <span class="text-[10px] text-slate-400 italic">Hiển thị trên đầu bảng & khung Bên A</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                            Tên Pháp Nhân Công Ty (Bên A) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="stmt-cfg-company-name" oninput="window.modPayment.updateConfigLivePreview()" placeholder="VD: CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 bg-white outline-none focus:border-rose-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                            Mã Số Thuế (MST) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="stmt-cfg-tax-code" oninput="window.modPayment.updateConfigLivePreview()" placeholder="0315614349" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-mono font-bold text-slate-900 bg-white outline-none focus:border-rose-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                            Hotline / Số Điện Thoại <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="stmt-cfg-phone" oninput="window.modPayment.updateConfigLivePreview()" placeholder="0855.959.656 / 0937.039.889" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 bg-white outline-none focus:border-rose-500">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                            Địa Chỉ Trụ Sở / Văn Phòng Giao Dịch <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="stmt-cfg-address" oninput="window.modPayment.updateConfigLivePreview()" placeholder="VD: 419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-medium text-slate-900 bg-white outline-none focus:border-rose-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                            Email Liên Hệ / Nhận Đối Soát
+                        </label>
+                        <input type="text" id="stmt-cfg-email" oninput="window.modPayment.updateConfigLivePreview()" placeholder="contact@sungo.vn" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-medium text-slate-900 bg-white outline-none focus:border-rose-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                            Tên Thương Hiệu Thay Thế (Khi không dùng ảnh logo)
+                        </label>
+                        <input type="text" id="stmt-cfg-brand-name" oninput="window.modPayment.updateConfigLivePreview()" placeholder="SUNGO ERP" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-black text-amber-600 bg-white outline-none focus:border-rose-500">
+                    </div>
+
+                    <div class="md:col-span-2 flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-1">
+                        <div class="flex-1 w-full">
+                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                                Đường Dẫn Logo Hình Ảnh (URL)
+                            </label>
+                            <input type="text" id="stmt-cfg-logo-url" oninput="window.modPayment.updateConfigLivePreview()" placeholder="https://.../logo.png" class="w-full border border-slate-300 rounded-xl p-2 text-xs font-mono text-slate-800 bg-white outline-none focus:border-rose-500">
+                        </div>
+                        <div class="flex items-center gap-2 sm:pt-5">
+                            <input type="checkbox" id="stmt-cfg-show-logo" checked onchange="window.modPayment.updateConfigLivePreview()" class="w-4 h-4 text-rose-600 accent-rose-600 rounded cursor-pointer">
+                            <label for="stmt-cfg-show-logo" class="text-xs font-bold text-slate-700 cursor-pointer select-none">Hiển thị Logo ảnh</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nhóm 2: Thông tin Chữ Ký Đại Diện 2 Bên -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h4 class="text-xs font-black uppercase text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-signature text-rose-600"></i>
+                        <span>2. Cấu Hình Khung Ký Xác Nhận (Đại diện Bên A & Bên B)</span>
+                    </h4>
+                    <span class="text-[10px] text-slate-400 italic">Khung ký dưới chân trang A4</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Bên B (NCC) -->
+                    <div class="space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="text-[11px] font-black uppercase text-slate-800 block">Khung Ký Bên B (Nhà Cung Cấp - Cột trái)</span>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-0.5">Tiêu đề người ký</label>
+                            <input type="text" id="stmt-cfg-sign-title-b" oninput="window.modPayment.updateConfigLivePreview()" placeholder="ĐẠI DIỆN NHÀ CUNG CẤP" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-bold bg-white outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-0.5">Dòng chú thích ký</label>
+                            <input type="text" id="stmt-cfg-sign-sub-b" oninput="window.modPayment.updateConfigLivePreview()" placeholder="(Ký, ghi rõ họ tên và đóng dấu)" class="w-full border border-slate-300 rounded-lg p-2 text-xs text-slate-600 italic bg-white outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Bên A (Công ty) -->
+                    <div class="space-y-2 p-3 bg-rose-50/50 rounded-xl border border-rose-200">
+                        <span class="text-[11px] font-black uppercase text-rose-900 block">Khung Ký Bên A (Công Ty Mua Hàng - Cột phải)</span>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-0.5">Tiêu đề người ký</label>
+                            <input type="text" id="stmt-cfg-sign-title-a" oninput="window.modPayment.updateConfigLivePreview()" placeholder="ĐẠI DIỆN CÔNG TY..." class="w-full border border-slate-300 rounded-lg p-2 text-xs font-bold bg-white outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-0.5">Chức danh ký</label>
+                            <input type="text" id="stmt-cfg-sign-sub-a" oninput="window.modPayment.updateConfigLivePreview()" placeholder="(Người lập bảng & Kế toán trưởng)" class="w-full border border-slate-300 rounded-lg p-2 text-xs text-slate-600 italic bg-white outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-0.5">Bộ phận / Tên người ký</label>
+                            <input type="text" id="stmt-cfg-sign-dept-a" oninput="window.modPayment.updateConfigLivePreview()" placeholder="Bộ Phận Kế Toán Tài Chính" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-900 bg-white outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nhóm 3: Ghi chú chân trang -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                <label class="block text-[11px] font-bold text-slate-700 uppercase">
+                    3. Ghi Chú Chân Trang Phiếu Đối Chiếu (Footer Note)
+                </label>
+                <textarea id="stmt-cfg-footer-note" rows="2" oninput="window.modPayment.updateConfigLivePreview()" placeholder="* Bảng đối chiếu công nợ này là cơ sở để hai bên đối chiếu và xác nhận số liệu thanh toán tiền hàng..." class="w-full border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 bg-white outline-none focus:border-rose-500"></textarea>
+            </div>
+
+            <!-- Khung Live Preview xem trước mẫu in -->
+            <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-amber-300 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-black uppercase text-amber-800 flex items-center gap-1.5">
+                        <i class="fas fa-eye text-amber-500"></i> Xem Trước Trực Quan (Live Preview Mẫu In)
+                    </h4>
+                    <span class="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-md">Khổ A4 Portrait</span>
+                </div>
+
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-3">
+                    <!-- Top header preview -->
+                    <div class="flex justify-between items-start pb-2 border-b border-slate-300">
+                        <div id="cfg-prev-logo-box">
+                            <span class="text-amber-500 font-black text-lg" id="cfg-prev-brand-text">SUNGO ERP</span>
+                        </div>
+                        <div class="text-right text-[11px] leading-tight space-y-0.5 max-w-[65%]">
+                            <p class="font-black uppercase text-slate-900 text-xs" id="cfg-prev-company-name">CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO</p>
+                            <p class="text-slate-600" id="cfg-prev-address">419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM</p>
+                            <p class="text-slate-600" id="cfg-prev-contact">MST: 0315614349 | Hotline: 0855.959.656 | Email: contact@sungo.vn</p>
+                        </div>
+                    </div>
+
+                    <!-- Signatures preview -->
+                    <div class="grid grid-cols-2 gap-3 text-center text-[11px] pt-1">
+                        <div>
+                            <p class="font-bold text-slate-800 uppercase" id="cfg-prev-sign-b">ĐẠI DIỆN NHÀ CUNG CẤP</p>
+                            <p class="text-slate-500 italic text-[10px]" id="cfg-prev-sign-sub-b">(Ký, ghi rõ họ tên và đóng dấu)</p>
+                            <div class="h-8"></div>
+                            <p class="font-bold text-slate-900 text-[10.5px]">Tên Nhà Cung Cấp</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800 uppercase" id="cfg-prev-sign-a">ĐẠI DIỆN CÔNG TY...</p>
+                            <p class="text-slate-500 italic text-[10px]" id="cfg-prev-sign-sub-a">(Người lập bảng & Kế toán trưởng)</p>
+                            <div class="h-8"></div>
+                            <p class="font-bold text-slate-900 text-[10.5px]" id="cfg-prev-sign-dept-a">Bộ Phận Kế Toán Tài Chính</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+            <button type="button" onclick="window.modPayment.resetStatementConfigDefaults()" class="px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer flex items-center gap-1.5">
+                <i class="fas fa-undo"></i> <span>Khôi Phục Mặc Định</span>
+            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="window.modPayment.closeStatementConfigModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer">
+                    Đóng
+                </button>
+                <button type="button" onclick="window.modPayment.saveStatementConfig()" class="px-5 py-2 rounded-xl text-xs font-black text-white bg-rose-600 hover:bg-rose-700 shadow-md transition cursor-pointer flex items-center gap-1.5 active:scale-95">
+                    <i class="fas fa-floppy-disk"></i> <span>Lưu Cấu Hình Mẫu In</span>
+                </button>
             </div>
         </div>
     </div>
@@ -681,14 +900,354 @@ window.modPayment = {
     currentFilterStatus: 'ALL',
     selectedSupplierForStatement: null,
 
+    defaultStatementConfig: {
+        company_name: 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO',
+        tax_code: '0315614349',
+        address: '419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM',
+        phone: '0855.959.656',
+        email: 'contact@sungo.vn',
+        brand_name: 'SUNGO ERP',
+        logo_url: 'https://w.ladicdn.com/59c7c20ca47ab2ec0ae66b42/logo-slogan-sungo-20240730095349-sow7b.png',
+        show_logo: true,
+        sign_title_a: 'ĐẠI DIỆN CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO',
+        sign_sub_a: '(Người lập bảng & Kế toán trưởng)',
+        sign_dept_a: 'Bộ Phận Kế Toán Tài Chính',
+        sign_title_b: 'ĐẠI DIỆN NHÀ CUNG CẤP',
+        sign_sub_b: '(Ký, ghi rõ họ tên và đóng dấu)',
+        footer_note: '* Bảng đối chiếu công nợ này là cơ sở để hai bên đối chiếu và xác nhận số liệu thanh toán tiền hàng.'
+    },
+    statementConfig: null,
+
+    loadStatementConfig: async () => {
+        try {
+            const local = localStorage.getItem('sungo_supplier_statement_config');
+            if (local) {
+                window.modPayment.statementConfig = { ...window.modPayment.defaultStatementConfig, ...JSON.parse(local) };
+            }
+        } catch(e) {}
+
+        try {
+            const res = await fetch('/api/settings');
+            const data = await res.json();
+            if (data && data.success && data.data) {
+                const s = data.data;
+                let remoteCfg = s.supplier_statement_config;
+                if (typeof remoteCfg === 'string') {
+                    try { remoteCfg = JSON.parse(remoteCfg); } catch(e) {}
+                }
+                if (remoteCfg && typeof remoteCfg === 'object') {
+                    window.modPayment.statementConfig = { ...window.modPayment.defaultStatementConfig, ...remoteCfg };
+                    localStorage.setItem('sungo_supplier_statement_config', JSON.stringify(window.modPayment.statementConfig));
+                } else if (!window.modPayment.statementConfig) {
+                    const compName = s.quote_store_name || s.store_name || window.modPayment.defaultStatementConfig.company_name;
+                    window.modPayment.statementConfig = {
+                        ...window.modPayment.defaultStatementConfig,
+                        company_name: compName,
+                        tax_code: s.quote_store_tax || s.store_tax || window.modPayment.defaultStatementConfig.tax_code,
+                        address: s.quote_store_address || s.store_address || window.modPayment.defaultStatementConfig.address,
+                        phone: s.quote_store_phone || s.store_phone || s.company_hotline || window.modPayment.defaultStatementConfig.phone,
+                        email: s.quote_store_email || s.store_email || s.company_email || window.modPayment.defaultStatementConfig.email,
+                        logo_url: s.quote_store_logo || s.store_logo || window.modPayment.defaultStatementConfig.logo_url,
+                        sign_title_a: `ĐẠI DIỆN ${compName}`
+                    };
+                }
+            }
+        } catch (e) {
+            console.warn("Lỗi nạp cấu hình mẫu in:", e.message);
+        }
+
+        if (!window.modPayment.statementConfig) {
+            window.modPayment.statementConfig = { ...window.modPayment.defaultStatementConfig };
+        }
+
+        window.modPayment.applyStatementConfigToView();
+    },
+
+    getStatementConfig: () => {
+        if (!window.modPayment.statementConfig) {
+            try {
+                const local = localStorage.getItem('sungo_supplier_statement_config');
+                if (local) {
+                    window.modPayment.statementConfig = { ...window.modPayment.defaultStatementConfig, ...JSON.parse(local) };
+                }
+            } catch(e) {}
+        }
+        return window.modPayment.statementConfig || window.modPayment.defaultStatementConfig;
+    },
+
+    applyStatementConfigToView: () => {
+        const cfg = window.modPayment.getStatementConfig();
+        
+        const elCompName = document.getElementById('stmt-view-company-name');
+        if (elCompName) elCompName.innerText = cfg.company_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+
+        const elAddr = document.getElementById('stmt-view-address');
+        if (elAddr) elAddr.innerText = cfg.address || '';
+
+        const elTax = document.getElementById('stmt-view-tax');
+        if (elTax) elTax.innerText = cfg.tax_code || '';
+
+        const elPhone = document.getElementById('stmt-view-phone');
+        if (elPhone) elPhone.innerText = cfg.phone || '';
+
+        const elEmail = document.getElementById('stmt-view-email');
+        if (elEmail) elEmail.innerText = cfg.email || '';
+
+        const logoImg = document.getElementById('stmt-view-logo-img');
+        const brandWrap = document.getElementById('stmt-view-brand-wrap');
+        const brandName = document.getElementById('stmt-view-brand-name');
+
+        if (cfg.show_logo && cfg.logo_url) {
+            if (logoImg) {
+                logoImg.src = cfg.logo_url;
+                logoImg.classList.remove('hidden');
+            }
+            if (brandWrap) brandWrap.classList.add('hidden');
+        } else {
+            if (logoImg) logoImg.classList.add('hidden');
+            if (brandWrap) {
+                brandWrap.classList.remove('hidden');
+                if (brandName) brandName.innerText = cfg.brand_name || 'SUNGO ERP';
+            }
+        }
+
+        const elBenAName = document.getElementById('stmt-view-bena-name');
+        if (elBenAName) elBenAName.innerText = cfg.company_name || '';
+
+        const elBenATax = document.getElementById('stmt-view-bena-tax');
+        if (elBenATax) elBenATax.innerText = cfg.tax_code || '';
+
+        const elBenAAddr = document.getElementById('stmt-view-bena-address');
+        if (elBenAAddr) elBenAAddr.innerText = cfg.address || '';
+
+        const elBenAPhone = document.getElementById('stmt-view-bena-phone');
+        if (elBenAPhone) elBenAPhone.innerText = cfg.phone || '';
+
+        const elBenAEmail = document.getElementById('stmt-view-bena-email');
+        if (elBenAEmail) elBenAEmail.innerText = cfg.email || '';
+
+        const elFootNote = document.getElementById('stmt-view-footer-note');
+        if (elFootNote) elFootNote.innerText = cfg.footer_note || '';
+
+        const elSignA = document.getElementById('stmt-view-sign-title-a');
+        if (elSignA) elSignA.innerText = cfg.sign_title_a || `ĐẠI DIỆN ${cfg.company_name}`;
+
+        const elSignSubA = document.getElementById('stmt-view-sign-sub-a');
+        if (elSignSubA) elSignSubA.innerText = cfg.sign_sub_a || '(Người lập bảng & Kế toán trưởng)';
+
+        const elSignDeptA = document.getElementById('stmt-view-sign-dept-a');
+        if (elSignDeptA) elSignDeptA.innerText = cfg.sign_dept_a || 'Bộ Phận Kế Toán Tài Chính';
+
+        const elSignB = document.getElementById('stmt-view-sign-title-b');
+        if (elSignB) elSignB.innerText = cfg.sign_title_b || 'ĐẠI DIỆN NHÀ CUNG CẤP';
+
+        const elSignSubB = document.getElementById('stmt-view-sign-sub-b');
+        if (elSignSubB) elSignSubB.innerText = cfg.sign_sub_b || '(Ký, ghi rõ họ tên và đóng dấu)';
+    },
+
+    openStatementConfigModal: () => {
+        const cfg = window.modPayment.getStatementConfig();
+
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val != null ? val : '';
+        };
+
+        setVal('stmt-cfg-company-name', cfg.company_name);
+        setVal('stmt-cfg-tax-code', cfg.tax_code);
+        setVal('stmt-cfg-address', cfg.address);
+        setVal('stmt-cfg-phone', cfg.phone);
+        setVal('stmt-cfg-email', cfg.email);
+        setVal('stmt-cfg-brand-name', cfg.brand_name || 'SUNGO ERP');
+        setVal('stmt-cfg-logo-url', cfg.logo_url || '');
+
+        const chkLogo = document.getElementById('stmt-cfg-show-logo');
+        if (chkLogo) chkLogo.checked = cfg.show_logo !== false;
+
+        setVal('stmt-cfg-sign-title-a', cfg.sign_title_a);
+        setVal('stmt-cfg-sign-sub-a', cfg.sign_sub_a);
+        setVal('stmt-cfg-sign-dept-a', cfg.sign_dept_a);
+        setVal('stmt-cfg-sign-title-b', cfg.sign_title_b);
+        setVal('stmt-cfg-sign-sub-b', cfg.sign_sub_b);
+        setVal('stmt-cfg-footer-note', cfg.footer_note);
+
+        window.modPayment.updateConfigLivePreview();
+
+        const modal = document.getElementById('modal-statement-config');
+        if (modal) {
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+            modal.classList.remove('hidden');
+        }
+    },
+
+    closeStatementConfigModal: () => {
+        const modal = document.getElementById('modal-statement-config');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    updateConfigLivePreview: () => {
+        const getVal = (id, def = '') => document.getElementById(id)?.value?.trim() || def;
+        const cName = getVal('stmt-cfg-company-name', 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO');
+        const tax = getVal('stmt-cfg-tax-code', '0315614349');
+        const phone = getVal('stmt-cfg-phone', '0855.959.656');
+        const addr = getVal('stmt-cfg-address', '419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM');
+        const email = getVal('stmt-cfg-email', 'contact@sungo.vn');
+        const brand = getVal('stmt-cfg-brand-name', 'SUNGO ERP');
+        const logoUrl = getVal('stmt-cfg-logo-url', '');
+        const showLogo = document.getElementById('stmt-cfg-show-logo')?.checked ?? true;
+
+        const signA = getVal('stmt-cfg-sign-title-a', `ĐẠI DIỆN ${cName}`);
+        const signSubA = getVal('stmt-cfg-sign-sub-a', '(Người lập bảng & Kế toán trưởng)');
+        const signDeptA = getVal('stmt-cfg-sign-dept-a', 'Bộ Phận Kế Toán Tài Chính');
+        const signB = getVal('stmt-cfg-sign-title-b', 'ĐẠI DIỆN NHÀ CUNG CẤP');
+        const signSubB = getVal('stmt-cfg-sign-sub-b', '(Ký, ghi rõ họ tên và đóng dấu)');
+
+        const prevName = document.getElementById('cfg-prev-company-name');
+        if (prevName) prevName.innerText = cName;
+
+        const prevAddr = document.getElementById('cfg-prev-address');
+        if (prevAddr) prevAddr.innerText = addr;
+
+        const prevContact = document.getElementById('cfg-prev-contact');
+        if (prevContact) prevContact.innerText = `MST: ${tax} | Hotline: ${phone} | Email: ${email}`;
+
+        const prevLogoBox = document.getElementById('cfg-prev-logo-box');
+        if (prevLogoBox) {
+            if (showLogo && logoUrl) {
+                prevLogoBox.innerHTML = `<img src="${logoUrl}" alt="Logo" class="h-7 max-w-[120px] object-contain" onerror="this.outerHTML='<span class=\\'text-amber-500 font-black text-base\\'>${brand}</span>'">`;
+            } else {
+                prevLogoBox.innerHTML = `<span class="text-amber-500 font-black text-base">${brand}</span>`;
+            }
+        }
+
+        const prevSignA = document.getElementById('cfg-prev-sign-a');
+        if (prevSignA) prevSignA.innerText = signA;
+
+        const prevSignSubA = document.getElementById('cfg-prev-sign-sub-a');
+        if (prevSignSubA) prevSignSubA.innerText = signSubA;
+
+        const prevSignDeptA = document.getElementById('cfg-prev-sign-dept-a');
+        if (prevSignDeptA) prevSignDeptA.innerText = signDeptA;
+
+        const prevSignB = document.getElementById('cfg-prev-sign-b');
+        if (prevSignB) prevSignB.innerText = signB;
+
+        const prevSignSubB = document.getElementById('cfg-prev-sign-sub-b');
+        if (prevSignSubB) prevSignSubB.innerText = signSubB;
+    },
+
+    loadFromSystemSettings: async () => {
+        try {
+            const res = await fetch('/api/settings');
+            const data = await res.json();
+            if (data && data.success && data.data) {
+                const s = data.data;
+                const setVal = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el && val != null) el.value = val;
+                };
+
+                const compName = s.quote_store_name || s.store_name || 'CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO';
+                setVal('stmt-cfg-company-name', compName);
+                setVal('stmt-cfg-tax-code', s.quote_store_tax || s.store_tax || '0315614349');
+                setVal('stmt-cfg-address', s.quote_store_address || s.store_address || 'TP.HCM');
+                setVal('stmt-cfg-phone', s.quote_store_phone || s.store_phone || s.company_hotline || '0855959656');
+                setVal('stmt-cfg-email', s.quote_store_email || s.store_email || s.company_email || 'contact@sungo.vn');
+                setVal('stmt-cfg-logo-url', s.quote_store_logo || s.store_logo || '');
+                setVal('stmt-cfg-sign-title-a', `ĐẠI DIỆN ${compName}`);
+
+                window.modPayment.updateConfigLivePreview();
+
+                if (typeof window.showToast === 'function') {
+                    window.showToast("Đã tải dữ liệu từ Cài Đặt Hệ Thống thành công!", "success");
+                } else {
+                    alert("Đã tải thông tin từ Cài Đặt Hệ Thống thành công!");
+                }
+            }
+        } catch (e) {
+            console.error("Lỗi tải từ cài đặt hệ thống:", e);
+            alert("Không thể tải dữ liệu hệ thống: " + e.message);
+        }
+    },
+
+    resetStatementConfigDefaults: () => {
+        if (!confirm("Bạn có chắc chắn muốn khôi phục thông tin mẫu in về mặc định ban đầu không?")) return;
+        window.modPayment.statementConfig = { ...window.modPayment.defaultStatementConfig };
+        window.modPayment.openStatementConfigModal();
+        if (typeof window.showToast === 'function') {
+            window.showToast("Đã khôi phục cài đặt mặc định.", "info");
+        }
+    },
+
+    saveStatementConfig: async () => {
+        const getVal = (id) => document.getElementById(id)?.value?.trim() || '';
+        const companyName = getVal('stmt-cfg-company-name');
+        if (!companyName) {
+            return alert("Vui lòng nhập Tên Pháp Nhân Công Ty (Bên A)!");
+        }
+
+        const newCfg = {
+            company_name: companyName,
+            tax_code: getVal('stmt-cfg-tax-code') || '0315614349',
+            phone: getVal('stmt-cfg-phone') || '0855.959.656',
+            address: getVal('stmt-cfg-address') || '',
+            email: getVal('stmt-cfg-email') || '',
+            brand_name: getVal('stmt-cfg-brand-name') || 'SUNGO ERP',
+            logo_url: getVal('stmt-cfg-logo-url') || '',
+            show_logo: document.getElementById('stmt-cfg-show-logo')?.checked ?? true,
+            sign_title_a: getVal('stmt-cfg-sign-title-a') || `ĐẠI DIỆN ${companyName}`,
+            sign_sub_a: getVal('stmt-cfg-sign-sub-a') || '(Người lập bảng & Kế toán trưởng)',
+            sign_dept_a: getVal('stmt-cfg-sign-dept-a') || 'Bộ Phận Kế Toán Tài Chính',
+            sign_title_b: getVal('stmt-cfg-sign-title-b') || 'ĐẠI DIỆN NHÀ CUNG CẤP',
+            sign_sub_b: getVal('stmt-cfg-sign-sub-b') || '(Ký, ghi rõ họ tên và đóng dấu)',
+            footer_note: getVal('stmt-cfg-footer-note') || ''
+        };
+
+        window.modPayment.statementConfig = newCfg;
+        localStorage.setItem('sungo_supplier_statement_config', JSON.stringify(newCfg));
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/settings', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({
+                    supplier_statement_config: newCfg
+                })
+            });
+            const result = await res.json();
+            if (!result.success && result.error && !result.error.includes("TỪ CHỐI")) {
+                console.warn("Server save notice:", result.error);
+            }
+        } catch(e) {
+            console.warn("Lưu lên server có ngoại lệ:", e.message);
+        }
+
+        window.modPayment.applyStatementConfigToView();
+        window.modPayment.closeStatementConfigModal();
+
+        if (typeof window.showToast === 'function') {
+            window.showToast("Lưu cấu hình phiếu in đối chiếu công nợ thành công!", "success");
+        } else {
+            alert("Đã lưu cấu hình phiếu in đối chiếu công nợ thành công!");
+        }
+    },
+
     fmt: (num) => new Intl.NumberFormat('vi-VN').format(num || 0),
 
     init: async () => {
+        await window.modPayment.loadStatementConfig();
         await window.modPayment.loadSupplierDebts();
         await window.modPayment.loadPayments();
     },
 
     reloadAll: async () => {
+        await window.modPayment.loadStatementConfig();
         await window.modPayment.loadSupplierDebts();
         await window.modPayment.loadPayments();
     },
@@ -1448,6 +2007,7 @@ window.modPayment = {
     },
 
     renderDetailedStatement: (data) => {
+        window.modPayment.applyStatementConfigToView();
         const sup = data.supplier || {};
         const purchases = data.purchases || [];
         const payments = data.payments || [];
@@ -1880,10 +2440,11 @@ window.modPayment = {
             const fromDateStr = fromDate ? new Date(fromDate).toLocaleDateString('vi-VN') : 'Đầu kỳ';
             const toDateStr = toDate ? new Date(toDate).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN');
 
+            const cfg = window.modPayment.getStatementConfig();
             const rows = [
-                ["CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO"],
-                ["Địa chỉ: 419/13 Song hành xa lộ Hà Nội, P. Trường Thọ, TP. Thủ Đức, TP.HCM"],
-                ["Mã số thuế: 0315614349 | Điện thoại: 0937.039.889 | Email: info@sungo.vn"],
+                [cfg.company_name || "CÔNG TY TNHH ĐIỆN MẶT TRỜI SUNGO"],
+                [`Địa chỉ: ${cfg.address || ""}`],
+                [`Mã số thuế: ${cfg.tax_code || ""} | Điện thoại: ${cfg.phone || ""} | Email: ${cfg.email || ""}`],
                 [],
                 [`BẢNG ĐỐI CHIẾU CÔNG NỢ CHI TIẾT NHÀ CUNG CẤP (TK 331)`],
                 [`Đơn vị: ${(sup.name || 'NHÀ CUNG CẤP').toUpperCase()} | Mã: ${sup.supplier_code || 'NCC' + sup.id}${sup.tax_code ? ' | MST: ' + sup.tax_code : ''}`],
@@ -2013,6 +2574,22 @@ window.modPayment = {
             rows.push(["", "", "", "", "", "", "DƯ NỢ CUỐI KỲ PHẢI TRẢ NCC (TK 331)", "", "", runningDebt]);
             rows.push([]);
             rows.push(["Số tiền nợ còn lại bằng chữ:", window.modPayment.docSoTienTiengViet(Math.round(runningDebt))]);
+            if (cfg.footer_note) {
+                rows.push([]);
+                rows.push([cfg.footer_note]);
+            }
+            rows.push([]);
+            rows.push([
+                "", "", cfg.sign_title_b || "ĐẠI DIỆN NHÀ CUNG CẤP", "", "", "", "", cfg.sign_title_a || `ĐẠI DIỆN ${cfg.company_name}`, "", ""
+            ]);
+            rows.push([
+                "", "", cfg.sign_sub_b || "(Ký, ghi rõ họ tên và đóng dấu)", "", "", "", "", cfg.sign_sub_a || "(Người lập bảng & Kế toán trưởng)", "", ""
+            ]);
+            rows.push([]);
+            rows.push([]);
+            rows.push([
+                "", "", sup.name || "Nhà Cung Cấp", "", "", "", "", cfg.sign_dept_a || "Bộ Phận Kế Toán Tài Chính", "", ""
+            ]);
 
             const ws = XLSX.utils.aoa_to_sheet(rows);
 
