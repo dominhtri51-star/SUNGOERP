@@ -514,30 +514,167 @@ router.post('/detect-specs-warranty', async (req, res) => {
 
             // Nếu có product_id mà thiếu mô tả/danh mục, tìm trong database
             if (it.product_id && (!desc || !cat)) {
-                const pRes = await pool.query("SELECT description, category, sku FROM products WHERE id = $1", [it.product_id]);
+                const pRes = await pool.query("SELECT description, category, sku, accounting_name, accounting_code, product_name FROM products WHERE id = $1", [it.product_id]);
                 if (pRes.rows.length > 0) {
                     desc = desc || pRes.rows[0].description || '';
                     cat = cat || pRes.rows[0].category || '';
-                    sku = sku || pRes.rows[0].sku || '';
+                    sku = sku || pRes.rows[0].accounting_code || pRes.rows[0].sku || '';
+                    it.accounting_name = it.accounting_name || pRes.rows[0].accounting_name || '';
+                    it.commercial_name = it.commercial_name || pRes.rows[0].product_name || '';
                 }
             } else if (it.product_name && (!desc || !cat)) {
-                const pRes = await pool.query("SELECT description, category, sku FROM products WHERE product_name ILIKE $1 LIMIT 1", [it.product_name.trim()]);
+                const pRes = await pool.query("SELECT description, category, sku, accounting_name, accounting_code, product_name FROM products WHERE product_name ILIKE $1 OR accounting_name ILIKE $1 LIMIT 1", [it.product_name.trim()]);
                 if (pRes.rows.length > 0) {
                     desc = desc || pRes.rows[0].description || '';
                     cat = cat || pRes.rows[0].category || '';
-                    sku = sku || pRes.rows[0].sku || '';
+                    sku = sku || pRes.rows[0].accounting_code || pRes.rows[0].sku || '';
+                    it.accounting_name = it.accounting_name || pRes.rows[0].accounting_name || '';
+                    it.commercial_name = it.commercial_name || pRes.rows[0].product_name || '';
                 }
             }
 
-            const detected = detectProductSpecsAndWarranty(it.product_name || '', desc, cat, sku);
+            const detected = detectProductSpecsAndWarranty(it.commercial_name || it.product_name || '', desc, cat, sku);
             results.push({
                 ...it,
+                sku: sku || it.sku || '',
+                accounting_name: it.accounting_name || '',
+                commercial_name: it.commercial_name || '',
                 specs: it.specs || detected.specs,
                 warranty: it.warranty || detected.warranty
             });
         }
 
         res.json({ success: true, data: results });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2c. PUT: CẬP NHẬT NHANH DANH SÁCH HÀNG HÓA & TÊN KẾ TOÁN TRONG HỢP ĐỒNG
+router.put('/:id/items', async (req, res) => {
+    try {
+        const { items } = req.body;
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ success: false, error: 'Danh sách mặt hàng không hợp lệ!' });
+        }
+
+        let calculatedTotal = 0;
+        const formattedItems = items.map((it, idx) => {
+            const qty = parseFloat(it.quantity || 1);
+            const price = parseFloat(it.price || 0);
+            const lineTotal = qty * price;
+            calculatedTotal += lineTotal;
+
+            const pName = (it.product_name || '').trim() || 'Sản phẩm';
+            const detected = detectProductSpecsAndWarranty(it.commercial_name || pName, it.description, it.category, it.sku);
+
+            return {
+                stt: idx + 1,
+                product_id: it.product_id || null,
+                sku: it.sku || '',
+                product_name: pName,
+                accounting_name: it.accounting_name || '',
+                commercial_name: it.commercial_name || '',
+                unit: it.unit || 'Bộ',
+                quantity: qty,
+                price: price,
+                total_amount: lineTotal,
+                specs: it.specs || detected.specs,
+                warranty: it.warranty || detected.warranty
+            };
+        });
+
+        const totalValue = req.body.total_value !== undefined ? parseFloat(req.body.total_value) : calculatedTotal;
+        const totalValueText = docSoThanhChu(totalValue);
+
+        const updateRes = await pool.query(`
+            UPDATE contracts 
+            SET items_snapshot = $1,
+                total_value = $2,
+                total_value_text = $3,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $4
+            RETURNING *
+        `, [JSON.stringify(formattedItems), totalValue, totalValueText, req.params.id]);
+
+        if (updateRes.rowCount === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy hợp đồng!' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Đã cập nhật danh sách hàng hóa và tên kế toán trong hợp đồng thành công!',
+            data: updateRes.rows[0]
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2d. POST: ĐỒNG BỘ TOÀN BỘ TÊN HÀNG HÓA SANG TÊN KẾ TOÁN GỐC TỪ DANH MỤC SẢN PHẨM
+router.post('/:id/sync-accounting-names', async (req, res) => {
+    try {
+        const cRes = await pool.query('SELECT id, items_snapshot FROM contracts WHERE id = $1', [req.params.id]);
+        if (cRes.rowCount === 0) {
+            return res.status(404).json({ success: false, error: 'Không tìm thấy hợp đồng!' });
+        }
+
+        let items = cRes.rows[0].items_snapshot || [];
+        if (typeof items === 'string') {
+            try { items = JSON.parse(items); } catch(e) { items = []; }
+        }
+
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ success: false, error: 'Hợp đồng chưa có danh sách mặt hàng!' });
+        }
+
+        let syncedCount = 0;
+        const updatedItems = [];
+
+        for (const it of items) {
+            let pRow = null;
+            if (it.product_id) {
+                const pRes = await pool.query('SELECT id, product_name, accounting_name, accounting_code, sku, unit FROM products WHERE id = $1', [it.product_id]);
+                if (pRes.rows.length > 0) pRow = pRes.rows[0];
+            }
+            if (!pRow && it.sku) {
+                const pRes = await pool.query('SELECT id, product_name, accounting_name, accounting_code, sku, unit FROM products WHERE sku = $1 OR accounting_code = $1 LIMIT 1', [it.sku]);
+                if (pRes.rows.length > 0) pRow = pRes.rows[0];
+            }
+            if (!pRow && it.product_name) {
+                const pRes = await pool.query('SELECT id, product_name, accounting_name, accounting_code, sku, unit FROM products WHERE product_name ILIKE $1 OR accounting_name ILIKE $1 LIMIT 1', [it.product_name.trim()]);
+                if (pRes.rows.length > 0) pRow = pRes.rows[0];
+            }
+
+            if (pRow && pRow.accounting_name && pRow.accounting_name.trim()) {
+                const accName = pRow.accounting_name.trim();
+                updatedItems.push({
+                    ...it,
+                    product_id: pRow.id || it.product_id,
+                    sku: pRow.accounting_code || pRow.sku || it.sku,
+                    accounting_name: accName,
+                    commercial_name: it.commercial_name || pRow.product_name || it.product_name,
+                    product_name: accName
+                });
+                syncedCount++;
+            } else {
+                updatedItems.push(it);
+            }
+        }
+
+        const updateRes = await pool.query(`
+            UPDATE contracts 
+            SET items_snapshot = $1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $2
+            RETURNING *
+        `, [JSON.stringify(updatedItems), req.params.id]);
+
+        res.json({
+            success: true,
+            message: `Đã đồng bộ thành công ${syncedCount}/${items.length} mặt hàng sang tên Kế toán chuẩn!`,
+            data: updateRes.rows[0]
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -606,27 +743,36 @@ router.post('/from-order/:orderId', async (req, res) => {
         if (!custCompany) custCompany = o.customer_name || o.c_fullname || 'Khách Hàng Mua Hàng';
         if (!custAddress) custAddress = o.customer_address || o.c_address || '';
 
-        // Lấy danh sách sản phẩm trong đơn hàng kèm mô tả và danh mục
+        // Lấy danh sách sản phẩm trong đơn hàng kèm mô tả, danh mục và tên kế toán
         const itemsRes = await client.query(`
             SELECT oi.*, 
-                   COALESCE(p.product_name, oi.product_name, 'Sản phẩm') as product_name,
+                   p.accounting_name,
+                   p.accounting_code,
+                   COALESCE(p.product_name, oi.product_name, 'Sản phẩm') as commercial_product_name,
                    COALESCE(p.sku, oi.sku, '') as sku,
                    COALESCE(p.unit, 'Bộ') as unit,
                    p.description,
                    p.category
             FROM order_items oi
-            LEFT JOIN products p ON oi.product_id = p.id
+            LEFT JOIN products p ON (oi.product_id = p.id OR (oi.product_id IS NULL AND (oi.sku = p.sku OR oi.product_name = p.product_name)))
             WHERE oi.order_id = $1
             ORDER BY oi.id ASC
         `, [o.id]);
 
         const items = itemsRes.rows.map((item, idx) => {
-            const detected = detectProductSpecsAndWarranty(item.product_name, item.description, item.category, item.sku);
+            const rawAccounting = (item.accounting_name && String(item.accounting_name).trim()) ? String(item.accounting_name).trim() : '';
+            const commercialName = item.commercial_product_name || item.product_name || 'Sản phẩm';
+            // Tên hàng hoá trong hợp đồng bán hàng: Lấy tên theo kế toán (accounting_name), nếu không có mới lấy tên thương mại
+            const chosenName = rawAccounting || commercialName;
+
+            const detected = detectProductSpecsAndWarranty(commercialName, item.description, item.category, item.sku);
             return {
                 stt: idx + 1,
                 product_id: item.product_id,
-                sku: item.sku || '',
-                product_name: item.product_name,
+                sku: item.accounting_code || item.sku || '',
+                product_name: chosenName,
+                accounting_name: rawAccounting,
+                commercial_name: commercialName,
                 unit: item.unit || 'Bộ',
                 quantity: parseFloat(item.quantity || 1),
                 price: parseFloat(item.price || 0),

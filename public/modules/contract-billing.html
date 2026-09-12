@@ -267,6 +267,9 @@
                         <i class="fas fa-list-check text-emerald-600"></i> Điều 1: Danh Mục Sản Phẩm, Thông Số & Bảo Hành
                     </h4>
                     <div class="flex items-center gap-2">
+                        <button type="button" onclick="window.modContract.syncAllBuilderAccountingNames()" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-lg text-[10.5px] font-bold shadow transition flex items-center gap-1 cursor-pointer" title="Chuẩn hóa toàn bộ tên sản phẩm theo tên Kế toán / HĐĐT">
+                            <i class="fas fa-scale-balanced"></i> Chuẩn Tên Kế Toán
+                        </button>
                         <button type="button" onclick="window.modContract.autoDetectWarrantyAndSpecs()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 py-1 rounded-lg text-[10.5px] font-black shadow transition flex items-center gap-1.5 cursor-pointer" title="Tự động tìm trong tên sản phẩm và mô tả để điền thông số kỹ thuật & thời hạn bảo hành (BH 5 năm, 2 năm, 12/25 năm...)">
                             <i class="fas fa-wand-magic-sparkles text-amber-300 animate-pulse"></i> ✨ Quét Tự Động Bảo Hành & Thông Số
                         </button>
@@ -817,6 +820,78 @@
         </div>
     </div>
 </div>
+
+<!-- ========================================================= -->
+<!-- 2b. MODAL: CHỈNH SỬA NHANH TÊN HÀNG HÓA KẾ TOÁN TRONG HỢP ĐỒNG -->
+<!-- ========================================================= -->
+<div id="quick-edit-items-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm hidden items-center justify-center z-[10001] p-4">
+    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col animate-slide-in-right">
+        <!-- Header -->
+        <div class="p-4 flex items-center justify-between bg-gradient-to-r from-indigo-700 via-purple-700 to-slate-800 text-white shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center font-black text-amber-300">
+                    <i class="fas fa-file-pen text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-sm uppercase tracking-wider">CHỈNH SỬA TÊN HÀNG HÓA KẾ TOÁN TRONG HỢP ĐỒNG</h3>
+                    <p class="text-[11px] text-white/80 font-medium">Quy chuẩn tên pháp lý / hóa đơn VAT và cho phép chỉnh sửa tùy ý theo nhu cầu</p>
+                </div>
+            </div>
+            <button onclick="window.modContract.closeQuickEditItemsModal()" class="text-white/80 hover:text-white cursor-pointer"><i class="fas fa-times text-lg"></i></button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 text-xs">
+            <div class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-indigo-950">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-circle-info text-indigo-600 text-base shrink-0"></i>
+                    <p class="text-xs">
+                        Tên hàng hóa dưới đây sẽ được hiển thị chính thức trên văn bản <b>Hợp Đồng Mua Bán (Điều 1)</b> và <b>Bảng Bảo Hành (Điều 2)</b>. Bạn có thể sửa trực tiếp hoặc bấm nút nạp lại tên Kế toán gốc từ kho hàng.
+                    </p>
+                </div>
+                <button type="button" onclick="window.modContract.quickEditSyncAccountingNames()" class="shrink-0 bg-white hover:bg-indigo-100 text-indigo-700 border border-indigo-300 px-3 py-1.5 rounded-lg font-bold text-xs transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-rotate text-indigo-600"></i> Nạp Lại Tên Kế Toán Từ Kho
+                </button>
+            </div>
+
+            <!-- Bảng danh sách mặt hàng -->
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-100 text-slate-700 font-bold text-[11px] uppercase border-b">
+                        <tr>
+                            <th class="p-2.5 text-center w-10">STT</th>
+                            <th class="p-2.5">Tên Hàng Hóa Kế Toán (Hiển Thị Trong Hợp Đồng)</th>
+                            <th class="p-2.5 text-center w-16">ĐVT</th>
+                            <th class="p-2.5 text-right w-20">Số Lượng</th>
+                            <th class="p-2.5 text-right w-28">Đơn Giá</th>
+                            <th class="p-2.5 text-right w-32">Thành Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quick-edit-items-tbody" class="divide-y divide-slate-100 text-slate-800">
+                        <!-- Render rows dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-white border-t border-slate-200 flex items-center justify-between shrink-0">
+            <div class="text-slate-500 text-xs">
+                <span>Tổng giá trị hợp đồng: </span>
+                <span id="quick-edit-total-val" class="font-black text-rose-700 text-sm">0 đ</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="window.modContract.closeQuickEditItemsModal()" class="px-4 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer">
+                    Hủy Bỏ
+                </button>
+                <button type="button" id="btn-save-quick-edit-items" onclick="window.modContract.saveQuickEditItems()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-save text-amber-300"></i> Lưu Cập Nhật & Áp Dụng Ngay
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ========================================================= -->
 <!-- 3. MODAL TẢI LÊN & QUẢN LÝ FILE HỢP ĐỒNG ĐÃ KÝ (PDF / SCAN) -->
 <!-- ========================================================= -->
@@ -1014,6 +1089,7 @@
 </div>
 
 <datalist id="crm-customers-datalist"></datalist>
+<datalist id="contract-products-datalist"></datalist>
 
 <style>
     @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -1072,6 +1148,7 @@ window.modContract = {
         }
         await window.modContract.load();
         await window.modContract.loadCRM();
+        await window.modContract.loadProducts();
         window.modContract.initSigCanvas();
     },
 
@@ -1581,11 +1658,29 @@ window.modContract = {
             const tbody = document.getElementById('builder-items-tbody');
             const items = c.items_snapshot || [];
             if (items.length > 0) {
-                tbody.innerHTML = items.map((it, idx) => `
-                    <tr class="item-row bg-white hover:bg-slate-50/50 transition">
+                tbody.innerHTML = items.map((it, idx) => {
+                    const accName = it.accounting_name || it.product_name || '';
+                    const commName = it.commercial_name || '';
+                    return `
+                    <tr class="item-row bg-white hover:bg-slate-50/50 transition"
+                        data-product-id="${it.product_id || ''}"
+                        data-sku="${it.sku || ''}"
+                        data-accounting-name="${encodeURIComponent(accName)}"
+                        data-commercial-name="${encodeURIComponent(commName)}">
                         <td class="p-2 border text-center font-bold align-top row-stt">${idx + 1}</td>
                         <td class="p-2 border space-y-1.5">
-                            <input type="text" class="w-full font-bold outline-none item-name text-slate-800 focus:text-purple-900 border-b border-transparent focus:border-purple-400 py-0.5" placeholder="Tên thiết bị / Hàng hóa..." value="${it.product_name || ''}">
+                            <div class="flex items-center justify-between gap-1">
+                                <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+                                    <i class="fas fa-scale-balanced"></i> Tên Kế Toán / HĐĐT
+                                </span>
+                                ${commName && commName !== it.product_name ? `
+                                    <button type="button" onclick="window.modContract.toggleRowItemName(this)" class="text-[10px] font-bold text-slate-500 hover:text-purple-700 underline cursor-pointer">
+                                        <i class="fas fa-arrow-right-arrow-left"></i> Đổi Tên TM ⇄ KT
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <textarea rows="2" list="contract-products-datalist" onchange="window.modContract.onProductSelect(this)" class="w-full font-bold outline-none item-name text-slate-800 focus:text-purple-900 border border-slate-200 focus:border-purple-400 rounded p-1.5 text-xs resize-y shadow-2xs" placeholder="Tên thiết bị / Hàng hóa theo kế toán...">${it.product_name || ''}</textarea>
+                            <p class="comm-name-hint text-[10.5px] text-slate-400 ${commName && commName !== it.product_name ? '' : 'hidden'}">Tên thương mại: <b class="text-slate-600">${commName}</b></p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 pt-1 border-t border-slate-100">
                                 <div class="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
                                     <span class="text-[10px] font-bold text-slate-500 shrink-0"><i class="fas fa-microchip text-slate-400"></i> Thông số:</span>
@@ -1603,7 +1698,8 @@ window.modContract = {
                         <td class="p-2 border text-right font-black text-slate-900 item-total align-top py-2.5">${window.modContract.fmt((it.quantity || 1) * (it.price || 0))} đ</td>
                         <td class="p-2 border text-center align-top py-2.5"><button type="button" onclick="this.closest('.item-row').remove(); window.modContract.recalcTotal();" class="text-slate-400 hover:text-rose-600 cursor-pointer p-1" title="Xóa dòng này"><i class="fas fa-trash-can"></i></button></td>
                     </tr>
-                `).join('');
+                    `;
+                }).join('');
             } else {
                 window.modContract.resetItemsTable();
             }
@@ -1687,10 +1783,21 @@ window.modContract = {
     resetItemsTable: () => {
         const tbody = document.getElementById('builder-items-tbody');
         tbody.innerHTML = `
-            <tr class="item-row bg-white hover:bg-slate-50/50 transition">
+            <tr class="item-row bg-white hover:bg-slate-50/50 transition"
+                data-accounting-name="${encodeURIComponent('Biến tần Inverter Deye Hybrid 6kW 1 pha (SUN-6K-SG04LP1-EU)')}"
+                data-commercial-name="${encodeURIComponent('Biến tần Inverter Deye Hybrid 6kW 1 pha')}">
                 <td class="p-2 border text-center font-bold align-top row-stt">1</td>
                 <td class="p-2 border space-y-1.5">
-                    <input type="text" class="w-full font-bold outline-none item-name text-slate-800 focus:text-purple-900 border-b border-transparent focus:border-purple-400 py-0.5" placeholder="Tên thiết bị / Hàng hóa..." value="Biến tần Inverter Deye Hybrid 6kW 1 pha (SUN-6K-SG04LP1-EU)">
+                    <div class="flex items-center justify-between gap-1">
+                        <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
+                            <i class="fas fa-scale-balanced"></i> Tên Kế Toán / HĐĐT
+                        </span>
+                        <button type="button" onclick="window.modContract.toggleRowItemName(this)" class="text-[10px] font-bold text-slate-500 hover:text-purple-700 underline cursor-pointer">
+                            <i class="fas fa-arrow-right-arrow-left"></i> Đổi Tên TM ⇄ KT
+                        </button>
+                    </div>
+                    <textarea rows="2" list="contract-products-datalist" onchange="window.modContract.onProductSelect(this)" class="w-full font-bold outline-none item-name text-slate-800 focus:text-purple-900 border border-slate-200 focus:border-purple-400 rounded p-1.5 text-xs resize-y shadow-2xs" placeholder="Gõ tên hoặc chọn sản phẩm từ kho...">Biến tần Inverter Deye Hybrid 6kW 1 pha (SUN-6K-SG04LP1-EU)</textarea>
+                    <p class="comm-name-hint text-[10.5px] text-slate-400">Tên thương mại: <b class="text-slate-600">Biến tần Inverter Deye Hybrid 6kW 1 pha</b></p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 pt-1 border-t border-slate-100">
                         <div class="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
                             <span class="text-[10px] font-bold text-slate-500 shrink-0"><i class="fas fa-microchip text-slate-400"></i> Thông số:</span>
@@ -1717,10 +1824,25 @@ window.modContract = {
         const rowCount = tbody.querySelectorAll('.item-row').length + 1;
         const tr = document.createElement('tr');
         tr.className = 'item-row bg-white hover:bg-slate-50/50 transition';
+        const accName = data.accounting_name || data.product_name || '';
+        const commName = data.commercial_name || '';
+        tr.dataset.productId = data.product_id || '';
+        tr.dataset.sku = data.sku || '';
+        tr.dataset.accountingName = encodeURIComponent(accName);
+        tr.dataset.commercialName = encodeURIComponent(commName);
         tr.innerHTML = `
             <td class="p-2 border text-center font-bold align-top row-stt">${rowCount}</td>
             <td class="p-2 border space-y-1.5">
-                <input type="text" class="w-full font-bold outline-none item-name text-slate-800 focus:text-purple-900 border-b border-transparent focus:border-purple-400 py-0.5" placeholder="Tên sản phẩm..." value="${data.product_name || ''}">
+                <div class="flex items-center justify-between gap-1">
+                    <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
+                        <i class="fas fa-scale-balanced"></i> Tên Kế Toán / HĐĐT
+                    </span>
+                    <button type="button" onclick="window.modContract.toggleRowItemName(this)" class="text-[10px] font-bold text-slate-500 hover:text-purple-700 underline cursor-pointer ${commName ? '' : 'hidden'}">
+                        <i class="fas fa-arrow-right-arrow-left"></i> Đổi Tên TM ⇄ KT
+                    </button>
+                </div>
+                <textarea rows="2" list="contract-products-datalist" onchange="window.modContract.onProductSelect(this)" class="w-full font-bold outline-none item-name text-slate-800 focus:text-purple-900 border border-slate-200 focus:border-purple-400 rounded p-1.5 text-xs resize-y shadow-2xs" placeholder="Gõ tên hoặc chọn sản phẩm từ kho...">${accName || ''}</textarea>
+                <p class="comm-name-hint text-[10.5px] text-slate-400 ${commName && commName !== accName ? '' : 'hidden'}">Tên thương mại: <b class="text-slate-600">${commName}</b></p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 pt-1 border-t border-slate-100">
                     <div class="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
                         <span class="text-[10px] font-bold text-slate-500 shrink-0"><i class="fas fa-microchip text-slate-400"></i> Thông số:</span>
@@ -1913,7 +2035,11 @@ window.modContract = {
                 const price = parseFloat(tr.querySelector('.item-price')?.value.replace(/[^0-9]/g, '')) || 0;
                 items.push({
                     stt: idx + 1,
+                    product_id: tr.dataset.productId ? parseInt(tr.dataset.productId) : null,
+                    sku: tr.dataset.sku || '',
                     product_name: pName,
+                    accounting_name: decodeURIComponent(tr.dataset.accountingName || '') || pName,
+                    commercial_name: decodeURIComponent(tr.dataset.commercialName || ''),
                     specs: tr.querySelector('.item-specs')?.value.trim() || '',
                     warranty: tr.querySelector('.item-warranty')?.value.trim() || '',
                     unit: tr.querySelector('.item-unit')?.value.trim() || 'Bộ',
@@ -2024,6 +2150,9 @@ window.modContract = {
                 const isAdmin = window.modContract.checkAdminRole();
                 const isKtt = window.modContract.checkKttRole();
                 let extraBtns = `
+                    <button onclick="window.modContract.openQuickEditItemsModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer" title="Chỉnh sửa tên hàng hóa theo kế toán và số lượng, đơn giá">
+                        <i class="fas fa-file-pen text-amber-300"></i> Sửa Tên Hàng Kế Toán
+                    </button>
                     <button onclick="window.modContract.openEdit(${c.id})" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Chỉnh sửa chi tiết hợp đồng, thông số và bảo hành">
                         <i class="fas fa-pen-to-square"></i> Chỉnh Sửa HĐ
                     </button>
@@ -2148,6 +2277,22 @@ window.modContract = {
         let itemsHtml = '';
         if (items.length > 0) {
             itemsHtml = `
+                <div class="no-print bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-xl p-2.5 my-3 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-600 text-white font-black text-[10px] uppercase tracking-wider flex items-center gap-1">
+                            <i class="fas fa-scale-balanced"></i> Tên Kế Toán
+                        </span>
+                        <span class="text-xs text-blue-900 font-medium">Tên hàng hóa trong hợp đồng bán hàng hiển thị theo danh mục Kế toán. Bạn có thể bấm để chỉnh sửa linh hoạt.</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onclick="window.modContract.syncAccountingNamesForCurrentContract()" class="bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 px-2.5 py-1 rounded text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs" title="Lấy lại tên hàng chuẩn theo Kế toán từ danh mục sản phẩm">
+                            <i class="fas fa-rotate text-blue-600"></i> Lấy Tên Kế Toán Gốc
+                        </button>
+                        <button type="button" onclick="window.modContract.openQuickEditItemsModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow">
+                            <i class="fas fa-file-pen text-amber-300"></i> Chỉnh Sửa Tên Hàng
+                        </button>
+                    </div>
+                </div>
                 <table class="w-full border-collapse border border-slate-900 my-4 text-xs" style="page-break-inside: auto;">
                     <thead>
                         <tr class="bg-slate-100 font-bold" style="page-break-inside: avoid;">
@@ -2163,7 +2308,12 @@ window.modContract = {
                         ${items.map(it => `
                             <tr style="page-break-inside: avoid;">
                                 <td class="border border-slate-900 p-2 text-center">${it.stt || 1}</td>
-                                <td class="border border-slate-900 p-2 font-bold">${it.product_name}</td>
+                                <td class="border border-slate-900 p-2 font-bold">
+                                    <span>${it.product_name}</span>
+                                    <button type="button" onclick="window.modContract.openQuickEditItemsModal()" class="no-print ml-1.5 text-indigo-600 hover:text-indigo-900 opacity-60 hover:opacity-100 transition cursor-pointer text-[10.5px]" title="Chỉnh sửa tên hàng này">
+                                        <i class="fas fa-pen-to-square"></i>
+                                    </button>
+                                </td>
                                 <td class="border border-slate-900 p-2 text-center">${it.unit || 'Bộ'}</td>
                                 <td class="border border-slate-900 p-2 text-right font-bold">${it.quantity}</td>
                                 <td class="border border-slate-900 p-2 text-right">${window.modContract.fmt(it.price)} đ</td>
@@ -3173,6 +3323,348 @@ window.modContract = {
             btn.innerHTML = '<i class="fas fa-check"></i> Xác Nhận Đã Nhận Tiền & Cập Nhật Sổ Quỹ';
             btn.classList.remove('opacity-50', 'pointer-events-none');
         }
+    },
+
+    // =========================================================
+    // 7. CHỈNH SỬA NHANH TÊN HÀNG HÓA KẾ TOÁN & ĐỒNG BỘ TÊN KHO
+    // =========================================================
+    openQuickEditItemsModal: async () => {
+        const c = window.modContract.currentContract;
+        if (!c || !c.id) return alert("Chưa chọn hợp đồng!");
+
+        if (!window.modContract.productsList || window.modContract.productsList.length === 0) {
+            await window.modContract.loadProducts();
+        }
+
+        const items = c.items_snapshot || [];
+        const tbody = document.getElementById('quick-edit-items-tbody');
+        if (!tbody) return;
+
+        if (items.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 font-bold">Hợp đồng này chưa có danh sách mặt hàng!</td></tr>`;
+        } else {
+            tbody.innerHTML = items.map((it, idx) => {
+                let matchedProd = null;
+                if (window.modContract.productsList) {
+                    if (it.product_id) matchedProd = window.modContract.productsList.find(x => x.id == it.product_id);
+                    if (!matchedProd && it.sku) matchedProd = window.modContract.productsList.find(x => x.sku == it.sku || x.accounting_code == it.sku);
+                    if (!matchedProd && it.product_name) {
+                        matchedProd = window.modContract.productsList.find(x => 
+                            (x.accounting_name && x.accounting_name.trim().toLowerCase() === it.product_name.trim().toLowerCase()) ||
+                            (x.product_name && x.product_name.trim().toLowerCase() === it.product_name.trim().toLowerCase())
+                        );
+                    }
+                }
+
+                const accName = it.accounting_name || (matchedProd?.accounting_name) || it.product_name || '';
+                const commName = it.commercial_name || (matchedProd?.product_name) || '';
+                const qty = parseFloat(it.quantity || 1);
+                const price = parseFloat(it.price || 0);
+                const total = qty * price;
+
+                return `
+                    <tr class="qe-item-row hover:bg-indigo-50/30 transition" 
+                        data-product-id="${it.product_id || matchedProd?.id || ''}"
+                        data-sku="${it.sku || matchedProd?.accounting_code || matchedProd?.sku || ''}"
+                        data-accounting-name="${encodeURIComponent(accName)}"
+                        data-commercial-name="${encodeURIComponent(commName)}"
+                        data-specs="${encodeURIComponent(it.specs || '')}"
+                        data-warranty="${encodeURIComponent(it.warranty || '')}">
+                        <td class="p-2.5 text-center font-bold text-slate-500 align-top qe-stt">${idx + 1}</td>
+                        <td class="p-2.5 space-y-1.5 align-top">
+                            <div class="flex items-center justify-between gap-1">
+                                <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+                                    <i class="fas fa-scale-balanced"></i> Tên Kế Toán / HĐĐT
+                                </span>
+                                ${commName && commName !== it.product_name ? `
+                                    <button type="button" onclick="window.modContract.toggleQuickEditRowName(this)" class="text-[10px] font-bold text-slate-600 hover:text-indigo-700 underline cursor-pointer">
+                                        <i class="fas fa-arrow-right-arrow-left text-indigo-500"></i> Đổi Tên TM ⇄ KT
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <textarea rows="2" class="w-full font-bold outline-none qe-item-name text-slate-800 focus:text-indigo-900 border border-slate-300 focus:border-indigo-500 rounded-lg p-2 text-xs resize-y shadow-xs" placeholder="Nhập tên hàng hóa theo hóa đơn kế toán...">${it.product_name || ''}</textarea>
+                            ${commName && commName !== it.product_name ? `
+                                <div class="text-[10.5px] text-slate-400 flex items-center gap-1">
+                                    <i class="fas fa-tag text-slate-400 text-[9px]"></i>
+                                    <span>Tên thương mại gốc: <b class="text-slate-600">${commName}</b></span>
+                                </div>
+                            ` : ''}
+                        </td>
+                        <td class="p-2.5 text-center align-top"><input type="text" class="w-full text-center outline-none qe-item-unit border border-slate-200 rounded p-1.5 text-xs" value="${it.unit || 'Bộ'}"></td>
+                        <td class="p-2.5 text-right align-top"><input type="number" class="w-full text-right font-bold outline-none qe-item-qty border border-slate-200 rounded p-1.5 text-xs" value="${qty}" oninput="window.modContract.recalcQuickEditTotal()"></td>
+                        <td class="p-2.5 text-right align-top"><input type="text" class="w-full text-right font-bold outline-none qe-item-price border border-slate-200 rounded p-1.5 text-xs" value="${window.modContract.fmt(price)}" oninput="this.value = new Intl.NumberFormat('vi-VN').format(this.value.replace(/[^0-9]/g, '')); window.modContract.recalcQuickEditTotal();"></td>
+                        <td class="p-2.5 text-right font-black text-slate-900 qe-item-total align-top py-3 text-xs">${window.modContract.fmt(total)} đ</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.modContract.recalcQuickEditTotal();
+        document.getElementById('quick-edit-items-modal').classList.replace('hidden', 'flex');
+    },
+
+    closeQuickEditItemsModal: () => {
+        const modal = document.getElementById('quick-edit-items-modal');
+        if (modal) modal.classList.replace('flex', 'hidden');
+    },
+
+    recalcQuickEditTotal: () => {
+        let total = 0;
+        document.querySelectorAll('#quick-edit-items-tbody .qe-item-row').forEach(tr => {
+            const qty = parseFloat(tr.querySelector('.qe-item-qty')?.value) || 0;
+            const price = parseFloat(tr.querySelector('.qe-item-price')?.value.replace(/[^0-9]/g, '')) || 0;
+            const line = qty * price;
+            total += line;
+            const totEl = tr.querySelector('.qe-item-total');
+            if (totEl) totEl.innerText = window.modContract.fmt(line) + ' đ';
+        });
+        const totalEl = document.getElementById('quick-edit-total-val');
+        if (totalEl) totalEl.innerText = window.modContract.fmt(total) + ' đ';
+    },
+
+    toggleQuickEditRowName: (btn) => {
+        const tr = btn.closest('.qe-item-row');
+        if (!tr) return;
+        const nameTextarea = tr.querySelector('.qe-item-name');
+        if (!nameTextarea) return;
+        const comm = decodeURIComponent(tr.dataset.commercialName || '');
+        const acc = decodeURIComponent(tr.dataset.accountingName || '');
+        if (!comm || !acc) return;
+        if (nameTextarea.value.trim() === acc.trim()) {
+            nameTextarea.value = comm;
+        } else {
+            nameTextarea.value = acc;
+        }
+    },
+
+    quickEditSyncAccountingNames: async () => {
+        const rows = document.querySelectorAll('#quick-edit-items-tbody .qe-item-row');
+        if (rows.length === 0) return;
+        if (!window.modContract.productsList || window.modContract.productsList.length === 0) {
+            await window.modContract.loadProducts();
+        }
+        let cnt = 0;
+        rows.forEach(tr => {
+            const nameEl = tr.querySelector('.qe-item-name');
+            const pId = tr.dataset.productId;
+            const sku = tr.dataset.sku;
+            let found = null;
+            if (pId && window.modContract.productsList) found = window.modContract.productsList.find(x => x.id == pId);
+            if (!found && sku && window.modContract.productsList) found = window.modContract.productsList.find(x => x.sku == sku || x.accounting_code == sku);
+            
+            const targetAcc = (found && found.accounting_name) ? found.accounting_name.trim() : decodeURIComponent(tr.dataset.accountingName || '');
+            if (targetAcc && nameEl) {
+                nameEl.value = targetAcc;
+                cnt++;
+            }
+        });
+        alert(`Đã nạp lại Tên Kế Toán cho ${cnt}/${rows.length} mặt hàng!`);
+    },
+
+    saveQuickEditItems: async () => {
+        const c = window.modContract.currentContract;
+        if (!c || !c.id) return alert("Không tìm thấy hợp đồng!");
+
+        const rows = document.querySelectorAll('#quick-edit-items-tbody .qe-item-row');
+        if (rows.length === 0) return alert("Danh sách mặt hàng trống!");
+
+        const items = [];
+        let calculatedTotal = 0;
+        rows.forEach((tr, idx) => {
+            const pName = tr.querySelector('.qe-item-name')?.value.trim();
+            if (pName) {
+                const qty = parseFloat(tr.querySelector('.qe-item-qty')?.value) || 1;
+                const price = parseFloat(tr.querySelector('.qe-item-price')?.value.replace(/[^0-9]/g, '')) || 0;
+                const lineTotal = qty * price;
+                calculatedTotal += lineTotal;
+
+                items.push({
+                    stt: idx + 1,
+                    product_id: tr.dataset.productId ? parseInt(tr.dataset.productId) : null,
+                    sku: tr.dataset.sku || '',
+                    product_name: pName,
+                    accounting_name: decodeURIComponent(tr.dataset.accountingName || '') || pName,
+                    commercial_name: decodeURIComponent(tr.dataset.commercialName || ''),
+                    specs: decodeURIComponent(tr.dataset.specs || ''),
+                    warranty: decodeURIComponent(tr.dataset.warranty || ''),
+                    unit: tr.querySelector('.qe-item-unit')?.value.trim() || 'Bộ',
+                    quantity: qty,
+                    price: price,
+                    total_amount: lineTotal
+                });
+            }
+        });
+
+        if (items.length === 0) return alert("Vui lòng nhập tên hàng hóa!");
+
+        const btn = document.getElementById('btn-save-quick-edit-items');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const res = await fetch(`/api/contracts/${c.id}/items`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items, total_value: calculatedTotal })
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.modContract.currentContract = data.data;
+                window.modContract.renderDocumentHTML(data.data);
+                window.modContract.closeQuickEditItemsModal();
+                await window.modContract.load();
+                alert(data.message || "Đã lưu cập nhật tên hàng hóa thành công!");
+            } else {
+                alert("Lỗi: " + data.error);
+            }
+        } catch (e) {
+            alert("Lỗi kết nối khi lưu tên hàng hóa!");
+        } finally {
+            btn.innerHTML = '<i class="fas fa-save text-amber-300"></i> Lưu Cập Nhật & Áp Dụng Ngay';
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    },
+
+    syncAccountingNamesForCurrentContract: async () => {
+        const c = window.modContract.currentContract;
+        if (!c || !c.id) return alert("Không tìm thấy hợp đồng!");
+
+        if (!confirm(`Bạn có chắc chắn muốn đồng bộ lại toàn bộ tên hàng hóa trong Hợp đồng #${c.contract_code} sang Tên Kế Toán gốc từ danh mục kho hàng?`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/contracts/${c.id}/sync-accounting-names`, {
+                method: 'POST'
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.modContract.currentContract = data.data;
+                window.modContract.renderDocumentHTML(data.data);
+                await window.modContract.load();
+                alert(data.message);
+            } else {
+                alert("Lỗi: " + data.error);
+            }
+        } catch (e) {
+            alert("Lỗi kết nối khi đồng bộ tên kế toán!");
+        }
+    },
+
+    loadProducts: async () => {
+        try {
+            const res = await fetch('/api/products?t=' + Date.now());
+            const data = await res.json();
+            const prods = Array.isArray(data) ? data : (data.data || []);
+            window.modContract.productsList = prods;
+            const datalist = document.getElementById('contract-products-datalist');
+            if (datalist) {
+                datalist.innerHTML = prods.map(p => {
+                    const accName = (p.accounting_name && p.accounting_name.trim()) ? p.accounting_name.trim() : (p.product_name || '');
+                    const sub = `SKU: ${p.sku || ''} • TM: ${p.product_name || ''} • Giá: ${window.modContract.fmt(p.retail_price || 0)} đ`;
+                    return `<option value="${accName}">${sub}</option>`;
+                }).join('');
+            }
+        } catch(e) {
+            console.warn("Lỗi tải danh mục sản phẩm:", e);
+        }
+    },
+
+    onProductSelect: (inputEl) => {
+        const val = (inputEl.value || '').trim();
+        if (!val || !window.modContract.productsList) return;
+        const p = window.modContract.productsList.find(x => 
+            (x.accounting_name && x.accounting_name.trim().toLowerCase() === val.toLowerCase()) ||
+            (x.product_name && x.product_name.trim().toLowerCase() === val.toLowerCase()) ||
+            (x.sku && x.sku.trim().toLowerCase() === val.toLowerCase())
+        );
+        if (p) {
+            const tr = inputEl.closest('.item-row');
+            if (!tr) return;
+            const accName = (p.accounting_name && p.accounting_name.trim()) ? p.accounting_name.trim() : (p.product_name || '');
+            inputEl.value = accName;
+            tr.dataset.productId = p.id;
+            tr.dataset.sku = p.accounting_code || p.sku || '';
+            tr.dataset.accountingName = accName;
+            tr.dataset.commercialName = p.product_name || '';
+
+            const commHint = tr.querySelector('.comm-name-hint');
+            if (commHint) {
+                if (p.product_name && p.product_name !== accName) {
+                    commHint.innerHTML = `Tên thương mại: <b class="text-slate-600">${p.product_name}</b>`;
+                    commHint.classList.remove('hidden');
+                } else {
+                    commHint.classList.add('hidden');
+                }
+            }
+
+            const unitEl = tr.querySelector('.item-unit');
+            if (unitEl && p.unit) unitEl.value = p.unit;
+
+            const priceEl = tr.querySelector('.item-price');
+            if (priceEl && p.retail_price) {
+                priceEl.value = window.modContract.fmt(p.retail_price);
+            }
+
+            window.modContract.recalcTotal();
+        }
+    },
+
+    toggleRowItemName: (btn) => {
+        const tr = btn.closest('.item-row');
+        if (!tr) return;
+        const nameInput = tr.querySelector('.item-name');
+        if (!nameInput) return;
+        const comm = decodeURIComponent(tr.dataset.commercialName || '');
+        const acc = decodeURIComponent(tr.dataset.accountingName || '');
+        if (!comm || !acc) return;
+        if (nameInput.value.trim() === acc.trim()) {
+            nameInput.value = comm;
+        } else {
+            nameInput.value = acc;
+        }
+        window.modContract.recalcTotal();
+    },
+
+    syncAllBuilderAccountingNames: async () => {
+        const rows = document.querySelectorAll('#builder-items-tbody .item-row');
+        if (rows.length === 0) return alert("Chưa có mặt hàng nào trong danh sách!");
+        if (!window.modContract.productsList || window.modContract.productsList.length === 0) {
+            await window.modContract.loadProducts();
+        }
+        let updatedCount = 0;
+        rows.forEach(tr => {
+            const nameInput = tr.querySelector('.item-name');
+            if (!nameInput) return;
+            const currentVal = nameInput.value.trim();
+            const pId = tr.dataset.productId;
+            const pSku = tr.dataset.sku;
+            let found = null;
+            if (pId) found = window.modContract.productsList.find(x => x.id == pId);
+            if (!found && pSku) found = window.modContract.productsList.find(x => x.sku == pSku || x.accounting_code == pSku);
+            if (!found && currentVal) {
+                found = window.modContract.productsList.find(x => 
+                    (x.accounting_name && x.accounting_name.trim().toLowerCase() === currentVal.toLowerCase()) ||
+                    (x.product_name && x.product_name.trim().toLowerCase() === currentVal.toLowerCase())
+                );
+            }
+            if (found && found.accounting_name && found.accounting_name.trim()) {
+                const acc = found.accounting_name.trim();
+                nameInput.value = acc;
+                tr.dataset.accountingName = acc;
+                tr.dataset.commercialName = found.product_name || '';
+                tr.dataset.productId = found.id;
+                tr.dataset.sku = found.accounting_code || found.sku || '';
+                const commHint = tr.querySelector('.comm-name-hint');
+                if (commHint) {
+                    commHint.innerHTML = `Tên thương mại: <b class="text-slate-600">${found.product_name || ''}</b>`;
+                    commHint.classList.remove('hidden');
+                }
+                updatedCount++;
+            }
+        });
+        alert(`Đã chuẩn hóa ${updatedCount}/${rows.length} mặt hàng sang Tên Kế Toán!`);
+        window.modContract.recalcTotal();
     }
 };
 
