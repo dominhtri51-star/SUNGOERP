@@ -28,33 +28,33 @@
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <i class="fas fa-search text-xs"></i>
             </div>
-            <input type="text" id="debt-search-input" oninput="window.modDebtBook.onSearch(this.value)" placeholder="Tìm khách hàng, nhà cung cấp, SĐT..." class="w-full pl-9 pr-8 py-2.5 bg-slate-100/90 hover:bg-slate-100 focus:bg-white text-slate-800 text-xs sm:text-sm font-medium rounded-2xl outline-none border border-transparent focus:border-emerald-500 transition shadow-2xs">
+            <input type="text" id="debt-search-input" oninput="window.modDebtBook.onSearch(this.value)" placeholder="Tìm khách hàng, số điện thoại, mã KH..." class="w-full pl-9 pr-8 py-2.5 bg-slate-100/90 hover:bg-slate-100 focus:bg-white text-slate-800 text-xs sm:text-sm font-medium rounded-2xl outline-none border border-transparent focus:border-emerald-500 transition shadow-2xs">
             <button type="button" id="debt-search-clear" onclick="window.modDebtBook.clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
                 <i class="fas fa-times-circle text-xs"></i>
             </button>
         </div>
 
-        <!-- BỘ LỌC DẠNG PILLS (NGANG) -->
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs font-bold text-slate-600">
-            <div class="relative shrink-0">
-                <select id="filter-partner-type" onchange="window.modDebtBook.onFilterChange()" class="appearance-none bg-white border border-slate-200 rounded-xl px-3 py-1.5 pr-6 text-xs font-bold text-slate-700 outline-none shadow-2xs cursor-pointer">
-                    <option value="ALL">Tất cả đối tác</option>
-                    <option value="CUSTOMER" selected>Khách hàng</option>
-                    <option value="SUPPLIER">Nhà cung cấp</option>
-                </select>
-                <i class="fas fa-chevron-down text-[9px] text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-            </div>
-
-            <div class="relative shrink-0">
-                <select id="filter-debt-status" onchange="window.modDebtBook.onFilterChange()" class="appearance-none bg-white border border-slate-200 rounded-xl px-3 py-1.5 pr-6 text-xs font-bold text-slate-700 outline-none shadow-2xs cursor-pointer">
-                    <option value="RECEIVABLE" selected>🟢 Chỉ phải thu (Đã xuất)</option>
-                    <option value="UNCOMPLETED">📦 Đơn có lệnh xuất (Chưa hoàn tất)</option>
-                    <option value="ALL">Tất cả trạng thái nợ</option>
-                    <option value="PAYABLE">🟠 Chỉ phải trả (Tiền cọc)</option>
-                    <option value="ZERO">⚪ Đã hết nợ</option>
-                </select>
-                <i class="fas fa-chevron-down text-[9px] text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-            </div>
+        <!-- CÁC THẺ TRẠNG THÁI LỌC NHANH (STATUS PILLS - KHÔNG DÙNG MENU SỔ XUỐNG) -->
+        <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-0.5 text-xs font-bold">
+            <button type="button" onclick="window.modDebtBook.setStatusFilter('RECEIVABLE')" data-status="RECEIVABLE" class="debt-status-pill shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs bg-emerald-600 text-white border border-emerald-600">
+                <span class="w-2 h-2 rounded-full bg-white"></span>
+                <span>Phải thu (Đã xuất)</span>
+            </button>
+            <button type="button" onclick="window.modDebtBook.setStatusFilter('UNCOMPLETED')" data-status="UNCOMPLETED" class="debt-status-pill shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                <span>Đơn có lệnh xuất</span>
+            </button>
+            <button type="button" onclick="window.modDebtBook.setStatusFilter('PAYABLE')" data-status="PAYABLE" class="debt-status-pill shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>Tiền cọc (Phải trả)</span>
+            </button>
+            <button type="button" onclick="window.modDebtBook.setStatusFilter('ZERO')" data-status="ZERO" class="debt-status-pill shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">
+                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                <span>Đã hết nợ</span>
+            </button>
+            <button type="button" onclick="window.modDebtBook.setStatusFilter('ALL')" data-status="ALL" class="debt-status-pill shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">
+                <span>Tất cả</span>
+            </button>
         </div>
 
         <!-- 3 THẺ TỔNG HỢP: PHẢI THU, PHẢI TRẢ & ĐƠN CÓ LỆNH XUẤT CHƯA HOÀN THÀNH -->
@@ -120,7 +120,7 @@
         <!-- TIÊU ĐỀ DANH SÁCH -->
         <div class="flex items-center justify-between pt-1 border-b border-slate-100 pb-1.5">
             <span class="text-[11px] font-black uppercase text-slate-400 tracking-wider">DANH SÁCH KHÁCH HÀNG</span>
-            <span class="text-[11px] font-bold text-slate-500" id="debt-list-count">0 đối tác</span>
+            <span class="text-[11px] font-bold text-slate-500" id="debt-list-count">0 khách hàng</span>
         </div>
 
         <!-- DANH SÁCH KHÁCH HÀNG / ĐỐI TÁC SỔ NỢ -->
@@ -828,12 +828,11 @@ window.modDebtBook = {
                 }
             }
 
-            // 2. Nạp danh sách đối tác
-            const pType = document.getElementById('filter-partner-type')?.value || 'ALL';
-            const dStatus = document.getElementById('filter-debt-status')?.value || 'RECEIVABLE';
+            // 2. Nạp danh sách khách hàng sổ nợ (chỉ quản lý khách hàng)
+            const dStatus = window.modDebtBook.currentStatusFilter || 'RECEIVABLE';
             const q = document.getElementById('debt-search-input')?.value || '';
 
-            const pRes = await fetch(`/api/debt-book/partners?partner_type=${encodeURIComponent(pType)}&debt_status=${encodeURIComponent(dStatus)}&search=${encodeURIComponent(q)}&t=` + Date.now());
+            const pRes = await fetch(`/api/debt-book/partners?partner_type=CUSTOMER&debt_status=${encodeURIComponent(dStatus)}&search=${encodeURIComponent(q)}&t=` + Date.now());
             const pJson = await pRes.json();
             if (pJson.success) {
                 window.modDebtBook.partners = pJson.partners || [];
@@ -850,13 +849,13 @@ window.modDebtBook = {
         if (!list) return;
 
         const partners = window.modDebtBook.partners || [];
-        if (countEl) countEl.innerText = `${partners.length} đối tác`;
+        if (countEl) countEl.innerText = `${partners.length} khách hàng`;
 
         if (partners.length === 0) {
             list.innerHTML = `
                 <div class="py-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
                     <i class="fas fa-check-circle text-3xl text-emerald-400 opacity-60"></i>
-                    <p class="font-bold text-slate-600">Không có đối tác nợ nào phù hợp bộ lọc!</p>
+                    <p class="font-bold text-slate-600">Không có khách hàng nào phù hợp bộ lọc!</p>
                 </div>
             `;
             return;
@@ -929,15 +928,32 @@ window.modDebtBook = {
         window.modDebtBook.loadData();
     },
 
-    onFilterChange: () => {
+    currentStatusFilter: 'RECEIVABLE',
+
+    setStatusFilter: (status) => {
+        window.modDebtBook.currentStatusFilter = status;
+        document.querySelectorAll('.debt-status-pill').forEach(btn => {
+            const btnStatus = btn.getAttribute('data-status');
+            if (btnStatus === status) {
+                btn.className = "debt-status-pill shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs " + window.modDebtBook.getActivePillStyle(status);
+            } else {
+                btn.className = "debt-status-pill shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-200 hover:bg-slate-50";
+            }
+        });
         window.modDebtBook.loadData();
     },
 
     quickFilterStatus: (status) => {
-        const filterSelect = document.getElementById('filter-debt-status');
-        if (filterSelect) {
-            filterSelect.value = status;
-            window.modDebtBook.loadData();
+        window.modDebtBook.setStatusFilter(status);
+    },
+
+    getActivePillStyle: (status) => {
+        switch(status) {
+            case 'RECEIVABLE': return 'bg-emerald-600 text-white border border-emerald-600';
+            case 'UNCOMPLETED': return 'bg-indigo-600 text-white border border-indigo-600';
+            case 'PAYABLE': return 'bg-amber-600 text-white border border-amber-600';
+            case 'ZERO': return 'bg-slate-800 text-white border border-slate-800';
+            default: return 'bg-slate-900 text-white border border-slate-900';
         }
     },
 
