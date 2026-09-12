@@ -1730,7 +1730,7 @@ window.modOrders = {
             filtered = filtered.filter(o => {
                 if (!o.created_at) return true;
                 try {
-                    const d = new Date(o.created_at);
+                    const d = window.parseVietnamDate ? window.parseVietnamDate(o.created_at) : new Date(o.created_at);
                     if (isNaN(d.getTime())) return true;
                     
                     const year = d.getFullYear();
@@ -1933,7 +1933,7 @@ window.modOrders = {
 
         list.forEach(o => {
             const isSelected = window.modOrders.selectedOrderIds.has(o.id);
-            const dateStr = o.created_at ? new Date(o.created_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }) : '---';
+            const dateStr = window.formatVietnamDateTime ? window.formatVietnamDateTime(o.created_at) : (o.created_at ? new Date(o.created_at).toLocaleString('vi-VN') : '---');
             
             const total = parseFloat(o.total_amount) || 0;
             const paid = parseFloat(o.paid_amount) || 0;
@@ -3720,7 +3720,7 @@ window.modOrders = {
                         ${o.customer_signature ? '(Đã ký điện tử)' : '(Ký và ghi rõ họ tên)'}
                     </small><br>
                     ${o.customer_signature 
-                        ? `<img src="${o.customer_signature}" style="max-height:60px; max-width:160px; object-fit:contain; margin:4px auto; display:block;"><strong style="font-size:12px; text-transform:uppercase;">${o.customer_signed_name || o.customer_name || ''}</strong><br><small style="color:#64748b; font-size:10px;">${o.customer_signed_at ? new Date(o.customer_signed_at).toLocaleString('vi-VN') : ''}</small>` 
+                        ? `<img src="${o.customer_signature}" style="max-height:60px; max-width:160px; object-fit:contain; margin:4px auto; display:block;"><strong style="font-size:12px; text-transform:uppercase;">${o.customer_signed_name || o.customer_name || ''}</strong><br><small style="color:#64748b; font-size:10px;">${window.formatVietnamDateTime ? window.formatVietnamDateTime(o.customer_signed_at) : (o.customer_signed_at || '')}</small>` 
                         : '<br><br><br><br>'
                     }
                 </div>
@@ -3730,7 +3730,7 @@ window.modOrders = {
                         ${o.sales_signature ? '(Đại diện SUNGO)' : '(Ký và ghi rõ họ tên)'}
                     </small><br>
                     ${o.sales_signature 
-                        ? `<img src="${o.sales_signature}" style="max-height:60px; max-width:160px; object-fit:contain; margin:4px auto; display:block;"><strong style="font-size:12px; text-transform:uppercase;">${o.sales_signed_name || o.salesperson_name || 'Đại diện bán hàng'}</strong><br><small style="color:#64748b; font-size:10px;">${o.sales_signed_at ? new Date(o.sales_signed_at).toLocaleString('vi-VN') : ''}</small>` 
+                        ? `<img src="${o.sales_signature}" style="max-height:60px; max-width:160px; object-fit:contain; margin:4px auto; display:block;"><strong style="font-size:12px; text-transform:uppercase;">${o.sales_signed_name || o.salesperson_name || 'Đại diện bán hàng'}</strong><br><small style="color:#64748b; font-size:10px;">${window.formatVietnamDateTime ? window.formatVietnamDateTime(o.sales_signed_at) : (o.sales_signed_at || '')}</small>` 
                         : '<br><br><br><br>'
                     }
                 </div>
@@ -4333,7 +4333,7 @@ window.modOrders = {
         if (o.customer_signature) {
             custBadge.className = "px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300";
             custBadge.innerText = "Đã Ký ✅";
-            const sDate = o.customer_signed_at ? new Date(o.customer_signed_at).toLocaleString('vi-VN') : '';
+            const sDate = o.customer_signed_at ? (window.formatVietnamDateTime ? window.formatVietnamDateTime(o.customer_signed_at) : new Date(o.customer_signed_at).toLocaleString('vi-VN')) : '';
             custPreview.innerHTML = `
                 <img src="${o.customer_signature}" class="max-h-16 object-contain my-1" alt="Chữ ký khách">
                 <strong class="text-xs uppercase text-slate-800">${o.customer_signed_name || o.customer_name || 'Khách hàng'}</strong>
@@ -4355,7 +4355,7 @@ window.modOrders = {
         if (o.sales_signature) {
             salesBadge.className = "px-2 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-300";
             salesBadge.innerText = "Đã Ký ✅";
-            const sDate = o.sales_signed_at ? new Date(o.sales_signed_at).toLocaleString('vi-VN') : '';
+            const sDate = o.sales_signed_at ? (window.formatVietnamDateTime ? window.formatVietnamDateTime(o.sales_signed_at) : new Date(o.sales_signed_at).toLocaleString('vi-VN')) : '';
             salesPreview.innerHTML = `
                 <img src="${o.sales_signature}" class="max-h-16 object-contain my-1" alt="Chữ ký NVKD">
                 <strong class="text-xs uppercase text-slate-800">${o.sales_signed_name || o.salesperson_name || 'Đại diện bán hàng'}</strong>

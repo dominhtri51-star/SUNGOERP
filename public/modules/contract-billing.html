@@ -1265,7 +1265,7 @@ window.modContract = {
                 else if (pct >= 50) colorBar = 'bg-blue-500';
                 else if (pct > 0) colorBar = 'bg-amber-500';
 
-                const d = new Date(c.created_at || c.effective_date);
+                const d = window.parseVietnamDate ? window.parseVietnamDate(c.created_at || c.effective_date) : new Date(c.created_at || c.effective_date);
 
                 const deleteBtnHtml = isAdmin ? `
                     <button onclick="window.modContract.deleteContract(${c.id}, '${c.contract_code}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border border-rose-200 px-2 py-1 rounded text-[10px] font-bold transition shadow cursor-pointer" title="Xóa hợp đồng rác (Admin)">
@@ -1332,7 +1332,7 @@ window.modContract = {
                 const val = parseFloat(c.total_value || 0);
                 const paid = parseFloat(c.paid_amount || 0);
                 const pct = val > 0 ? Math.min(100, Math.round((paid / val) * 100)) : 0;
-                const d = new Date(c.created_at || c.effective_date);
+                const d = window.parseVietnamDate ? window.parseVietnamDate(c.created_at || c.effective_date) : new Date(c.created_at || c.effective_date);
 
                 let typeBadge = '';
                 if (c.contract_type === 'MUA_BAN') {
@@ -1472,7 +1472,7 @@ window.modContract = {
                                 </span>
                             </div>
                             <p class="font-bold text-slate-900 text-xs mt-1">${o.customer_name || 'Khách Hàng'}</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">${new Date(o.created_at).toLocaleString('vi-VN')} • ${o.items?.length || 0} mặt hàng</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${window.formatVietnamDateTime ? window.formatVietnamDateTime(o.created_at) : new Date(o.created_at).toLocaleString('vi-VN')} • ${o.items?.length || 0} mặt hàng</p>
                         </div>
                         <div class="text-right">
                             <p class="font-black text-slate-900 text-sm">${window.modContract.fmt(o.total_amount)} đ</p>
@@ -2120,7 +2120,7 @@ window.modContract = {
         const sheet = document.getElementById('contract-document-sheet');
         const items = c.items_snapshot || [];
         const terms = c.payment_terms || [];
-        const d = new Date(c.effective_date || c.created_at);
+        const d = window.parseVietnamDate ? window.parseVietnamDate(c.effective_date || c.created_at) : new Date(c.effective_date || c.created_at);
         const cert = window.modContract.certConfig || {};
 
         let titleStr = 'HỢP ĐỒNG MUA BÁN';

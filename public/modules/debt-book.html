@@ -1517,10 +1517,11 @@ window.modDebtBook = {
                 });
             });
             transactions.forEach(tx => {
+                const parsedDt = window.parseVietnamDate ? window.parseVietnamDate(tx.date || tx.created_at) : new Date(tx.date || tx.created_at);
                 timeline.push({
                     type: tx.transaction_type,
-                    date: new Date(tx.date || tx.created_at).getTime(),
-                    dateStr: new Date(tx.date || tx.created_at).toLocaleDateString('vi-VN'),
+                    date: parsedDt.getTime(),
+                    dateStr: window.formatVietnamDate ? window.formatVietnamDate(tx.date || tx.created_at) : parsedDt.toLocaleDateString('vi-VN'),
                     tx: tx
                 });
             });
@@ -1842,10 +1843,11 @@ window.modDebtBook = {
             });
         });
         transactions.forEach(tx => {
+            const parsedDt = window.parseVietnamDate ? window.parseVietnamDate(tx.date || tx.created_at) : new Date(tx.date || tx.created_at);
             timeline.push({
                 type: tx.transaction_type, // 'RECEIVE' or 'PAY'
-                date: new Date(tx.date || tx.created_at).getTime(),
-                dateStr: new Date(tx.date || tx.created_at).toLocaleDateString('vi-VN'),
+                date: parsedDt.getTime(),
+                dateStr: window.formatVietnamDate ? window.formatVietnamDate(tx.date || tx.created_at) : parsedDt.toLocaleDateString('vi-VN'),
                 tx: tx
             });
         });

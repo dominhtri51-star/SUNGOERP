@@ -196,17 +196,17 @@ router.get('/quick', async (req, res) => {
         let diffDays = 1;
 
         if (period === 'day') {
-            dateFilter = "DATE(o.created_at) = CURRENT_DATE";
-            orderDateFilter = "DATE(created_at) = CURRENT_DATE";
+            dateFilter = "DATE(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') = (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date";
+            orderDateFilter = "DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') = (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date";
         } else if (period === 'week') {
-            dateFilter = "o.created_at >= date_trunc('week', CURRENT_DATE)";
-            orderDateFilter = "created_at >= date_trunc('week', CURRENT_DATE)";
+            dateFilter = "o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' >= date_trunc('week', NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')";
+            orderDateFilter = "created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' >= date_trunc('week', NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')";
         } else if (period === 'month') {
-            dateFilter = "o.created_at >= date_trunc('month', CURRENT_DATE)";
-            orderDateFilter = "created_at >= date_trunc('month', CURRENT_DATE)";
+            dateFilter = "o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' >= date_trunc('month', NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')";
+            orderDateFilter = "created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' >= date_trunc('month', NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')";
         } else if (period === 'year') {
-            dateFilter = "o.created_at >= date_trunc('year', CURRENT_DATE)";
-            orderDateFilter = "created_at >= date_trunc('year', CURRENT_DATE)";
+            dateFilter = "o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' >= date_trunc('year', NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')";
+            orderDateFilter = "created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' >= date_trunc('year', NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')";
         } else if (period === 'custom') {
             if (isValidDate(startDate) && isValidDate(endDate)) {
                 customStart = startDate;
@@ -219,8 +219,8 @@ router.get('/quick', async (req, res) => {
                 customStart = todayStr;
                 customEnd = todayStr;
             }
-            dateFilter = `DATE(o.created_at) >= '${customStart}' AND DATE(o.created_at) <= '${customEnd}'`;
-            orderDateFilter = `DATE(created_at) >= '${customStart}' AND DATE(created_at) <= '${customEnd}'`;
+            dateFilter = `DATE(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') >= '${customStart}' AND DATE(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') <= '${customEnd}'`;
+            orderDateFilter = `DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') >= '${customStart}' AND DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') <= '${customEnd}'`;
             diffDays = Math.ceil((new Date(customEnd) - new Date(customStart)) / (1000 * 60 * 60 * 24)) + 1;
         }
 
@@ -269,81 +269,81 @@ router.get('/quick', async (req, res) => {
         if (period === 'year') {
             timelineQuery = `
                 SELECT 
-                    EXTRACT(MONTH FROM o.created_at)::text as time_key,
+                    EXTRACT(MONTH FROM o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh')::text as time_key,
                     COALESCE(SUM(oi.quantity * oi.price), 0) AS revenue,
                     COALESCE(SUM(oi.quantity * (oi.price - COALESCE(p.import_price, 0))), 0) AS profit
                 FROM order_items oi
                 JOIN orders o ON oi.order_id = o.id
                 LEFT JOIN products p ON oi.product_id = p.id
                 WHERE o.status = 'COMPLETED' AND ${dateFilter}
-                GROUP BY EXTRACT(MONTH FROM o.created_at)
-                ORDER BY EXTRACT(MONTH FROM o.created_at) ASC
+                GROUP BY EXTRACT(MONTH FROM o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh')
+                ORDER BY EXTRACT(MONTH FROM o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') ASC
             `;
         } else if (period === 'month' || period === 'week') {
             timelineQuery = `
                 SELECT 
-                    TO_CHAR(o.created_at, 'YYYY-MM-DD') as time_key,
+                    TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD') as time_key,
                     COALESCE(SUM(oi.quantity * oi.price), 0) AS revenue,
                     COALESCE(SUM(oi.quantity * (oi.price - COALESCE(p.import_price, 0))), 0) AS profit
                 FROM order_items oi
                 JOIN orders o ON oi.order_id = o.id
                 LEFT JOIN products p ON oi.product_id = p.id
                 WHERE o.status = 'COMPLETED' AND ${dateFilter}
-                GROUP BY TO_CHAR(o.created_at, 'YYYY-MM-DD')
+                GROUP BY TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD')
                 ORDER BY time_key ASC
             `;
         } else if (period === 'custom') {
             if (diffDays <= 1) {
                 timelineQuery = `
                     SELECT 
-                        TO_CHAR(o.created_at, 'HH24:00') as time_key,
+                        TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:00') as time_key,
                         COALESCE(SUM(oi.quantity * oi.price), 0) AS revenue,
                         COALESCE(SUM(oi.quantity * (oi.price - COALESCE(p.import_price, 0))), 0) AS profit
                     FROM order_items oi
                     JOIN orders o ON oi.order_id = o.id
                     LEFT JOIN products p ON oi.product_id = p.id
                     WHERE o.status = 'COMPLETED' AND ${dateFilter}
-                    GROUP BY TO_CHAR(o.created_at, 'HH24:00')
+                    GROUP BY TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:00')
                     ORDER BY time_key ASC
                 `;
             } else if (diffDays <= 31) {
                 timelineQuery = `
                     SELECT 
-                        TO_CHAR(o.created_at, 'YYYY-MM-DD') as time_key,
+                        TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD') as time_key,
                         COALESCE(SUM(oi.quantity * oi.price), 0) AS revenue,
                         COALESCE(SUM(oi.quantity * (oi.price - COALESCE(p.import_price, 0))), 0) AS profit
                     FROM order_items oi
                     JOIN orders o ON oi.order_id = o.id
                     LEFT JOIN products p ON oi.product_id = p.id
                     WHERE o.status = 'COMPLETED' AND ${dateFilter}
-                    GROUP BY TO_CHAR(o.created_at, 'YYYY-MM-DD')
+                    GROUP BY TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD')
                     ORDER BY time_key ASC
                 `;
             } else {
                 timelineQuery = `
                     SELECT 
-                        TO_CHAR(o.created_at, 'YYYY-MM') as time_key,
+                        TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD') as time_key,
                         COALESCE(SUM(oi.quantity * oi.price), 0) AS revenue,
                         COALESCE(SUM(oi.quantity * (oi.price - COALESCE(p.import_price, 0))), 0) AS profit
                     FROM order_items oi
                     JOIN orders o ON oi.order_id = o.id
                     LEFT JOIN products p ON oi.product_id = p.id
                     WHERE o.status = 'COMPLETED' AND ${dateFilter}
-                    GROUP BY TO_CHAR(o.created_at, 'YYYY-MM')
+                    GROUP BY TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD')
                     ORDER BY time_key ASC
                 `;
             }
         } else { // 'day'
             timelineQuery = `
                 SELECT 
-                    TO_CHAR(o.created_at, 'HH24:00') as time_key,
+                    TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:00') as time_key,
                     COALESCE(SUM(oi.quantity * oi.price), 0) AS revenue,
                     COALESCE(SUM(oi.quantity * (oi.price - COALESCE(p.import_price, 0))), 0) AS profit
                 FROM order_items oi
                 JOIN orders o ON oi.order_id = o.id
                 LEFT JOIN products p ON oi.product_id = p.id
                 WHERE o.status = 'COMPLETED' AND ${dateFilter}
-                GROUP BY TO_CHAR(o.created_at, 'HH24:00')
+                GROUP BY TO_CHAR(o.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:00')
                 ORDER BY time_key ASC
             `;
         }

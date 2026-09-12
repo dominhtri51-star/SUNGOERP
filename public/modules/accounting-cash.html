@@ -789,7 +789,7 @@ window.modCash = {
             const detailRows = orders.map(o => `
                 <tr class="hover:bg-blue-50/50 transition">
                     <td class="py-1.5 px-3 font-mono font-bold text-blue-700">
-                        #${o.order_code} <span class="text-[10px] text-slate-400 font-normal ml-1">(${new Date(o.created_at).toLocaleDateString('vi-VN')})</span>
+                        #${o.order_code} <span class="text-[10px] text-slate-400 font-normal ml-1">(${window.formatVietnamDate ? window.formatVietnamDate(o.created_at) : new Date(o.created_at).toLocaleDateString('vi-VN')})</span>
                     </td>
                     <td class="py-1.5 px-2 text-center"><span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[9px] font-bold">${o.status}</span></td>
                     <td class="py-1.5 px-2 text-right font-medium text-slate-700">${new Intl.NumberFormat('vi-VN').format(o.total_amount)} đ</td>
@@ -922,7 +922,7 @@ window.modCash = {
             <tr class="hover:bg-slate-50">
                 <td class="p-3">
                     <p class="font-mono font-bold text-slate-800">${h.code}</p>
-                    <p class="text-[10px] text-slate-400">${new Date(h.created_at).toLocaleString('vi-VN')}</p>
+                    <p class="text-[10px] text-slate-400">${window.formatVietnamDateTime ? window.formatVietnamDateTime(h.created_at) : new Date(h.created_at).toLocaleString('vi-VN')}</p>
                 </td>
                 <td class="p-3 font-bold text-slate-900">${h.target_name}</td>
                 <td class="p-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">${h.source_fund || h.payment_method}</span></td>
@@ -1240,10 +1240,11 @@ window.modCash = {
             });
         });
         transactions.forEach(tx => {
+            const parsedDt = window.parseVietnamDate ? window.parseVietnamDate(tx.date || tx.created_at) : new Date(tx.date || tx.created_at);
             timeline.push({
                 type: tx.transaction_type,
-                date: new Date(tx.date || tx.created_at).getTime(),
-                dateStr: new Date(tx.date || tx.created_at).toLocaleDateString('vi-VN'),
+                date: parsedDt.getTime(),
+                dateStr: window.formatVietnamDate ? window.formatVietnamDate(tx.date || tx.created_at) : parsedDt.toLocaleDateString('vi-VN'),
                 tx: tx
             });
         });
@@ -1540,10 +1541,11 @@ window.modCash = {
                 });
             });
             transactions.forEach(tx => {
+                const parsedDt = window.parseVietnamDate ? window.parseVietnamDate(tx.date || tx.created_at) : new Date(tx.date || tx.created_at);
                 timeline.push({
                     type: tx.transaction_type,
-                    date: new Date(tx.date || tx.created_at).getTime(),
-                    dateStr: new Date(tx.date || tx.created_at).toLocaleDateString('vi-VN'),
+                    date: parsedDt.getTime(),
+                    dateStr: window.formatVietnamDate ? window.formatVietnamDate(tx.date || tx.created_at) : parsedDt.toLocaleDateString('vi-VN'),
                     tx: tx
                 });
             });

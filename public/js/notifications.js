@@ -670,18 +670,26 @@ window.modNotifications = {
         }
     },
 
-    // 19. Định dạng thời gian tương đối tiếng Việt
+    // 19. Định dạng thời gian tương đối tiếng Việt chuẩn múi giờ Việt Nam (GMT+7)
     formatRelativeTime: function(dateStr) {
         if (!dateStr) return '';
         try {
-            const d = new Date(dateStr);
+            const parseFn = window.parseVietnamDate || function(s) {
+                if (!s) return new Date();
+                let str = String(s).trim();
+                if (str.includes(' ') && !str.includes('T')) str = str.replace(' ', 'T');
+                if (!str.endsWith('Z') && !/[+-]\d{2}(:?\d{2})?$/.test(str)) str += 'Z';
+                return new Date(str);
+            };
+            const d = parseFn(dateStr);
             const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (diff < 0) return 'Vừa xong';
             if (diff < 30) return 'Vừa xong';
             if (diff < 60) return `${diff} giây trước`;
             if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
             if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
             if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-            return d.toLocaleDateString('vi-VN');
+            return window.formatVietnamDate ? window.formatVietnamDate(dateStr) : d.toLocaleDateString('vi-VN');
         } catch(e) {
             return '';
         }

@@ -618,7 +618,7 @@ window.modCashbook = {
                 <tr class="hover:bg-slate-50 transition">
                     <td class="p-3">
                         <p class="font-mono font-black text-slate-800 text-xs">${t.code}</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">${new Date(t.created_at).toLocaleString('vi-VN')}</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">${window.formatVietnamDateTime ? window.formatVietnamDateTime(t.created_at) : new Date(t.created_at).toLocaleString('vi-VN')}</p>
                     </td>
                     <td class="p-3 text-center">
                         ${badge}
@@ -666,7 +666,7 @@ window.modCashbook = {
                 <tr class="hover:bg-rose-50/40 transition">
                     <td class="p-3">
                         <p class="font-mono font-bold text-rose-900">${t.code}</p>
-                        <p class="text-[10px] text-slate-400">${new Date(t.created_at).toLocaleDateString('vi-VN')}</p>
+                        <p class="text-[10px] text-slate-400">${window.formatVietnamDate ? window.formatVietnamDate(t.created_at) : new Date(t.created_at).toLocaleDateString('vi-VN')}</p>
                     </td>
                     <td class="p-3 font-bold text-slate-800">${t.category || 'Chi khác'}</td>
                     <td class="p-3 font-bold text-slate-900">${t.target_name}</td>
@@ -826,7 +826,7 @@ window.modCashbook = {
 
         let csv = "\uFEFFSTT,Mã Phiếu,Ngày Giao Dịch,Loại,Danh Mục,Trạng Thái Thuế,Nguồn Tiền,Đối Tượng,Số Tiền (VNĐ),Diễn Giải,Chứng Từ Đính Kèm\n";
         window.modCashbook.transactions.forEach((t, idx) => {
-            const dateStr = new Date(t.created_at).toLocaleDateString('vi-VN');
+            const dateStr = window.formatVietnamDate ? window.formatVietnamDate(t.created_at) : new Date(t.created_at).toLocaleDateString('vi-VN');
             const safeTarget = `"${(t.target_name || '').replace(/"/g, '""')}"`;
             const safeNotes = `"${(t.notes || '').replace(/"/g, '""')}"`;
             const sign = t.type === 'THU' ? '' : '-';

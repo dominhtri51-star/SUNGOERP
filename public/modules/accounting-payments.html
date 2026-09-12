@@ -2049,20 +2049,22 @@ window.modPayment = {
         const timeline = [];
         purchases.forEach(po => {
             const d = po.created_at || po.receive_date || Date.now();
+            const parsedDt = window.parseVietnamDate ? window.parseVietnamDate(d) : new Date(d);
             timeline.push({
                 type: 'PURCHASE',
-                date: new Date(d).getTime(),
-                dateStr: new Date(d).toLocaleDateString('vi-VN'),
+                date: parsedDt.getTime(),
+                dateStr: window.formatVietnamDate ? window.formatVietnamDate(d) : parsedDt.toLocaleDateString('vi-VN'),
                 po: po
             });
         });
 
         payments.forEach(p => {
             const d = p.created_at || Date.now();
+            const parsedDt = window.parseVietnamDate ? window.parseVietnamDate(d) : new Date(d);
             timeline.push({
                 type: 'PAYMENT',
-                date: new Date(d).getTime(),
-                dateStr: new Date(d).toLocaleDateString('vi-VN'),
+                date: parsedDt.getTime(),
+                dateStr: window.formatVietnamDate ? window.formatVietnamDate(d) : parsedDt.toLocaleDateString('vi-VN'),
                 payment: p
             });
         });
@@ -2485,20 +2487,22 @@ window.modPayment = {
             const timeline = [];
             purchases.forEach(po => {
                 const dt = po.created_at || po.receive_date || Date.now();
+                const parsedDt = window.parseVietnamDate ? window.parseVietnamDate(dt) : new Date(dt);
                 timeline.push({
                     type: 'PURCHASE',
-                    date: new Date(dt).getTime(),
-                    dateStr: new Date(dt).toLocaleDateString('vi-VN'),
+                    date: parsedDt.getTime(),
+                    dateStr: window.formatVietnamDate ? window.formatVietnamDate(dt) : parsedDt.toLocaleDateString('vi-VN'),
                     po: po
                 });
             });
 
             payments.forEach(p => {
                 const dt = p.created_at || Date.now();
+                const parsedDt = window.parseVietnamDate ? window.parseVietnamDate(dt) : new Date(dt);
                 timeline.push({
                     type: 'PAYMENT',
-                    date: new Date(dt).getTime(),
-                    dateStr: new Date(dt).toLocaleDateString('vi-VN'),
+                    date: parsedDt.getTime(),
+                    dateStr: window.formatVietnamDate ? window.formatVietnamDate(dt) : parsedDt.toLocaleDateString('vi-VN'),
                     payment: p
                 });
             });

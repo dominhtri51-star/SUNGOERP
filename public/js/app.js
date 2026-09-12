@@ -55,6 +55,66 @@ window.escapeHtml = function(str) {
         .replace(/'/g, '&#039;');
 };
 
+// ==========================================
+// CHUẨN HÓA MÚI GIỜ VIỆT NAM (ASIA/HO_CHI_MINH - GMT+7) TOÀN HỆ THỐNG
+// Tuân thủ 100% Nguyên Tắc Vàng: An toàn dữ liệu, không can thiệp CSDL.
+// ==========================================
+window.parseVietnamDate = function(timestamp) {
+    if (!timestamp) return new Date();
+    if (timestamp instanceof Date) return timestamp;
+    let s = String(timestamp).trim();
+    if (!s) return new Date();
+    // Nếu là dạng 'YYYY-MM-DD HH:mm:ss' từ CSDL Postgres (lưu UTC), chuyển thành ISO và gắn Z
+    if (s.includes(' ') && !s.includes('T')) {
+        s = s.replace(' ', 'T');
+    }
+    if (!s.endsWith('Z') && !/[+-]\d{2}(:?\d{2})?$/.test(s)) {
+        s += 'Z';
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? new Date(timestamp) : d;
+};
+
+window.formatVietnamDateTime = function(timestamp, options = {}) {
+    if (!timestamp) return '---';
+    const d = window.parseVietnamDate(timestamp);
+    if (isNaN(d.getTime())) return String(timestamp);
+    const defaults = {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    };
+    return new Intl.DateTimeFormat('vi-VN', { ...defaults, ...options }).format(d);
+};
+
+window.formatVietnamDate = function(timestamp) {
+    if (!timestamp) return '---';
+    const d = window.parseVietnamDate(timestamp);
+    if (isNaN(d.getTime())) return String(timestamp);
+    return new Intl.DateTimeFormat('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(d);
+};
+
+window.formatVietnamTime = function(timestamp) {
+    if (!timestamp) return '--:--';
+    const d = window.parseVietnamDate(timestamp);
+    if (isNaN(d.getTime())) return '--:--';
+    return new Intl.DateTimeFormat('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    }).format(d);
+};
+
 const ALL_SYSTEM_GROUPS = [
     { 
         group: 'Trí Tuệ Nhân Tạo & Điều Hành', 

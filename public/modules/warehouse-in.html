@@ -179,7 +179,9 @@ window.modWmsIn = {
                 }
 
                 let mappedPOs = displayPOs.map(po => {
-                    const dStr = po.updated_at ? new Date(po.updated_at).toLocaleDateString('vi-VN') : new Date(po.created_at).toLocaleDateString('vi-VN');
+                    const dStr = po.updated_at 
+                        ? (window.formatVietnamDate ? window.formatVietnamDate(po.updated_at) : new Date(po.updated_at).toLocaleDateString('vi-VN'))
+                        : (window.formatVietnamDate ? window.formatVietnamDate(po.created_at) : new Date(po.created_at).toLocaleDateString('vi-VN'));
                     
                     const mappedPo = {
                         id: po.id,

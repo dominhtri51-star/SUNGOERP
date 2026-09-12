@@ -1,3 +1,4 @@
+process.env.TZ = 'Asia/Ho_Chi_Minh';
 try { require('dotenv').config(); } catch (e) {}
 const express = require('express');
 const fs = require('fs');
