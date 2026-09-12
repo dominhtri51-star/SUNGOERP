@@ -136,6 +136,20 @@ router.get('/summary', async (req, res) => {
         `);
         const reminderCount = parseInt(reminderRes.rows[0]?.count || 0);
 
+        // Đếm tổng hợp các đơn hàng chưa hoàn thành & chưa xuất kho (để kế toán & sale phối hợp, tránh đòi nợ trùng)
+        const uncompletedRes = await pool.query(`
+            SELECT 
+                COUNT(id) as uncompleted_orders_count,
+                COALESCE(SUM(total_amount), 0) as uncompleted_orders_total,
+                COALESCE(SUM(total_amount - COALESCE(paid_amount, 0)), 0) as uncompleted_orders_remaining,
+                COUNT(DISTINCT customer_id) as uncompleted_customers_count,
+                COUNT(CASE WHEN (status IN ('PENDING', 'PROCESSING') AND dispatched_at IS NULL) THEN 1 END) as unexported_orders_count,
+                COALESCE(SUM(CASE WHEN (status IN ('PENDING', 'PROCESSING') AND dispatched_at IS NULL) THEN total_amount ELSE 0 END), 0) as unexported_orders_total
+            FROM orders 
+            WHERE status NOT IN ('COMPLETED', 'CANCELLED', 'RETURNED')
+        `);
+        const unc = uncompletedRes.rows[0] || {};
+
         res.json({
             success: true,
             summary: {
@@ -143,7 +157,13 @@ router.get('/summary', async (req, res) => {
                 total_payable: Math.round(totalPayable),
                 debtor_count: debtorCount,
                 creditor_count: creditorCount,
-                reminder_count: reminderCount
+                reminder_count: reminderCount,
+                uncompleted_orders_count: parseInt(unc.uncompleted_orders_count || 0),
+                uncompleted_orders_total: Math.round(parseFloat(unc.uncompleted_orders_total || 0)),
+                uncompleted_orders_remaining: Math.round(parseFloat(unc.uncompleted_orders_remaining || 0)),
+                uncompleted_customers_count: parseInt(unc.uncompleted_customers_count || 0),
+                unexported_orders_count: parseInt(unc.unexported_orders_count || 0),
+                unexported_orders_total: Math.round(parseFloat(unc.unexported_orders_total || 0))
             }
         });
     } catch(err) {
@@ -193,6 +213,20 @@ router.get('/partners', async (req, res) => {
                   AND o.customer_id IS NOT NULL
                   AND o.id NOT IN (SELECT order_id FROM debt_transactions WHERE order_id IS NOT NULL)
                 GROUP BY o.customer_id
+            ),
+            partner_uncompleted AS (
+                SELECT 
+                    o.customer_id,
+                    COUNT(o.id) as uncompleted_count,
+                    COALESCE(SUM(o.total_amount), 0) as uncompleted_total,
+                    COALESCE(SUM(o.total_amount - COALESCE(o.paid_amount, 0)), 0) as uncompleted_remaining,
+                    COUNT(CASE WHEN (o.status IN ('PENDING', 'PROCESSING') AND o.dispatched_at IS NULL) THEN 1 END) as unexported_count,
+                    COALESCE(SUM(CASE WHEN (o.status IN ('PENDING', 'PROCESSING') AND o.dispatched_at IS NULL) THEN o.total_amount ELSE 0 END), 0) as unexported_total,
+                    ARRAY_TO_STRING(ARRAY_AGG(DISTINCT COALESCE(e.full_name, o.sales_signed_name, 'Sale')) FILTER (WHERE e.full_name IS NOT NULL OR o.sales_signed_name IS NOT NULL), ', ') as sales_names
+                FROM orders o
+                LEFT JOIN employees e ON o.employee_id = e.id
+                WHERE o.status NOT IN ('COMPLETED', 'CANCELLED', 'RETURNED') AND o.customer_id IS NOT NULL
+                GROUP BY o.customer_id
             )
             SELECT 
                 c.id,
@@ -205,12 +239,19 @@ router.get('/partners', async (req, res) => {
                 COALESCE(ptx.total_received, 0) as total_received,
                 COALESCE(ptx.total_paid_out, 0) as total_paid_out,
                 COALESCE(pup.unlinked_paid, 0) as unlinked_paid,
+                COALESCE(punc.uncompleted_count, 0) as uncompleted_count,
+                COALESCE(punc.uncompleted_total, 0) as uncompleted_total,
+                COALESCE(punc.uncompleted_remaining, 0) as uncompleted_remaining,
+                COALESCE(punc.unexported_count, 0) as unexported_count,
+                COALESCE(punc.unexported_total, 0) as unexported_total,
+                COALESCE(punc.sales_names, '') as sales_names,
                 GREATEST(po.latest_order_date, ptx.latest_tx_date) as last_activity_date,
                 ptx.active_reminder as reminder_date
             FROM customers c
             LEFT JOIN partner_orders po ON c.id = po.customer_id
             LEFT JOIN partner_tx ptx ON c.id = ptx.customer_id
             LEFT JOIN partner_unlinked_paid pup ON c.id = pup.customer_id
+            LEFT JOIN partner_uncompleted punc ON c.id = punc.customer_id
             ORDER BY c.id DESC
         `;
 
@@ -248,7 +289,13 @@ router.get('/partners', async (req, res) => {
                 debt_type: debtType,
                 debt_label: debtLabel,
                 last_activity_date: r.last_activity_date,
-                reminder_date: r.reminder_date
+                reminder_date: r.reminder_date,
+                uncompleted_orders_count: parseInt(r.uncompleted_count || 0),
+                uncompleted_orders_total: Math.round(parseFloat(r.uncompleted_total || 0)),
+                uncompleted_orders_remaining: Math.round(parseFloat(r.uncompleted_remaining || 0)),
+                unexported_orders_count: parseInt(r.unexported_count || 0),
+                unexported_orders_total: Math.round(parseFloat(r.unexported_total || 0)),
+                sales_names: r.sales_names || ''
             };
         });
 
@@ -258,21 +305,27 @@ router.get('/partners', async (req, res) => {
             partners = partners.filter(p => 
                 (p.name && p.name.toLowerCase().includes(q)) ||
                 (p.phone && p.phone.includes(q)) ||
-                (p.customer_code && p.customer_code.toLowerCase().includes(q))
+                (p.customer_code && p.customer_code.toLowerCase().includes(q)) ||
+                (p.sales_names && p.sales_names.toLowerCase().includes(q))
             );
         }
 
         // 2. Lọc theo trạng thái nợ
-        if (debt_status && debt_status !== 'ALL') {
+        if (debt_status === 'UNCOMPLETED') {
+            // Lọc các khách hàng có đơn chưa hoàn thành / chưa xuất kho
+            partners = partners.filter(p => (p.uncompleted_orders_count || 0) > 0);
+            partners.sort((a, b) => (b.uncompleted_orders_total || 0) - (a.uncompleted_orders_total || 0));
+        } else if (debt_status && debt_status !== 'ALL') {
             partners = partners.filter(p => p.debt_type === debt_status);
         } else {
-            // Mặc định ưu tiên hiển thị những người CÓ NỢ lên đầu
+            // Mặc định ưu tiên hiển thị những người CÓ NỢ lên đầu, sau đó đến người CÓ ĐƠN CHƯA HOÀN TẤT
             partners.sort((a, b) => {
                 const aHasDebt = a.debt_type !== 'ZERO';
                 const bHasDebt = b.debt_type !== 'ZERO';
                 if (aHasDebt && !bHasDebt) return -1;
                 if (!aHasDebt && bHasDebt) return 1;
-                return b.amount - a.amount;
+                if (a.amount !== b.amount) return b.amount - a.amount;
+                return (b.uncompleted_orders_total || 0) - (a.uncompleted_orders_total || 0);
             });
         }
 
@@ -423,6 +476,52 @@ router.get('/partner/:id', async (req, res) => {
             ORDER BY reminder_date DESC LIMIT 1
         `, [id]);
 
+        // Lấy danh sách đơn hàng chưa hoàn thành / chưa xuất kho của khách hàng
+        const uncompletedOrdersRes = await pool.query(`
+            SELECT 
+                o.id,
+                o.order_code,
+                o.created_at,
+                o.status,
+                o.total_amount,
+                o.paid_amount,
+                (o.total_amount - COALESCE(o.paid_amount, 0)) as remaining,
+                o.dispatched_at,
+                o.notes,
+                o.shipping_address,
+                COALESCE(e.full_name, o.sales_signed_name, 'Chưa gán') AS sales_name,
+                CASE 
+                    WHEN (o.status IN ('SHIPPING_CMD', 'PACKED', 'SHIPPED') OR o.dispatched_at IS NOT NULL) THEN true 
+                    ELSE false 
+                END AS is_dispatched
+            FROM orders o
+            LEFT JOIN employees e ON o.employee_id = e.id
+            WHERE o.customer_id = $1 
+              AND o.status NOT IN ('COMPLETED', 'CANCELLED', 'RETURNED')
+            ORDER BY o.created_at DESC
+        `, [id]);
+
+        const uncompletedOrders = uncompletedOrdersRes.rows.map(o => ({
+            id: o.id,
+            order_code: o.order_code,
+            created_at: o.created_at,
+            status: o.status,
+            total_amount: Math.round(parseFloat(o.total_amount || 0)),
+            paid_amount: Math.round(parseFloat(o.paid_amount || 0)),
+            remaining: Math.round(parseFloat(o.remaining || 0)),
+            dispatched_at: o.dispatched_at,
+            notes: o.notes || '',
+            shipping_address: o.shipping_address || '',
+            sales_name: o.sales_name,
+            is_dispatched: Boolean(o.is_dispatched)
+        }));
+
+        const uncompletedCount = uncompletedOrders.length;
+        const uncompletedTotal = uncompletedOrders.reduce((acc, o) => acc + o.total_amount, 0);
+        const uncompletedRemaining = uncompletedOrders.reduce((acc, o) => acc + o.remaining, 0);
+        const unexportedCount = uncompletedOrders.filter(o => !o.is_dispatched).length;
+        const unexportedTotal = uncompletedOrders.filter(o => !o.is_dispatched).reduce((acc, o) => acc + o.total_amount, 0);
+
         res.json({
             success: true,
             partner: {
@@ -431,9 +530,15 @@ router.get('/partner/:id', async (req, res) => {
                 amount: Math.abs(netBalance),
                 debt_type: debtType,
                 debt_label: debtLabel,
-                active_reminder: lastReminderRes.rows[0] || null
+                active_reminder: lastReminderRes.rows[0] || null,
+                uncompleted_orders_count: uncompletedCount,
+                uncompleted_orders_total: uncompletedTotal,
+                uncompleted_orders_remaining: uncompletedRemaining,
+                unexported_orders_count: unexportedCount,
+                unexported_orders_total: unexportedTotal
             },
-            transactions: timelineEvents
+            transactions: timelineEvents,
+            uncompleted_orders: uncompletedOrders
         });
     } catch(err) {
         console.error('Lỗi GET /api/debt-book/partner/:id:', err);

@@ -47,7 +47,8 @@
 
             <div class="relative shrink-0">
                 <select id="filter-debt-status" onchange="window.modDebtBook.onFilterChange()" class="appearance-none bg-white border border-slate-200 rounded-xl px-3 py-1.5 pr-6 text-xs font-bold text-slate-700 outline-none shadow-2xs cursor-pointer">
-                    <option value="RECEIVABLE" selected>🟢 Chỉ phải thu</option>
+                    <option value="RECEIVABLE" selected>🟢 Chỉ phải thu (Đã xuất)</option>
+                    <option value="UNCOMPLETED">📦 Có đơn chưa hoàn thành (Chưa xuất)</option>
                     <option value="ALL">Tất cả trạng thái nợ</option>
                     <option value="PAYABLE">🟠 Chỉ phải trả (Tiền cọc)</option>
                     <option value="ZERO">⚪ Đã hết nợ</option>
@@ -56,15 +57,15 @@
             </div>
         </div>
 
-        <!-- 2 THẺ TỔNG HỢP NỢ (PHẢI THU & PHẢI TRẢ) -->
-        <div class="grid grid-cols-2 gap-3">
+        <!-- 3 THẺ TỔNG HỢP: PHẢI THU, PHẢI TRẢ & ĐƠN CHƯA HOÀN THÀNH / CHƯA XUẤT -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             <!-- THẺ 1: PHẢI THU (MÀU XANH LÁ NHẸ) -->
             <div onclick="window.modDebtBook.quickFilterStatus('RECEIVABLE')" class="bg-emerald-50/90 hover:bg-emerald-100/90 active:scale-[0.98] border border-emerald-200/80 rounded-2xl p-3.5 sm:p-4.5 flex flex-col justify-between transition shadow-2xs cursor-pointer group">
                 <div class="flex items-center gap-1.5 text-emerald-800 text-[11px] sm:text-xs font-bold mb-1">
                     <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-black group-hover:scale-110 transition">
                         <i class="fas fa-plus"></i>
                     </span>
-                    <span>Phải thu</span>
+                    <span>Phải thu (Đã xuất)</span>
                 </div>
                 <div>
                     <h2 class="text-base sm:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate" id="kpi-total-receivable">0</h2>
@@ -83,6 +84,23 @@
                 <div>
                     <h2 class="text-base sm:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate" id="kpi-total-payable">0</h2>
                     <p class="text-[10px] text-amber-700/80 font-medium mt-0.5" id="kpi-creditor-count">0 khách cọc trước</p>
+                </div>
+            </div>
+
+            <!-- THẺ 3: ĐƠN CHƯA HOÀN THÀNH / CHƯA XUẤT KHO (MÀU TÍM INDIGO) -->
+            <div onclick="window.modDebtBook.quickFilterStatus('UNCOMPLETED')" class="col-span-2 md:col-span-1 bg-indigo-50/90 hover:bg-indigo-100/90 active:scale-[0.98] border border-indigo-200/80 rounded-2xl p-3.5 sm:p-4.5 flex flex-col justify-between transition shadow-2xs cursor-pointer group">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-1.5 text-indigo-800 text-[11px] sm:text-xs font-bold">
+                        <span class="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[9px] font-black group-hover:scale-110 transition">
+                            <i class="fas fa-box-open"></i>
+                        </span>
+                        <span>Đơn chưa hoàn thành</span>
+                    </div>
+                    <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-200/70 text-indigo-800 tracking-wider">Sale theo dõi</span>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-2xl font-black text-indigo-950 tracking-tight leading-tight truncate" id="kpi-uncompleted-total">0</h2>
+                    <p class="text-[10px] text-indigo-700/90 font-medium mt-0.5" id="kpi-uncompleted-count">0 đơn chưa xuất kho</p>
                 </div>
             </div>
         </div>
@@ -206,6 +224,38 @@
                         <span class="text-[10px] text-slate-400 font-medium block truncate">Đối chiếu công nợ</span>
                     </div>
                 </button>
+            </div>
+        </div>
+
+        <!-- KHỐI ĐƠN HÀNG CHƯA HOÀN THÀNH / CHƯA XUẤT KHO (SALE THEO DÕI - KHÔNG TÍNH NỢ 131) -->
+        <div id="detail-uncompleted-section" class="hidden max-w-2xl w-full mx-auto px-4 mt-4">
+            <div class="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                            <i class="fas fa-box-open"></i>
+                        </span>
+                        <div>
+                            <h4 class="text-xs sm:text-sm font-black text-indigo-950">Đơn hàng đang xử lý / Chưa xuất kho</h4>
+                            <p class="text-[10px] text-indigo-700 font-medium">Do Sales phụ trách theo dõi cọc & tiến độ (chưa ghi nợ chính thức)</p>
+                        </div>
+                    </div>
+                    <span id="detail-uncompleted-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-200 text-indigo-900 shrink-0">0 đơn</span>
+                </div>
+
+                <!-- ALERT NHẮC NHỞ KẾ TOÁN & SALE -->
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 mb-2.5 flex items-start gap-2 text-[11px] text-amber-900">
+                    <i class="fas fa-shield-halved text-amber-600 mt-0.5 text-xs shrink-0"></i>
+                    <div>
+                        <strong class="font-bold">Lưu ý Kế toán & Kinh doanh:</strong>
+                        <span>Đơn hàng chưa xuất kho không được tính vào công nợ 131. Sale đang giữ liên lạc & thu cọc, Kế toán tuyệt đối không đòi nợ trùng lặp với khách!</span>
+                    </div>
+                </div>
+
+                <!-- DANH SÁCH ĐƠN CHƯA HOÀN THÀNH -->
+                <div id="detail-uncompleted-list" class="space-y-2">
+                    <!-- Rendered by JS -->
+                </div>
             </div>
         </div>
 
@@ -758,6 +808,15 @@ window.modDebtBook = {
                 document.getElementById('kpi-debtor-count').innerText = `${s.debtor_count} khách đang nợ`;
                 document.getElementById('kpi-creditor-count').innerText = `${s.creditor_count} khách cọc trước`;
 
+                const uncompletedEl = document.getElementById('kpi-uncompleted-total');
+                if (uncompletedEl) {
+                    uncompletedEl.innerText = window.modDebtBook.fmtMoney(s.uncompleted_orders_total || 0) + ' đ';
+                }
+                const uncompletedCountEl = document.getElementById('kpi-uncompleted-count');
+                if (uncompletedCountEl) {
+                    uncompletedCountEl.innerText = `${s.unexported_orders_count || s.uncompleted_orders_count || 0} đơn chưa xuất kho (Sale theo dõi)`;
+                }
+
                 const remBadge = document.getElementById('badge-reminders-count');
                 if (remBadge) {
                     if (s.reminder_count > 0) {
@@ -816,19 +875,31 @@ window.modDebtBook = {
                 avatarBg = "bg-amber-100 text-amber-900";
             }
 
+            const hasUncompleted = (p.uncompleted_orders_count || 0) > 0;
+            const uncompletedChip = hasUncompleted ? `
+                <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200/80 text-[10px] font-bold text-indigo-700">
+                        <i class="fas fa-box text-[9px]"></i>
+                        <span>${p.uncompleted_orders_count} đơn chưa xuất (${window.modDebtBook.fmtMoney(p.uncompleted_orders_total)} đ)</span>
+                    </span>
+                    ${p.sales_names ? `<span class="text-[10px] text-slate-500 font-medium"><i class="fas fa-user-tie text-[9px] text-slate-400 mr-0.5"></i>Sale: <strong class="text-slate-700">${p.sales_names}</strong></span>` : ''}
+                </div>
+            ` : '';
+
             return `
             <div onclick="window.modDebtBook.openDetail(${p.id})" class="py-3 sm:py-3.5 px-2 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 rounded-2xl cursor-pointer transition">
                 <!-- CỘT TRÁI: AVATAR & TÊN -->
-                <div class="flex items-center gap-3 min-w-0 pr-2">
-                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full ${avatarBg} font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-2xs">
+                <div class="flex items-start gap-3 min-w-0 pr-2">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full ${avatarBg} font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
                         ${p.initials || 'KH'}
                     </div>
                     <div class="min-w-0">
                         <h4 class="text-xs sm:text-sm font-black text-slate-900 truncate leading-snug">${p.name}</h4>
-                        <p class="text-[11px] ${labelClass} mt-0.5 flex items-center gap-1">
+                        <p class="text-[11px] ${labelClass} mt-0.5 flex items-center gap-1 flex-wrap">
                             <span>${labelText}</span>
                             ${p.phone ? `<span class="text-slate-400 font-normal">• ${p.phone}</span>` : ''}
                         </p>
+                        ${uncompletedChip}
                     </div>
                 </div>
 
@@ -917,6 +988,9 @@ window.modDebtBook = {
                 }
             }
 
+            // Render Uncompleted Orders
+            window.modDebtBook.renderUncompletedOrders(json.uncompleted_orders || []);
+
             // Render Timeline
             window.modDebtBook.renderTimeline(json.transactions || []);
 
@@ -929,6 +1003,63 @@ window.modDebtBook = {
         } catch(err) {
             alert("Lỗi tải chi tiết sổ nợ!");
         }
+    },
+
+    renderUncompletedOrders: (orders) => {
+        const section = document.getElementById('detail-uncompleted-section');
+        const list = document.getElementById('detail-uncompleted-list');
+        const badge = document.getElementById('detail-uncompleted-badge');
+        if (!section || !list) return;
+
+        if (!orders || orders.length === 0) {
+            section.classList.add('hidden');
+            return;
+        }
+
+        section.classList.remove('hidden');
+        const unexpCount = orders.filter(o => !o.is_dispatched).length;
+        if (badge) {
+            badge.innerText = `${orders.length} đơn (${unexpCount} chưa xuất)`;
+        }
+
+        list.innerHTML = orders.map(o => {
+            const d = new Date(o.created_at);
+            const dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : '';
+            
+            const dispatchBadge = o.is_dispatched ? `
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200 shrink-0">
+                    <i class="fas fa-truck-fast text-[9px]"></i> Đã phát lệnh / Đang giao (Đã tính nợ 131)
+                </span>
+            ` : `
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
+                    <i class="fas fa-clock text-[9px]"></i> HÀNG CHƯA XUẤT (Chưa tính nợ - Sale theo dõi)
+                </span>
+            `;
+
+            return `
+            <div class="bg-white rounded-xl p-3 border border-indigo-100 shadow-2xs hover:border-indigo-300 transition">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-mono font-black text-xs sm:text-sm text-slate-900">${o.order_code}</span>
+                            <span class="text-[11px] text-slate-400 font-medium">${dateStr}</span>
+                            ${dispatchBadge}
+                        </div>
+                        <div class="mt-1 text-xs text-slate-600 flex items-center gap-1.5 flex-wrap">
+                            <span class="font-bold text-slate-700"><i class="fas fa-user-tie text-slate-400 mr-1"></i>Sale: <strong class="text-indigo-700 font-black">${o.sales_name}</strong></span>
+                            ${o.notes ? `<span class="text-[11px] text-slate-500 italic truncate max-w-xs">• "${o.notes}"</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <span class="text-xs sm:text-sm font-black text-slate-900 block font-mono">${window.modDebtBook.fmtMoney(o.total_amount)} đ</span>
+                        <span class="text-[10px] text-slate-500 font-medium block">
+                            ${o.paid_amount > 0 ? `Đã cọc: <strong class="text-emerald-700">${window.modDebtBook.fmtMoney(o.paid_amount)}</strong> | ` : ''}Còn: <strong class="${o.remaining > 0 ? 'text-rose-600' : 'text-slate-700'}">${window.modDebtBook.fmtMoney(o.remaining)}</strong>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
     },
 
     backToOverview: () => {
