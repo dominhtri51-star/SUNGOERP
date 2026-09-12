@@ -14,15 +14,61 @@
             </button>
         </div>
         
+        <!-- Thống Kê Tổng Quan Công Nợ Nhà Cung Cấp -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 shrink-0">
+            <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-rose-200 shadow-2xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg font-black shrink-0">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Tổng Dư Nợ Phải Trả (331)</p>
+                    <p id="kpi-total-sup-debt" class="font-black text-rose-600 text-base sm:text-lg truncate">0 đ</p>
+                    <p id="kpi-sup-debt-count" class="text-[10px] text-slate-400 truncate">0 / 0 NCC có dư nợ</p>
+                </div>
+            </div>
+            <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-amber-200 shadow-2xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black shrink-0">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider truncate">Tổng Nợ Đầu Kỳ (Sổ Cũ)</p>
+                    <p id="kpi-total-op-debt" class="font-black text-amber-700 text-base sm:text-lg truncate">0 đ</p>
+                    <p class="text-[10px] text-slate-400 truncate">Đã ghi nhận vào TK 331</p>
+                </div>
+            </div>
+            <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-red-200 shadow-2xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-lg font-black shrink-0">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Cảnh Báo Vượt Hạn Mức</p>
+                    <p id="kpi-over-limit-count" class="font-black text-red-600 text-base sm:text-lg truncate">0 NCC</p>
+                    <p id="kpi-over-limit-sub" class="text-[10px] text-slate-400 font-bold truncate">Đang an toàn</p>
+                </div>
+            </div>
+            <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-orange-200 shadow-2xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-lg font-black shrink-0">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Trễ Hạn Thanh Toán</p>
+                    <p id="kpi-overdue-count" class="font-black text-orange-600 text-base sm:text-lg truncate">0 NCC</p>
+                    <p id="kpi-overdue-sub" class="text-[10px] text-slate-400 truncate">Theo chính sách nợ</p>
+                </div>
+            </div>
+        </div>
+        
         <!-- 1. Desktop Table View -->
         <div class="hidden md:block bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-x-auto flex-1">
             <table class="w-full text-left text-xs whitespace-nowrap">
                 <thead class="bg-slate-100 text-[10px] uppercase text-slate-600 font-black sticky top-0 shadow-2xs z-10 border-b border-slate-200">
                     <tr>
-                        <th class="p-3 pl-4">Mã & Đơn Vị</th>
-                        <th class="p-3">Liên Hệ</th>
-                        <th class="p-3 text-right">Hạn Mức Nợ Tối Đa</th>
-                        <th class="p-3 text-center">Chính Sách</th>
+                        <th class="p-3 pl-4 w-60">Nhà Cung Cấp & Mã</th>
+                        <th class="p-3 text-right w-44">Dư Nợ Hiện Tại (331)</th>
+                        <th class="p-3 w-56">Hạn Mức & % Đã Dùng</th>
+                        <th class="p-3 text-center w-40">Chính Sách & Hạn Nợ</th>
+                        <th class="p-3 text-center w-36">Tình Trạng & Cảnh Báo</th>
+                        <th class="p-3 w-36">Liên Hệ</th>
                         <th class="p-3 pr-4 text-center w-32">Thao Tác</th>
                     </tr>
                 </thead>
@@ -215,70 +261,337 @@ window.modSupplier = {
 
     fmtMoney: (num) => new Intl.NumberFormat('vi-VN').format(num || 0),
 
+    computeDebtStatus: (sup, posList = [], paysList = []) => {
+        const openingDebt = parseFloat(sup.opening_debt || 0);
+        const openingDebtDate = sup.opening_debt_date ? new Date(sup.opening_debt_date) : null;
+        const debtDays = parseInt(sup.debt_days) || 30;
+        const creditLimit = parseFloat(sup.credit_limit || 0);
+
+        const myPOs = posList.filter(po => 
+            (Number(po.supplier_id) === sup.id || (po.supplier_name && po.supplier_name.trim().toLowerCase() === sup.name.trim().toLowerCase())) &&
+            po.status === 'Hoàn Tất Nhập Kho'
+        ).map(po => ({
+            id: po.id,
+            code: po.po_code,
+            amount: parseFloat(po.total_amount || 0),
+            date: new Date(po.receive_date || po.updated_at || po.created_at)
+        })).sort((a, b) => a.date - b.date);
+
+        const totalPurchased = myPOs.reduce((sum, po) => sum + po.amount, 0);
+
+        const myPayments = paysList.filter(pay => 
+            (Number(pay.supplier_id) === sup.id || (pay.supplier_name && pay.supplier_name.trim().toLowerCase() === sup.name.trim().toLowerCase())) &&
+            pay.status === 'Đã Thanh Toán'
+        ).map(pay => ({
+            id: pay.id,
+            code: pay.payment_code,
+            amount: parseFloat(pay.amount || 0),
+            date: new Date(pay.updated_at || pay.created_at)
+        }));
+
+        const totalPaid = myPayments.reduce((sum, pay) => sum + pay.amount, 0);
+
+        // Chuẩn mực kế toán TK 331: Dư nợ = Nợ đầu kỳ + Phát sinh Nợ (Mua hàng) - Phát sinh Có (Đã trả)
+        const currentDebt = Math.max(0, openingDebt + totalPurchased - totalPaid);
+
+        let pctLimit = 0;
+        let isOverLimit = false;
+        let overLimitAmount = 0;
+        if (creditLimit > 0) {
+            pctLimit = Math.round((currentDebt / creditLimit) * 100);
+            if (currentDebt > creditLimit) {
+                isOverLimit = true;
+                overLimitAmount = currentDebt - creditLimit;
+            }
+        }
+
+        // Tính hạn và tuổi nợ theo phương pháp FIFO
+        let isOverdue = false;
+        let overdueDays = 0;
+        let daysLeft = 0;
+        let dueDate = null;
+        let oldestUnpaidDate = null;
+
+        if (currentDebt > 0) {
+            let remainingPaid = totalPaid;
+            let remainingOpeningDebt = openingDebt;
+
+            if (remainingPaid >= remainingOpeningDebt) {
+                remainingPaid -= remainingOpeningDebt;
+                remainingOpeningDebt = 0;
+            } else {
+                remainingOpeningDebt -= remainingPaid;
+                remainingPaid = 0;
+            }
+
+            if (remainingOpeningDebt > 0) {
+                oldestUnpaidDate = openingDebtDate || new Date('2026-09-01');
+            } else {
+                for (const po of myPOs) {
+                    if (remainingPaid >= po.amount) {
+                        remainingPaid -= po.amount;
+                    } else {
+                        oldestUnpaidDate = po.date;
+                        break;
+                    }
+                }
+                if (!oldestUnpaidDate && myPOs.length > 0) {
+                    oldestUnpaidDate = myPOs[myPOs.length - 1].date;
+                }
+            }
+
+            if (oldestUnpaidDate) {
+                dueDate = new Date(oldestUnpaidDate.getTime() + debtDays * 86400000);
+                const now = new Date();
+                const diffMs = now.getTime() - dueDate.getTime();
+                const diffDays = Math.ceil(diffMs / 86400000);
+
+                if (diffDays > 0) {
+                    isOverdue = true;
+                    overdueDays = diffDays;
+                } else {
+                    isOverdue = false;
+                    daysLeft = Math.abs(diffDays);
+                }
+            }
+        }
+
+        return {
+            openingDebt,
+            totalPurchased,
+            totalPaid,
+            currentDebt,
+            creditLimit,
+            pctLimit,
+            isOverLimit,
+            overLimitAmount,
+            debtDays,
+            isOverdue,
+            overdueDays,
+            daysLeft,
+            dueDate
+        };
+    },
+
     load: async () => {
         try {
-            const res = await fetch('/api/suppliers?t=' + Date.now());
-            const data = await res.json();
-            if(data.success) {
-                window.modSupplier.list = data.data;
+            const [resSup, resPur, resPay] = await Promise.all([
+                fetch('/api/suppliers?t=' + Date.now()),
+                fetch('/api/purchases?t=' + Date.now()),
+                fetch('/api/payments?t=' + Date.now())
+            ]);
+            const [dataSup, dataPur, dataPay] = await Promise.all([
+                resSup.json(),
+                resPur.json(),
+                resPay.json()
+            ]);
+
+            if (dataSup.success) {
+                window.modSupplier.list = dataSup.data;
+                const posList = dataPur.success ? (dataPur.data || []) : [];
+                const paysList = (dataPay.success || dataPay.data) ? (dataPay.data || []) : [];
+                window.modSupplier.purchases = posList;
+                window.modSupplier.payments = paysList;
+
                 const tbody = document.getElementById('tbl-suppliers');
+                const mobContainer = document.getElementById('tbl-suppliers-mobile');
                 
-                if(data.data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Chưa có dữ liệu nhà cung cấp.</td></tr>`;
+                if (dataSup.data.length === 0) {
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">Chưa có dữ liệu nhà cung cấp.</td></tr>`;
+                    if (mobContainer) mobContainer.innerHTML = `<div class="p-8 text-center text-slate-400 font-medium">Chưa có dữ liệu nhà cung cấp.</div>`;
+                    return;
+                }
 
-                tbody.innerHTML = data.data.map(i => {
-                    const creditLimitStr = i.credit_limit > 0 ? `<span class="text-red-600 font-black">${window.modSupplier.fmtMoney(i.credit_limit)} đ</span>` : `<span class="text-slate-400 italic font-medium">Không giới hạn</span>`;
-                    const termStr = `Tạm ứng ${i.advance_pct || 0}%<br>Nợ ${i.debt_days || 0} ngày`;
+                // Tính toán tổng hợp số liệu
+                let totalAllDebt = 0;
+                let totalAllOpeningDebt = 0;
+                let overLimitCount = 0;
+                let overdueCount = 0;
+                let inDebtCount = 0;
 
-                    return `
-                    <tr class="hover:bg-blue-50/50 transition border-b border-slate-50 cursor-pointer" onclick="window.modSupplier.showDetail(${i.id})">
-                        <td class="p-4">
-                            <p class="font-bold text-blue-700 text-sm hover:underline">${i.name}</p>
-                            <p class="text-[10px] text-slate-400 font-mono mt-0.5">Mã: ${i.supplier_code} | MST: ${i.tax_code || '---'}</p>
-                            ${Number(i.opening_debt) > 0 ? `<div class="mt-1"><span class="inline-flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shadow-2xs"><i class="fas fa-history text-amber-600"></i> Nợ ĐK: ${window.modSupplier.fmtMoney(i.opening_debt)} đ</span></div>` : ''}
-                        </td>
-                        <td class="p-4 text-xs">
-                            <p class="font-medium text-slate-700"><i class="fas fa-phone text-slate-400 w-4"></i> ${i.phone || '---'}</p>
-                            <p class="text-slate-500 mt-1"><i class="fas fa-envelope text-slate-400 w-4"></i> ${i.email || '---'}</p>
-                        </td>
-                        <td class="p-4 text-right">${creditLimitStr}</td>
-                        <td class="p-4 text-center">
-                            <span class="inline-block bg-amber-50 border border-amber-200 text-amber-800 text-[10px] px-2 py-1 rounded font-bold leading-tight">${termStr}</span>
-                        </td>
-                        <td class="p-4 text-center" onclick="event.stopPropagation()">
-                            <button onclick="window.modSupplier.openForm(${i.id})" class="text-slate-400 hover:text-blue-600 p-2 transition cursor-pointer"><i class="fas fa-cog"></i></button>
-                            <button onclick="window.modSupplier.deleteSupplier(${i.id})" class="text-slate-400 hover:text-red-500 p-2 transition ml-1 cursor-pointer"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `}).join('');
+                const itemsWithDebt = dataSup.data.map(i => {
+                    const st = window.modSupplier.computeDebtStatus(i, posList, paysList);
+                    totalAllDebt += st.currentDebt;
+                    totalAllOpeningDebt += st.openingDebt;
+                    if (st.currentDebt > 0) inDebtCount++;
+                    if (st.isOverLimit) overLimitCount++;
+                    if (st.isOverdue) overdueCount++;
+                    return { ...i, st };
+                });
+
+                // Cập nhật 4 thẻ KPI đầu trang
+                const elTotalDebt = document.getElementById('kpi-total-sup-debt');
+                const elDebtCount = document.getElementById('kpi-sup-debt-count');
+                const elOpDebt = document.getElementById('kpi-total-op-debt');
+                const elOverLimit = document.getElementById('kpi-over-limit-count');
+                const elOverLimitSub = document.getElementById('kpi-over-limit-sub');
+                const elOverdue = document.getElementById('kpi-overdue-count');
+                const elOverdueSub = document.getElementById('kpi-overdue-sub');
+
+                if (elTotalDebt) elTotalDebt.innerText = window.modSupplier.fmtMoney(totalAllDebt) + ' đ';
+                if (elDebtCount) elDebtCount.innerText = `${inDebtCount} / ${itemsWithDebt.length} NCC có dư nợ`;
+                if (elOpDebt) elOpDebt.innerText = window.modSupplier.fmtMoney(totalAllOpeningDebt) + ' đ';
+                if (elOverLimit) elOverLimit.innerText = `${overLimitCount} NCC`;
+                if (elOverLimitSub) {
+                    if (overLimitCount > 0) {
+                        elOverLimitSub.className = 'text-[10px] text-red-600 font-black truncate';
+                        elOverLimitSub.innerHTML = `<i class="fas fa-triangle-exclamation mr-0.5"></i> Vượt mức nợ cho phép`;
+                    } else {
+                        elOverLimitSub.className = 'text-[10px] text-emerald-600 font-bold truncate';
+                        elOverLimitSub.innerText = 'Đang trong hạn mức an toàn';
+                    }
+                }
+                if (elOverdue) elOverdue.innerText = `${overdueCount} NCC`;
+                if (elOverdueSub) {
+                    if (overdueCount > 0) {
+                        elOverdueSub.className = 'text-[10px] text-orange-600 font-black truncate';
+                        elOverdueSub.innerHTML = `<i class="fas fa-clock mr-0.5"></i> Cần ưu tiên thanh toán`;
+                    } else {
+                        elOverdueSub.className = 'text-[10px] text-slate-400 truncate';
+                        elOverdueSub.innerText = 'Không có đối tác trễ hạn';
+                    }
+                }
+
+                // Render Desktop Table
+                if (tbody) {
+                    tbody.innerHTML = itemsWithDebt.map(item => {
+                        const i = item;
+                        const st = item.st;
+                        const creditLimitStr = st.creditLimit > 0 ? window.modSupplier.fmtMoney(st.creditLimit) + ' đ' : 'Không giới hạn';
+
+                        // Cột Tình trạng & Cảnh báo
+                        let statusBadge = '';
+                        if (st.currentDebt === 0) {
+                            statusBadge = `<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-check text-emerald-500"></i> Hết nợ</span>`;
+                        } else if (st.isOverdue) {
+                            statusBadge = `<span class="inline-flex items-center gap-1 bg-red-100 text-red-800 border border-red-300 px-2 py-0.5 rounded text-[10px] font-black animate-pulse shadow-2xs"><i class="fas fa-triangle-exclamation text-red-600"></i> TRỄ ${st.overdueDays} NGÀY</span>`;
+                        } else if (st.isOverLimit) {
+                            statusBadge = `<span class="inline-flex items-center gap-1 bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded text-[10px] font-black"><i class="fas fa-ban text-rose-600"></i> VƯỢT HẠN MỨC</span>`;
+                        } else if (st.pctLimit >= 80) {
+                            statusBadge = `<span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-exclamation-circle text-amber-600"></i> SẮP CHẠM TRẦN</span>`;
+                        } else {
+                            statusBadge = `<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold"><i class="far fa-clock text-emerald-600"></i> Còn ${st.daysLeft} ngày</span>`;
+                        }
+
+                        // Cột Hạn mức & % Đã dùng
+                        let limitColHtml = '';
+                        if (st.creditLimit > 0) {
+                            const barColor = st.isOverLimit ? 'bg-rose-500' : (st.pctLimit >= 80 ? 'bg-amber-500' : 'bg-emerald-500');
+                            const textColor = st.isOverLimit ? 'text-rose-600 font-black' : (st.pctLimit >= 80 ? 'text-amber-600 font-black' : 'text-emerald-700 font-bold');
+                            limitColHtml = `
+                                <div>
+                                    <div class="flex items-center justify-between text-xs mb-1">
+                                        <span class="font-bold text-slate-700">${creditLimitStr}</span>
+                                        <span class="${textColor} text-[11px]">${st.pctLimit}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/80">
+                                        <div class="h-2 rounded-full transition-all duration-500 ${barColor}" style="width: ${Math.min(100, st.pctLimit)}%"></div>
+                                    </div>
+                                    ${st.isOverLimit ? 
+                                        `<span class="text-[9.5px] font-black text-rose-600 block mt-1"><i class="fas fa-triangle-exclamation mr-0.5"></i> Vượt trần: +${window.modSupplier.fmtMoney(st.overLimitAmount)} đ</span>` :
+                                        (st.pctLimit >= 80 ? 
+                                            `<span class="text-[9.5px] font-bold text-amber-600 block mt-1">Khả dụng còn: ${window.modSupplier.fmtMoney(st.creditLimit - st.currentDebt)} đ</span>` : 
+                                            `<span class="text-[9.5px] text-slate-400 block mt-1">Khả dụng còn: ${window.modSupplier.fmtMoney(st.creditLimit - st.currentDebt)} đ</span>`
+                                        )
+                                    }
+                                </div>
+                            `;
+                        } else {
+                            limitColHtml = `<span class="text-slate-400 italic text-xs font-medium">Không giới hạn</span>`;
+                        }
+
+                        return `
+                        <tr class="hover:bg-blue-50/50 transition border-b border-slate-50 cursor-pointer" onclick="window.modSupplier.showDetail(${i.id})">
+                            <td class="p-4">
+                                <p class="font-bold text-blue-700 text-sm hover:underline">${i.name}</p>
+                                <p class="text-[10px] text-slate-400 font-mono mt-0.5">Mã: ${i.supplier_code} | MST: ${i.tax_code || '---'}</p>
+                                ${Number(i.opening_debt) > 0 ? `<div class="mt-1"><span class="inline-flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shadow-2xs"><i class="fas fa-history text-amber-600"></i> Nợ ĐK: ${window.modSupplier.fmtMoney(i.opening_debt)} đ</span></div>` : ''}
+                            </td>
+                            <td class="p-4 text-right">
+                                <div class="font-black ${st.currentDebt > 0 ? 'text-rose-600 text-sm' : 'text-slate-700 text-xs'}">${window.modSupplier.fmtMoney(st.currentDebt)} đ</div>
+                                ${st.currentDebt > 0 && st.totalPurchased > 0 ? `<div class="text-[9.5px] text-slate-400 mt-0.5">Tiền hàng: ${window.modSupplier.fmtMoney(st.totalPurchased)} đ</div>` : ''}
+                            </td>
+                            <td class="p-4">
+                                ${limitColHtml}
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="inline-block bg-amber-50 border border-amber-200 text-amber-800 text-[10px] px-2 py-0.5 rounded font-bold leading-tight">Nợ ${i.debt_days || 0} ngày</span>
+                                ${st.currentDebt > 0 && st.dueDate ? `<span class="text-[9.5px] text-slate-400 block mt-1"><i class="far fa-calendar-alt mr-0.5"></i> Hạn: ${st.dueDate.toLocaleDateString('vi-VN')}</span>` : ''}
+                            </td>
+                            <td class="p-4 text-center">
+                                ${statusBadge}
+                            </td>
+                            <td class="p-4 text-xs">
+                                <p class="font-medium text-slate-700">${i.phone ? `<i class="fas fa-phone text-slate-400 w-3.5"></i> ${i.phone}` : '---'}</p>
+                                <p class="text-slate-500 mt-0.5">${i.email ? `<i class="fas fa-envelope text-slate-400 w-3.5"></i> ${i.email}` : ''}</p>
+                            </td>
+                            <td class="p-4 text-center" onclick="event.stopPropagation()">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button onclick="window.modSupplier.showDetail(${i.id})" class="bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white px-2.5 py-1.5 rounded-lg font-bold text-xs border border-blue-200 transition flex items-center gap-1 cursor-pointer">
+                                        <i class="fas fa-book"></i> Sổ Nợ
+                                    </button>
+                                    <button onclick="window.modSupplier.openForm(${i.id})" class="text-slate-400 hover:text-blue-600 p-1.5 transition cursor-pointer" title="Chỉnh sửa"><i class="fas fa-cog"></i></button>
+                                    <button onclick="window.modSupplier.deleteSupplier(${i.id})" class="text-slate-400 hover:text-red-500 p-1.5 transition cursor-pointer" title="Xóa"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        `;
+                    }).join('');
+                }
 
                 // Render Mobile Cards
-                const mobContainer = document.getElementById('tbl-suppliers-mobile');
                 if (mobContainer) {
-                    mobContainer.innerHTML = data.data.map(i => {
-                        const creditLimitStr = i.credit_limit > 0 ? `${window.modSupplier.fmtMoney(i.credit_limit)} đ` : 'Không giới hạn';
+                    mobContainer.innerHTML = itemsWithDebt.map(item => {
+                        const i = item;
+                        const st = item.st;
+                        const creditLimitStr = st.creditLimit > 0 ? `${window.modSupplier.fmtMoney(st.creditLimit)} đ` : 'Không giới hạn';
+                        
+                        let badgeMobile = '';
+                        if (st.currentDebt === 0) {
+                            badgeMobile = `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[10px] font-bold">Hết nợ</span>`;
+                        } else if (st.isOverdue) {
+                            badgeMobile = `<span class="bg-red-100 text-red-800 border border-red-300 px-2 py-0.5 rounded text-[10px] font-black animate-pulse">TRỄ ${st.overdueDays}N</span>`;
+                        } else if (st.isOverLimit) {
+                            badgeMobile = `<span class="bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded text-[10px] font-black">VƯỢT TRẦN</span>`;
+                        } else {
+                            badgeMobile = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">Còn ${st.daysLeft}n</span>`;
+                        }
+
                         return `
-                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
-                            <div class="flex items-start justify-between gap-2" onclick="window.modSupplier.showDetail(${i.id})">
+                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-3 cursor-pointer" onclick="window.modSupplier.showDetail(${i.id})">
+                            <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
                                     <h4 class="font-black text-blue-700 text-xs sm:text-sm leading-tight hover:underline">${i.name}</h4>
                                     <p class="text-[10px] text-slate-400 font-mono mt-0.5">Mã: ${i.supplier_code} ${i.tax_code ? '| MST: ' + i.tax_code : ''}</p>
                                     ${Number(i.opening_debt) > 0 ? `<div class="mt-1"><span class="inline-flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shadow-2xs"><i class="fas fa-history text-amber-600"></i> Nợ ĐK: ${window.modSupplier.fmtMoney(i.opening_debt)} đ</span></div>` : ''}
                                 </div>
-                                <span class="bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md text-[10px] font-black shrink-0">
-                                    Nợ ${i.debt_days || 0} ngày
-                                </span>
-                            </div>
-
-                            <div class="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                <div class="text-slate-600">
-                                    ${i.phone ? `<span class="mr-2"><i class="fas fa-phone text-slate-400"></i> ${i.phone}</span>` : ''}
-                                </div>
-                                <div class="text-right font-bold text-red-600 text-xs">
-                                    Hạn mức: ${creditLimitStr}
+                                <div class="text-right shrink-0">
+                                    ${badgeMobile}
+                                    <span class="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded text-[9.5px] font-bold block mt-1">Nợ ${i.debt_days || 0}n</span>
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                            <!-- Khung Dư nợ & Hạn mức -->
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Dư Nợ Hiện Tại</span>
+                                        <span class="font-black ${st.currentDebt > 0 ? 'text-rose-600' : 'text-slate-700'} text-sm">${window.modSupplier.fmtMoney(st.currentDebt)} đ</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Hạn Mức (${st.pctLimit}%)</span>
+                                        <span class="font-bold text-slate-700 text-xs">${creditLimitStr}</span>
+                                    </div>
+                                </div>
+                                ${st.creditLimit > 0 ? `
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                    <div class="h-1.5 rounded-full ${st.isOverLimit ? 'bg-rose-500' : (st.pctLimit >= 80 ? 'bg-amber-500' : 'bg-emerald-500')}" style="width: ${Math.min(100, st.pctLimit)}%"></div>
+                                </div>
+                                ${st.isOverLimit ? `<p class="text-[9.5px] text-rose-600 font-bold"><i class="fas fa-triangle-exclamation mr-1"></i>Vượt hạn mức: +${window.modSupplier.fmtMoney(st.overLimitAmount)} đ</p>` : ''}
+                                ` : ''}
+                            </div>
+
+                            <div class="flex items-center justify-between pt-1 border-t border-slate-100" onclick="event.stopPropagation()">
                                 <button type="button" onclick="window.modSupplier.showDetail(${i.id})" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-xl font-bold text-xs border border-blue-200 transition flex items-center gap-1 cursor-pointer">
                                     <i class="fas fa-book"></i> Xem Sổ Nợ
                                 </button>
@@ -295,7 +608,9 @@ window.modSupplier = {
                     }).join('');
                 }
             }
-        } catch(e) {}
+        } catch(e) {
+            console.error("Lỗi tải danh sách nhà cung cấp:", e);
+        }
     },
 
     openForm: (id = null) => {
