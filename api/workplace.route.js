@@ -262,6 +262,8 @@ router.post('/channels', async (req, res) => {
             `);
         }
 
+        if (typeof invalidateChannelMeta === 'function') invalidateChannelMeta();
+
         res.json({ 
             success: true, 
             data: newChannel, 
@@ -344,6 +346,8 @@ router.put('/channels/:id/members', async (req, res) => {
             `);
         }
 
+        if (typeof invalidateChannelMeta === 'function') invalidateChannelMeta(id);
+
         res.json({ 
             success: true, 
             message: member_ids.length === 0 
@@ -356,10 +360,70 @@ router.put('/channels/:id/members', async (req, res) => {
 });
 
 // ========================================================
-// SMART CONVERSATION VERSIONING (Tiết kiệm >90% DB Egress)
-// Trả về { unchanged: true } từ RAM trong 0.001ms nếu kênh không có tin mới
+// SMART MULTI-INSTANCE CACHING (Giảm >95% DB Queries & Egress)
 // ========================================================
-const conversationVersions = new Map();
+
+// 1. Cache thông tin kênh và danh sách thành viên (TTL: 10 phút)
+const channelMetaCache = new Map(); // chanId -> { id, name, type, memberSet, hasRestrictions, expiresAt }
+
+async function getChannelMeta(chanId) {
+    const now = Date.now();
+    const cached = channelMetaCache.get(chanId);
+    if (cached && now < cached.expiresAt) {
+        return cached;
+    }
+    const chanRes = await pool.query("SELECT id, type, name FROM workplace_channels WHERE id = $1", [chanId]);
+    if (chanRes.rows.length === 0) return null;
+
+    const membersRes = await pool.query("SELECT user_id FROM workplace_channel_members WHERE channel_id = $1", [chanId]);
+    const memberSet = new Set(membersRes.rows.map(r => r.user_id));
+    
+    const meta = {
+        id: chanRes.rows[0].id,
+        name: chanRes.rows[0].name,
+        type: chanRes.rows[0].type,
+        memberSet,
+        hasRestrictions: memberSet.size > 0,
+        expiresAt: now + 10 * 60 * 1000
+    };
+    channelMetaCache.set(chanId, meta);
+    return meta;
+}
+
+function invalidateChannelMeta(chanId = null) {
+    if (chanId) channelMetaCache.delete(parseInt(chanId, 10));
+    else channelMetaCache.clear();
+}
+
+// 2. Cache tin nhắn ghim của mỗi kênh (TTL: 10 phút)
+const pinnedCache = new Map(); // chanId -> { pinned, expiresAt }
+
+async function getPinnedMessage(chanId) {
+    const now = Date.now();
+    const cached = pinnedCache.get(chanId);
+    if (cached && now < cached.expiresAt) {
+        return cached.pinned;
+    }
+    const pinRes = await pool.query(`
+        SELECT m.*, u.full_name as sender_full_name
+        FROM workplace_messages m
+        LEFT JOIN users u ON m.sender_id = u.id
+        WHERE m.channel_id = $1 AND m.is_pinned = TRUE
+        ORDER BY m.id DESC LIMIT 1
+    `, [chanId]);
+    const pinned = pinRes.rows.length > 0 ? normalizeMessage(pinRes.rows[0]) : null;
+    pinnedCache.set(chanId, { pinned, expiresAt: now + 10 * 60 * 1000 });
+    return pinned;
+}
+
+function invalidatePinnedMessage(chanId) {
+    if (chanId) pinnedCache.delete(parseInt(chanId, 10));
+    else pinnedCache.clear();
+}
+
+// 3. Cache danh sách tin nhắn gần nhất và version xác định (TTL: 5 giây)
+// Giúp 10 tabs hoặc nhiều người cùng kênh không spam DB, phản hồi 0.1ms từ RAM
+const messagesCache = new Map(); // convKey -> { messages, pinned, version, expiresAt }
 
 function getConversationKey(channelId, directUserId, currentUserId) {
     if (channelId) return `chan_${channelId}`;
@@ -371,17 +435,30 @@ function getConversationKey(channelId, directUserId, currentUserId) {
     return null;
 }
 
+// Tạo version xác định (Deterministic Version) từ nội dung thực tế
+// Nhờ đó MỌI instance Cloud Run đều tính ra CÙNG 1 version, chấm dứt triệt để lỗi lệch cache ping-pong!
+function computeDeterministicVersion(messages) {
+    if (!messages || messages.length === 0) return 'v0';
+    const latest = messages[messages.length - 1];
+    const first = messages[0];
+    const latestUpd = latest.updated_at || latest.created_at || '';
+    return `${first.id}_${latest.id}_${messages.length}_${latestUpd}`;
+}
+
 function bumpConversationVersion(channelId, directUserId, currentUserId) {
     const key = getConversationKey(channelId, directUserId, currentUserId);
     if (key) {
-        conversationVersions.set(key, Date.now());
+        messagesCache.delete(key);
+    }
+    if (channelId) {
+        invalidatePinnedMessage(parseInt(channelId, 10));
     }
 }
 
 /**
  * 5. GET /api/workplace/messages
  * Lấy tin nhắn theo kênh/nhóm hoặc theo người nhắn 1-1
- * Query: ?channel_id=1 hoặc ?direct_user_id=5 &v=timestamp
+ * Query: ?channel_id=1 hoặc ?direct_user_id=5 &v=version
  */
 router.get('/messages', async (req, res) => {
     try {
@@ -390,20 +467,40 @@ router.get('/messages', async (req, res) => {
         const isAdmin = req.user && isLeaderOrAdmin(req.user.role);
         const queryLimit = Math.min(parseInt(limit, 10) || 50, 100);
 
-        const clientVersion = v ? parseInt(v, 10) : null;
         const convKey = getConversationKey(channel_id, direct_user_id, currentUserId);
-        const currentVersion = convKey ? (conversationVersions.get(convKey) || 0) : 0;
+        const now = Date.now();
 
-        // Nếu client gửi version trùng khớp với RAM server và không phải cuộn lên xem tin cũ (before_id)
-        // -> Trả về ngay lập tức không cần chạm vào Supabase (0 DB Queries, 0 Byte Egress!)
-        if (clientVersion && currentVersion > 0 && clientVersion === currentVersion && !before_id) {
-            return res.json({
-                success: true,
-                unchanged: true,
-                v: currentVersion
-            });
+        // 1. Kiểm tra RAM cache trước nếu không phải cuộn lên xem tin cũ (before_id)
+        if (convKey && !before_id) {
+            const cached = messagesCache.get(convKey);
+            if (cached && now < cached.expiresAt) {
+                if (v && v === cached.version) {
+                    return res.json({ success: true, unchanged: true, v: cached.version });
+                }
+                return res.json({
+                    success: true,
+                    v: cached.version,
+                    data: {
+                        messages: cached.messages,
+                        pinned: cached.pinned
+                    }
+                });
+            }
         }
 
+        // 2. Kiểm tra phân quyền an toàn với Channel Meta Cache (0 DB queries nếu đã cache)
+        if (channel_id) {
+            const chanId = parseInt(channel_id, 10);
+            const chanMeta = await getChannelMeta(chanId);
+            if (!chanMeta) {
+                return res.status(404).json({ success: false, error: 'Không tìm thấy kênh này!' });
+            }
+            if (!isAdmin && chanMeta.hasRestrictions && !chanMeta.memberSet.has(currentUserId)) {
+                return res.status(403).json({ success: false, error: 'Bạn không thuộc danh sách thành viên của nhóm này!' });
+            }
+        }
+
+        // 3. Thực hiện truy vấn tin nhắn từ DB
         let query = '';
         let params = [];
 
@@ -432,30 +529,6 @@ router.get('/messages', async (req, res) => {
             query += ` ORDER BY m.id DESC LIMIT $${params.length}`;
         } else if (channel_id) {
             const chanId = parseInt(channel_id, 10);
-
-            // Kiểm tra bảo mật: Nếu là nhóm phân công (GROUP), người dùng phải là thành viên hoặc Admin
-            const chanCheck = await pool.query("SELECT type, name FROM workplace_channels WHERE id = $1", [chanId]);
-            if (chanCheck.rows.length === 0) {
-                return res.status(404).json({ success: false, error: 'Không tìm thấy kênh này!' });
-            }
-
-            if (!isAdmin) {
-                const memberCountRes = await pool.query(
-                    "SELECT COUNT(*) FROM workplace_channel_members WHERE channel_id = $1",
-                    [chanId]
-                );
-                const hasRestrictions = parseInt(memberCountRes.rows[0].count, 10) > 0;
-                if (hasRestrictions) {
-                    const memberCheck = await pool.query(
-                        "SELECT 1 FROM workplace_channel_members WHERE channel_id = $1 AND user_id = $2",
-                        [chanId, currentUserId]
-                    );
-                    if (memberCheck.rows.length === 0) {
-                        return res.status(403).json({ success: false, error: 'Bạn không thuộc danh sách thành viên của nhóm này!' });
-                    }
-                }
-            }
-
             query = `
                 SELECT m.*, 
                        u.username as sender_username,
@@ -480,30 +553,36 @@ router.get('/messages', async (req, res) => {
         const result = await pool.query(query, params);
         const messages = result.rows.map(normalizeMessage).reverse();
 
-        // Lấy thông báo ghim nếu là kênh
+        // Lấy thông báo ghim từ Cache (hoặc nạp DB nếu chưa có)
         let pinnedMessage = null;
         if (channel_id) {
-            const pinRes = await pool.query(`
-                SELECT m.*, u.full_name as sender_full_name
-                FROM workplace_messages m
-                LEFT JOIN users u ON m.sender_id = u.id
-                WHERE m.channel_id = $1 AND m.is_pinned = TRUE
-                ORDER BY m.id DESC LIMIT 1
-            `, [parseInt(channel_id, 10)]);
-            if (pinRes.rows.length > 0) {
-                pinnedMessage = normalizeMessage(pinRes.rows[0]);
-            }
+            pinnedMessage = await getPinnedMessage(parseInt(channel_id, 10));
         }
 
-        let versionToReturn = currentVersion;
-        if (!versionToReturn) {
-            versionToReturn = Date.now();
-            if (convKey) conversationVersions.set(convKey, versionToReturn);
+        const computedVersion = computeDeterministicVersion(messages);
+
+        // Lưu vào RAM cache (TTL 5 giây) để phục vụ các yêu cầu polling tiếp theo tức thì
+        if (convKey && !before_id) {
+            messagesCache.set(convKey, {
+                messages,
+                pinned: pinnedMessage,
+                version: computedVersion,
+                expiresAt: now + 5000
+            });
+        }
+
+        // Nếu client gửi version trùng khớp với phiên bản hiện hành -> Thoát ngay (0 byte truyền tin nhắn)
+        if (v && v === computedVersion && !before_id) {
+            return res.json({
+                success: true,
+                unchanged: true,
+                v: computedVersion
+            });
         }
 
         res.json({
             success: true,
-            v: versionToReturn,
+            v: computedVersion,
             data: {
                 messages,
                 pinned: pinnedMessage

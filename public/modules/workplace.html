@@ -3359,21 +3359,65 @@ window.modWorkplace = {
         alert(info);
     },
 
-    // 16. Smart Polling (4s - Đã tích hợp Version Check 0-query)
+    // 16. Smart Polling (Đã tích hợp SSE Real-time + Fallback Polling 20s)
     startPolling: function() {
         this.stopPolling();
+
+        // Lắng nghe sự kiện SSE từ notifications.js để nhận tin nhắn mới tức thời (< 100ms)
+        if (!this._sseBound) {
+            this._sseBound = true;
+            this._onIncomingMessage = (ev) => {
+                if (ev && ev.detail) {
+                    this.handleIncomingMessageNotification(ev.detail);
+                }
+            };
+            window.addEventListener('sungo:workplace-message', this._onIncomingMessage);
+        }
+
         this.pollingTimer = setInterval(() => {
-            // Chỉ nạp tin nhắn nếu tab đang hiển thị
+            // Kiểm tra nghiêm ngặt: nếu người dùng đã chuyển sang module khác, ngắt polling ngay
+            const stream = document.getElementById('wp-message-stream');
+            if (!stream) {
+                this.stopPolling();
+                return;
+            }
+
+            // Chỉ nạp tin nhắn nếu tab đang hiển thị và có kênh đang mở
             if (document.visibilityState === 'visible' && this.activeId) {
                 this.loadMessages(false);
             }
-        }, 4000);
+        }, 20000); // 20 giây fallback an toàn thay vì 4s (tiết kiệm 80% query DB)
     },
 
     stopPolling: function() {
         if (this.pollingTimer) {
             clearInterval(this.pollingTimer);
             this.pollingTimer = null;
+        }
+    },
+
+    // Xử lý tin nhắn đến tức thời từ kênh SSE thời gian thực
+    handleIncomingMessageNotification: function(notif) {
+        if (!notif || !notif.data) return;
+        const stream = document.getElementById('wp-message-stream');
+        if (!stream) {
+            this.stopPolling();
+            return;
+        }
+
+        const data = notif.data;
+        const isCurrentChannel = this.activeType === 'CHANNEL' && parseInt(this.activeId, 10) === parseInt(data.channel_id, 10);
+        const isCurrentDirect = this.activeType === 'DIRECT' && (
+            parseInt(this.activeId, 10) === parseInt(data.direct_user_id, 10) ||
+            parseInt(this.activeId, 10) === parseInt(notif.sender_id, 10)
+        );
+
+        if (isCurrentChannel || isCurrentDirect) {
+            // Đang mở đúng cuộc trò chuyện -> Tải tin mới ngay lập tức
+            this.loadMessages(false);
+        } else {
+            // Đang ở kênh khác -> Nạp lại danh bạ để hiện chấm đỏ/badge
+            this.loadChannels();
         }
     },
 

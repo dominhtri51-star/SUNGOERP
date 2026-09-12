@@ -346,7 +346,9 @@ async function aggregateAllVaultDocuments() {
     // -------------------------------------------------------------
     try {
         const orderRes = await pool.query(`
-            SELECT o.*, c.full_name as c_name, c.vat_company, c.vat_taxcode, c.vat_address 
+            SELECT o.id, o.order_code, o.customer_id, o.customer_name, o.total_amount, 
+                   o.created_at, o.status, o.delivery_proofs,
+                   c.full_name as c_name, c.vat_company, c.vat_taxcode, c.vat_address 
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.id 
             ORDER BY o.id DESC LIMIT 300
@@ -355,7 +357,13 @@ async function aggregateAllVaultDocuments() {
         if (orderRes.rows.length > 0) {
             const oIds = orderRes.rows.map(r => r.id);
             const itemsRes = await pool.query("SELECT oi.*, p.product_name, p.sku FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ANY($1)", [oIds]);
-            const docsRes = await pool.query("SELECT * FROM order_docs WHERE order_id = ANY($1)", [oIds]);
+            const docsRes = await pool.query(`
+                SELECT id, order_id, doc_name, doc_type, 
+                       (CASE WHEN LENGTH(COALESCE(doc_url, '')) > 500 THEN '/api/orders/' || order_id || '/docs/' || id ELSE doc_url END) as doc_url,
+                       created_at
+                FROM order_docs 
+                WHERE order_id = ANY($1)
+            `, [oIds]);
 
             orderRes.rows.forEach(ord => {
                 const pTag = getPeriodTag(ord.created_at);
@@ -505,7 +513,12 @@ async function aggregateAllVaultDocuments() {
     // 4B. Báo giá đơn hàng & Báo giá đã ký điện tử: CHỈ LƯU KHI CÓ CHỮ KÝ HOẶC ĐÃ XÁC NHẬN / XUẤT HÀNG
     try {
         const orderQuotesRes = await pool.query(`
-            SELECT o.*, 
+            SELECT o.id, o.order_code, o.customer_id, o.customer_name, o.total_amount, 
+                   o.created_at, o.status, o.quote_sign_token,
+                   o.customer_signed_at, o.customer_signed_name,
+                   o.sales_signed_at, o.sales_signed_name,
+                   (CASE WHEN o.customer_signature IS NOT NULL AND LENGTH(o.customer_signature) > 10 THEN TRUE ELSE FALSE END) as has_cust_sig,
+                   (CASE WHEN o.sales_signature IS NOT NULL AND LENGTH(o.sales_signature) > 10 THEN TRUE ELSE FALSE END) as has_sales_sig,
                    c.full_name as c_name, c.vat_company, c.vat_taxcode, c.vat_address,
                    e.full_name as salesperson_name
             FROM orders o 
@@ -524,15 +537,15 @@ async function aggregateAllVaultDocuments() {
             const isLocked = lockedPeriods.has(pTag) || lockedPeriods.has(qTag);
 
             const docList = [];
-            const hasCustSig = !!ord.customer_signature;
-            const hasSalesSig = !!ord.sales_signature;
+            const hasCustSig = ord.has_cust_sig;
+            const hasSalesSig = ord.has_sales_sig;
             const isSigned = hasCustSig || hasSalesSig;
 
             if (hasCustSig) {
                 docList.push({
                     id: `CUST-SIG-${ord.id}`,
                     name: `Chữ ký Khách Hàng (${ord.customer_signed_name || ord.customer_name || 'Khách Hàng'})`,
-                    url: ord.customer_signature,
+                    url: `/api/orders/${ord.id}/signatures/customer`,
                     type: 'image',
                     tag: 'CUSTOMER_E_SIGNATURE'
                 });
@@ -542,7 +555,7 @@ async function aggregateAllVaultDocuments() {
                 docList.push({
                     id: `SALES-SIG-${ord.id}`,
                     name: `Chữ ký Đại Diện SUNGO (${ord.sales_signed_name || ord.salesperson_name || 'NVKD'})`,
-                    url: ord.sales_signature,
+                    url: `/api/orders/${ord.id}/signatures/sales`,
                     type: 'image',
                     tag: 'COMPANY_E_SIGNATURE'
                 });

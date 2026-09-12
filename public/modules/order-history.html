@@ -4311,11 +4311,27 @@ window.modOrders = {
     // ====================================================================
     // CỔNG KÝ BÁO GIÁ ĐIỆN TỬ & TẠO LINK CHIA SẺ (E-SIGNATURE PORTAL)
     // ====================================================================
-    openSignQuoteModal: (orderId) => {
-        const o = (orderId && typeof orderId === 'number') 
+    openSignQuoteModal: async (orderId) => {
+        let o = (orderId && typeof orderId === 'number') 
             ? window.modOrders.allOrders.find(x => x.id === orderId) 
             : window.modOrders.currentData;
         if (!o) return alert("Vui lòng chọn hoặc mở đơn hàng cần ký báo giá!");
+
+        // Nếu đơn hàng chưa nạp hình chữ ký (do danh sách tối ưu hóa băng thông) -> nạp chi tiết tức thì
+        if ((!o.customer_signature && o.has_customer_signature) || (!o.sales_signature && o.has_sales_signature)) {
+            try {
+                const res = await fetch('/api/orders/' + o.id + '?t=' + Date.now());
+                const json = await res.json();
+                if (json.success && json.data) {
+                    o.customer_signature = json.data.customer_signature;
+                    o.sales_signature = json.data.sales_signature;
+                    o.customer_signed_at = json.data.customer_signed_at;
+                    o.customer_signed_name = json.data.customer_signed_name;
+                    o.sales_signed_at = json.data.sales_signed_at;
+                    o.sales_signed_name = json.data.sales_signed_name;
+                }
+            } catch(e) {}
+        }
 
         // Tạo đường link ký công khai
         const token = o.quote_sign_token || o.order_code || o.id;

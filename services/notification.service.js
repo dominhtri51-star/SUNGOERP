@@ -219,7 +219,7 @@ async function getNotificationsForUser(userId, userRole, limit = 50) {
 // BỘ NHỚ ĐỆM RAM CHO UNREAD COUNT (Giảm 80% query app_notifications)
 // ========================================================
 const unreadCountCache = new Map(); // key: `${userId}_${userRole}` -> { count, expiresAt }
-const UNREAD_CACHE_TTL_MS = 30 * 1000; // 30 giây
+const UNREAD_CACHE_TTL_MS = 60 * 1000; // 60 giây (tự động invalidate ngay khi có thông báo mới hoặc đọc thông báo)
 
 function invalidateUnreadCountCache(userId = null) {
     if (userId) {

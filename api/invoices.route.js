@@ -131,7 +131,7 @@ router.post('/sync-pending', async (req, res) => {
         
         // Quét tất cả đơn hàng hoàn tất hoặc đã giao / thanh toán
         const orders = await client.query(`
-            SELECT o.*, 
+            SELECT o.id, o.order_code, o.customer_id, o.customer_name, o.total_amount, o.status,
                    c.full_name as customer_name_crm, 
                    c.phone as customer_phone_crm,
                    c.address as customer_address_crm,

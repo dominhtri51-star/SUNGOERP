@@ -22,14 +22,27 @@ router.get('/', async (req, res) => {
     try {
         const { date_from, date_to, limit, status, search } = req.query;
         let query = `
-            SELECT o.*, 
-                   COALESCE(NULLIF(o.customer_name, ''), c.full_name, 'Khách Lẻ') as customer_name,
-                   COALESCE(NULLIF(o.customer_phone, ''), c.phone, '') as customer_phone,
-                   c.tier as customer_tier,
-                   e.full_name as salesperson_name,
-                   e.emp_code as salesperson_code,
-                   wh.full_name as dispatched_by_name,
-                   wh.emp_code as dispatched_by_code
+            SELECT 
+                o.id, o.order_code, o.customer_id, o.total_amount, o.paid_amount, o.status,
+                o.payment_method, o.delivery_company, o.driver_name, o.license_plate, o.notes,
+                o.cancel_reason, o.refund_amount, o.created_at, o.customer_phone, o.delivery_proofs,
+                o.employee_id, o.shipping_fee, o.station_fee, o.packaging_fee, o.handling_fee,
+                o.other_fee, o.other_fee_note, o.discount_amount, o.points_discount, o.subtotal_amount,
+                o.cost_of_goods, o.gross_profit, o.net_profit, o.cost_fund_source, o.sync_accounting,
+                o.customer_signed_at, o.customer_signed_name,
+                o.sales_signed_at, o.sales_signed_name,
+                (CASE WHEN o.customer_signature IS NOT NULL AND LENGTH(o.customer_signature) > 10 THEN TRUE ELSE FALSE END) as has_customer_signature,
+                (CASE WHEN o.sales_signature IS NOT NULL AND LENGTH(o.sales_signature) > 10 THEN TRUE ELSE FALSE END) as has_sales_signature,
+                o.quote_sign_token, o.customer_address, o.carrier_address, o.recipient_name,
+                o.recipient_phone, o.vehicle_plate, o.shipping_note, o.dispatched_by, o.dispatched_at,
+                o.warehouse_commission, o.fee_payer,
+                COALESCE(NULLIF(o.customer_name, ''), c.full_name, 'Khách Lẻ') as customer_name,
+                COALESCE(NULLIF(o.customer_phone, ''), c.phone, '') as customer_phone,
+                c.tier as customer_tier,
+                e.full_name as salesperson_name,
+                e.emp_code as salesperson_code,
+                wh.full_name as dispatched_by_name,
+                wh.emp_code as dispatched_by_code
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.id 
             LEFT JOIN employees e ON o.employee_id = e.id
@@ -182,6 +195,56 @@ router.get('/:id', async (req, res) => {
             } 
         });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// GET: TẢI HÌNH ẢNH CHỮ KÝ (CUSTOMER HOẶC SALES) TỐI ƯU HÓA BĂNG THÔNG & HTTP CACHE
+router.get('/:id/signatures/:type', async (req, res) => {
+    try {
+        const { id, type } = req.params;
+        const col = type === 'sales' ? 'sales_signature' : 'customer_signature';
+        const result = await pool.query(`SELECT ${col} as sig FROM orders WHERE id = $1`, [id]);
+        if (result.rows.length === 0 || !result.rows[0].sig) {
+            return res.status(404).send('Không tìm thấy chữ ký');
+        }
+        const sig = result.rows[0].sig;
+        if (typeof sig === 'string' && sig.startsWith('data:image/')) {
+            const parts = sig.split(',');
+            const mimeMatch = parts[0].match(/:(.*?);/);
+            const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+            const buf = Buffer.from(parts[1], 'base64');
+            res.setHeader('Content-Type', mimeType);
+            res.setHeader('Cache-Control', 'public, max-age=86400');
+            return res.send(buf);
+        }
+        res.redirect(sig);
+    } catch(err) {
+        res.status(500).send(err.message);
+    }
+});
+
+// GET: TẢI CHỨNG TỪ TỪ BẢNG order_docs THEO ID
+router.get('/:id/docs/:docId', async (req, res) => {
+    try {
+        const { id, docId } = req.params;
+        const result = await pool.query('SELECT doc_name, doc_url, file_url FROM order_docs WHERE id = $1 AND order_id = $2', [docId, id]);
+        if (result.rows.length === 0) {
+            return res.status(404).send('Không tìm thấy chứng từ');
+        }
+        const row = result.rows[0];
+        const url = row.doc_url || row.file_url;
+        if (typeof url === 'string' && url.startsWith('data:')) {
+            const parts = url.split(',');
+            const mimeMatch = parts[0].match(/:(.*?);/);
+            const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+            const buf = Buffer.from(parts[1], 'base64');
+            res.setHeader('Content-Type', mimeType);
+            res.setHeader('Cache-Control', 'public, max-age=86400');
+            return res.send(buf);
+        }
+        res.redirect(url);
+    } catch(err) {
+        res.status(500).send(err.message);
+    }
 });
 
 // POST: TẠO ĐƠN HÀNG MỚI (Từ POS / Kinh Doanh)

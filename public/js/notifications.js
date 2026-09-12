@@ -148,19 +148,31 @@ window.modNotifications = {
         }
     },
 
-    // 3. Fallback Polling (60s - Đã có SSE Real-time kết nối ngầm phát chuông tức thì)
+    // 3. Fallback Polling (120s khi có SSE Real-time, 60s khi mất kết nối)
     startPolling: function() {
         if (this.pollingTimer) clearInterval(this.pollingTimer);
         this.pollingTimer = setInterval(() => {
             if (document.visibilityState === 'visible') {
                 this.fetchUnreadCount();
             }
-        }, 60000);
+        }, 120000); // 120 giây (2 phút) fallback - tiết kiệm 50% query không cần thiết
     },
 
     // 4. Xử lý khi nhận được thông báo mới (cả real-time SSE hoặc Polling)
     onNotificationReceived: function(notif) {
         if (!notif || !notif.id) return;
+
+        // Bắn tín hiệu tin nhắn thời gian thực sang Workplace nếu có
+        if (notif.type === 'MESSAGE') {
+            try {
+                window.dispatchEvent(new CustomEvent('sungo:workplace-message', { detail: notif }));
+            } catch(e) {}
+            if (window.modWorkplace && typeof window.modWorkplace.handleIncomingMessageNotification === 'function') {
+                try {
+                    window.modWorkplace.handleIncomingMessageNotification(notif);
+                } catch(e) {}
+            }
+        }
 
         // Tránh trùng lặp nếu đã có trong danh sách
         const exists = this.notifications.some(n => n.id === notif.id);
