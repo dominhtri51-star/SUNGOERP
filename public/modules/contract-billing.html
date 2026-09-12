@@ -17,21 +17,21 @@
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <button onclick="window.modContract.openQuickOrderModal()" class="flex-1 md:flex-initial bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
-                <i class="fas fa-bolt"></i> <span>HĐ Mua Bán (Từ Đơn)</span>
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
+            <button onclick="window.modContract.openQuickOrderModal()" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-2 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <i class="fas fa-bolt"></i> <span>HĐ Mua Bán</span>
             </button>
-            <button onclick="window.modContract.openCreate('THI_CONG')" class="flex-1 md:flex-initial bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+            <button onclick="window.modContract.openCreate('THI_CONG')" class="bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-bold py-2 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-hammer"></i> <span>Soạn HĐ Thi Công</span>
             </button>
-            <button onclick="window.modContract.openCreate('NGUYEN_TAC')" class="flex-1 md:flex-initial bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+            <button onclick="window.modContract.openCreate('NGUYEN_TAC')" class="bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold py-2 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-handshake"></i> <span>HĐ Nguyên Tắc</span>
             </button>
-            <button id="btn-cert-settings" onclick="window.modContract.openCertSettingsModal()" class="flex-1 md:flex-initial bg-rose-700 hover:bg-rose-800 active:scale-95 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+            <button id="btn-cert-settings" onclick="window.modContract.openCertSettingsModal()" class="bg-rose-700 hover:bg-rose-800 active:scale-95 text-white font-bold py-2 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <i class="fas fa-stamp"></i> <span>Cài Đặt Chữ Ký Số</span>
             </button>
-            <button onclick="window.modContract.load()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white transition text-xs font-bold cursor-pointer" title="Làm mới">
-                <i class="fas fa-sync-alt"></i>
+            <button onclick="window.modContract.load()" class="col-span-2 sm:col-auto p-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white transition text-xs font-bold cursor-pointer flex items-center justify-center gap-1.5" title="Làm mới">
+                <i class="fas fa-sync-alt"></i> <span class="sm:hidden">Làm mới dữ liệu</span>
             </button>
         </div>
     </div>
@@ -157,22 +157,22 @@
 <!-- ========================================================= -->
 <!-- MODAL SOẠN HỢP ĐỒNG NHANH (SMART CONTRACT BUILDER) -->
 <!-- ========================================================= -->
-<div id="contract-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4">
-    <div class="bg-white rounded-2xl w-full max-w-5xl h-[92vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col">
+<div id="contract-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[9999] p-1.5 sm:p-4">
+    <div class="bg-white rounded-2xl w-full max-w-5xl h-[96vh] sm:h-[92vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col">
         <!-- Header -->
-        <div class="p-4 flex items-center justify-between bg-purple-700 text-white shrink-0">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-file-pen text-lg"></i>
-                <h3 class="font-black text-sm uppercase tracking-wider" id="builder-modal-title">SOẠN HỢP ĐỒNG MỚI</h3>
-                <span id="builder-signed-badge" class="hidden text-[10px] bg-amber-400 text-amber-950 font-black px-2 py-0.5 rounded-full border border-amber-300">
-                    <i class="fas fa-rotate"></i> Chế độ chỉnh sửa lại
+        <div class="p-3 sm:p-4 flex items-center justify-between bg-purple-700 text-white shrink-0">
+            <div class="flex items-center gap-2 truncate">
+                <i class="fas fa-file-pen text-base sm:text-lg shrink-0"></i>
+                <h3 class="font-black text-xs sm:text-sm uppercase tracking-wider truncate" id="builder-modal-title">SOẠN HỢP ĐỒNG MỚI</h3>
+                <span id="builder-signed-badge" class="hidden text-[9.5px] sm:text-[10px] bg-amber-400 text-amber-950 font-black px-2 py-0.5 rounded-full border border-amber-300 shrink-0">
+                    <i class="fas fa-rotate"></i> Chế độ sửa lại
                 </span>
             </div>
-            <button onclick="window.modContract.closeCreate()" class="text-white/80 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            <button onclick="window.modContract.closeCreate()" class="text-white/80 hover:text-white p-1 cursor-pointer shrink-0"><i class="fas fa-times text-lg"></i></button>
         </div>
 
         <!-- Body Form -->
-        <div class="flex-1 overflow-y-auto p-5 space-y-4 text-xs bg-slate-50">
+        <div class="flex-1 overflow-y-auto p-3 sm:p-5 space-y-3 sm:space-y-4 text-xs bg-slate-50">
             <!-- Hidden ID khi chỉnh sửa -->
             <input type="hidden" id="c-edit-id" value="">
 
@@ -261,26 +261,31 @@
             </div>
 
             <!-- Bảng Chủng Loại Vật Tư & Thông Số Kỹ Thuật, Bảo Hành Chi Tiết -->
-            <div id="wrapper-items-section" class="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-                <div class="flex flex-wrap justify-between items-center gap-2 border-b pb-2">
+            <div id="wrapper-items-section" class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b pb-2">
                     <h4 class="font-black text-slate-800 uppercase text-xs flex items-center gap-1.5" id="label-items-section">
-                        <i class="fas fa-list-check text-emerald-600"></i> Điều 1: Danh Mục Sản Phẩm, Thông Số & Bảo Hành
+                        <i class="fas fa-list-check text-emerald-600 shrink-0"></i> <span>Điều 1: Danh Mục Sản Phẩm, Thông Số & Bảo Hành</span>
                     </h4>
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="window.modContract.syncAllBuilderAccountingNames()" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-lg text-[10.5px] font-bold shadow transition flex items-center gap-1 cursor-pointer" title="Chuẩn hóa toàn bộ tên sản phẩm theo tên Kế toán / HĐĐT">
+                    <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 shrink-0">
+                        <button type="button" onclick="window.modContract.syncAllBuilderAccountingNames()" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold shadow transition flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0" title="Chuẩn hóa toàn bộ tên sản phẩm theo tên Kế toán / HĐĐT">
                             <i class="fas fa-scale-balanced"></i> Chuẩn Tên Kế Toán
                         </button>
-                        <button type="button" onclick="window.modContract.autoDetectWarrantyAndSpecs()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 py-1 rounded-lg text-[10.5px] font-black shadow transition flex items-center gap-1.5 cursor-pointer" title="Tự động tìm trong tên sản phẩm và mô tả để điền thông số kỹ thuật & thời hạn bảo hành (BH 5 năm, 2 năm, 12/25 năm...)">
-                            <i class="fas fa-wand-magic-sparkles text-amber-300 animate-pulse"></i> ✨ Quét Tự Động Bảo Hành & Thông Số
+                        <button type="button" onclick="window.modContract.autoDetectWarrantyAndSpecs()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-2.5 py-1.5 rounded-lg text-[10.5px] font-black shadow transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0" title="Tự động tìm trong tên sản phẩm và mô tả để điền thông số kỹ thuật & thời hạn bảo hành (BH 5 năm, 2 năm, 12/25 năm...)">
+                            <i class="fas fa-wand-magic-sparkles text-amber-300"></i> Quét Tự Động BH
                         </button>
-                        <button type="button" onclick="window.modContract.addItemRow()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[10.5px] font-bold shadow transition flex items-center gap-1 cursor-pointer">
+                        <button type="button" onclick="window.modContract.addItemRow()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold shadow transition flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0">
                             <i class="fas fa-plus"></i> Thêm Mặt Hàng
                         </button>
                     </div>
                 </div>
                 
+                <!-- Mobile swipe hint -->
+                <div class="sm:hidden px-3 py-1 bg-purple-50/70 border-b border-purple-100 flex items-center gap-1.5 text-[10.5px] text-purple-900 rounded-t-lg">
+                    <i class="fas fa-arrows-left-right text-purple-600"></i>
+                    <span>Vuốt ngang bảng để xem đầy đủ cột Đơn Giá, Thành Tiền & Xóa</span>
+                </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
+                    <table class="w-full min-w-[700px] text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
                         <thead class="bg-slate-100 text-slate-600 uppercase font-bold text-[10px]">
                             <tr>
                                 <th class="p-2 border text-center w-10">STT</th>
@@ -295,19 +300,19 @@
                         <tbody id="builder-items-tbody" class="divide-y text-slate-700 font-medium"></tbody>
                     </table>
                 </div>
-                <div class="flex justify-end items-center gap-4 pt-2">
+                <div class="flex flex-col sm:flex-row justify-end items-end sm:items-center gap-2 sm:gap-4 pt-2 border-t border-slate-100">
                     <span class="font-bold text-slate-600 text-xs">Tổng Giá Trị Hợp Đồng (Gồm VAT):</span>
-                    <input type="text" id="c-total-val" readonly class="font-black text-base text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2 text-right w-48 outline-none">
+                    <input type="text" id="c-total-val" readonly class="font-black text-sm sm:text-base text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2 text-right w-full sm:w-48 outline-none">
                 </div>
             </div>
 
             <!-- Cấu Hình Tiến Độ Thanh Toán (Cho HĐ Thi Công & Mua Bán) -->
-            <div id="wrapper-payment-terms-section" class="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+            <div id="wrapper-payment-terms-section" class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h4 class="font-black text-slate-800 uppercase text-xs flex items-center gap-1.5">
                         <i class="fas fa-hourglass-half text-purple-600"></i> Điều Khoản & Tiến Độ Thanh Toán (Kiểm Soát Chặt Chẽ)
                     </h4>
-                    <button type="button" onclick="window.modContract.addPaymentStageRow()" class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 rounded text-[10px] font-bold shadow transition">
+                    <button type="button" onclick="window.modContract.addPaymentStageRow()" class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 rounded text-[10px] font-bold shadow transition cursor-pointer">
                         <i class="fas fa-plus mr-1"></i> Thêm Đợt
                     </button>
                 </div>
@@ -315,7 +320,7 @@
             </div>
 
             <!-- Điều Khoản Bảo Hành & Tùy Chỉnh -->
-            <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+            <div id="wrapper-warranty-section" class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h4 class="font-black text-slate-800 uppercase text-xs flex items-center gap-1.5">
                         <i class="fas fa-shield-halved text-teal-600"></i> Điều 2: Chính Sách Bảo Hành & Cam Kết Kỹ Thuật
@@ -338,9 +343,9 @@
         </div>
 
         <!-- Footer -->
-        <div class="p-4 border-t border-slate-200 bg-white flex justify-end gap-2 shrink-0">
-            <button onclick="window.modContract.closeCreate()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition text-xs">Hủy</button>
-            <button onclick="window.modContract.previewAndSave()" id="btn-save-contract" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-black rounded-lg transition shadow text-xs flex items-center gap-1.5 cursor-pointer">
+        <div class="p-3 sm:p-4 border-t border-slate-200 bg-white flex items-center justify-end gap-2 shrink-0">
+            <button onclick="window.modContract.closeCreate()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition text-xs cursor-pointer">Hủy</button>
+            <button onclick="window.modContract.previewAndSave()" id="btn-save-contract" class="flex-1 sm:flex-initial px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-black rounded-xl transition shadow text-xs flex items-center justify-center gap-1.5 cursor-pointer">
                 <i class="fas fa-save"></i> <span id="btn-save-contract-label">Lưu & Mở Trình Xem Hợp Đồng</span>
             </button>
         </div>
@@ -350,10 +355,10 @@
 <!-- ========================================================= -->
 <!-- MODAL XEM TRƯỚC VĂN BẢN & KÝ SỐ / KÝ ĐIỆN TỬ -->
 <!-- ========================================================= -->
-<div id="contract-view-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4">
-    <div class="bg-white rounded-2xl w-full max-w-5xl h-[94vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col">
+<div id="contract-view-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[9999] p-1 sm:p-4">
+    <div class="bg-white rounded-2xl w-full max-w-5xl h-[96vh] sm:h-[94vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col">
         <!-- Top Toolbar -->
-        <div class="p-3 sm:p-3.5 bg-slate-900 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 shrink-0">
+        <div class="p-2.5 sm:p-3.5 bg-slate-900 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shrink-0">
             <div class="flex items-center justify-between gap-2 w-full sm:w-auto">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
@@ -370,14 +375,15 @@
                 </button>
             </div>
 
-            <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar" id="view-modal-actions-container">
-                <button onclick="window.modContract.openSignPad('A')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-1.5 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center gap-1 cursor-pointer whitespace-nowrap">
+            <!-- Single line horizontal scrollable button bar on mobile -->
+            <div class="flex flex-nowrap items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar py-0.5" id="view-modal-actions-container">
+                <button onclick="window.modContract.openSignPad('A')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-1.5 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0">
                     <i class="fas fa-pen-nib"></i> Bên A Ký
                 </button>
-                <div id="btn-stamp-wrapper" class="flex flex-wrap items-center gap-1.5">
+                <div id="btn-stamp-wrapper" class="flex flex-nowrap items-center gap-1.5 shrink-0">
                     <!-- Dynamic Stamp Buttons injected here -->
                 </div>
-                <button onclick="window.modContract.printContractPDF()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-1.5 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center gap-1 cursor-pointer whitespace-nowrap">
+                <button onclick="window.modContract.printContractPDF()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-1.5 px-2.5 rounded-xl text-xs transition shadow-2xs flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0">
                     <i class="fas fa-print"></i> In PDF
                 </button>
                 <button type="button" onclick="document.getElementById('contract-view-modal').classList.replace('flex', 'hidden')" class="hidden sm:block text-slate-400 hover:text-white ml-2 cursor-pointer"><i class="fas fa-times text-lg"></i></button>
@@ -385,8 +391,8 @@
         </div>
 
         <!-- Scrollable A4 Document Sheet -->
-        <div class="flex-1 overflow-y-auto bg-slate-200 p-2 sm:p-4 md:p-8 flex justify-center">
-            <div class="bg-white w-full max-w-[800px] min-h-[1050px] p-8 md:p-14 shadow-2xl rounded-sm font-serif text-[13.5px] leading-relaxed text-slate-900 border border-slate-300" id="contract-document-sheet">
+        <div class="flex-1 overflow-y-auto bg-slate-200 p-1.5 sm:p-4 md:p-8 flex justify-center">
+            <div class="bg-white w-full max-w-[800px] min-h-[1050px] p-3.5 sm:p-8 md:p-14 shadow-2xl rounded-sm font-serif text-[12.5px] sm:text-[13.5px] leading-relaxed text-slate-900 border border-slate-300" id="contract-document-sheet">
                 <!-- Nội dung HĐ sẽ được đổ vào đây -->
             </div>
         </div>
@@ -824,68 +830,75 @@
 <!-- ========================================================= -->
 <!-- 2b. MODAL: CHỈNH SỬA NHANH TÊN HÀNG HÓA KẾ TOÁN TRONG HỢP ĐỒNG -->
 <!-- ========================================================= -->
-<div id="quick-edit-items-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm hidden items-center justify-center z-[10001] p-4">
-    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col animate-slide-in-right">
+<div id="quick-edit-items-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm hidden items-center justify-center z-[10001] p-1.5 sm:p-4">
+    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[96vh] sm:max-h-[92vh] shadow-2xl overflow-hidden border border-slate-200 flex flex-col animate-slide-in-right">
         <!-- Header -->
-        <div class="p-4 flex items-center justify-between bg-gradient-to-r from-indigo-700 via-purple-700 to-slate-800 text-white shrink-0">
-            <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center font-black text-amber-300">
-                    <i class="fas fa-file-pen text-lg"></i>
+        <div class="p-3 sm:p-4 flex items-center justify-between bg-gradient-to-r from-indigo-700 via-purple-700 to-slate-800 text-white shrink-0">
+            <div class="flex items-center gap-2 sm:gap-2.5 truncate">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 flex items-center justify-center font-black text-amber-300 shrink-0">
+                    <i class="fas fa-file-pen text-base sm:text-lg"></i>
                 </div>
-                <div>
-                    <h3 class="font-black text-sm uppercase tracking-wider">CHỈNH SỬA TÊN HÀNG HÓA KẾ TOÁN TRONG HỢP ĐỒNG</h3>
-                    <p class="text-[11px] text-white/80 font-medium">Quy chuẩn tên pháp lý / hóa đơn VAT và cho phép chỉnh sửa tùy ý theo nhu cầu</p>
+                <div class="min-w-0">
+                    <h3 class="font-black text-xs sm:text-sm uppercase tracking-wider truncate">CHỈNH SỬA TÊN HÀNG KẾ TOÁN TRONG HĐ</h3>
+                    <p class="text-[10px] sm:text-[11px] text-white/80 font-medium truncate">Quy chuẩn tên pháp lý / VAT & chỉnh sửa tùy ý theo nhu cầu</p>
                 </div>
             </div>
-            <button onclick="window.modContract.closeQuickEditItemsModal()" class="text-white/80 hover:text-white cursor-pointer"><i class="fas fa-times text-lg"></i></button>
+            <button onclick="window.modContract.closeQuickEditItemsModal()" class="text-white/80 hover:text-white p-1 cursor-pointer shrink-0"><i class="fas fa-times text-lg"></i></button>
         </div>
 
         <!-- Body -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 text-xs">
-            <div class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-indigo-950">
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-slate-50 text-xs">
+            <div class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 text-indigo-950">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-circle-info text-indigo-600 text-base shrink-0"></i>
-                    <p class="text-xs">
-                        Tên hàng hóa dưới đây sẽ được hiển thị chính thức trên văn bản <b>Hợp Đồng Mua Bán (Điều 1)</b> và <b>Bảng Bảo Hành (Điều 2)</b>. Bạn có thể sửa trực tiếp hoặc bấm nút nạp lại tên Kế toán gốc từ kho hàng.
+                    <p class="text-[11px] sm:text-xs">
+                        Tên hàng hóa hiển thị chính thức trên văn bản <b>HĐ Mua Bán (Điều 1)</b> & <b>Bảo Hành (Điều 2)</b>. Bạn có thể sửa trực tiếp hoặc bấm nút nạp lại tên Kế toán gốc từ kho hàng.
                     </p>
                 </div>
-                <button type="button" onclick="window.modContract.quickEditSyncAccountingNames()" class="shrink-0 bg-white hover:bg-indigo-100 text-indigo-700 border border-indigo-300 px-3 py-1.5 rounded-lg font-bold text-xs transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="window.modContract.quickEditSyncAccountingNames()" class="shrink-0 bg-white hover:bg-indigo-100 text-indigo-700 border border-indigo-300 px-3 py-1.5 rounded-lg font-bold text-xs transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
                     <i class="fas fa-rotate text-indigo-600"></i> Nạp Lại Tên Kế Toán Từ Kho
                 </button>
             </div>
 
             <!-- Bảng danh sách mặt hàng -->
             <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-100 text-slate-700 font-bold text-[11px] uppercase border-b">
-                        <tr>
-                            <th class="p-2.5 text-center w-10">STT</th>
-                            <th class="p-2.5">Tên Hàng Hóa Kế Toán (Hiển Thị Trong Hợp Đồng)</th>
-                            <th class="p-2.5 text-center w-16">ĐVT</th>
-                            <th class="p-2.5 text-right w-20">Số Lượng</th>
-                            <th class="p-2.5 text-right w-28">Đơn Giá</th>
-                            <th class="p-2.5 text-right w-32">Thành Tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody id="quick-edit-items-tbody" class="divide-y divide-slate-100 text-slate-800">
-                        <!-- Render rows dynamically -->
-                    </tbody>
-                </table>
+                <!-- Mobile swipe hint -->
+                <div class="sm:hidden px-3 py-1 bg-indigo-50/70 border-b border-indigo-100 flex items-center gap-1.5 text-[10.5px] text-indigo-900">
+                    <i class="fas fa-arrows-left-right text-indigo-600"></i>
+                    <span>Vuốt ngang bảng để xem đầy đủ cột Đơn Giá & Thành Tiền</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[660px] text-left border-collapse whitespace-nowrap">
+                        <thead class="bg-slate-100 text-slate-700 font-bold text-[10.5px] sm:text-[11px] uppercase border-b">
+                            <tr>
+                                <th class="p-2 sm:p-2.5 text-center w-10">STT</th>
+                                <th class="p-2 sm:p-2.5 min-w-[260px]">Tên Hàng Hóa Kế Toán (Hiển Thị Trong HĐ)</th>
+                                <th class="p-2 sm:p-2.5 text-center w-16">ĐVT</th>
+                                <th class="p-2 sm:p-2.5 text-right w-20">Số Lượng</th>
+                                <th class="p-2 sm:p-2.5 text-right w-28">Đơn Giá</th>
+                                <th class="p-2 sm:p-2.5 text-right w-32">Thành Tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quick-edit-items-tbody" class="divide-y divide-slate-100 text-slate-800">
+                            <!-- Render rows dynamically -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <div class="p-4 bg-white border-t border-slate-200 flex items-center justify-between shrink-0">
-            <div class="text-slate-500 text-xs">
+        <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 shrink-0">
+            <div class="text-slate-600 text-xs flex items-center justify-between sm:justify-start gap-2">
                 <span>Tổng giá trị hợp đồng: </span>
-                <span id="quick-edit-total-val" class="font-black text-rose-700 text-sm">0 đ</span>
+                <span id="quick-edit-total-val" class="font-black text-rose-700 text-sm sm:text-base">0 đ</span>
             </div>
-            <div class="flex items-center gap-2">
-                <button type="button" onclick="window.modContract.closeQuickEditItemsModal()" class="px-4 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer">
+            <div class="flex items-center gap-2 justify-end">
+                <button type="button" onclick="window.modContract.closeQuickEditItemsModal()" class="px-3.5 sm:px-4 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer">
                     Hủy Bỏ
                 </button>
-                <button type="button" id="btn-save-quick-edit-items" onclick="window.modContract.saveQuickEditItems()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
-                    <i class="fas fa-save text-amber-300"></i> Lưu Cập Nhật & Áp Dụng Ngay
+                <button type="button" id="btn-save-quick-edit-items" onclick="window.modContract.saveQuickEditItems()" class="flex-1 sm:flex-initial px-4 sm:px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs transition shadow flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-save text-amber-300"></i> <span>Lưu & Áp Dụng Ngay</span>
                 </button>
             </div>
         </div>
@@ -1709,15 +1722,19 @@ window.modContract = {
             if (terms.length > 0 && c.contract_type !== 'NGUYEN_TAC') {
                 const listDiv = document.getElementById('builder-terms-list');
                 listDiv.innerHTML = terms.map(s => `
-                    <div class="p-2.5 bg-slate-50 border rounded-lg flex items-center gap-2 term-stage-row">
-                        <span class="w-14 font-black text-slate-700 shrink-0">Đợt ${s.stage}:</span>
-                        <input type="text" class="flex-1 border p-1 rounded font-bold outline-none term-name" value="${s.name}">
-                        <div class="flex items-center gap-1 w-20 shrink-0">
-                            <input type="number" class="w-12 border p-1 rounded text-right font-bold term-pct" value="${s.pct}" oninput="window.modContract.recalcTermsFromPct()">
-                            <span class="font-bold">%</span>
+                    <div class="p-2.5 bg-slate-50 border rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center gap-2 term-stage-row">
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <span class="w-14 font-black text-slate-700 shrink-0">Đợt ${s.stage}:</span>
+                            <input type="text" class="flex-1 border p-1 rounded font-bold outline-none term-name min-w-0 text-xs" value="${s.name}">
                         </div>
-                        <input type="text" readonly class="w-32 border p-1 rounded text-right font-black text-purple-700 bg-purple-50 term-amt" value="${window.modContract.fmt(s.amount)} đ">
-                        <button type="button" onclick="this.closest('.term-stage-row').remove();" class="text-slate-400 hover:text-rose-600 p-1"><i class="fas fa-times"></i></button>
+                        <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                            <div class="flex items-center gap-1 w-20 shrink-0">
+                                <input type="number" class="w-12 border p-1 rounded text-right font-bold term-pct text-xs" value="${s.pct}" oninput="window.modContract.recalcTermsFromPct()">
+                                <span class="font-bold text-xs">%</span>
+                            </div>
+                            <input type="text" readonly class="flex-1 sm:w-32 border p-1 rounded text-right font-black text-purple-700 bg-purple-50 term-amt text-xs" value="${window.modContract.fmt(s.amount)} đ">
+                            <button type="button" onclick="this.closest('.term-stage-row').remove();" class="text-slate-400 hover:text-rose-600 p-1 shrink-0 cursor-pointer"><i class="fas fa-times"></i></button>
+                        </div>
                     </div>
                 `).join('');
             }
@@ -1969,15 +1986,19 @@ window.modContract = {
         }
 
         listDiv.innerHTML = stages.map(s => `
-            <div class="p-2.5 bg-slate-50 border rounded-lg flex items-center gap-2 term-stage-row">
-                <span class="w-14 font-black text-slate-700 shrink-0">Đợt ${s.stage}:</span>
-                <input type="text" class="flex-1 border p-1 rounded font-bold outline-none term-name" value="${s.name}">
-                <div class="flex items-center gap-1 w-20 shrink-0">
-                    <input type="number" class="w-12 border p-1 rounded text-right font-bold term-pct" value="${s.pct}" oninput="window.modContract.recalcTermsFromPct()">
-                    <span class="font-bold">%</span>
+            <div class="p-2.5 bg-slate-50 border rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center gap-2 term-stage-row">
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <span class="w-14 font-black text-slate-700 shrink-0">Đợt ${s.stage}:</span>
+                    <input type="text" class="flex-1 border p-1 rounded font-bold outline-none term-name min-w-0 text-xs" value="${s.name}">
                 </div>
-                <input type="text" readonly class="w-32 border p-1 rounded text-right font-black text-purple-700 bg-purple-50 term-amt" value="${window.modContract.fmt(Math.round(grandTotal * (s.pct / 100)))} đ">
-                <button type="button" onclick="this.closest('.term-stage-row').remove();" class="text-slate-400 hover:text-rose-600 p-1"><i class="fas fa-times"></i></button>
+                <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                    <div class="flex items-center gap-1 w-20 shrink-0">
+                        <input type="number" class="w-12 border p-1 rounded text-right font-bold term-pct text-xs" value="${s.pct}" oninput="window.modContract.recalcTermsFromPct()">
+                        <span class="font-bold text-xs">%</span>
+                    </div>
+                    <input type="text" readonly class="flex-1 sm:w-32 border p-1 rounded text-right font-black text-purple-700 bg-purple-50 term-amt text-xs" value="${window.modContract.fmt(Math.round(grandTotal * (s.pct / 100)))} đ">
+                    <button type="button" onclick="this.closest('.term-stage-row').remove();" class="text-slate-400 hover:text-rose-600 p-1 shrink-0 cursor-pointer"><i class="fas fa-times"></i></button>
+                </div>
             </div>
         `).join('');
     },
@@ -2004,16 +2025,20 @@ window.modContract = {
         const grandTotal = parseFloat(grandTotalStr) || 0;
 
         const div = document.createElement('div');
-        div.className = 'p-2.5 bg-slate-50 border rounded-lg flex items-center gap-2 term-stage-row';
+        div.className = 'p-2.5 bg-slate-50 border rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center gap-2 term-stage-row';
         div.innerHTML = `
-            <span class="w-14 font-black text-slate-700 shrink-0">Đợt ${count}:</span>
-            <input type="text" class="flex-1 border p-1 rounded font-bold outline-none term-name" value="Đợt ${count}: Thanh toán bổ sung">
-            <div class="flex items-center gap-1 w-20 shrink-0">
-                <input type="number" class="w-12 border p-1 rounded text-right font-bold term-pct" value="10" oninput="window.modContract.recalcTermsFromPct()">
-                <span class="font-bold">%</span>
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+                <span class="w-14 font-black text-slate-700 shrink-0">Đợt ${count}:</span>
+                <input type="text" class="flex-1 border p-1 rounded font-bold outline-none term-name min-w-0 text-xs" value="Đợt ${count}: Thanh toán bổ sung">
             </div>
-            <input type="text" readonly class="w-32 border p-1 rounded text-right font-black text-purple-700 bg-purple-50 term-amt" value="${window.modContract.fmt(Math.round(grandTotal * 0.1))} đ">
-            <button type="button" onclick="this.closest('.term-stage-row').remove();" class="text-slate-400 hover:text-rose-600 p-1"><i class="fas fa-times"></i></button>
+            <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                <div class="flex items-center gap-1 w-20 shrink-0">
+                    <input type="number" class="w-12 border p-1 rounded text-right font-bold term-pct text-xs" value="10" oninput="window.modContract.recalcTermsFromPct()">
+                    <span class="font-bold text-xs">%</span>
+                </div>
+                <input type="text" readonly class="flex-1 sm:w-32 border p-1 rounded text-right font-black text-purple-700 bg-purple-50 term-amt text-xs" value="${window.modContract.fmt(Math.round(grandTotal * 0.1))} đ">
+                <button type="button" onclick="this.closest('.term-stage-row').remove();" class="text-slate-400 hover:text-rose-600 p-1 shrink-0 cursor-pointer"><i class="fas fa-times"></i></button>
+            </div>
         `;
         listDiv.appendChild(div);
     },
@@ -2150,23 +2175,23 @@ window.modContract = {
                 const isAdmin = window.modContract.checkAdminRole();
                 const isKtt = window.modContract.checkKttRole();
                 let extraBtns = `
-                    <button onclick="window.modContract.openQuickEditItemsModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer" title="Chỉnh sửa tên hàng hóa theo kế toán và số lượng, đơn giá">
+                    <button onclick="window.modContract.openQuickEditItemsModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0" title="Chỉnh sửa tên hàng hóa theo kế toán và số lượng, đơn giá">
                         <i class="fas fa-file-pen text-amber-300"></i> Sửa Tên Hàng Kế Toán
                     </button>
-                    <button onclick="window.modContract.openEdit(${c.id})" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Chỉnh sửa chi tiết hợp đồng, thông số và bảo hành">
+                    <button onclick="window.modContract.openEdit(${c.id})" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0" title="Chỉnh sửa chi tiết hợp đồng, thông số và bảo hành">
                         <i class="fas fa-pen-to-square"></i> Chỉnh Sửa HĐ
                     </button>
-                    <button onclick="window.modContract.copyPublicSignLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Sao chép đường link gửi cho khách hàng ký online">
+                    <button onclick="window.modContract.copyPublicSignLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0" title="Sao chép đường link gửi cho khách hàng ký online">
                         <i class="fas fa-link text-amber-300"></i> Link Ký Khách Hàng
                     </button>
-                    <button onclick="window.modContract.openUploadSignedModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Tải file scan giấy đã ký mộc đỏ hoặc file PDF ký ngoài">
+                    <button onclick="window.modContract.openUploadSignedModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0" title="Tải file scan giấy đã ký mộc đỏ hoặc file PDF ký ngoài">
                         <i class="fas fa-file-arrow-up"></i> Tải File Đã Ký
                     </button>
                 `;
 
                 if (isAdmin) {
                     extraBtns += `
-                        <button onclick="window.modContract.deleteContract(${c.id}, '${c.contract_code}')" class="bg-rose-700 hover:bg-rose-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Xóa hợp đồng rác (Admin)">
+                        <button onclick="window.modContract.deleteContract(${c.id}, '${c.contract_code}')" class="bg-rose-700 hover:bg-rose-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0" title="Xóa hợp đồng rác (Admin)">
                             <i class="fas fa-trash-alt"></i> Xóa HĐ
                         </button>
                     `;
@@ -2174,7 +2199,7 @@ window.modContract = {
 
                 if (c.signed_file_url) {
                     extraBtns += `
-                        <a href="${c.signed_file_url}" target="_blank" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1" title="Xem file hợp đồng scan đã lưu trữ">
+                        <a href="${c.signed_file_url}" target="_blank" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 whitespace-nowrap shrink-0" title="Xem file hợp đồng scan đã lưu trữ">
                             <i class="fas fa-file-circle-check"></i> Xem File Scan
                         </a>
                     `;
@@ -2183,50 +2208,50 @@ window.modContract = {
                 if (c.contract_status === 'SIGNED' || (c.digital_stamp_b && c.digital_stamp_b.is_valid && (c.digital_stamp_b.ktt_signed || c.signed_file_url))) {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
-                        <span class="bg-emerald-600/30 text-emerald-300 border border-emerald-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
+                        <span class="bg-emerald-600/30 text-emerald-300 border border-emerald-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1 whitespace-nowrap shrink-0">
                             <i class="fas fa-check-circle"></i> Đã Ký Hoàn Tất (NewCA)
                         </span>
-                        <button onclick="window.modContract.revokeStamp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer" title="Thu hồi chữ ký số để chỉnh sửa lại">
+                        <button onclick="window.modContract.revokeStamp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0" title="Thu hồi chữ ký số để chỉnh sửa lại">
                             <i class="fas fa-rotate-left"></i> Thu Hồi Dấu Số (Để Sửa)
                         </button>
                     `;
                 } else if (c.contract_status === 'PENDING_KTT_SIGN') {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
-                        <span class="bg-blue-600/30 text-blue-300 border border-blue-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
+                        <span class="bg-blue-600/30 text-blue-300 border border-blue-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1 whitespace-nowrap shrink-0">
                             <i class="fas fa-crown text-amber-300"></i> Đã Giám Đốc Duyệt
                         </span>
-                        <button onclick="window.modContract.openKttTokenModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow-lg flex items-center gap-1.5 animate-pulse cursor-pointer" title="Kế toán trưởng cắm USB Token NewCA vào máy tính để ký số">
+                        <button onclick="window.modContract.openKttTokenModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow-lg flex items-center gap-1.5 animate-pulse cursor-pointer whitespace-nowrap shrink-0" title="Kế toán trưởng cắm USB Token NewCA vào máy tính để ký số">
                             <i class="fas fa-key text-amber-300"></i> 💎 KTT Ký Số USB Token NewCA
                         </button>
-                        <button onclick="window.modContract.revokeStamp()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2.5 rounded-lg text-xs transition flex items-center gap-1 cursor-pointer" title="Hủy duyệt để sửa lại">
+                        <button onclick="window.modContract.revokeStamp()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2.5 rounded-lg text-xs transition flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0" title="Hủy duyệt để sửa lại">
                             <i class="fas fa-rotate-left"></i> Hủy Duyệt
                         </button>
                     `;
                 } else if (c.contract_status === 'PENDING_DIRECTOR_APPROVAL') {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
-                        <button onclick="window.modContract.openDirectorModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 animate-pulse cursor-pointer">
+                        <button onclick="window.modContract.openDirectorModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 animate-pulse cursor-pointer whitespace-nowrap shrink-0">
                             <i class="fas fa-crown text-amber-300"></i> Giám Đốc Duyệt Ký
                         </button>
-                        <button onclick="window.modContract.directorReject()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2.5 rounded-lg text-xs transition flex items-center gap-1 cursor-pointer" title="Yêu cầu kế toán sửa lại">
+                        <button onclick="window.modContract.directorReject()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2.5 rounded-lg text-xs transition flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0" title="Yêu cầu kế toán sửa lại">
                             <i class="fas fa-undo"></i> Yêu Cầu Sửa
                         </button>
                     `;
                 } else if (c.contract_status === 'REJECTED') {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
-                        <span class="bg-red-600/30 text-red-300 border border-red-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
+                        <span class="bg-red-600/30 text-red-300 border border-red-500/50 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1 whitespace-nowrap shrink-0">
                             <i class="fas fa-ban"></i> Giám Đốc Không Ký
                         </span>
-                        <button onclick="window.modContract.openKttModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer">
+                        <button onclick="window.modContract.openKttModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0">
                             <i class="fas fa-paper-plane"></i> Kế Toán Trình Ký Lại
                         </button>
                     `;
                 } else {
                     btnWrapper.innerHTML = `
                         ${extraBtns}
-                        <button onclick="window.modContract.openKttModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+                        <button onclick="window.modContract.openKttModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-1.5 px-3.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0">
                             <i class="fas fa-paper-plane"></i> 1. Kế Toán Trình Giám Đốc Duyệt
                         </button>
                     `;
@@ -2277,55 +2302,57 @@ window.modContract = {
         let itemsHtml = '';
         if (items.length > 0) {
             itemsHtml = `
-                <div class="no-print bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-xl p-2.5 my-3 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                <div class="no-print bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-xl p-2.5 my-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 shadow-xs">
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded bg-blue-600 text-white font-black text-[10px] uppercase tracking-wider flex items-center gap-1">
+                        <span class="px-2 py-0.5 rounded bg-blue-600 text-white font-black text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
                             <i class="fas fa-scale-balanced"></i> Tên Kế Toán
                         </span>
-                        <span class="text-xs text-blue-900 font-medium">Tên hàng hóa trong hợp đồng bán hàng hiển thị theo danh mục Kế toán. Bạn có thể bấm để chỉnh sửa linh hoạt.</span>
+                        <span class="text-xs text-blue-900 font-medium">Tên hàng theo danh mục Kế toán. Bạn có thể bấm để chỉnh sửa linh hoạt.</span>
                     </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <button type="button" onclick="window.modContract.syncAccountingNamesForCurrentContract()" class="bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 px-2.5 py-1 rounded text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs" title="Lấy lại tên hàng chuẩn theo Kế toán từ danh mục sản phẩm">
+                    <div class="flex items-center gap-1.5 shrink-0 justify-end">
+                        <button type="button" onclick="window.modContract.syncAccountingNamesForCurrentContract()" class="flex-1 sm:flex-initial bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 px-2.5 py-1 rounded text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shadow-xs" title="Lấy lại tên hàng chuẩn theo Kế toán từ danh mục sản phẩm">
                             <i class="fas fa-rotate text-blue-600"></i> Lấy Tên Kế Toán Gốc
                         </button>
-                        <button type="button" onclick="window.modContract.openQuickEditItemsModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow">
+                        <button type="button" onclick="window.modContract.openQuickEditItemsModal()" class="flex-1 sm:flex-initial bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shadow">
                             <i class="fas fa-file-pen text-amber-300"></i> Chỉnh Sửa Tên Hàng
                         </button>
                     </div>
                 </div>
-                <table class="w-full border-collapse border border-slate-900 my-4 text-xs" style="page-break-inside: auto;">
-                    <thead>
-                        <tr class="bg-slate-100 font-bold" style="page-break-inside: avoid;">
-                            <th class="border border-slate-900 p-2 text-center w-10">STT</th>
-                            <th class="border border-slate-900 p-2 text-left">Chủng Loại Vật Tư / Hạng Mục</th>
-                            <th class="border border-slate-900 p-2 text-center w-16">ĐVT</th>
-                            <th class="border border-slate-900 p-2 text-right w-16">Số Lượng</th>
-                            <th class="border border-slate-900 p-2 text-right w-28">Đơn Giá</th>
-                            <th class="border border-slate-900 p-2 text-right w-32">Thành Tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${items.map(it => `
-                            <tr style="page-break-inside: avoid;">
-                                <td class="border border-slate-900 p-2 text-center">${it.stt || 1}</td>
-                                <td class="border border-slate-900 p-2 font-bold">
-                                    <span>${it.product_name}</span>
-                                    <button type="button" onclick="window.modContract.openQuickEditItemsModal()" class="no-print ml-1.5 text-indigo-600 hover:text-indigo-900 opacity-60 hover:opacity-100 transition cursor-pointer text-[10.5px]" title="Chỉnh sửa tên hàng này">
-                                        <i class="fas fa-pen-to-square"></i>
-                                    </button>
-                                </td>
-                                <td class="border border-slate-900 p-2 text-center">${it.unit || 'Bộ'}</td>
-                                <td class="border border-slate-900 p-2 text-right font-bold">${it.quantity}</td>
-                                <td class="border border-slate-900 p-2 text-right">${window.modContract.fmt(it.price)} đ</td>
-                                <td class="border border-slate-900 p-2 text-right font-bold">${window.modContract.fmt(it.total_amount || (it.quantity * it.price))} đ</td>
+                <div class="overflow-x-auto my-3">
+                    <table class="w-full min-w-[520px] border-collapse border border-slate-900 text-xs" style="page-break-inside: auto;">
+                        <thead>
+                            <tr class="bg-slate-100 font-bold" style="page-break-inside: avoid;">
+                                <th class="border border-slate-900 p-2 text-center w-10">STT</th>
+                                <th class="border border-slate-900 p-2 text-left">Chủng Loại Vật Tư / Hạng Mục</th>
+                                <th class="border border-slate-900 p-2 text-center w-16">ĐVT</th>
+                                <th class="border border-slate-900 p-2 text-right w-16">Số Lượng</th>
+                                <th class="border border-slate-900 p-2 text-right w-28">Đơn Giá</th>
+                                <th class="border border-slate-900 p-2 text-right w-32">Thành Tiền</th>
                             </tr>
-                        `).join('')}
-                        <tr class="bg-slate-50 font-black" style="page-break-inside: avoid;">
-                            <td colspan="5" class="border border-slate-900 p-2 text-right uppercase">Tổng Tiền Thanh Toán (Đã bao gồm VAT):</td>
-                            <td class="border border-slate-900 p-2 text-right text-rose-700">${window.modContract.fmt(c.total_value)} VNĐ</td>
-                        </tr>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${items.map(it => `
+                                <tr style="page-break-inside: avoid;">
+                                    <td class="border border-slate-900 p-2 text-center">${it.stt || 1}</td>
+                                    <td class="border border-slate-900 p-2 font-bold">
+                                        <span>${it.product_name}</span>
+                                        <button type="button" onclick="window.modContract.openQuickEditItemsModal()" class="no-print ml-1.5 text-indigo-600 hover:text-indigo-900 opacity-60 hover:opacity-100 transition cursor-pointer text-[10.5px]" title="Chỉnh sửa tên hàng này">
+                                            <i class="fas fa-pen-to-square"></i>
+                                        </button>
+                                    </td>
+                                    <td class="border border-slate-900 p-2 text-center">${it.unit || 'Bộ'}</td>
+                                    <td class="border border-slate-900 p-2 text-right font-bold">${it.quantity}</td>
+                                    <td class="border border-slate-900 p-2 text-right">${window.modContract.fmt(it.price)} đ</td>
+                                    <td class="border border-slate-900 p-2 text-right font-bold">${window.modContract.fmt(it.total_amount || (it.quantity * it.price))} đ</td>
+                                </tr>
+                            `).join('')}
+                            <tr class="bg-slate-50 font-black" style="page-break-inside: avoid;">
+                                <td colspan="5" class="border border-slate-900 p-2 text-right uppercase">Tổng Tiền Thanh Toán (Đã bao gồm VAT):</td>
+                                <td class="border border-slate-900 p-2 text-right text-rose-700">${window.modContract.fmt(c.total_value)} VNĐ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <p class="italic mb-4"><b>Bằng chữ:</b> ${c.total_value_text || '---'}</p>
             `;
         }
@@ -2333,26 +2360,28 @@ window.modContract = {
         let specsWarrantyTableHtml = '';
         if (items.length > 0) {
             specsWarrantyTableHtml = `
-                <table class="w-full border-collapse border border-slate-900 my-2.5 text-[11.5px]" style="page-break-inside: avoid;">
-                    <thead>
-                        <tr class="bg-slate-100 font-bold">
-                            <th class="border border-slate-900 p-2 text-center w-9">STT</th>
-                            <th class="border border-slate-900 p-2 text-left w-2/5">Tên Thiết Bị / Chủng Loại</th>
-                            <th class="border border-slate-900 p-2 text-left">Thông Số Kỹ Thuật Chính</th>
-                            <th class="border border-slate-900 p-2 text-center w-36">Thời Hạn Bảo Hành</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${items.map(it => `
-                            <tr>
-                                <td class="border border-slate-900 p-2 text-center font-bold">${it.stt || 1}</td>
-                                <td class="border border-slate-900 p-2 font-bold">${it.product_name}</td>
-                                <td class="border border-slate-900 p-2 text-slate-800">${it.specs || 'Tiêu chuẩn kỹ thuật chính hãng theo catalog nhà sản xuất.'}</td>
-                                <td class="border border-slate-900 p-2 text-center font-bold text-teal-900">${it.warranty || 'Theo quy định hãng'}</td>
+                <div class="overflow-x-auto my-2.5">
+                    <table class="w-full min-w-[520px] border-collapse border border-slate-900 text-[11.5px]" style="page-break-inside: avoid;">
+                        <thead>
+                            <tr class="bg-slate-100 font-bold">
+                                <th class="border border-slate-900 p-2 text-center w-9">STT</th>
+                                <th class="border border-slate-900 p-2 text-left w-2/5 min-w-[160px]">Tên Thiết Bị / Chủng Loại</th>
+                                <th class="border border-slate-900 p-2 text-left min-w-[180px]">Thông Số Kỹ Thuật Chính</th>
+                                <th class="border border-slate-900 p-2 text-center w-36">Thời Hạn Bảo Hành</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${items.map(it => `
+                                <tr>
+                                    <td class="border border-slate-900 p-2 text-center font-bold">${it.stt || 1}</td>
+                                    <td class="border border-slate-900 p-2 font-bold">${it.product_name}</td>
+                                    <td class="border border-slate-900 p-2 text-slate-800">${it.specs || 'Tiêu chuẩn kỹ thuật chính hãng theo catalog nhà sản xuất.'}</td>
+                                    <td class="border border-slate-900 p-2 text-center font-bold text-teal-900">${it.warranty || 'Theo quy định hãng'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `;
         }
 
