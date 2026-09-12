@@ -139,6 +139,28 @@ function isLeaderOrAdmin(role) {
     return ['ADMIN', 'SUPER_ADMIN', 'GIAM_DOC', 'DIRECTOR', 'TONG_GIAM_DOC'].includes(r);
 }
 
+// Helper chuẩn hóa định dạng thời gian ISO 8601 UTC kết thúc bằng Z
+// Do CSDL Postgres lưu kiểu TIMESTAMP WITHOUT TIME ZONE (được đánh giá theo UTC),
+// và pg typeParser(1114) trả về chuỗi nguyên thủy dạng 'YYYY-MM-DD HH:mm:ss.ffffff' không có múi giờ,
+// ta cần đảm bảo chuỗi luôn có định dạng chuẩn ISO UTC để các trình duyệt & Node.js
+// chuyển đổi chính xác sang múi giờ Việt Nam (Asia/Ho_Chi_Minh - GMT+7).
+function normalizeCreatedAt(val) {
+    if (!val) return val;
+    if (val instanceof Date) return val.toISOString();
+    let s = String(val).trim();
+    if (!s) return s;
+    if (s.includes(' ') && !s.includes('T')) s = s.replace(' ', 'T');
+    if (!s.endsWith('Z') && !/[+-]\d{2}(:?\d{2})?$/.test(s)) s += 'Z';
+    return s;
+}
+
+function normalizeMessage(m) {
+    if (!m) return m;
+    if (m.created_at) m.created_at = normalizeCreatedAt(m.created_at);
+    if (m.updated_at) m.updated_at = normalizeCreatedAt(m.updated_at);
+    return m;
+}
+
 /**
  * 1. GET /api/workplace/channels
  * Lấy danh sách các kênh công khai + các nhóm mà user được phân công tham gia + Danh bạ nhân viên
@@ -179,10 +201,15 @@ router.get('/channels', async (req, res) => {
             ORDER BY u.full_name ASC
         `, [currentUserId]);
 
+        const normalizedChannels = channelsRes.rows.map(c => {
+            if (c.last_activity) c.last_activity = normalizeCreatedAt(c.last_activity);
+            return c;
+        });
+
         res.json({
             success: true,
             data: {
-                channels: channelsRes.rows,
+                channels: normalizedChannels,
                 direct_users: usersRes.rows,
                 is_admin: isAdmin
             }
@@ -451,7 +478,7 @@ router.get('/messages', async (req, res) => {
         }
 
         const result = await pool.query(query, params);
-        const messages = result.rows.reverse();
+        const messages = result.rows.map(normalizeMessage).reverse();
 
         // Lấy thông báo ghim nếu là kênh
         let pinnedMessage = null;
@@ -464,7 +491,7 @@ router.get('/messages', async (req, res) => {
                 ORDER BY m.id DESC LIMIT 1
             `, [parseInt(channel_id, 10)]);
             if (pinRes.rows.length > 0) {
-                pinnedMessage = pinRes.rows[0];
+                pinnedMessage = normalizeMessage(pinRes.rows[0]);
             }
         }
 
@@ -577,7 +604,7 @@ router.post('/messages', async (req, res) => {
         ]);
 
         if (dupCheck.rows.length > 0) {
-            return res.json({ success: true, data: dupCheck.rows[0], message: 'Tin nhắn đã được gửi thành công!' });
+            return res.json({ success: true, data: normalizeMessage(dupCheck.rows[0]), message: 'Tin nhắn đã được gửi thành công!' });
         }
 
         // Chèn tin nhắn mới (bao gồm reply và message_type)
@@ -605,7 +632,7 @@ router.post('/messages', async (req, res) => {
             cleanMsgType
         ]);
 
-        const newMsg = insertRes.rows[0];
+        const newMsg = normalizeMessage(insertRes.rows[0]);
 
         // Phát thông báo thời gian thực toàn hệ thống
         try {
@@ -782,7 +809,7 @@ router.put('/messages/:id', async (req, res) => {
 
         // Kiểm tra thời hạn 15 phút đối với nhân viên thường
         if (!isAdmin) {
-            const msgTime = new Date(msg.created_at).getTime();
+            const msgTime = new Date(normalizeCreatedAt(msg.created_at)).getTime();
             const now = Date.now();
             const elapsedMinutes = (now - msgTime) / (60 * 1000);
             if (elapsedMinutes > 15) {
@@ -802,7 +829,7 @@ router.put('/messages/:id', async (req, res) => {
         `, [cleanContent, id]);
 
         bumpConversationVersion(msg.channel_id, msg.recipient_id, msg.sender_id);
-        res.json({ success: true, data: updateRes.rows[0], message: 'Đã chỉnh sửa tin nhắn thành công!' });
+        res.json({ success: true, data: normalizeMessage(updateRes.rows[0]), message: 'Đã chỉnh sửa tin nhắn thành công!' });
     } catch (err) {
         console.error('Lỗi PUT /api/workplace/messages/:id:', err.message);
         res.status(500).json({ success: false, error: err.message });
@@ -829,7 +856,7 @@ router.delete('/messages/:id', async (req, res) => {
 
         // Kiểm tra thời hạn 15 phút đối với nhân viên thường
         if (!isAdmin) {
-            const msgTime = new Date(msg.created_at).getTime();
+            const msgTime = new Date(normalizeCreatedAt(msg.created_at)).getTime();
             const now = Date.now();
             const elapsedMinutes = (now - msgTime) / (60 * 1000);
             if (elapsedMinutes > 15) {
