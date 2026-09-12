@@ -283,12 +283,10 @@
 
         parseNum: (val) => {
             if (val === null || val === undefined || val === '') return 0;
-            if (typeof val === 'number') return isNaN(val) ? 0 : val;
-            let str = String(val).trim().replace(/[đĐ\s]/g, '');
-            if (/^-?\d+$/.test(str)) return parseInt(str, 10) || 0;
-            if (/^-?\d+\.\d+$/.test(str)) return parseFloat(str) || 0;
-            str = str.replace(/\./g, '').replace(/,/g, '.');
-            return parseFloat(str) || 0;
+            if (typeof val === 'number') return isNaN(val) ? 0 : Math.round(val);
+            const str = String(val).trim().replace(/[đĐ\s]/g, '');
+            const clean = str.replace(/[^0-9-]/g, '');
+            return clean ? parseInt(clean, 10) || 0 : 0;
         },
 
         onFeeChanged: (input) => {

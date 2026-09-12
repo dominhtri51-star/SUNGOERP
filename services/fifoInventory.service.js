@@ -5,6 +5,14 @@ const pool = require('../config/database');
  * & Phân Bổ Chi Phí Mua Hàng Phát Sinh (Phí Ship, Bốc Xếp, Chi Khác)
  */
 
+function parseSafeMoney(val) {
+    if (val === null || val === undefined || val === '') return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : Math.round(val);
+    const str = String(val).trim().replace(/[đĐ\s]/g, '');
+    const clean = str.replace(/[^0-9-]/g, '');
+    return clean ? parseInt(clean, 10) || 0 : 0;
+}
+
 /**
  * 1. Phân bổ chi phí phát sinh (phí ship, chi khác) vào từng sản phẩm trong đơn mua hàng
  * Nguyên tắc kế toán: Phân bổ theo tỷ trọng giá trị hàng hóa (hoặc số lượng nếu giá trị = 0)
@@ -16,8 +24,8 @@ const pool = require('../config/database');
  */
 function allotFeesToItems(items, shippingFee = 0, otherFee = 0, feeNotes = '') {
     if (!Array.isArray(items)) items = [];
-    const ship = Math.max(0, parseFloat(shippingFee) || 0);
-    const other = Math.max(0, parseFloat(otherFee) || 0);
+    const ship = Math.max(0, parseSafeMoney(shippingFee));
+    const other = Math.max(0, parseSafeMoney(otherFee));
     const totalExtraFee = ship + other;
 
     let itemsAmount = 0;

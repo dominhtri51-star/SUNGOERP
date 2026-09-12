@@ -23,8 +23,17 @@ function readFallbackDB() {
         return JSON.parse(fs.readFileSync(dbFile, 'utf8')); 
     } catch(e) { return []; }
 }
+
 function writeFallbackDB(data) {
     try { fs.writeFileSync(dbFile, JSON.stringify(data, null, 2), 'utf8'); } catch(e) {}
+}
+
+function parseSafeMoney(val) {
+    if (val === null || val === undefined || val === '') return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : Math.round(val);
+    const str = String(val).trim().replace(/[đĐ\s]/g, '');
+    const clean = str.replace(/[^0-9-]/g, '');
+    return clean ? parseInt(clean, 10) || 0 : 0;
 }
 
 function formatPurchaseRow(row) {
@@ -105,8 +114,8 @@ router.post('/', async (req, res) => {
         const supplierName = (payload.supplier_name || '').trim();
         const note = (payload.note || '').trim();
         const rawItems = Array.isArray(payload.items) ? payload.items : [];
-        const shippingFee = Math.max(0, parseFloat(payload.shipping_fee) || 0);
-        const otherFee = Math.max(0, parseFloat(payload.other_fee) || 0);
+        const shippingFee = Math.max(0, parseSafeMoney(payload.shipping_fee));
+        const otherFee = Math.max(0, parseSafeMoney(payload.other_fee));
         const feeNotes = (payload.fee_notes || '').trim();
         const status = payload.status || 'Chờ Duyệt';
         const docs = (payload.docs && typeof payload.docs === 'object') ? payload.docs : {};
@@ -187,8 +196,8 @@ router.put('/:id', async (req, res) => {
         const supplierName = (payload.supplier_name || '').trim();
         const note = (payload.note || '').trim();
         const rawItems = Array.isArray(payload.items) ? payload.items : [];
-        const shippingFee = Math.max(0, parseFloat(payload.shipping_fee) || 0);
-        const otherFee = Math.max(0, parseFloat(payload.other_fee) || 0);
+        const shippingFee = Math.max(0, parseSafeMoney(payload.shipping_fee));
+        const otherFee = Math.max(0, parseSafeMoney(payload.other_fee));
         const feeNotes = (payload.fee_notes || '').trim();
         const status = payload.status || 'Chờ Duyệt';
 
